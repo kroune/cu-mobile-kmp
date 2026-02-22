@@ -6,7 +6,6 @@ plugins {
   alias(libs.plugins.composeMultiplatform)
   alias(libs.plugins.composeCompiler)
   alias(libs.plugins.ktlint)
-  alias(libs.plugins.detekt)
   alias(libs.plugins.kotlinSerialization)
   alias(libs.plugins.kotlinCocoapods)
 }
