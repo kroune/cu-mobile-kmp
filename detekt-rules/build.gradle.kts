@@ -3,6 +3,6 @@ plugins {
 }
 kotlin {
     dependencies {
-        compileOnly(libs.detekt.api)
+        implementation(libs.detekt.api)
     }
 }

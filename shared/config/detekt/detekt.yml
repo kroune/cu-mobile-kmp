@@ -857,5 +857,7 @@ style:
         active: true
         excludeImports:
             - 'java.util.*'
+
+custom-style:
     RedundantNamedArgument:
         active: true

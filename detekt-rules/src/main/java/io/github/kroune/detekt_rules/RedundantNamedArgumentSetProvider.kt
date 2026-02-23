@@ -5,7 +5,7 @@ import dev.detekt.api.RuleSetId
 import dev.detekt.api.RuleSetProvider
 
 class CustomRuleSetProvider : RuleSetProvider {
-    override val ruleSetId = RuleSetId("style")
+    override val ruleSetId = RuleSetId("custom-style")
 
     override fun instance(): RuleSet = RuleSet(
         ruleSetId,
