@@ -1,3 +1,4 @@
+import dev.detekt.gradle.Detekt
 import org.jetbrains.kotlin.gradle.plugin.mpp.NativeBuildType
 
 plugins {
@@ -20,6 +21,12 @@ object AppInfo {
     const val APP_VERSION_INT: Int = 101
     const val LICENSE_TYPE = "GPL-3.0"
 }
+
+dependencies {
+    detektPlugins(project(":detekt-rules"))
+}
+
+tasks.withType<Detekt> { dependsOn(":detekt-rules:assemble") }
 
 kotlin {
     applyDefaultHierarchyTemplate()
