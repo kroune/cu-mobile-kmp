@@ -12,10 +12,10 @@ import androidx.compose.ui.graphics.Color
  */
 internal fun gradeColor(grade: Int): Color =
     when {
-        grade >= 8 -> Color(0xFF66BB6A)
-        grade >= 6 -> Color(0xFFFFEE58)
-        grade >= 4 -> Color(0xFFFFA726)
-        else -> Color(0xFFEF5350)
+        grade >= 8 -> AppColors.GradeExcellent
+        grade >= 6 -> AppColors.GradeGood
+        grade >= 4 -> AppColors.GradeSatisfactory
+        else -> AppColors.GradeFail
     }
 
 /**

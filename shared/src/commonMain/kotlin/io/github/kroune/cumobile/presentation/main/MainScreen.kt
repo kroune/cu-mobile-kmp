@@ -18,7 +18,6 @@ import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.pages.ChildPages
 import com.arkivanov.decompose.extensions.compose.stack.Children
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
-import com.arkivanov.decompose.router.pages.ChildPages as PagesState
 import io.github.kroune.cumobile.presentation.common.AppColors
 import io.github.kroune.cumobile.presentation.common.TopBar
 import io.github.kroune.cumobile.presentation.courses.CoursesScreen
@@ -31,6 +30,7 @@ import io.github.kroune.cumobile.presentation.notifications.NotificationsScreen
 import io.github.kroune.cumobile.presentation.performance.CoursePerformanceScreen
 import io.github.kroune.cumobile.presentation.profile.ProfileScreen
 import io.github.kroune.cumobile.presentation.tasks.TasksScreen
+import com.arkivanov.decompose.router.pages.ChildPages as PagesState
 
 /**
  * Main screen with bottom navigation and top bar.
@@ -199,12 +199,12 @@ private fun DetailOverlay(
  * top bar updates when profile data finishes loading.
  */
 @Composable
-private fun extractHomeState(
-    pages: PagesState<*, MainComponent.TabChild>,
-): HomeComponent.State? {
+private fun extractHomeState(pages: PagesState<*, MainComponent.TabChild>): HomeComponent.State? {
     val homeChild = pages.items.firstOrNull()?.instance
     if (homeChild !is MainComponent.TabChild.HomeChild) return null
-    return homeChild.component.state.subscribeAsState().value
+    return homeChild.component.state
+        .subscribeAsState()
+        .value
 }
 
 /** Bottom nav tab labels. */

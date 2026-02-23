@@ -18,15 +18,29 @@ object AppColors {
     val TextSecondary = Color(0xFF9E9E9E)
     val Error = Color(0xFFEF5350)
 
-    // Task state colors (matching Flutter reference)
+    // Task state colors (matching Flutter reference exactly)
     val TaskBacklog = Color(0xFF9E9E9E)
     val TaskInProgress = Color(0xFF42A5F5)
-    val TaskRevision = Color(0xFFFFA726)
-    val TaskRework = Color(0xFFFFA726)
-    val TaskReview = Color(0xFF7E57C2)
-    val TaskHasSolution = Color(0xFF26A69A)
+    val TaskRevision = Color(0xFFEF5350)
+    val TaskRework = Color(0xFFEF5350)
+    val TaskReview = Color(0xFFFFA726)
+    val TaskHasSolution = Color(0xFF00E676)
     val TaskFailed = Color(0xFFEF5350)
-    val TaskEvaluated = Color(0xFF66BB6A)
+    val TaskEvaluated = Color(0xFF00E676)
+
+    // Grade colors
+    val GradeExcellent = Color(0xFF00E676)
+    val GradeGood = Color(0xFFFFCA28)
+    val GradeSatisfactory = Color(0xFFFF9800)
+    val GradeFail = Color(0xFFEF5350)
+
+    // Level score colors (longread)
+    val LevelBasic = Color(0xFF3044FF)
+    val LevelMedium = Color(0xFFE63F07)
+
+    // Additional surface colors
+    val CodeBlockBackground = Color(0xFF2A2A2A)
+    val BlockquoteBackground = Color(0xFF1A1A2E)
 
     // Course category colors
     val CategoryMathematics = Color(0xFF42A5F5)

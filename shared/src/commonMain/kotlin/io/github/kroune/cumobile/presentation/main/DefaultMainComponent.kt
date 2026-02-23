@@ -2,12 +2,12 @@ package io.github.kroune.cumobile.presentation.main
 
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.DelicateDecomposeApi
+import com.arkivanov.decompose.router.children.ChildNavState.Status
 import com.arkivanov.decompose.router.pages.ChildPages
 import com.arkivanov.decompose.router.pages.Pages
 import com.arkivanov.decompose.router.pages.PagesNavigation
 import com.arkivanov.decompose.router.pages.childPages
 import com.arkivanov.decompose.router.pages.select
-import com.arkivanov.decompose.router.children.ChildNavState.Status
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
