@@ -19,7 +19,7 @@ data class StudentProfile(
     val timeLogin: String = "",
     val inn: String = "",
     val snils: String = "",
-    val course: Int = 0,
+    val course: Int? = null,
     val gender: String = "",
     val enrollmentPhase: String = "",
     val educationLevel: String = "",

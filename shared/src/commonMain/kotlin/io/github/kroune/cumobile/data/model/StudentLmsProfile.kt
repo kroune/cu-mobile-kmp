@@ -15,7 +15,7 @@ data class StudentLmsProfile(
     val middleName: String? = null,
     val universityEmail: String = "",
     val timeAccount: String = "",
-    val studyStartYear: Int = 0,
+    val studyStartYear: Int? = null,
     val studyLevel: String = "",
     val lateDaysBalance: Int = 0,
 )

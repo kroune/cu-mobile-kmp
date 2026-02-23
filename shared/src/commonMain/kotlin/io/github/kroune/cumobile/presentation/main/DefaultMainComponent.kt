@@ -7,6 +7,7 @@ import com.arkivanov.decompose.router.pages.Pages
 import com.arkivanov.decompose.router.pages.PagesNavigation
 import com.arkivanov.decompose.router.pages.childPages
 import com.arkivanov.decompose.router.pages.select
+import com.arkivanov.decompose.router.children.ChildNavState.Status
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
@@ -66,6 +67,9 @@ class DefaultMainComponent(
                     ),
                     selectedIndex = 0,
                 )
+            },
+            pageStatus = { index, pages ->
+                if (index == pages.selectedIndex) Status.RESUMED else Status.CREATED
             },
             childFactory = ::createTabChild,
         )

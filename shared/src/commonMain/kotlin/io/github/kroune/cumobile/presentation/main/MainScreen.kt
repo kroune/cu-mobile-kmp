@@ -18,11 +18,13 @@ import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.pages.ChildPages
 import com.arkivanov.decompose.extensions.compose.stack.Children
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
+import com.arkivanov.decompose.router.pages.ChildPages as PagesState
 import io.github.kroune.cumobile.presentation.common.AppColors
 import io.github.kroune.cumobile.presentation.common.TopBar
 import io.github.kroune.cumobile.presentation.courses.CoursesScreen
 import io.github.kroune.cumobile.presentation.courses.detail.CourseDetailScreen
 import io.github.kroune.cumobile.presentation.files.FilesScreen
+import io.github.kroune.cumobile.presentation.home.HomeComponent
 import io.github.kroune.cumobile.presentation.home.HomeScreen
 import io.github.kroune.cumobile.presentation.longread.LongreadScreen
 import io.github.kroune.cumobile.presentation.notifications.NotificationsScreen
@@ -47,7 +49,7 @@ fun MainScreen(component: MainComponent) {
     val hasDetail =
         detailStack.active.instance !is MainComponent.DetailChild.None
 
-    // Extract profile initials and late days from the Home tab
+    // Extract profile initials and late days from the Home tab (observed reactively)
     val homeState = extractHomeState(pages)
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -192,19 +194,17 @@ private fun DetailOverlay(
 /**
  * Extracts the HomeComponent state from the tab pages
  * for displaying profile initials and late days in the top bar.
+ *
+ * Uses [subscribeAsState] to observe changes reactively so the
+ * top bar updates when profile data finishes loading.
  */
+@Composable
 private fun extractHomeState(
-    pages: com.arkivanov.decompose.router.pages.ChildPages<
-        *,
-        MainComponent.TabChild,
-    >,
-): io.github.kroune.cumobile.presentation.home.HomeComponent.State? {
+    pages: PagesState<*, MainComponent.TabChild>,
+): HomeComponent.State? {
     val homeChild = pages.items.firstOrNull()?.instance
-    return if (homeChild is MainComponent.TabChild.HomeChild) {
-        homeChild.component.state.value
-    } else {
-        null
-    }
+    if (homeChild !is MainComponent.TabChild.HomeChild) return null
+    return homeChild.component.state.subscribeAsState().value
 }
 
 /** Bottom nav tab labels. */

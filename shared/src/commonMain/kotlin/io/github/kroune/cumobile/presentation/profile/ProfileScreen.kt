@@ -124,9 +124,10 @@ private fun ProfileContent(
         )
 
         // Course + education level
-        if (profile.course > 0 || state.educationLevelLabel.isNotEmpty()) {
+        val courseNumber = profile.course
+        if ((courseNumber != null && courseNumber > 0) || state.educationLevelLabel.isNotEmpty()) {
             val courseText = buildString {
-                if (profile.course > 0) append("${profile.course} курс")
+                if (courseNumber != null && courseNumber > 0) append("$courseNumber курс")
                 if (state.educationLevelLabel.isNotEmpty()) {
                     if (isNotEmpty()) append(" — ")
                     append(state.educationLevelLabel)
