@@ -64,3 +64,13 @@ data class NotificationPaging(
 data class NotificationFilter(
     val category: Int,
 )
+
+/**
+ * Named constants for notification category IDs used in the API.
+ *
+ * Category `1` = education-related, category `2` = everything else.
+ */
+object NotificationCategory {
+    const val Education = 1
+    const val Other = 2
+}

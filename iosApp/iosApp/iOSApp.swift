@@ -42,7 +42,7 @@ class RootHolder : ObservableObject {
     init() {
         lifecycle = LifecycleRegistryKt.LifecycleRegistry()
 
-        root = MainViewControllerKt.createRootComponent(
+        root = KoinKt.createRootComponent(
             componentContext: DefaultComponentContext(lifecycle: lifecycle)
         )
 

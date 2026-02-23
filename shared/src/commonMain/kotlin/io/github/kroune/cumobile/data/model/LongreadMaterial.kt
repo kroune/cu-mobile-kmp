@@ -40,10 +40,18 @@ data class LongreadMaterial(
     val estimation: MaterialEstimation? = null,
     val taskId: Int? = null,
 ) {
-    val isMarkdown: Boolean get() = discriminator == "markdown"
-    val isFile: Boolean get() = discriminator == "file"
-    val isCoding: Boolean get() = discriminator == "coding"
-    val isQuestions: Boolean get() = discriminator == "questions"
+    val isMarkdown: Boolean get() = discriminator == Discriminator.Markdown
+    val isFile: Boolean get() = discriminator == Discriminator.File
+    val isCoding: Boolean get() = discriminator == Discriminator.Coding
+    val isQuestions: Boolean get() = discriminator == Discriminator.Questions
+
+    /** Known discriminator values for [LongreadMaterial.discriminator]. */
+    object Discriminator {
+        const val Markdown = "markdown"
+        const val File = "file"
+        const val Coding = "coding"
+        const val Questions = "questions"
+    }
 
     /** Content name from the nested [content] object. */
     val contentName: String?

@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -35,6 +34,8 @@ import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import io.github.kroune.cumobile.data.local.DownloadedFileInfo
 import io.github.kroune.cumobile.presentation.common.AppColors
+import io.github.kroune.cumobile.presentation.common.ErrorContent
+import io.github.kroune.cumobile.presentation.common.LoadingContent
 import io.github.kroune.cumobile.presentation.common.formatEpochDate
 import io.github.kroune.cumobile.presentation.common.formatSizeBytes
 
@@ -69,9 +70,9 @@ fun FilesScreen(
         )
 
         when {
-            state.isLoading -> LoadingState()
-            state.error != null -> ErrorState(
-                message = state.error!!,
+            state.isLoading -> LoadingContent()
+            state.error != null -> ErrorContent(
+                error = state.error.orEmpty(),
                 onRetry = { component.onIntent(FilesComponent.Intent.Refresh) },
             )
             state.files.isEmpty() -> EmptyState()
@@ -261,40 +262,6 @@ private fun ExtensionBadge(extension: String) {
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
         )
-    }
-}
-
-@Composable
-private fun LoadingState() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center,
-    ) {
-        CircularProgressIndicator(color = AppColors.Accent)
-    }
-}
-
-@Composable
-private fun ErrorState(
-    message: String,
-    onRetry: () -> Unit,
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        Text(
-            text = message,
-            color = AppColors.Error,
-            fontSize = 14.sp,
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        TextButton(onClick = onRetry) {
-            Text(text = "Повторить", color = AppColors.Accent)
-        }
     }
 }
 

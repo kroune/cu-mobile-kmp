@@ -5,7 +5,6 @@ package io.github.kroune.cumobile.presentation.profile
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -33,6 +32,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import io.github.kroune.cumobile.presentation.common.AppColors
+import io.github.kroune.cumobile.presentation.common.DetailTopBar
+import io.github.kroune.cumobile.presentation.common.ErrorContent
+import io.github.kroune.cumobile.presentation.common.LoadingContent
 
 /**
  * Profile screen displaying student info, avatar, and logout button.
@@ -56,80 +58,32 @@ fun ProfileScreen(
             .fillMaxSize()
             .background(AppColors.Background),
     ) {
-        ProfileTopBar(
+        DetailTopBar(
+            title = "Профиль",
             onBack = onBack,
-            onLogout = { component.onIntent(ProfileComponent.Intent.Logout) },
+            trailingContent = {
+                TextButton(
+                    onClick = { component.onIntent(ProfileComponent.Intent.Logout) },
+                ) {
+                    Text(
+                        text = "Выйти",
+                        color = AppColors.Error,
+                        fontSize = 14.sp,
+                    )
+                }
+            },
         )
 
         when {
             state.isLoading -> LoadingContent()
             state.error != null && state.profile == null -> ErrorContent(
-                error = state.error!!,
+                error = state.error.orEmpty(),
                 onRetry = { component.onIntent(ProfileComponent.Intent.Refresh) },
             )
             state.profile != null -> ProfileContent(
                 state = state,
                 onDeleteAvatar = { component.onIntent(ProfileComponent.Intent.DeleteAvatar) },
             )
-        }
-    }
-}
-
-@Composable
-private fun ProfileTopBar(
-    onBack: () -> Unit,
-    onLogout: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(AppColors.Background)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
-    ) {
-        TextButton(onClick = onBack) {
-            Text(text = "← Назад", color = AppColors.Accent, fontSize = 14.sp)
-        }
-        Text(
-            text = "Профиль",
-            color = AppColors.TextPrimary,
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-        )
-        TextButton(onClick = onLogout) {
-            Text(text = "Выйти", color = AppColors.Error, fontSize = 14.sp)
-        }
-    }
-}
-
-@Composable
-private fun LoadingContent(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center,
-    ) {
-        CircularProgressIndicator(color = AppColors.Accent)
-    }
-}
-
-@Composable
-private fun ErrorContent(
-    error: String,
-    onRetry: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center,
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(text = error, color = AppColors.Error, fontSize = 14.sp)
-            Spacer(modifier = Modifier.height(12.dp))
-            TextButton(onClick = onRetry) {
-                Text(text = "Повторить", color = AppColors.Accent)
-            }
         }
     }
 }

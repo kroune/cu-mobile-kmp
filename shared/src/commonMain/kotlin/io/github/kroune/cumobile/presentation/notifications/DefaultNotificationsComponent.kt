@@ -4,6 +4,7 @@ import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
+import io.github.kroune.cumobile.data.model.NotificationCategory
 import io.github.kroune.cumobile.data.model.NotificationItem
 import io.github.kroune.cumobile.domain.repository.NotificationRepository
 import kotlinx.coroutines.Dispatchers
@@ -13,8 +14,8 @@ import kotlinx.coroutines.launch
 /**
  * Default implementation of [NotificationsComponent].
  *
- * Loads education (category=1) and other (category=2) notifications
- * in parallel on creation. Supports tab switching and link opening.
+ * Loads education ([NotificationCategory.Education]) and other ([NotificationCategory.Other])
+ * notifications in parallel on creation. Supports tab switching and link opening.
  */
 class DefaultNotificationsComponent(
     componentContext: ComponentContext,
@@ -46,8 +47,8 @@ class DefaultNotificationsComponent(
     private fun loadNotifications() {
         scope.launch {
             _state.value = _state.value.copy(isLoading = true, error = null)
-            val education = notificationRepository.fetchNotifications(category = 1)
-            val other = notificationRepository.fetchNotifications(category = 2)
+            val education = notificationRepository.fetchNotifications(category = NotificationCategory.Education)
+            val other = notificationRepository.fetchNotifications(category = NotificationCategory.Other)
             if (education != null || other != null) {
                 _state.value = _state.value.copy(
                     educationNotifications = sortByDate(education.orEmpty()),

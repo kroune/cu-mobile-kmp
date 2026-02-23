@@ -22,7 +22,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -37,6 +36,8 @@ import io.github.kroune.cumobile.data.model.StudentTask
 import io.github.kroune.cumobile.presentation.common.AppColors
 import io.github.kroune.cumobile.presentation.common.CourseCard
 import io.github.kroune.cumobile.presentation.common.DeadlineTaskCard
+import io.github.kroune.cumobile.presentation.common.ErrorContent
+import io.github.kroune.cumobile.presentation.common.LoadingContent
 
 /**
  * Home screen composable for the "Главная" tab.
@@ -53,10 +54,13 @@ fun HomeScreen(
     val state by component.state.subscribeAsState()
 
     when {
-        state.isLoading -> LoadingContent(modifier)
+        state.isLoading -> LoadingContent(
+            modifier = modifier.background(AppColors.Background),
+        )
         state.error != null -> ErrorContent(
-            error = state.error!!,
-            modifier = modifier,
+            error = state.error.orEmpty(),
+            onRetry = null,
+            modifier = modifier.background(AppColors.Background),
         )
         else -> HomeContent(
             state = state,
@@ -247,37 +251,6 @@ private fun EmptySection(
         Text(
             text = text,
             color = AppColors.TextSecondary,
-            fontSize = 14.sp,
-        )
-    }
-}
-
-@Composable
-private fun LoadingContent(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(AppColors.Background),
-        contentAlignment = Alignment.Center,
-    ) {
-        CircularProgressIndicator(color = AppColors.Accent)
-    }
-}
-
-@Composable
-private fun ErrorContent(
-    error: String,
-    modifier: Modifier = Modifier,
-) {
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(AppColors.Background),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = error,
-            color = AppColors.Error,
             fontSize = 14.sp,
         )
     }

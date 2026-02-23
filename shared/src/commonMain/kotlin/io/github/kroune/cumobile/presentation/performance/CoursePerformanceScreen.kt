@@ -3,20 +3,16 @@
 package io.github.kroune.cumobile.presentation.performance
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -31,7 +27,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import io.github.kroune.cumobile.presentation.common.AppColors
+import io.github.kroune.cumobile.presentation.common.ErrorContent
+import io.github.kroune.cumobile.presentation.common.LoadingContent
+import io.github.kroune.cumobile.presentation.common.SegmentedControl
 import io.github.kroune.cumobile.presentation.common.TopBar
+import io.github.kroune.cumobile.presentation.common.gradeColor
+import io.github.kroune.cumobile.presentation.common.gradeDescription
 
 /**
  * Course performance screen with two tabs:
@@ -62,9 +63,9 @@ fun CoursePerformanceScreen(
         }
 
         when {
-            state.isLoading -> LoadingState()
-            state.error != null -> ErrorState(
-                error = state.error!!,
+            state.isLoading -> LoadingContent()
+            state.error != null -> ErrorContent(
+                error = state.error.orEmpty(),
                 onRetry = {
                     component.onIntent(CoursePerformanceComponent.Intent.Refresh)
                 },
@@ -75,49 +76,21 @@ fun CoursePerformanceScreen(
 }
 
 @Composable
-private fun LoadingState(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center,
-    ) {
-        CircularProgressIndicator(color = AppColors.Accent)
-    }
-}
-
-@Composable
-private fun ErrorState(
-    error: String,
-    onRetry: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center,
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(error, color = AppColors.Error, fontSize = 14.sp)
-            Spacer(Modifier.height(8.dp))
-            TextButton(onClick = onRetry) {
-                Text("Повторить", color = AppColors.Accent)
-            }
-        }
-    }
-}
-
-@Composable
 private fun PerformanceContent(
     state: CoursePerformanceComponent.State,
     component: CoursePerformanceComponent,
     modifier: Modifier = Modifier,
 ) {
+    val tabLabels = listOf("Набранные баллы", "Успеваемость")
     Column(modifier = modifier.fillMaxSize()) {
         TotalGradeCard(
             grade = state.totalGrade,
             courseName = state.courseName,
         )
-        TabSelector(
-            selectedTab = state.selectedTab,
-            onTabSelected = {
+        SegmentedControl(
+            labels = tabLabels,
+            selectedIndex = state.selectedTab,
+            onSelect = {
                 component.onIntent(CoursePerformanceComponent.Intent.SelectTab(it))
             },
         )
@@ -199,55 +172,6 @@ private fun TotalGradeCard(
 
 // endregion
 
-// region Tab Selector
-
-@Composable
-private fun TabSelector(
-    selectedTab: Int,
-    onTabSelected: (Int) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val tabs = listOf("Набранные баллы", "Успеваемость")
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        tabs.forEachIndexed { index, label ->
-            val isSelected = selectedTab == index
-            val bgColor = if (isSelected) {
-                AppColors.Accent.copy(alpha = 0.2f)
-            } else {
-                Color.Transparent
-            }
-            val textColor = if (isSelected) {
-                AppColors.Accent
-            } else {
-                AppColors.TextSecondary
-            }
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(bgColor)
-                    .clickable { onTabSelected(index) }
-                    .padding(vertical = 10.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = label,
-                    color = textColor,
-                    fontSize = 14.sp,
-                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                )
-            }
-        }
-    }
-}
-
-// endregion
-
 // region Helpers
 
 /** Format a score, showing one decimal place only if needed. */
@@ -259,24 +183,6 @@ internal fun formatScore(value: Double): String {
         rounded.toString()
     }
 }
-
-/** Color-code a grade value (0-10 scale). */
-internal fun gradeColor(grade: Int): Color =
-    when {
-        grade >= 8 -> Color(0xFF66BB6A) // green
-        grade >= 6 -> Color(0xFFFFEB3B) // yellow
-        grade >= 4 -> Color(0xFFFFA726) // orange
-        else -> Color(0xFFEF5350) // red
-    }
-
-/** Human-readable grade description. */
-internal fun gradeDescription(grade: Int): String =
-    when {
-        grade >= 8 -> "Отлично"
-        grade >= 6 -> "Хорошо"
-        grade >= 4 -> "Удовлетворительно"
-        else -> "Неудовлетворительно"
-    }
 
 /** Color based on score ratio (0.0 to 1.0). */
 internal fun scoreRatioColor(ratio: Double): Color =

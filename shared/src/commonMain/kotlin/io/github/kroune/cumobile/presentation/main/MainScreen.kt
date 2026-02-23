@@ -165,7 +165,6 @@ private fun DetailOverlay(
             is MainComponent.DetailChild.LongreadChild -> {
                 LongreadScreen(
                     component = instance.component,
-                    onBack = { component.navigateDetailBack() },
                 )
             }
             is MainComponent.DetailChild.CoursePerformanceChild -> {

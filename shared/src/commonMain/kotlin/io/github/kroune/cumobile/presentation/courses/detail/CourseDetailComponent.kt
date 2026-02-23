@@ -59,7 +59,7 @@ interface CourseDetailComponent {
  * longreads' names match, or any of its exercises' names match.
  * For non-matching themes, only matching longreads are retained.
  */
-fun filteredThemes(
+internal fun filteredThemes(
     themes: List<CourseTheme>,
     query: String,
 ): List<CourseTheme> {

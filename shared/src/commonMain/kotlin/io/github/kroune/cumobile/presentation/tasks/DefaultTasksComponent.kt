@@ -5,6 +5,7 @@ import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.data.model.StudentTask
+import io.github.kroune.cumobile.data.model.TaskState
 import io.github.kroune.cumobile.domain.repository.TaskRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -66,7 +67,7 @@ class DefaultTasksComponent(
                 isLoading = true,
                 error = null,
             )
-            val result = taskRepository.fetchTasks(ALL_API_STATES)
+            val result = taskRepository.fetchTasks(AllApiStates)
             if (result != null) {
                 _state.value = _state.value.copy(
                     allTasks = result,
@@ -95,11 +96,11 @@ class DefaultTasksComponent(
  * to the bottom; remaining are sorted by deadline ascending
  * (null deadlines last).
  */
-fun filteredTasks(state: TasksComponent.State): List<StudentTask> {
+internal fun filteredTasks(state: TasksComponent.State): List<StudentTask> {
     val segmentStates = if (state.segment == 0) {
-        ACTIVE_STATES
+        ActiveStates
     } else {
-        ARCHIVE_STATES
+        ArchiveStates
     }
     return state.allTasks
         .filter { task ->
@@ -122,17 +123,17 @@ fun filteredTasks(state: TasksComponent.State): List<StudentTask> {
  * evaluated/failed/rejected/review tasks go to the bottom;
  * remaining sorted by deadline ascending (null deadlines last).
  */
-private val BOTTOM_STATES = setOf(
-    "evaluated",
-    "failed",
-    "rejected",
-    "review",
+private val BottomStates = setOf(
+    TaskState.Evaluated,
+    TaskState.Failed,
+    TaskState.Rejected,
+    TaskState.Review,
 )
 
 private fun taskComparator(): Comparator<StudentTask> =
     Comparator { a, b ->
-        val aBottom = normalizeTaskState(a.state) in BOTTOM_STATES
-        val bBottom = normalizeTaskState(b.state) in BOTTOM_STATES
+        val aBottom = normalizeTaskState(a.state) in BottomStates
+        val bBottom = normalizeTaskState(b.state) in BottomStates
         if (aBottom != bBottom) {
             return@Comparator if (aBottom) 1 else -1
         }
@@ -150,7 +151,7 @@ private fun taskComparator(): Comparator<StudentTask> =
  * Returns the distinct course names available for the course filter
  * dropdown, sorted alphabetically.
  */
-fun availableCourses(tasks: List<StudentTask>): List<Pair<Int, String>> =
+internal fun availableCourses(tasks: List<StudentTask>): List<Pair<Int, String>> =
     tasks
         .map { it.course.id to it.course.name }
         .distinctBy { it.first }
@@ -160,14 +161,14 @@ fun availableCourses(tasks: List<StudentTask>): List<Pair<Int, String>> =
  * Returns the distinct status labels available for the status filter
  * dropdown in the current segment.
  */
-fun availableStatuses(
+internal fun availableStatuses(
     tasks: List<StudentTask>,
     segment: Int,
 ): List<String> {
     val segmentStates = if (segment == 0) {
-        ACTIVE_STATES
+        ActiveStates
     } else {
-        ARCHIVE_STATES
+        ArchiveStates
     }
     return tasks
         .map { normalizeTaskState(effectiveTaskState(it)) }

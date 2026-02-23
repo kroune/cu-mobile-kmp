@@ -60,13 +60,13 @@ interface CoursesComponent {
 }
 
 /** Returns active (non-archived) courses sorted alphabetically. */
-fun activeCourses(courses: List<Course>): List<Course> =
+internal fun activeCourses(courses: List<Course>): List<Course> =
     courses
         .filter { !it.isArchived }
         .sortedBy { it.name }
 
 /** Returns archived courses sorted alphabetically. */
-fun archivedCourses(courses: List<Course>): List<Course> =
+internal fun archivedCourses(courses: List<Course>): List<Course> =
     courses
         .filter { it.isArchived }
         .sortedBy { it.name }

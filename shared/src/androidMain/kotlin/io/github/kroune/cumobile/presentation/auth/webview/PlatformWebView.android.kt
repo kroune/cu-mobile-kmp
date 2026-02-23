@@ -9,9 +9,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
-
-private const val AuthDomain = "https://my.centraluniversity.ru"
-private const val TargetCookieName = "bff.cookie"
+import io.github.kroune.cumobile.data.network.BaseDomain
+import io.github.kroune.cumobile.data.network.TargetCookieName
 
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
@@ -77,7 +76,7 @@ private fun tryCaptureCookie(
 private fun extractBffCookie(): String? {
     val cookieManager = CookieManager.getInstance()
     val cookieString = cookieManager
-        .getCookie(AuthDomain)
+        .getCookie(BaseDomain)
         ?: return null
     return cookieString
         .split(";")

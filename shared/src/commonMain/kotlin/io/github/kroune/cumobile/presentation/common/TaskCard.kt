@@ -24,6 +24,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.kroune.cumobile.data.model.StudentTask
+import io.github.kroune.cumobile.data.model.TaskState
 
 /**
  * Compact task card for the deadlines section on the Home screen.
@@ -144,11 +145,11 @@ fun StatusBadge(
  * Returns the badge label for a task state, optionally showing
  * the score for evaluated tasks.
  */
-fun taskStateBadgeLabel(
+private fun taskStateBadgeLabel(
     state: String,
     score: Double?,
 ): String =
-    if (state == "evaluated" && score != null) {
+    if (state == TaskState.Evaluated && score != null) {
         "${score.toInt()}"
     } else {
         taskStateLabel(state)
@@ -160,7 +161,7 @@ fun taskStateBadgeLabel(
  * Uses simple string comparison which works for ISO 8601 format
  * since it sorts lexicographically.
  */
-fun isOverdue(deadline: String?): Boolean {
+internal fun isOverdue(deadline: String?): Boolean {
     if (deadline == null) return false
     return false
 }

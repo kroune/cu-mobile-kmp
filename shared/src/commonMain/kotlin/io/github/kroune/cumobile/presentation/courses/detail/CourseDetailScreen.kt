@@ -19,9 +19,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -39,6 +37,9 @@ import io.github.kroune.cumobile.data.model.CourseTheme
 import io.github.kroune.cumobile.data.model.Longread
 import io.github.kroune.cumobile.data.model.ThemeExercise
 import io.github.kroune.cumobile.presentation.common.AppColors
+import io.github.kroune.cumobile.presentation.common.DetailTopBar
+import io.github.kroune.cumobile.presentation.common.ErrorContent
+import io.github.kroune.cumobile.presentation.common.LoadingContent
 import io.github.kroune.cumobile.presentation.common.formatDeadlineShort
 import io.github.kroune.cumobile.presentation.common.stripEmojiPrefix
 
@@ -66,7 +67,7 @@ fun CourseDetailScreen(
             .background(AppColors.Background),
     ) {
         // Top bar
-        CourseDetailTopBar(
+        DetailTopBar(
             title = courseName,
             onBack = onBack,
         )
@@ -74,7 +75,7 @@ fun CourseDetailScreen(
         when {
             state.isLoading -> LoadingContent()
             state.error != null -> ErrorContent(
-                error = state.error!!,
+                error = state.error.orEmpty(),
                 onRetry = {
                     component.onIntent(CourseDetailComponent.Intent.Refresh)
                 },
@@ -84,39 +85,6 @@ fun CourseDetailScreen(
                 component = component,
             )
         }
-    }
-}
-
-@Composable
-private fun CourseDetailTopBar(
-    title: String,
-    onBack: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(AppColors.Surface)
-            .padding(horizontal = 8.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        TextButton(onClick = onBack) {
-            Text(
-                text = "\u2190 Назад",
-                color = AppColors.Accent,
-                fontSize = 14.sp,
-            )
-        }
-
-        Text(
-            text = title,
-            color = AppColors.TextPrimary,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.SemiBold,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
-        )
     }
 }
 
@@ -408,42 +376,6 @@ private fun ExerciseRow(
         }
     }
 }
-
-// region Loading / Error states
-
-@Composable
-private fun LoadingContent(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center,
-    ) {
-        CircularProgressIndicator(color = AppColors.Accent)
-    }
-}
-
-@Composable
-private fun ErrorContent(
-    error: String,
-    onRetry: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center,
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(text = "\u26A0\uFE0F", fontSize = 40.sp)
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(text = error, color = AppColors.Error, fontSize = 14.sp)
-            Spacer(modifier = Modifier.height(8.dp))
-            TextButton(onClick = onRetry) {
-                Text(text = "Повторить", color = AppColors.Accent)
-            }
-        }
-    }
-}
-
-// endregion
 
 // region Helper functions
 

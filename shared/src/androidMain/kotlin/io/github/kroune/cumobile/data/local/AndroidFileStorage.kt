@@ -12,7 +12,7 @@ private val logger = KotlinLogging.logger {}
  * Stores downloaded files in a `downloads` subdirectory
  * within the app's internal files directory.
  */
-class AndroidFileStorage(
+internal class AndroidFileStorage(
     context: Context,
 ) : FileStorage {
     private val downloadsDir: File =
@@ -34,7 +34,7 @@ class AndroidFileStorage(
     }
 
     override fun deleteFile(name: String): Boolean {
-        val file = File(downloadsDir, name)
+        val file = resolveSecure(name) ?: return false
         return file.exists() && file.delete()
     }
 
@@ -54,7 +54,7 @@ class AndroidFileStorage(
         filename: String,
     ): Boolean =
         try {
-            val file = File(downloadsDir, filename)
+            val file = resolveSecure(filename) ?: return false
             file.writeBytes(bytes)
             true
         } catch (e: Exception) {
@@ -62,5 +62,23 @@ class AndroidFileStorage(
             false
         }
 
-    override fun fileExists(name: String): Boolean = File(downloadsDir, name).exists()
+    override fun fileExists(name: String): Boolean {
+        val file = resolveSecure(name) ?: return false
+        return file.exists()
+    }
+
+    /**
+     * Resolves [name] inside [downloadsDir] and validates that the
+     * resolved path does not escape the directory (path traversal guard).
+     *
+     * @return the resolved [File], or `null` if the name is invalid.
+     */
+    private fun resolveSecure(name: String): File? {
+        val file = File(downloadsDir, name)
+        if (!file.canonicalPath.startsWith(downloadsDir.canonicalPath)) {
+            logger.warn { "Rejected path-traversal file name: $name" }
+            return null
+        }
+        return file
+    }
 }

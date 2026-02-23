@@ -22,8 +22,13 @@ android {
             libs.versions.android.min.sdk
                 .get()
                 .toInt()
-        versionCode = 1 // You can add this code into libs.versions.toml file.
-        versionName = "1.0" // You can add this code into libs.versions.toml file.
+        versionCode =
+            libs.versions.app.version.code
+                .get()
+                .toInt()
+        versionName =
+            libs.versions.app.version.name
+                .get()
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

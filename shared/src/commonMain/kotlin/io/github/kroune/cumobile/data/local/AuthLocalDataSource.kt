@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.map
  * Local data source for authentication-related storage.
  * Uses DataStore Preferences to persist the BFF cookie.
  */
-class AuthLocalDataSource(
+internal class AuthLocalDataSource(
     private val dataStore: DataStore<Preferences>,
 ) {
     /** Flow emitting the current cookie value, or null if not stored. */

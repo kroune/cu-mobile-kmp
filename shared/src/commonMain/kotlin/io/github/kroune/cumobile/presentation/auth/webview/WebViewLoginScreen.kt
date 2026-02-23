@@ -16,8 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
-
-private const val AuthUrl = "https://my.centraluniversity.ru"
+import io.github.kroune.cumobile.data.network.BaseDomain
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,7 +46,7 @@ fun WebViewLoginScreen(component: WebViewLoginComponent) {
 
         Box(modifier = Modifier.fillMaxSize()) {
             PlatformWebView(
-                url = AuthUrl,
+                url = BaseDomain,
                 onCookieCaptured = { cookie ->
                     component.onIntent(WebViewLoginComponent.Intent.CookieCaptured(cookie))
                 },

@@ -19,9 +19,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -35,6 +33,11 @@ import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import io.github.kroune.cumobile.data.model.NotificationItem
 import io.github.kroune.cumobile.presentation.common.AppColors
+import io.github.kroune.cumobile.presentation.common.DetailTopBar
+import io.github.kroune.cumobile.presentation.common.EmptyContent
+import io.github.kroune.cumobile.presentation.common.ErrorContent
+import io.github.kroune.cumobile.presentation.common.LoadingContent
+import io.github.kroune.cumobile.presentation.common.SegmentedControl
 import io.github.kroune.cumobile.presentation.common.formatDateTimeFull
 
 /**
@@ -58,22 +61,29 @@ fun NotificationsScreen(
             .fillMaxSize()
             .background(AppColors.Background),
     ) {
-        NotificationsTopBar(onBack = onBack)
+        DetailTopBar(
+            title = "Уведомления",
+            onBack = onBack,
+        )
 
-        TabSelector(
-            selectedTab = state.selectedTab,
-            onSelectTab = {
+        SegmentedControl(
+            labels = listOf("Учеба", "Другое"),
+            selectedIndex = state.selectedTab,
+            onSelect = {
                 component.onIntent(NotificationsComponent.Intent.SelectTab(it))
             },
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
         )
 
         when {
             state.isLoading -> LoadingContent()
             state.error != null && state.currentNotifications.isEmpty() -> ErrorContent(
-                error = state.error!!,
+                error = state.error.orEmpty(),
                 onRetry = { component.onIntent(NotificationsComponent.Intent.Refresh) },
             )
-            state.currentNotifications.isEmpty() -> EmptyContent()
+            state.currentNotifications.isEmpty() -> EmptyContent(
+                text = "Нет уведомлений",
+            )
             else -> NotificationsList(
                 notifications = state.currentNotifications,
                 onLinkClick = {
@@ -81,129 +91,6 @@ fun NotificationsScreen(
                 },
             )
         }
-    }
-}
-
-@Composable
-private fun NotificationsTopBar(
-    onBack: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(AppColors.Background)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        TextButton(onClick = onBack) {
-            Text(text = "← Назад", color = AppColors.Accent, fontSize = 14.sp)
-        }
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(
-            text = "Уведомления",
-            color = AppColors.TextPrimary,
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-        )
-    }
-}
-
-@Composable
-private fun TabSelector(
-    selectedTab: Int,
-    onSelectTab: (Int) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        TabChip(
-            label = "Учеба",
-            isSelected = selectedTab == 0,
-            onClick = { onSelectTab(0) },
-            modifier = Modifier.weight(1f),
-        )
-        TabChip(
-            label = "Другое",
-            isSelected = selectedTab == 1,
-            onClick = { onSelectTab(1) },
-            modifier = Modifier.weight(1f),
-        )
-    }
-}
-
-@Composable
-private fun TabChip(
-    label: String,
-    isSelected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val bgColor = if (isSelected) AppColors.Accent else AppColors.Surface
-    val textColor = if (isSelected) AppColors.Background else AppColors.TextSecondary
-
-    Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(8.dp))
-            .background(bgColor)
-            .clickable(onClick = onClick)
-            .padding(vertical = 10.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = label,
-            color = textColor,
-            fontSize = 14.sp,
-            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-        )
-    }
-}
-
-@Composable
-private fun LoadingContent(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center,
-    ) {
-        CircularProgressIndicator(color = AppColors.Accent)
-    }
-}
-
-@Composable
-private fun ErrorContent(
-    error: String,
-    onRetry: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center,
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(text = error, color = AppColors.Error, fontSize = 14.sp)
-            Spacer(modifier = Modifier.height(12.dp))
-            TextButton(onClick = onRetry) {
-                Text(text = "Повторить", color = AppColors.Accent)
-            }
-        }
-    }
-}
-
-@Composable
-private fun EmptyContent(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = "Нет уведомлений",
-            color = AppColors.TextSecondary,
-            fontSize = 14.sp,
-        )
     }
 }
 

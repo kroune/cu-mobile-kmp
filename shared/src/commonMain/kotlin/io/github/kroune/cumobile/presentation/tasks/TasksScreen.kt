@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,21 +16,22 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import io.github.kroune.cumobile.presentation.common.AppColors
+import io.github.kroune.cumobile.presentation.common.EmptyContent
+import io.github.kroune.cumobile.presentation.common.ErrorContent
+import io.github.kroune.cumobile.presentation.common.LoadingContent
+import io.github.kroune.cumobile.presentation.common.SegmentedControl
 import io.github.kroune.cumobile.presentation.common.stripEmojiPrefix
 import io.github.kroune.cumobile.presentation.common.taskStateLabel
 
@@ -62,10 +62,12 @@ fun TasksScreen(
         Spacer(modifier = Modifier.height(8.dp))
 
         // Segment control
-        SegmentControl(
-            selectedSegment = state.segment,
-            activeCount = countBySegment(allTasks, 0),
-            archiveCount = countBySegment(allTasks, 1),
+        SegmentedControl(
+            labels = listOf(
+                "Активные (${countBySegment(allTasks, 0)})",
+                "Архив (${countBySegment(allTasks, 1)})",
+            ),
+            selectedIndex = state.segment,
             onSelect = {
                 component.onIntent(TasksComponent.Intent.SelectSegment(it))
             },
@@ -102,33 +104,16 @@ private fun TasksContentArea(
     modifier: Modifier = Modifier,
 ) {
     when {
-        state.isLoading -> {
-            Box(
-                modifier = modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center,
-            ) {
-                CircularProgressIndicator(color = AppColors.Accent)
-            }
-        }
-        state.error != null -> {
-            ErrorContent(
-                error = state.error,
-                onRetry = { onIntent(TasksComponent.Intent.Refresh) },
-                modifier = modifier,
-            )
-        }
-        tasks.isEmpty() -> {
-            Box(
-                modifier = modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = "Нет заданий по выбранным фильтрам",
-                    color = AppColors.TextSecondary,
-                    fontSize = 14.sp,
-                )
-            }
-        }
+        state.isLoading -> LoadingContent(modifier)
+        state.error != null -> ErrorContent(
+            error = state.error,
+            onRetry = { onIntent(TasksComponent.Intent.Refresh) },
+            modifier = modifier,
+        )
+        tasks.isEmpty() -> EmptyContent(
+            text = "Нет заданий по выбранным фильтрам",
+            modifier = modifier,
+        )
         else -> {
             LazyColumn(
                 modifier = modifier,
@@ -146,60 +131,6 @@ private fun TasksContentArea(
                         },
                     )
                 }
-            }
-        }
-    }
-}
-
-/**
- * Segment control with Active/Archive tabs and counts.
- */
-@Composable
-private fun SegmentControl(
-    selectedSegment: Int,
-    activeCount: Int,
-    archiveCount: Int,
-    onSelect: (Int) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val segments = listOf(
-        "Активные ($activeCount)",
-        "Архив ($archiveCount)",
-    )
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
-            .background(AppColors.Surface)
-            .padding(2.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly,
-    ) {
-        segments.forEachIndexed { index, label ->
-            val selected = selectedSegment == index
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .clip(RoundedCornerShape(6.dp))
-                    .background(
-                        if (selected) {
-                            AppColors.Accent.copy(alpha = 0.2f)
-                        } else {
-                            AppColors.Surface
-                        },
-                    ).clickable { onSelect(index) }
-                    .padding(vertical = 8.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = label,
-                    color = if (selected) AppColors.Accent else AppColors.TextSecondary,
-                    fontSize = 13.sp,
-                    fontWeight = if (selected) {
-                        FontWeight.SemiBold
-                    } else {
-                        FontWeight.Normal
-                    },
-                )
             }
         }
     }
@@ -381,48 +312,13 @@ private fun FilterChip(
 }
 
 /**
- * Error state with retry button.
- */
-@Composable
-private fun ErrorContent(
-    error: String,
-    onRetry: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center,
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                text = "\u26A0\uFE0F", // ⚠️
-                fontSize = 40.sp,
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = error,
-                color = AppColors.Error,
-                fontSize = 14.sp,
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            TextButton(onClick = onRetry) {
-                Text(
-                    text = "Повторить",
-                    color = AppColors.Accent,
-                )
-            }
-        }
-    }
-}
-
-/**
  * Counts tasks belonging to the given segment.
  */
 private fun countBySegment(
     tasks: List<io.github.kroune.cumobile.data.model.StudentTask>,
     segment: Int,
 ): Int {
-    val segmentStates = if (segment == 0) ACTIVE_STATES else ARCHIVE_STATES
+    val segmentStates = if (segment == 0) ActiveStates else ArchiveStates
     return tasks.count {
         normalizeTaskState(effectiveTaskState(it)) in segmentStates
     }

@@ -507,6 +507,10 @@
 
 ### Next steps
 
+#### Deferred items
+- [ ] Move model classes from `data/model/` to a standalone `model/` package (47 files affected, separate PR)
+- [ ] Rename `*Response` types to non-API-specific names (part of model move)
+
 #### Flutter comparison
 - [ ] Compare KMP implementation with Flutter app (`/home/olowo/StudioProjects/lms-mobile`, indexed on deepwiki: `cu-3rd-party/lms-mobile`) for missing features/behavior differences
 

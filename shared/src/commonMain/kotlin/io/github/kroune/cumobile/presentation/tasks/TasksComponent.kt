@@ -2,6 +2,7 @@ package io.github.kroune.cumobile.presentation.tasks
 
 import com.arkivanov.decompose.value.Value
 import io.github.kroune.cumobile.data.model.StudentTask
+import io.github.kroune.cumobile.data.model.TaskState
 
 /**
  * MVI component for the Tasks tab ("Задания").
@@ -67,29 +68,33 @@ interface TasksComponent {
 /**
  * Active task states (shown in the "Active" segment).
  */
-val ACTIVE_STATES = setOf(
-    "backlog",
-    "inProgress",
-    "hasSolution",
-    "revision",
-    "rework",
-    "review",
+internal val ActiveStates = setOf(
+    TaskState.Backlog,
+    TaskState.InProgress,
+    TaskState.HasSolution,
+    TaskState.Revision,
+    TaskState.Rework,
+    TaskState.Review,
 )
 
 /**
  * Archive task states (shown in the "Archive" segment).
  */
-val ARCHIVE_STATES = setOf("evaluated", "failed", "rejected")
+internal val ArchiveStates = setOf(
+    TaskState.Evaluated,
+    TaskState.Failed,
+    TaskState.Rejected,
+)
 
 /**
  * All states requested from the API.
  */
-val ALL_API_STATES = listOf(
-    "inProgress",
-    "review",
-    "backlog",
-    "failed",
-    "evaluated",
+internal val AllApiStates = listOf(
+    TaskState.InProgress,
+    TaskState.Review,
+    TaskState.Backlog,
+    TaskState.Failed,
+    TaskState.Evaluated,
 )
 
 /**
@@ -98,10 +103,10 @@ val ALL_API_STATES = listOf(
  * Maps "rework" -> "revision" and "rejected" -> "failed" to match
  * the Flutter reference UI grouping.
  */
-fun normalizeTaskState(state: String): String =
+internal fun normalizeTaskState(state: String): String =
     when (state) {
-        "rework" -> "revision"
-        "rejected" -> "failed"
+        TaskState.Rework -> TaskState.Revision
+        TaskState.Rejected -> TaskState.Failed
         else -> state
     }
 
@@ -109,9 +114,9 @@ fun normalizeTaskState(state: String): String =
  * Derives a virtual "hasSolution" state when a task is inProgress
  * but already has a submitted solution.
  */
-fun effectiveTaskState(task: StudentTask): String =
-    if (task.state == "inProgress" && task.submitAt != null) {
-        "hasSolution"
+internal fun effectiveTaskState(task: StudentTask): String =
+    if (task.state == TaskState.InProgress && task.submitAt != null) {
+        TaskState.HasSolution
     } else {
         task.state
     }

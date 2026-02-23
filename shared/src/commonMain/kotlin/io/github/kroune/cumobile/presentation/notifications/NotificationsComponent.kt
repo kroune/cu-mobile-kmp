@@ -1,13 +1,14 @@
 package io.github.kroune.cumobile.presentation.notifications
 
 import com.arkivanov.decompose.value.Value
+import io.github.kroune.cumobile.data.model.NotificationCategory
 import io.github.kroune.cumobile.data.model.NotificationItem
 
 /**
  * MVI component for the notifications screen.
  *
- * Displays two tabs: "Учеба" (education, category=1) and
- * "Другое" (other, category=2). Supports deep-linking
+ * Displays two tabs: "Учеба" (education, [NotificationCategory.Education]) and
+ * "Другое" (other, [NotificationCategory.Other]). Supports deep-linking
  * from notification links.
  */
 interface NotificationsComponent {

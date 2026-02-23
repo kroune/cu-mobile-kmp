@@ -3,6 +3,7 @@ package io.github.kroune.cumobile.presentation.home
 import com.arkivanov.decompose.value.Value
 import io.github.kroune.cumobile.data.model.Course
 import io.github.kroune.cumobile.data.model.StudentTask
+import io.github.kroune.cumobile.data.model.TaskState
 
 /**
  * MVI component for the Home tab ("Главная").
@@ -62,10 +63,10 @@ interface HomeComponent {
     companion object {
         /** Task states shown in the deadlines section. */
         val ACTIVE_TASK_STATES = setOf(
-            "backlog",
-            "inProgress",
-            "revision",
-            "rework",
+            TaskState.Backlog,
+            TaskState.InProgress,
+            TaskState.Revision,
+            TaskState.Rework,
         )
     }
 }

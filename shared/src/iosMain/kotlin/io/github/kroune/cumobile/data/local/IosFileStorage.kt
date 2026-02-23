@@ -2,7 +2,13 @@ package io.github.kroune.cumobile.data.local
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.cinterop.ObjCObjectVar
+import kotlinx.cinterop.alloc
+import kotlinx.cinterop.memScoped
+import kotlinx.cinterop.ptr
+import kotlinx.cinterop.value
 import platform.Foundation.NSDocumentDirectory
+import platform.Foundation.NSError
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSFileModificationDate
 import platform.Foundation.NSFileSize
@@ -20,34 +26,57 @@ private val logger = KotlinLogging.logger {}
  * within the app's Documents directory.
  */
 @OptIn(ExperimentalForeignApi::class)
-class IosFileStorage : FileStorage {
+internal class IosFileStorage : FileStorage {
     private val fileManager = NSFileManager.defaultManager
 
     private val downloadsDir: String by lazy {
-        val documentsUrl = fileManager.URLForDirectory(
-            directory = NSDocumentDirectory,
-            inDomain = NSUserDomainMask,
-            appropriateForURL = null,
-            create = false,
-            error = null,
-        )
+        val documentsUrl = memScoped {
+            val errorPtr = alloc<ObjCObjectVar<NSError?>>()
+            val url = fileManager.URLForDirectory(
+                directory = NSDocumentDirectory,
+                inDomain = NSUserDomainMask,
+                appropriateForURL = null,
+                create = false,
+                error = errorPtr.ptr,
+            )
+            errorPtr.value?.let {
+                logger.error { "Failed to locate Documents dir: ${it.localizedDescription}" }
+            }
+            url
+        }
         val path = requireNotNull(documentsUrl).path!! + "/downloads"
         if (!fileManager.fileExistsAtPath(path)) {
-            fileManager.createDirectoryAtPath(
-                path = path,
-                withIntermediateDirectories = true,
-                attributes = null,
-                error = null,
-            )
+            memScoped {
+                val errorPtr = alloc<ObjCObjectVar<NSError?>>()
+                val success = fileManager.createDirectoryAtPath(
+                    path = path,
+                    withIntermediateDirectories = true,
+                    attributes = null,
+                    error = errorPtr.ptr,
+                )
+                if (!success) {
+                    val error = errorPtr.value
+                    logger.error {
+                        "Failed to create downloads dir: ${error?.localizedDescription}"
+                    }
+                }
+            }
         }
         path
     }
 
     override fun listFiles(): List<DownloadedFileInfo> {
-        val contents = fileManager.contentsOfDirectoryAtPath(
-            downloadsDir,
-            error = null,
-        ) ?: return emptyList()
+        val contents = memScoped {
+            val errorPtr = alloc<ObjCObjectVar<NSError?>>()
+            val result = fileManager.contentsOfDirectoryAtPath(
+                downloadsDir,
+                error = errorPtr.ptr,
+            )
+            errorPtr.value?.let {
+                logger.error { "Failed to list downloads dir: ${it.localizedDescription}" }
+            }
+            result
+        } ?: return emptyList()
 
         return contents
             .filterIsInstance<String>()
@@ -58,10 +87,17 @@ class IosFileStorage : FileStorage {
     private fun buildFileInfo(filename: String): DownloadedFileInfo? {
         val fullPath = nsString(downloadsDir)
             .stringByAppendingPathComponent(filename)
-        val attributes = fileManager.attributesOfItemAtPath(
-            fullPath,
-            error = null,
-        ) ?: return null
+        val attributes = memScoped {
+            val errorPtr = alloc<ObjCObjectVar<NSError?>>()
+            val attrs = fileManager.attributesOfItemAtPath(
+                fullPath,
+                error = errorPtr.ptr,
+            )
+            errorPtr.value?.let {
+                logger.warn { "Failed to read attributes for $filename: ${it.localizedDescription}" }
+            }
+            attrs
+        } ?: return null
 
         val size = (attributes[NSFileSize] as? Number)?.toLong() ?: 0L
         val modDate = attributes[NSFileModificationDate]
@@ -80,22 +116,41 @@ class IosFileStorage : FileStorage {
     }
 
     override fun deleteFile(name: String): Boolean {
-        val path = nsString(downloadsDir)
-            .stringByAppendingPathComponent(name)
-        return fileManager.removeItemAtPath(path, error = null)
+        val path = resolveSecure(name) ?: return false
+        return memScoped {
+            val errorPtr = alloc<ObjCObjectVar<NSError?>>()
+            val success = fileManager.removeItemAtPath(path, error = errorPtr.ptr)
+            if (!success) {
+                errorPtr.value?.let {
+                    logger.error { "Failed to delete $name: ${it.localizedDescription}" }
+                }
+            }
+            success
+        }
     }
 
     override fun deleteAllFiles(): Int {
-        val contents = fileManager.contentsOfDirectoryAtPath(
-            downloadsDir,
-            error = null,
-        ) ?: return 0
+        val contents = memScoped {
+            val errorPtr = alloc<ObjCObjectVar<NSError?>>()
+            val result = fileManager.contentsOfDirectoryAtPath(
+                downloadsDir,
+                error = errorPtr.ptr,
+            )
+            errorPtr.value?.let {
+                logger.error { "Failed to list dir for deleteAll: ${it.localizedDescription}" }
+            }
+            result
+        } ?: return 0
 
         var count = 0
         for (item in contents.filterIsInstance<String>()) {
             val path = nsString(downloadsDir)
                 .stringByAppendingPathComponent(item)
-            if (fileManager.removeItemAtPath(path, error = null)) {
+            val deleted = memScoped {
+                val errorPtr = alloc<ObjCObjectVar<NSError?>>()
+                fileManager.removeItemAtPath(path, error = errorPtr.ptr)
+            }
+            if (deleted) {
                 count++
             }
         }
@@ -108,8 +163,7 @@ class IosFileStorage : FileStorage {
         filename: String,
     ): Boolean =
         try {
-            val path = nsString(downloadsDir)
-                .stringByAppendingPathComponent(filename)
+            val path = resolveSecure(filename) ?: return false
             val nsData = bytes.toNSData()
             nsData.writeToFile(path, atomically = true)
         } catch (e: Exception) {
@@ -118,9 +172,25 @@ class IosFileStorage : FileStorage {
         }
 
     override fun fileExists(name: String): Boolean {
-        val path = nsString(downloadsDir)
-            .stringByAppendingPathComponent(name)
+        val path = resolveSecure(name) ?: return false
         return fileManager.fileExistsAtPath(path)
+    }
+
+    /**
+     * Resolves [name] inside [downloadsDir] using Foundation path
+     * APIs and validates that the result does not escape the directory
+     * (path traversal guard).
+     *
+     * @return the resolved path, or `null` if the name is invalid.
+     */
+    private fun resolveSecure(name: String): String? {
+        val resolved = nsString(downloadsDir)
+            .stringByAppendingPathComponent(name)
+        if (!resolved.startsWith(downloadsDir)) {
+            logger.warn { "Rejected path-traversal file name: $name" }
+            return null
+        }
+        return resolved
     }
 
     private fun nsString(value: String): NSString = NSString.create(string = value)

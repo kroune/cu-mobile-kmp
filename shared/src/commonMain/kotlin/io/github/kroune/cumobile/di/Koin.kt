@@ -1,7 +1,13 @@
 package io.github.kroune.cumobile.di
 
+import com.arkivanov.decompose.ComponentContext
 import io.github.kroune.cumobile.data.local.AuthLocalDataSource
-import io.github.kroune.cumobile.data.network.ApiService
+import io.github.kroune.cumobile.data.network.ContentApiService
+import io.github.kroune.cumobile.data.network.CourseApiService
+import io.github.kroune.cumobile.data.network.NotificationApiService
+import io.github.kroune.cumobile.data.network.PerformanceApiService
+import io.github.kroune.cumobile.data.network.ProfileApiService
+import io.github.kroune.cumobile.data.network.TaskApiService
 import io.github.kroune.cumobile.data.network.createHttpClient
 import io.github.kroune.cumobile.data.repository.AuthRepositoryImpl
 import io.github.kroune.cumobile.data.repository.ContentRepositoryImpl
@@ -19,24 +25,32 @@ import io.github.kroune.cumobile.domain.repository.NotificationRepository
 import io.github.kroune.cumobile.domain.repository.PerformanceRepository
 import io.github.kroune.cumobile.domain.repository.ProfileRepository
 import io.github.kroune.cumobile.domain.repository.TaskRepository
+import io.github.kroune.cumobile.presentation.main.MainDependencies
+import io.github.kroune.cumobile.presentation.root.DefaultRootComponent
 import org.koin.core.context.startKoin
 import org.koin.core.module.Module
 import org.koin.dsl.module
+import org.koin.mp.KoinPlatform
 
 /**
  * Core Koin module providing shared dependencies.
  * Platform-specific modules (e.g., DataStore) are provided via [platformModule].
  */
-val networkModule = module {
+private val networkModule = module {
     single { createHttpClient() }
-    single { ApiService(get()) }
+    single { ProfileApiService(get()) }
+    single { TaskApiService(get()) }
+    single { CourseApiService(get()) }
+    single { ContentApiService(get()) }
+    single { NotificationApiService(get()) }
+    single { PerformanceApiService(get()) }
 }
 
-val dataModule = module {
+private val dataModule = module {
     single { AuthLocalDataSource(get()) }
 }
 
-val repositoryModule = module {
+private val repositoryModule = module {
     single<AuthRepository> { AuthRepositoryImpl(get(), get()) }
     single<ProfileRepository> { ProfileRepositoryImpl(get(), get()) }
     single<TaskRepository> { TaskRepositoryImpl(get(), get()) }
@@ -60,4 +74,27 @@ fun initKoin(platformModule: Module = module { }) {
             repositoryModule,
         )
     }
+}
+
+/**
+ * Creates a [DefaultRootComponent] with dependencies resolved from Koin.
+ *
+ * Called from Android [io.github.kroune.cumobile.MainActivity] and iOS Swift entry point.
+ */
+fun createRootComponent(componentContext: ComponentContext): DefaultRootComponent {
+    val koin = KoinPlatform.getKoin()
+    val mainDependencies = MainDependencies(
+        taskRepository = koin.get<TaskRepository>(),
+        courseRepository = koin.get<CourseRepository>(),
+        profileRepository = koin.get<ProfileRepository>(),
+        performanceRepository = koin.get<PerformanceRepository>(),
+        contentRepository = koin.get<ContentRepository>(),
+        notificationRepository = koin.get<NotificationRepository>(),
+        fileRepository = koin.get<FileRepository>(),
+    )
+    return DefaultRootComponent(
+        componentContext = componentContext,
+        authRepository = koin.get<AuthRepository>(),
+        mainDependencies = mainDependencies,
+    )
 }

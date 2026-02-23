@@ -3,37 +3,25 @@ package io.github.kroune.cumobile.data.repository
 import io.github.kroune.cumobile.data.local.AuthLocalDataSource
 import io.github.kroune.cumobile.data.model.StudentLmsProfile
 import io.github.kroune.cumobile.data.model.StudentProfile
-import io.github.kroune.cumobile.data.network.ApiService
+import io.github.kroune.cumobile.data.network.ProfileApiService
 import io.github.kroune.cumobile.domain.repository.ProfileRepository
 
 /**
  * Implementation of [ProfileRepository].
  *
  * Retrieves the auth cookie from [AuthLocalDataSource] and delegates
- * all network calls to [ApiService].
+ * all network calls to [ProfileApiService].
  */
-class ProfileRepositoryImpl(
+internal class ProfileRepositoryImpl(
     authLocal: AuthLocalDataSource,
-    apiService: ApiService,
-) : CookieAwareRepository(authLocal, apiService),
+    private val profileApi: ProfileApiService,
+) : CookieAwareRepository(authLocal),
     ProfileRepository {
-    override suspend fun fetchProfile(): StudentProfile? =
-        withCookie {
-            apiService.fetchProfile(it)
-        }
+    override suspend fun fetchProfile(): StudentProfile? = withCookie { profileApi.fetchProfile(it) }
 
-    override suspend fun fetchLmsProfile(): StudentLmsProfile? =
-        withCookie {
-            apiService.fetchLmsProfile(it)
-        }
+    override suspend fun fetchLmsProfile(): StudentLmsProfile? = withCookie { profileApi.fetchLmsProfile(it) }
 
-    override suspend fun fetchAvatar(): ByteArray? =
-        withCookie {
-            apiService.fetchAvatar(it)
-        }
+    override suspend fun fetchAvatar(): ByteArray? = withCookie { profileApi.fetchAvatar(it) }
 
-    override suspend fun deleteAvatar(): Boolean =
-        withCookieOrFalse {
-            apiService.deleteAvatar(it)
-        }
+    override suspend fun deleteAvatar(): Boolean = withCookieOrFalse { profileApi.deleteAvatar(it) }
 }

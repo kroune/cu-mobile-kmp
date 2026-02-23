@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.interop.UIKitView
+import io.github.kroune.cumobile.data.network.TargetCookieName
 import kotlinx.cinterop.ExperimentalForeignApi
 import platform.CoreGraphics.CGRectMake
 import platform.Foundation.NSHTTPCookie
@@ -14,8 +15,6 @@ import platform.WebKit.WKNavigationDelegateProtocol
 import platform.WebKit.WKWebView
 import platform.WebKit.WKWebViewConfiguration
 import platform.darwin.NSObject
-
-private const val TargetCookieName = "bff.cookie"
 
 @OptIn(ExperimentalForeignApi::class)
 @Composable

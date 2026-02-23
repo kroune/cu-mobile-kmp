@@ -17,8 +17,6 @@ detekt {
 }
 
 object AppInfo {
-    const val APP_VERSION: String = "1.0.1"
-    const val APP_VERSION_INT: Int = 101
     const val LICENSE_TYPE = "GPL-3.0"
 }
 
@@ -38,7 +36,9 @@ kotlin {
     applyDefaultHierarchyTemplate()
 
     cocoapods {
-        version = AppInfo.APP_VERSION
+        version =
+            libs.versions.app.version.name
+                .get()
         license = AppInfo.LICENSE_TYPE
         framework {
             baseName = "ComposeApp"

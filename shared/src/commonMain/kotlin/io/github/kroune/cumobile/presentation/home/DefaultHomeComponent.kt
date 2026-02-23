@@ -5,6 +5,7 @@ import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.data.model.StudentTask
+import io.github.kroune.cumobile.data.model.TaskState
 import io.github.kroune.cumobile.domain.repository.CourseRepository
 import io.github.kroune.cumobile.domain.repository.ProfileRepository
 import io.github.kroune.cumobile.domain.repository.TaskRepository
@@ -87,11 +88,11 @@ class DefaultHomeComponent(
      */
     private suspend fun loadTasks(): List<StudentTask>? {
         val states = listOf(
-            "inProgress",
-            "review",
-            "backlog",
-            "failed",
-            "evaluated",
+            TaskState.InProgress,
+            TaskState.Review,
+            TaskState.Backlog,
+            TaskState.Failed,
+            TaskState.Evaluated,
         )
         return taskRepository.fetchTasks(states)
     }

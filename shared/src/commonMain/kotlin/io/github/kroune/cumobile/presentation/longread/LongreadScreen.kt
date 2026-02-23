@@ -4,7 +4,6 @@ package io.github.kroune.cumobile.presentation.longread
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,7 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -28,6 +26,9 @@ import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import io.github.kroune.cumobile.data.model.LongreadMaterial
 import io.github.kroune.cumobile.presentation.common.AppColors
+import io.github.kroune.cumobile.presentation.common.DetailTopBar
+import io.github.kroune.cumobile.presentation.common.ErrorContent
+import io.github.kroune.cumobile.presentation.common.LoadingContent
 import io.github.kroune.cumobile.presentation.common.formatSizeBytes
 
 /**
@@ -42,7 +43,6 @@ import io.github.kroune.cumobile.presentation.common.formatSizeBytes
 @Composable
 fun LongreadScreen(
     component: LongreadComponent,
-    onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val state by component.state.subscribeAsState()
@@ -52,78 +52,21 @@ fun LongreadScreen(
             .fillMaxSize()
             .background(AppColors.Background),
     ) {
-        LongreadTopBar(
+        DetailTopBar(
             title = state.title,
             onBack = { component.onIntent(LongreadComponent.Intent.Back) },
         )
 
         when {
-            state.isLoading -> LoadingState()
-            state.error != null -> ErrorState(
-                error = state.error!!,
+            state.isLoading -> LoadingContent()
+            state.error != null -> ErrorContent(
+                error = state.error.orEmpty(),
                 onRetry = { component.onIntent(LongreadComponent.Intent.Refresh) },
             )
             else -> MaterialList(
                 state = state,
                 onIntent = component::onIntent,
             )
-        }
-    }
-}
-
-@Composable
-private fun LongreadTopBar(
-    title: String,
-    onBack: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(AppColors.Surface)
-            .padding(horizontal = 8.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        TextButton(onClick = onBack) {
-            Text(text = "\u2190 Назад", color = AppColors.Accent)
-        }
-        Text(
-            text = title,
-            color = AppColors.TextPrimary,
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f).padding(end = 8.dp),
-        )
-    }
-}
-
-@Composable
-private fun LoadingState(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center,
-    ) {
-        CircularProgressIndicator(color = AppColors.Accent)
-    }
-}
-
-@Composable
-private fun ErrorState(
-    error: String,
-    onRetry: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center,
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(text = error, color = AppColors.Error, fontSize = 16.sp)
-            TextButton(onClick = onRetry) {
-                Text(text = "Повторить", color = AppColors.Accent)
-            }
         }
     }
 }

@@ -10,7 +10,7 @@ import platform.Foundation.NSUserDomainMask
  * Uses the app's documents directory.
  */
 @OptIn(ExperimentalForeignApi::class)
-fun dataStorePath(): String {
+internal fun dataStorePath(): String {
     val documentDirectory = NSFileManager.defaultManager.URLForDirectory(
         directory = NSDocumentDirectory,
         inDomain = NSUserDomainMask,

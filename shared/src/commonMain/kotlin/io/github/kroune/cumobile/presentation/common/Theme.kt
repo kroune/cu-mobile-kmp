@@ -3,6 +3,7 @@
 package io.github.kroune.cumobile.presentation.common
 
 import androidx.compose.ui.graphics.Color
+import io.github.kroune.cumobile.data.model.TaskState
 
 /**
  * App color palette matching the Flutter reference app.
@@ -42,13 +43,13 @@ object AppColors {
  */
 fun taskStateLabel(state: String): String =
     when (state) {
-        "backlog" -> "Не начато"
-        "inProgress" -> "В работе"
-        "revision", "rework" -> "Доработка"
-        "review" -> "На проверке"
-        "hasSolution" -> "Есть решение"
-        "failed", "rejected" -> "Не сдано"
-        "evaluated" -> "Проверено"
+        TaskState.Backlog -> "Не начато"
+        TaskState.InProgress -> "В работе"
+        TaskState.Revision, TaskState.Rework -> "Доработка"
+        TaskState.Review -> "На проверке"
+        TaskState.HasSolution -> "Есть решение"
+        TaskState.Failed, TaskState.Rejected -> "Не сдано"
+        TaskState.Evaluated -> "Проверено"
         else -> state
     }
 
@@ -57,14 +58,14 @@ fun taskStateLabel(state: String): String =
  */
 fun taskStateColor(state: String): Color =
     when (state) {
-        "backlog" -> AppColors.TaskBacklog
-        "inProgress" -> AppColors.TaskInProgress
-        "revision" -> AppColors.TaskRevision
-        "rework" -> AppColors.TaskRework
-        "review" -> AppColors.TaskReview
-        "hasSolution" -> AppColors.TaskHasSolution
-        "failed", "rejected" -> AppColors.TaskFailed
-        "evaluated" -> AppColors.TaskEvaluated
+        TaskState.Backlog -> AppColors.TaskBacklog
+        TaskState.InProgress -> AppColors.TaskInProgress
+        TaskState.Revision -> AppColors.TaskRevision
+        TaskState.Rework -> AppColors.TaskRework
+        TaskState.Review -> AppColors.TaskReview
+        TaskState.HasSolution -> AppColors.TaskHasSolution
+        TaskState.Failed, TaskState.Rejected -> AppColors.TaskFailed
+        TaskState.Evaluated -> AppColors.TaskEvaluated
         else -> AppColors.TaskBacklog
     }
 

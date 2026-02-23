@@ -10,7 +10,9 @@ import io.ktor.client.statement.readRawBytes
 import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
+import kotlin.coroutines.cancellation.CancellationException
 
 private val logger = KotlinLogging.logger {}
 
@@ -20,10 +22,10 @@ private val logger = KotlinLogging.logger {}
  * Uses [FileStorage] for local disk operations and [HttpClient]
  * for downloading files from pre-signed URLs.
  */
-class FileRepositoryImpl(
+internal class FileRepositoryImpl(
     private val fileStorage: FileStorage,
     private val httpClient: HttpClient,
-    private val dispatcher: CoroutineDispatcher = Dispatchers.Default,
+    private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : FileRepository {
     override suspend fun listDownloadedFiles(): List<DownloadedFileInfo> =
         withContext(dispatcher) {
@@ -54,6 +56,8 @@ class FileRepositoryImpl(
             } else {
                 false
             }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             logger.error(e) { "Failed to download and save file: $filename" }
             false

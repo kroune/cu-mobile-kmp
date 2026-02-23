@@ -19,10 +19,6 @@ data class GradebookSemester(
     val semesterNumber: Int,
     val grades: List<GradebookGrade> = emptyList(),
 ) {
-    /** Human-readable title, e.g. "2024/2025, семестр 1". */
-    val title: String
-        get() = "$year/${year + 1}, семестр $semesterNumber"
-
     /** Non-elective grades. */
     val regularGrades: List<GradebookGrade>
         get() = grades.filter { !it.isElective }
@@ -54,5 +50,10 @@ data class GradebookGrade(
 ) {
     /** Whether this is an elective subject. */
     val isElective: Boolean
-        get() = subjectType == "elective"
+        get() = subjectType == SubjectType.Elective
+
+    /** Known [subjectType] values. */
+    object SubjectType {
+        const val Elective = "elective"
+    }
 }
