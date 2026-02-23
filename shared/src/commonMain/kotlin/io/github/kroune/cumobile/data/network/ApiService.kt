@@ -17,6 +17,7 @@ import io.github.kroune.cumobile.data.model.TaskComment
 import io.github.kroune.cumobile.data.model.TaskDetails
 import io.github.kroune.cumobile.data.model.TaskEvent
 import io.github.kroune.cumobile.data.model.UploadLinkData
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.delete
@@ -35,6 +36,8 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
+private val logger = KotlinLogging.logger {}
+
 /**
  * Centralized API service for all CU LMS network calls.
  *
@@ -42,6 +45,7 @@ import kotlinx.serialization.json.jsonPrimitive
  * `bff.cookie` value retrieved from [AuthLocalDataSource].
  * Methods return `null` / `false` / empty list on failure, never throw.
  */
+@Suppress("TooManyFunctions")
 class ApiService(
     private val httpClient: HttpClient,
 ) {
@@ -66,7 +70,8 @@ class ApiService(
                 header("Cookie", cookieHeader(cookie))
             }
             response.status == HttpStatusCode.OK
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            logger.error(e) { "Failed to validate auth" }
             false
         }
 
@@ -79,7 +84,8 @@ class ApiService(
                 header("Cookie", cookieHeader(cookie))
             }
             if (response.status == HttpStatusCode.OK) response.body() else null
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            logger.error(e) { "Failed to fetch profile" }
             null
         }
 
@@ -94,7 +100,8 @@ class ApiService(
             } else {
                 null
             }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            logger.error(e) { "Failed to fetch profile raw" }
             null
         }
 
@@ -109,7 +116,8 @@ class ApiService(
             } else {
                 null
             }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            logger.error(e) { "Failed to fetch avatar" }
             null
         }
 
@@ -120,7 +128,8 @@ class ApiService(
                 header("Cookie", cookieHeader(cookie))
             }
             isSuccess(response.status)
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            logger.error(e) { "Failed to delete avatar" }
             false
         }
 
@@ -131,7 +140,8 @@ class ApiService(
                 header("Cookie", cookieHeader(cookie))
             }
             if (response.status == HttpStatusCode.OK) response.body() else null
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            logger.error(e) { "Failed to fetch LMS profile" }
             null
         }
 
@@ -153,7 +163,8 @@ class ApiService(
                 header("Cookie", cookieHeader(cookie))
             }
             if (response.status == HttpStatusCode.OK) response.body() else null
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            logger.error(e) { "Failed to fetch tasks" }
             null
         }
 
@@ -167,7 +178,8 @@ class ApiService(
                 header("Cookie", cookieHeader(cookie))
             }
             if (response.status == HttpStatusCode.OK) response.body() else null
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            logger.error(e) { "Failed to fetch task details for taskId=$taskId" }
             null
         }
 
@@ -181,7 +193,8 @@ class ApiService(
                 header("Cookie", cookieHeader(cookie))
             }
             if (response.status == HttpStatusCode.OK) response.body() else null
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            logger.error(e) { "Failed to fetch task events for taskId=$taskId" }
             null
         }
 
@@ -195,7 +208,8 @@ class ApiService(
                 header("Cookie", cookieHeader(cookie))
             }
             if (response.status == HttpStatusCode.OK) response.body() else null
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            logger.error(e) { "Failed to fetch task comments for taskId=$taskId" }
             null
         }
 
@@ -210,7 +224,8 @@ class ApiService(
                 contentType(ContentType.Application.Json)
             }
             isSuccess(response.status)
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            logger.error(e) { "Failed to start task taskId=$taskId" }
             false
         }
 
@@ -238,7 +253,8 @@ class ApiService(
                 )
             }
             isSuccess(response.status)
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            logger.error(e) { "Failed to submit task taskId=$taskId" }
             false
         }
 
@@ -261,7 +277,8 @@ class ApiService(
                 setBody(mapOf("lateDays" to lateDays))
             }
             isSuccess(response.status)
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            logger.error(e) { "Failed to prolong late days for taskId=$taskId" }
             false
         }
 
@@ -278,7 +295,8 @@ class ApiService(
                 contentType(ContentType.Application.Json)
             }
             isSuccess(response.status)
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            logger.error(e) { "Failed to cancel late days for taskId=$taskId" }
             false
         }
 
@@ -315,7 +333,8 @@ class ApiService(
             } else {
                 null
             }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            logger.error(e) { "Failed to create comment for taskId=$taskId" }
             null
         }
 
@@ -328,7 +347,8 @@ class ApiService(
                 header("Cookie", cookieHeader(cookie))
             }
             if (response.status == HttpStatusCode.OK) response.body() else null
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            logger.error(e) { "Failed to fetch courses" }
             null
         }
 
@@ -342,7 +362,8 @@ class ApiService(
                 header("Cookie", cookieHeader(cookie))
             }
             if (response.status == HttpStatusCode.OK) response.body() else null
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            logger.error(e) { "Failed to fetch course overview for courseId=$courseId" }
             null
         }
 
@@ -359,7 +380,8 @@ class ApiService(
                 header("Cookie", cookieHeader(cookie))
             }
             if (response.status == HttpStatusCode.OK) response.body() else null
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            logger.error(e) { "Failed to fetch longread materials for longreadId=$longreadId" }
             null
         }
 
@@ -373,7 +395,8 @@ class ApiService(
                 header("Cookie", cookieHeader(cookie))
             }
             if (response.status == HttpStatusCode.OK) response.body() else null
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            logger.error(e) { "Failed to fetch material materialId=$materialId" }
             null
         }
 
@@ -398,7 +421,8 @@ class ApiService(
             } else {
                 null
             }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            logger.error(e) { "Failed to get download link for filename=$filename" }
             null
         }
 
@@ -421,7 +445,8 @@ class ApiService(
                 header("Cookie", cookieHeader(cookie))
             }
             if (response.status == HttpStatusCode.OK) response.body() else null
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            logger.error(e) { "Failed to get upload link for filename=$filename" }
             null
         }
 
@@ -458,7 +483,8 @@ class ApiService(
             } else {
                 null
             }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            logger.error(e) { "Failed to fetch notifications for category=$category" }
             null
         }
 
@@ -471,7 +497,8 @@ class ApiService(
                 header("Cookie", cookieHeader(cookie))
             }
             if (response.status == HttpStatusCode.OK) response.body() else null
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            logger.error(e) { "Failed to fetch performance" }
             null
         }
 
@@ -487,7 +514,8 @@ class ApiService(
                 header("Cookie", cookieHeader(cookie))
             }
             if (response.status == HttpStatusCode.OK) response.body() else null
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            logger.error(e) { "Failed to fetch course exercises for courseId=$courseId" }
             null
         }
 
@@ -503,7 +531,8 @@ class ApiService(
                 header("Cookie", cookieHeader(cookie))
             }
             if (response.status == HttpStatusCode.OK) response.body() else null
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            logger.error(e) { "Failed to fetch course performance for courseId=$courseId" }
             null
         }
 
@@ -514,7 +543,8 @@ class ApiService(
                 header("Cookie", cookieHeader(cookie))
             }
             if (response.status == HttpStatusCode.OK) response.body() else null
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            logger.error(e) { "Failed to fetch gradebook" }
             null
         }
 }

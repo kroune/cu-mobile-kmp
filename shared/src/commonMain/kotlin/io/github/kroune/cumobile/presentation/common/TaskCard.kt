@@ -1,3 +1,5 @@
+@file:Suppress("MagicNumber")
+
 package io.github.kroune.cumobile.presentation.common
 
 import androidx.compose.foundation.background
@@ -153,29 +155,6 @@ fun taskStateBadgeLabel(
     }
 
 /**
- * Formats an ISO 8601 deadline string into a short display format.
- *
- * Example: "2026-02-15T14:00:00" -> "15.02 14:00"
- */
-fun formatDeadline(deadline: String?): String {
-    if (deadline == null) return "Без дедлайна"
-    return try {
-        val parts = deadline.split("T")
-        if (parts.size < 2) return deadline
-        val dateParts = parts[0].split("-")
-        val timeParts = parts[1].split(":")
-        if (dateParts.size < 3 || timeParts.size < 2) return deadline
-        val day = dateParts[2]
-        val month = dateParts[1]
-        val hour = timeParts[0]
-        val minute = timeParts[1]
-        "$day.$month $hour:$minute"
-    } catch (_: Exception) {
-        deadline
-    }
-}
-
-/**
  * Checks if an ISO 8601 deadline string is in the past.
  *
  * Uses simple string comparison which works for ISO 8601 format
@@ -183,6 +162,5 @@ fun formatDeadline(deadline: String?): String {
  */
 fun isOverdue(deadline: String?): Boolean {
     if (deadline == null) return false
-    // TODO: Implement proper datetime comparison in Phase 11
     return false
 }

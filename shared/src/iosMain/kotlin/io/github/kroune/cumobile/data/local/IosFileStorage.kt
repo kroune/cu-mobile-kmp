@@ -1,5 +1,6 @@
 package io.github.kroune.cumobile.data.local
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.cinterop.ExperimentalForeignApi
 import platform.Foundation.NSDocumentDirectory
 import platform.Foundation.NSFileManager
@@ -9,6 +10,8 @@ import platform.Foundation.NSString
 import platform.Foundation.NSUserDomainMask
 import platform.Foundation.stringByAppendingPathComponent
 import platform.Foundation.writeToFile
+
+private val logger = KotlinLogging.logger {}
 
 /**
  * iOS implementation of [FileStorage].
@@ -109,7 +112,8 @@ class IosFileStorage : FileStorage {
                 .stringByAppendingPathComponent(filename)
             val nsData = bytes.toNSData()
             nsData.writeToFile(path, atomically = true)
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            logger.error(e) { "Failed to save file: $filename" }
             false
         }
 

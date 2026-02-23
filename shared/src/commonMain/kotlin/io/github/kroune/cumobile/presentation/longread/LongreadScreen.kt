@@ -1,3 +1,5 @@
+@file:Suppress("MagicNumber")
+
 package io.github.kroune.cumobile.presentation.longread
 
 import androidx.compose.foundation.background
@@ -26,6 +28,7 @@ import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import io.github.kroune.cumobile.data.model.LongreadMaterial
 import io.github.kroune.cumobile.presentation.common.AppColors
+import io.github.kroune.cumobile.presentation.common.formatSizeBytes
 
 /**
  * Main longread screen displaying materials within a longread.
@@ -160,7 +163,7 @@ private fun MarkdownCard(
     material: LongreadMaterial,
     modifier: Modifier = Modifier,
 ) {
-    val content = material.viewContent?.let { stripHtmlTags(it) } ?: ""
+    val content = material.viewContent?.let { stripHtmlTags(it) }.orEmpty()
     if (content.isBlank()) return
 
     Column(
@@ -196,7 +199,7 @@ private fun FileCard(
     modifier: Modifier = Modifier,
 ) {
     val filename = material.filename ?: "Файл"
-    val version = material.version ?: ""
+    val version = material.version.orEmpty()
 
     Row(
         modifier = modifier
@@ -218,7 +221,7 @@ private fun FileCard(
             )
             material.length?.let { size ->
                 Text(
-                    text = formatFileSize(size),
+                    text = formatSizeBytes(size.toLong()),
                     color = AppColors.TextSecondary,
                     fontSize = 12.sp,
                 )
@@ -281,12 +284,3 @@ internal fun stripHtmlTags(html: String): String =
         .replace("&gt;", ">")
         .replace("&quot;", "\"")
         .trim()
-
-/** Formats a file size in bytes to a human-readable string. */
-internal fun formatFileSize(bytes: Int): String {
-    if (bytes < 1024) return "$bytes Б"
-    val kb = bytes / 1024.0
-    if (kb < 1024) return "${String.format("%.1f", kb)} КБ"
-    val mb = kb / 1024.0
-    return "${String.format("%.1f", mb)} МБ"
-}

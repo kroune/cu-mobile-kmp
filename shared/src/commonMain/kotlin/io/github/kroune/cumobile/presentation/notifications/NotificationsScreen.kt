@@ -1,3 +1,5 @@
+@file:Suppress("TooManyFunctions", "MagicNumber")
+
 package io.github.kroune.cumobile.presentation.notifications
 
 import androidx.compose.foundation.background
@@ -33,6 +35,7 @@ import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import io.github.kroune.cumobile.data.model.NotificationItem
 import io.github.kroune.cumobile.presentation.common.AppColors
+import io.github.kroune.cumobile.presentation.common.formatDateTimeFull
 
 /**
  * Notifications screen with two tabs: "Учеба" and "Другое".
@@ -254,7 +257,7 @@ private fun NotificationCard(
             // Date
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = formatNotificationDate(item.createdAt),
+                text = formatDateTimeFull(item.createdAt),
                 color = AppColors.TextSecondary,
                 fontSize = 11.sp,
             )
@@ -327,19 +330,3 @@ private fun notificationIconEmoji(
             "\uD83D\uDD14" // 🔔
         }
     }
-
-/**
- * Formats an ISO 8601 datetime string to "dd.MM.yyyy HH:mm".
- *
- * Basic parser for common formats. Falls back to raw string
- * if parsing fails.
- */
-internal fun formatNotificationDate(isoDate: String): String {
-    // Expected: "2026-02-22T14:30:00Z" or "2026-02-22T14:30:00+03:00"
-    if (isoDate.length < 16) return isoDate
-    val date = isoDate.substring(0, 10) // "2026-02-22"
-    val time = isoDate.substring(11, 16) // "14:30"
-    val parts = date.split("-")
-    if (parts.size != 3) return isoDate
-    return "${parts[2]}.${parts[1]}.${parts[0]} $time"
-}

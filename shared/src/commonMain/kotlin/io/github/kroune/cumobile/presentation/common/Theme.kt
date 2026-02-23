@@ -1,3 +1,5 @@
+@file:Suppress("MatchingDeclarationName", "MagicNumber")
+
 package io.github.kroune.cumobile.presentation.common
 
 import androidx.compose.ui.graphics.Color

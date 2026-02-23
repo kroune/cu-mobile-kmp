@@ -8,7 +8,6 @@ import io.github.kroune.cumobile.data.model.TaskDetails
 import io.github.kroune.cumobile.data.model.TaskEvent
 import io.github.kroune.cumobile.data.network.ApiService
 import io.github.kroune.cumobile.domain.repository.TaskRepository
-import kotlinx.coroutines.flow.first
 
 /**
  * Implementation of [TaskRepository].
@@ -17,64 +16,63 @@ import kotlinx.coroutines.flow.first
  * all network calls to [ApiService].
  */
 class TaskRepositoryImpl(
-    private val authLocal: AuthLocalDataSource,
-    private val apiService: ApiService,
-) : TaskRepository {
-    private suspend fun cookie(): String? = authLocal.cookieFlow.first()
+    authLocal: AuthLocalDataSource,
+    apiService: ApiService,
+) : CookieAwareRepository(authLocal, apiService),
+    TaskRepository {
+    override suspend fun fetchTasks(states: List<String>): List<StudentTask>? =
+        withCookie {
+            apiService.fetchTasks(it, states)
+        }
 
-    override suspend fun fetchTasks(states: List<String>): List<StudentTask>? {
-        val c = cookie() ?: return null
-        return apiService.fetchTasks(c, states)
-    }
+    override suspend fun fetchTaskDetails(taskId: Int): TaskDetails? =
+        withCookie {
+            apiService.fetchTaskDetails(it, taskId)
+        }
 
-    override suspend fun fetchTaskDetails(taskId: Int): TaskDetails? {
-        val c = cookie() ?: return null
-        return apiService.fetchTaskDetails(c, taskId)
-    }
+    override suspend fun fetchTaskEvents(taskId: Int): List<TaskEvent>? =
+        withCookie {
+            apiService.fetchTaskEvents(it, taskId)
+        }
 
-    override suspend fun fetchTaskEvents(taskId: Int): List<TaskEvent>? {
-        val c = cookie() ?: return null
-        return apiService.fetchTaskEvents(c, taskId)
-    }
+    override suspend fun fetchTaskComments(taskId: Int): List<TaskComment>? =
+        withCookie {
+            apiService.fetchTaskComments(it, taskId)
+        }
 
-    override suspend fun fetchTaskComments(taskId: Int): List<TaskComment>? {
-        val c = cookie() ?: return null
-        return apiService.fetchTaskComments(c, taskId)
-    }
-
-    override suspend fun startTask(taskId: Int): Boolean {
-        val c = cookie() ?: return false
-        return apiService.startTask(c, taskId)
-    }
+    override suspend fun startTask(taskId: Int): Boolean =
+        withCookieOrFalse {
+            apiService.startTask(it, taskId)
+        }
 
     override suspend fun submitTask(
         taskId: Int,
         solutionUrl: String?,
         attachments: List<MaterialAttachment>,
-    ): Boolean {
-        val c = cookie() ?: return false
-        return apiService.submitTask(c, taskId, solutionUrl, attachments)
-    }
+    ): Boolean =
+        withCookieOrFalse {
+            apiService.submitTask(it, taskId, solutionUrl, attachments)
+        }
 
     override suspend fun prolongLateDays(
         taskId: Int,
         lateDays: Int,
-    ): Boolean {
-        val c = cookie() ?: return false
-        return apiService.prolongLateDays(c, taskId, lateDays)
-    }
+    ): Boolean =
+        withCookieOrFalse {
+            apiService.prolongLateDays(it, taskId, lateDays)
+        }
 
-    override suspend fun cancelLateDays(taskId: Int): Boolean {
-        val c = cookie() ?: return false
-        return apiService.cancelLateDays(c, taskId)
-    }
+    override suspend fun cancelLateDays(taskId: Int): Boolean =
+        withCookieOrFalse {
+            apiService.cancelLateDays(it, taskId)
+        }
 
     override suspend fun createComment(
         taskId: Int,
         content: String,
         attachments: List<MaterialAttachment>,
-    ): Int? {
-        val c = cookie() ?: return null
-        return apiService.createComment(c, taskId, content, attachments)
-    }
+    ): Int? =
+        withCookie {
+            apiService.createComment(it, taskId, content, attachments)
+        }
 }

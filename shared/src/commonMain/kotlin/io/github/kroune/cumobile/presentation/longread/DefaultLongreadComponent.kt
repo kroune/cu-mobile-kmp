@@ -3,14 +3,12 @@ package io.github.kroune.cumobile.presentation.longread
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
-import com.arkivanov.essenty.lifecycle.Lifecycle
+import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.data.model.LongreadMaterial
 import io.github.kroune.cumobile.domain.repository.ContentRepository
 import io.github.kroune.cumobile.domain.repository.TaskRepository
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 /**
@@ -19,26 +17,25 @@ import kotlinx.coroutines.launch
  * Loads materials for a longread and manages task actions
  * (start, submit, comments, late days) for coding materials.
  */
+@Suppress("TooManyFunctions")
 class DefaultLongreadComponent(
     componentContext: ComponentContext,
-    longreadId: Int,
-    courseId: Int,
-    themeId: Int,
+    params: LongreadParams,
     private val contentRepository: ContentRepository,
     private val taskRepository: TaskRepository,
     private val onBack: () -> Unit,
     private val onDownloadReady: (url: String, filename: String) -> Unit,
 ) : LongreadComponent,
     ComponentContext by componentContext {
-    private val scope = CoroutineScope(
+    private val scope = coroutineScope(
         Dispatchers.Main.immediate + SupervisorJob(),
     )
 
     private val _state = MutableValue(
         LongreadComponent.State(
-            longreadId = longreadId,
-            courseId = courseId,
-            themeId = themeId,
+            longreadId = params.longreadId,
+            courseId = params.courseId,
+            themeId = params.themeId,
         ),
     )
     override val state: Value<LongreadComponent.State> = _state
@@ -65,13 +62,6 @@ class DefaultLongreadComponent(
     }
 
     init {
-        lifecycle.subscribe(
-            object : Lifecycle.Callbacks {
-                override fun onDestroy() {
-                    scope.cancel()
-                }
-            },
-        )
         loadMaterials()
     }
 

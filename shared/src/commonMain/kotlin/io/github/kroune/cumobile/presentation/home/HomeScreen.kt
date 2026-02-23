@@ -1,3 +1,5 @@
+@file:Suppress("MagicNumber")
+
 package io.github.kroune.cumobile.presentation.home
 
 import androidx.compose.foundation.background

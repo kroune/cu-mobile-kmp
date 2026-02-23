@@ -107,7 +107,7 @@ private fun TaskHeader(
             material.estimation?.let { est ->
                 Text(
                     text = "Макс. балл: ${est.maxScore}" +
-                        (est.activityName?.let { " \u2022 $it" } ?: ""),
+                        (est.activityName?.let { " \u2022 $it" }.orEmpty()),
                     color = AppColors.TextSecondary,
                     fontSize = 12.sp,
                 )
@@ -264,26 +264,7 @@ private fun SolutionTab(
     ) {
         // Existing solution display
         taskDetails.solutionUrl?.let { url ->
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(AppColors.Accent.copy(alpha = 0.1f))
-                    .padding(12.dp),
-            ) {
-                Text(
-                    text = "Текущее решение:",
-                    color = AppColors.TextSecondary,
-                    fontSize = 12.sp,
-                )
-                Text(
-                    text = url,
-                    color = AppColors.Accent,
-                    fontSize = 13.sp,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
+            ExistingSolutionDisplay(url = url)
         }
 
         // Score display for evaluated tasks
@@ -296,50 +277,98 @@ private fun SolutionTab(
 
         // Solution URL input (only for submittable states)
         if (canSubmitSolution(taskDetails.state)) {
-            OutlinedTextField(
-                value = solutionUrl,
-                onValueChange = { url ->
-                    onIntent(LongreadComponent.Intent.UpdateSolutionUrl(url))
-                },
-                label = { Text("URL решения") },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                keyboardActions = KeyboardActions(
-                    onDone = {
-                        onIntent(LongreadComponent.Intent.SubmitSolution)
-                    },
-                ),
-                modifier = Modifier.fillMaxWidth(),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = AppColors.TextPrimary,
-                    unfocusedTextColor = AppColors.TextPrimary,
-                    focusedBorderColor = AppColors.Accent,
-                    unfocusedBorderColor = AppColors.TextSecondary,
-                    focusedLabelColor = AppColors.Accent,
-                    unfocusedLabelColor = AppColors.TextSecondary,
-                    cursorColor = AppColors.Accent,
-                ),
+            SolutionUrlInput(
+                solutionUrl = solutionUrl,
+                isSubmitting = isSubmitting,
+                onIntent = onIntent,
             )
+        }
+    }
+}
 
-            Button(
-                onClick = {
+/** Displays the current solution URL. */
+@Composable
+private fun ExistingSolutionDisplay(
+    url: String,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .background(AppColors.Accent.copy(alpha = 0.1f))
+            .padding(12.dp),
+    ) {
+        Text(
+            text = "Текущее решение:",
+            color = AppColors.TextSecondary,
+            fontSize = 12.sp,
+        )
+        Text(
+            text = url,
+            color = AppColors.Accent,
+            fontSize = 13.sp,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
+
+/** Solution URL text field and submit button. */
+@Composable
+private fun SolutionUrlInput(
+    solutionUrl: String,
+    isSubmitting: Boolean,
+    onIntent: (LongreadComponent.Intent) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        OutlinedTextField(
+            value = solutionUrl,
+            onValueChange = { url ->
+                onIntent(LongreadComponent.Intent.UpdateSolutionUrl(url))
+            },
+            label = { Text("URL решения") },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(
+                onDone = {
                     onIntent(LongreadComponent.Intent.SubmitSolution)
                 },
-                enabled = !isSubmitting,
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = AppColors.Accent,
-                ),
-                shape = RoundedCornerShape(8.dp),
-            ) {
-                if (isSubmitting) {
-                    CircularProgressIndicator(
-                        color = AppColors.Background,
-                        modifier = Modifier.padding(4.dp),
-                    )
-                } else {
-                    Text(text = "Отправить решение", color = AppColors.Background)
-                }
+            ),
+            modifier = Modifier.fillMaxWidth(),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = AppColors.TextPrimary,
+                unfocusedTextColor = AppColors.TextPrimary,
+                focusedBorderColor = AppColors.Accent,
+                unfocusedBorderColor = AppColors.TextSecondary,
+                focusedLabelColor = AppColors.Accent,
+                unfocusedLabelColor = AppColors.TextSecondary,
+                cursorColor = AppColors.Accent,
+            ),
+        )
+
+        Button(
+            onClick = {
+                onIntent(LongreadComponent.Intent.SubmitSolution)
+            },
+            enabled = !isSubmitting,
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = AppColors.Accent,
+            ),
+            shape = RoundedCornerShape(8.dp),
+        ) {
+            if (isSubmitting) {
+                CircularProgressIndicator(
+                    color = AppColors.Background,
+                    modifier = Modifier.padding(4.dp),
+                )
+            } else {
+                Text(text = "Отправить решение", color = AppColors.Background)
             }
         }
     }

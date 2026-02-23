@@ -5,18 +5,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.pages.ChildPages
@@ -63,7 +59,7 @@ fun MainScreen(component: MainComponent) {
         ) {
             TopBar(
                 title = TAB_LABELS[selectedIndex],
-                profileInitials = homeState?.profileInitials ?: "",
+                profileInitials = homeState?.profileInitials.orEmpty(),
                 lateDaysBalance = homeState?.lateDaysBalance,
                 onNotificationsClick = { component.navigateToNotifications() },
                 onProfileClick = { component.navigateToProfile() },
@@ -189,53 +185,6 @@ private fun DetailOverlay(
                     component = instance.component,
                     onBack = { component.navigateDetailBack() },
                 )
-            }
-        }
-    }
-}
-
-/**
- * Generic placeholder for detail screens not yet implemented.
- */
-@Composable
-private fun DetailPlaceholder(
-    title: String,
-    onBack: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(AppColors.Background)
-            .padding(),
-    ) {
-        TopBar(
-            title = title,
-            profileInitials = "",
-            lateDaysBalance = null,
-            onNotificationsClick = {},
-            onProfileClick = {},
-        )
-
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(AppColors.Background),
-            contentAlignment = Alignment.Center,
-        ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    text = title,
-                    color = AppColors.TextPrimary,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                )
-                TextButton(onClick = onBack) {
-                    Text(
-                        text = "← Назад",
-                        color = AppColors.Accent,
-                    )
-                }
             }
         }
     }

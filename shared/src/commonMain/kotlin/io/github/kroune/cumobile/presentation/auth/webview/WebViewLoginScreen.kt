@@ -17,7 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 
-private const val AUTH_URL = "https://my.centraluniversity.ru"
+private const val AuthUrl = "https://my.centraluniversity.ru"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,7 +47,7 @@ fun WebViewLoginScreen(component: WebViewLoginComponent) {
 
         Box(modifier = Modifier.fillMaxSize()) {
             PlatformWebView(
-                url = AUTH_URL,
+                url = AuthUrl,
                 onCookieCaptured = { cookie ->
                     component.onIntent(WebViewLoginComponent.Intent.CookieCaptured(cookie))
                 },

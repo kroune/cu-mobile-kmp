@@ -27,8 +27,14 @@ interface ProfileComponent {
         val initials: String
             get() {
                 val p = profile ?: return ""
-                val first = p.firstName.firstOrNull()?.uppercase() ?: ""
-                val last = p.lastName.firstOrNull()?.uppercase() ?: ""
+                val first = p.firstName
+                    .firstOrNull()
+                    ?.uppercase()
+                    .orEmpty()
+                val last = p.lastName
+                    .firstOrNull()
+                    ?.uppercase()
+                    .orEmpty()
                 return "$first$last"
             }
 
@@ -38,7 +44,7 @@ interface ProfileComponent {
                 "bachelor" -> "Бакалавриат"
                 "master" -> "Магистратура"
                 "specialist" -> "Специалитет"
-                else -> profile?.educationLevel ?: ""
+                else -> profile?.educationLevel.orEmpty()
             }
 
         /**
@@ -47,8 +53,9 @@ interface ProfileComponent {
          */
         val otherEmails: List<io.github.kroune.cumobile.data.model.EmailInfo>
             get() {
-                val uni = profile?.universityEmail ?: return profile?.emails ?: emptyList()
-                return profile?.emails?.filter { it.value != uni } ?: emptyList()
+                val p = profile ?: return emptyList()
+                val uni = p.universityEmail ?: return p.emails
+                return p.emails.filter { it.value != uni }
             }
 
         override fun equals(other: Any?): Boolean {

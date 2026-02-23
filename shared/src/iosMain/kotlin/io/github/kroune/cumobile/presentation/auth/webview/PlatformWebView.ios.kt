@@ -15,7 +15,7 @@ import platform.WebKit.WKWebView
 import platform.WebKit.WKWebViewConfiguration
 import platform.darwin.NSObject
 
-private const val TARGET_COOKIE_NAME = "bff.cookie"
+private const val TargetCookieName = "bff.cookie"
 
 @OptIn(ExperimentalForeignApi::class)
 @Composable
@@ -68,7 +68,7 @@ private class WebViewNavigationDelegate(
             if (cookies == null) return@getAllCookies
             for (item in cookies) {
                 val httpCookie = item as? NSHTTPCookie ?: continue
-                if (httpCookie.name == TARGET_COOKIE_NAME && httpCookie.value.isNotEmpty()) {
+                if (httpCookie.name == TargetCookieName && httpCookie.value.isNotEmpty()) {
                     cookieFound = true
                     onCookieCaptured(httpCookie.value)
                     return@getAllCookies

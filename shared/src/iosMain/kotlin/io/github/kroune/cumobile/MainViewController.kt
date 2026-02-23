@@ -10,6 +10,7 @@ import io.github.kroune.cumobile.domain.repository.NotificationRepository
 import io.github.kroune.cumobile.domain.repository.PerformanceRepository
 import io.github.kroune.cumobile.domain.repository.ProfileRepository
 import io.github.kroune.cumobile.domain.repository.TaskRepository
+import io.github.kroune.cumobile.presentation.main.MainDependencies
 import io.github.kroune.cumobile.presentation.root.DefaultRootComponent
 import io.github.kroune.cumobile.presentation.root.RootComponent
 import org.koin.mp.KoinPlatform
@@ -22,9 +23,7 @@ fun rootViewController(root: RootComponent) = ComposeUIViewController { App(root
  */
 fun createRootComponent(componentContext: ComponentContext): DefaultRootComponent {
     val koin = KoinPlatform.getKoin()
-    return DefaultRootComponent(
-        componentContext = componentContext,
-        authRepository = koin.get<AuthRepository>(),
+    val mainDependencies = MainDependencies(
         taskRepository = koin.get<TaskRepository>(),
         courseRepository = koin.get<CourseRepository>(),
         profileRepository = koin.get<ProfileRepository>(),
@@ -32,5 +31,10 @@ fun createRootComponent(componentContext: ComponentContext): DefaultRootComponen
         contentRepository = koin.get<ContentRepository>(),
         notificationRepository = koin.get<NotificationRepository>(),
         fileRepository = koin.get<FileRepository>(),
+    )
+    return DefaultRootComponent(
+        componentContext = componentContext,
+        authRepository = koin.get<AuthRepository>(),
+        mainDependencies = mainDependencies,
     )
 }

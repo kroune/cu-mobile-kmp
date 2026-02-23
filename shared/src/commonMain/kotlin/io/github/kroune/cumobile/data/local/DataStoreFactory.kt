@@ -17,4 +17,4 @@ fun createDataStore(producePath: () -> String): DataStore<Preferences> =
     )
 
 /** Common DataStore file name used across platforms. */
-internal const val DATA_STORE_FILE_NAME = "cumobile_prefs.preferences_pb"
+internal const val DataStoreFileName = "cumobile_prefs.preferences_pb"

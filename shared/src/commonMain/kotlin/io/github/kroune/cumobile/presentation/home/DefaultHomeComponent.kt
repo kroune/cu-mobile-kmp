@@ -3,16 +3,17 @@ package io.github.kroune.cumobile.presentation.home
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
-import com.arkivanov.essenty.lifecycle.Lifecycle
+import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.data.model.StudentTask
 import io.github.kroune.cumobile.domain.repository.CourseRepository
 import io.github.kroune.cumobile.domain.repository.ProfileRepository
 import io.github.kroune.cumobile.domain.repository.TaskRepository
-import kotlinx.coroutines.CoroutineScope
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+
+private val logger = KotlinLogging.logger {}
 
 /**
  * Default implementation of [HomeComponent].
@@ -29,7 +30,7 @@ class DefaultHomeComponent(
     private val onOpenCourse: (Int) -> Unit,
 ) : HomeComponent,
     ComponentContext by componentContext {
-    private val scope = CoroutineScope(
+    private val scope = coroutineScope(
         Dispatchers.Main.immediate + SupervisorJob(),
     )
 
@@ -37,13 +38,6 @@ class DefaultHomeComponent(
     override val state: Value<HomeComponent.State> = _state
 
     init {
-        lifecycle.subscribe(
-            object : Lifecycle.Callbacks {
-                override fun onDestroy() {
-                    scope.cancel()
-                }
-            },
-        )
         loadData()
     }
 
@@ -65,8 +59,8 @@ class DefaultHomeComponent(
                 val lmsProfile = profileRepository.fetchLmsProfile()
 
                 _state.value = _state.value.copy(
-                    tasks = tasks ?: emptyList(),
-                    courses = courses ?: emptyList(),
+                    tasks = tasks.orEmpty(),
+                    courses = courses.orEmpty(),
                     profileInitials = initials,
                     lateDaysBalance = lmsProfile?.lateDaysBalance,
                     isLoading = false,
@@ -77,6 +71,7 @@ class DefaultHomeComponent(
                     },
                 )
             } catch (e: Exception) {
+                logger.error(e) { "Failed to load home data" }
                 _state.value = _state.value.copy(
                     isLoading = false,
                     error = "Ошибка: ${e.message}",
@@ -107,8 +102,14 @@ class DefaultHomeComponent(
      */
     private suspend fun loadProfileInitials(): String {
         val profile = profileRepository.fetchProfile() ?: return ""
-        val first = profile.firstName.firstOrNull()?.uppercase() ?: ""
-        val last = profile.lastName.firstOrNull()?.uppercase() ?: ""
+        val first = profile.firstName
+            .firstOrNull()
+            ?.uppercase()
+            .orEmpty()
+        val last = profile.lastName
+            .firstOrNull()
+            ?.uppercase()
+            .orEmpty()
         return "$first$last"
     }
 }

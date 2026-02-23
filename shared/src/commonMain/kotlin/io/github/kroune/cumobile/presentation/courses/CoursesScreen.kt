@@ -1,3 +1,5 @@
+@file:Suppress("TooManyFunctions", "MagicNumber")
+
 package io.github.kroune.cumobile.presentation.courses
 
 import androidx.compose.foundation.background

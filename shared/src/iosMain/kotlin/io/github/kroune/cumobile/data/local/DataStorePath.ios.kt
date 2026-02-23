@@ -18,5 +18,5 @@ fun dataStorePath(): String {
         create = false,
         error = null,
     )
-    return requireNotNull(documentDirectory).path + "/$DATA_STORE_FILE_NAME"
+    return requireNotNull(documentDirectory).path + "/$DataStoreFileName"
 }

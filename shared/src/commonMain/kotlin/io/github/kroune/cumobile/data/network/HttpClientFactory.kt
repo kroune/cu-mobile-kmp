@@ -23,9 +23,9 @@ fun createHttpClient(): HttpClient =
             )
         }
         defaultRequest {
-            url(BASE_URL)
+            url(BaseUrl)
         }
     }
 
 /** Base URL for the CU LMS API. */
-internal const val BASE_URL = "https://my.centraluniversity.ru/api/"
+internal const val BaseUrl = "https://my.centraluniversity.ru/api/"

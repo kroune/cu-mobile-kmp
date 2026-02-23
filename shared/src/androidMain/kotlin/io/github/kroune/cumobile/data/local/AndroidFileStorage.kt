@@ -1,7 +1,10 @@
 package io.github.kroune.cumobile.data.local
 
 import android.content.Context
+import io.github.oshai.kotlinlogging.KotlinLogging
 import java.io.File
+
+private val logger = KotlinLogging.logger {}
 
 /**
  * Android implementation of [FileStorage].
@@ -54,7 +57,8 @@ class AndroidFileStorage(
             val file = File(downloadsDir, filename)
             file.writeBytes(bytes)
             true
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            logger.error(e) { "Failed to save file: $filename" }
             false
         }
 

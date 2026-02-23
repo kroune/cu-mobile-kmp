@@ -1,3 +1,5 @@
+@file:Suppress("MagicNumber")
+
 package io.github.kroune.cumobile.presentation.longread
 
 import androidx.compose.foundation.background
@@ -29,6 +31,8 @@ import io.github.kroune.cumobile.data.model.TaskDetails
 import io.github.kroune.cumobile.data.model.TaskEvent
 import io.github.kroune.cumobile.presentation.common.AppColors
 import io.github.kroune.cumobile.presentation.common.StatusBadge
+import io.github.kroune.cumobile.presentation.common.formatDateTime
+import io.github.kroune.cumobile.presentation.common.formatDeadline
 import io.github.kroune.cumobile.presentation.common.taskStateColor
 import io.github.kroune.cumobile.presentation.common.taskStateLabel
 
@@ -206,8 +210,8 @@ private fun TaskInfoSummary(
     ) {
         InfoRow(
             label = "Статус",
-            value = taskStateLabel(taskDetails.state ?: ""),
-            valueColor = taskStateColor(taskDetails.state ?: ""),
+            value = taskStateLabel(taskDetails.state.orEmpty()),
+            valueColor = taskStateColor(taskDetails.state.orEmpty()),
         )
         InfoRow(
             label = "Оценка",
@@ -215,7 +219,7 @@ private fun TaskInfoSummary(
         )
         InfoRow(
             label = "Дедлайн",
-            value = io.github.kroune.cumobile.presentation.common.formatDeadline(
+            value = formatDeadline(
                 taskDetails.deadline,
             ),
         )
@@ -357,21 +361,3 @@ private fun eventTypeColor(type: String): androidx.compose.ui.graphics.Color =
         "late_days_prolonged", "late_days_cancelled" -> AppColors.TextSecondary
         else -> AppColors.TextSecondary
     }
-
-/**
- * Formats an ISO 8601 datetime string into a short display format.
- *
- * Example: "2026-02-15T14:00:00.000Z" -> "15.02 14:00"
- */
-internal fun formatDateTime(dateTime: String): String {
-    return try {
-        val parts = dateTime.split("T")
-        if (parts.size < 2) return dateTime
-        val dateParts = parts[0].split("-")
-        val timeParts = parts[1].split(":")
-        if (dateParts.size < 3 || timeParts.size < 2) return dateTime
-        "${dateParts[2]}.${dateParts[1]} ${timeParts[0]}:${timeParts[1]}"
-    } catch (_: Exception) {
-        dateTime
-    }
-}

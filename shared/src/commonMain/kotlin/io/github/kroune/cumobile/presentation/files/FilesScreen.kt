@@ -1,3 +1,5 @@
+@file:Suppress("TooManyFunctions", "MagicNumber")
+
 package io.github.kroune.cumobile.presentation.files
 
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -32,8 +34,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import io.github.kroune.cumobile.data.local.DownloadedFileInfo
-import io.github.kroune.cumobile.data.local.formatSizeBytes
 import io.github.kroune.cumobile.presentation.common.AppColors
+import io.github.kroune.cumobile.presentation.common.formatEpochDate
+import io.github.kroune.cumobile.presentation.common.formatSizeBytes
 
 /**
  * Files tab screen displaying locally downloaded files.
@@ -217,7 +220,7 @@ private fun FileRow(
             Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = "${formatSizeBytes(file.sizeBytes)} • ${
-                    formatDate(file.lastModifiedMillis)
+                    formatEpochDate(file.lastModifiedMillis)
                 }",
                 color = AppColors.TextSecondary,
                 fontSize = 12.sp,
@@ -347,70 +350,3 @@ private fun extensionColor(ext: String) =
         "MP4", "MOV", "AVI" -> AppColors.CategoryBusiness
         else -> AppColors.TextSecondary
     }
-
-/**
- * Formats a millisecond timestamp to a date string (dd.MM.yyyy).
- *
- * Uses manual calculation to avoid JVM-only APIs.
- */
-private fun formatDate(millis: Long): String {
-    if (millis <= 0L) return ""
-    val totalDays = (millis / 86_400_000L).toInt()
-    val date = daysToDate(totalDays)
-    val day = date.first.toString().padStart(2, '0')
-    val month = date.second.toString().padStart(2, '0')
-    return "$day.$month.${date.third}"
-}
-
-/**
- * Converts days since epoch to (day, month, year) triple.
- */
-private fun daysToDate(totalDays: Int): Triple<Int, Int, Int> {
-    var remaining = totalDays
-    var year = 1970
-    while (true) {
-        val daysInYear = if (isLeapYear(year)) 366 else 365
-        if (remaining < daysInYear) break
-        remaining -= daysInYear
-        year++
-    }
-    val monthDays = if (isLeapYear(year)) LEAP_MONTH_DAYS else MONTH_DAYS
-    var month = 1
-    for (days in monthDays) {
-        if (remaining < days) break
-        remaining -= days
-        month++
-    }
-    return Triple(remaining + 1, month, year)
-}
-
-private fun isLeapYear(year: Int): Boolean = (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)
-
-private val MONTH_DAYS = intArrayOf(
-    31,
-    28,
-    31,
-    30,
-    31,
-    30,
-    31,
-    31,
-    30,
-    31,
-    30,
-    31,
-)
-private val LEAP_MONTH_DAYS = intArrayOf(
-    31,
-    29,
-    31,
-    30,
-    31,
-    30,
-    31,
-    31,
-    30,
-    31,
-    30,
-    31,
-)

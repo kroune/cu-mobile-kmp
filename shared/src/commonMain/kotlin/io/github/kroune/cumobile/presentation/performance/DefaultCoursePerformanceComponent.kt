@@ -3,14 +3,12 @@ package io.github.kroune.cumobile.presentation.performance
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
-import com.arkivanov.essenty.lifecycle.Lifecycle
+import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.data.model.CourseExercise
 import io.github.kroune.cumobile.data.model.TaskScore
 import io.github.kroune.cumobile.domain.repository.PerformanceRepository
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 /**
@@ -29,7 +27,7 @@ class DefaultCoursePerformanceComponent(
     private val onBack: () -> Unit,
 ) : CoursePerformanceComponent,
     ComponentContext by componentContext {
-    private val scope = CoroutineScope(
+    private val scope = coroutineScope(
         Dispatchers.Main.immediate + SupervisorJob(),
     )
 
@@ -56,13 +54,6 @@ class DefaultCoursePerformanceComponent(
     }
 
     init {
-        lifecycle.subscribe(
-            object : Lifecycle.Callbacks {
-                override fun onDestroy() {
-                    scope.cancel()
-                }
-            },
-        )
         loadData()
     }
 
@@ -83,8 +74,8 @@ class DefaultCoursePerformanceComponent(
                 return@launch
             }
 
-            val exercises = exercisesResponse?.exercises ?: emptyList()
-            val tasks = performanceResponse?.tasks ?: emptyList()
+            val exercises = exercisesResponse?.exercises.orEmpty()
+            val tasks = performanceResponse?.tasks.orEmpty()
 
             val exercisesWithScores = joinExercisesWithScores(exercises, tasks)
             val summaries = buildActivitySummaries(tasks)

@@ -10,8 +10,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 
-private const val AUTH_DOMAIN = "https://my.centraluniversity.ru"
-private const val TARGET_COOKIE_NAME = "bff.cookie"
+private const val AuthDomain = "https://my.centraluniversity.ru"
+private const val TargetCookieName = "bff.cookie"
 
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
@@ -77,13 +77,13 @@ private fun tryCaptureCookie(
 private fun extractBffCookie(): String? {
     val cookieManager = CookieManager.getInstance()
     val cookieString = cookieManager
-        .getCookie(AUTH_DOMAIN)
+        .getCookie(AuthDomain)
         ?: return null
     return cookieString
         .split(";")
         .asSequence()
         .map { it.trim().split("=", limit = 2) }
-        .firstOrNull { it.size == 2 && it[0].trim() == TARGET_COOKIE_NAME }
+        .firstOrNull { it.size == 2 && it[0].trim() == TargetCookieName }
         ?.get(1)
         ?.trim()
         ?.takeIf { it.isNotEmpty() }

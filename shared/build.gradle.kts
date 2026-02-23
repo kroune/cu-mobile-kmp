@@ -28,6 +28,12 @@ dependencies {
 
 tasks.withType<Detekt> { dependsOn(":detekt-rules:assemble") }
 
+tasks.withType<Detekt>().configureEach {
+    exclude { element ->
+        element.file.path.contains("/build/generated/")
+    }
+}
+
 kotlin {
     applyDefaultHierarchyTemplate()
 
@@ -92,6 +98,7 @@ kotlin {
 
             api(libs.decompose)
             implementation(libs.decompose.animations)
+            implementation(libs.essenty.lifecycle.coroutines)
 
             implementation(libs.koin.core)
 

@@ -51,6 +51,7 @@ decompose = { group = "com.arkivanov.decompose", name = "decompose", version.ref
 decompose-lifecycle = { group = "com.arkivanov.essenty", name = "lifecycle", version.ref = "essenty" }
 decompose-state-keeper = { group = "com.arkivanov.essenty", name = "state-keeper", version.ref = "essenty" }
 decompose-animations = { group = "com.arkivanov.decompose", name = "extensions-compose-experimental", version.ref = "decompose" }
+essenty-lifecycle-coroutines = { group = "com.arkivanov.essenty", name = "lifecycle-coroutines", version.ref = "essenty" }
 
 ktor-client-core = { group = "io.ktor", name = "ktor-client-core", version.ref = "ktor" }
 ktor-client-cio = { group = "io.ktor", name = "ktor-client-cio", version.ref = "ktor" }
@@ -66,6 +67,8 @@ koin-core = { group = "io.insert-koin", name = "koin-core", version.ref = "koinC
 kotlin-logging = { group = "io.github.oshai", name = "kotlin-logging", version.ref = "kotlinLogging" }
 
 detekt-api = { group = "dev.detekt", name = "detekt-api", version.ref = "detekt" }
+detekt-test = { group = "dev.detekt", name = "detekt-test", version.ref = "detekt" }
+detekt-test-utils = { group = "dev.detekt", name = "detekt-test-utils", version.ref = "detekt" }
 
 [plugins]
 kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }

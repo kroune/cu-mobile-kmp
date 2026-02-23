@@ -46,7 +46,7 @@ data class NotificationRequest(
         ): NotificationRequest =
             NotificationRequest(
                 paging = NotificationPaging(limit = limit, offset = offset),
-                filter = NotificationFilter(category = category),
+                filter = NotificationFilter(category),
             )
     }
 }

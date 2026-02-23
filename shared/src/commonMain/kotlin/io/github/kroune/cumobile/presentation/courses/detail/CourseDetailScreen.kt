@@ -1,3 +1,5 @@
+@file:Suppress("TooManyFunctions", "MagicNumber")
+
 package io.github.kroune.cumobile.presentation.courses.detail
 
 import androidx.compose.foundation.background
@@ -37,6 +39,7 @@ import io.github.kroune.cumobile.data.model.CourseTheme
 import io.github.kroune.cumobile.data.model.Longread
 import io.github.kroune.cumobile.data.model.ThemeExercise
 import io.github.kroune.cumobile.presentation.common.AppColors
+import io.github.kroune.cumobile.presentation.common.formatDeadlineShort
 import io.github.kroune.cumobile.presentation.common.stripEmojiPrefix
 
 /**
@@ -55,7 +58,7 @@ fun CourseDetailScreen(
 ) {
     val state by component.state.subscribeAsState()
     val overview = state.overview
-    val courseName = overview?.name?.let { stripEmojiPrefix(it) } ?: ""
+    val courseName = overview?.name?.let { stripEmojiPrefix(it) }.orEmpty()
 
     Column(
         modifier = modifier
@@ -123,7 +126,7 @@ private fun ThemesContent(
     component: CourseDetailComponent,
     modifier: Modifier = Modifier,
 ) {
-    val themes = state.overview?.themes ?: emptyList()
+    val themes = state.overview?.themes.orEmpty()
     val filtered = filteredThemes(themes, state.searchQuery)
 
     Column(modifier = modifier.padding(horizontal = 16.dp)) {
@@ -163,7 +166,6 @@ private fun ThemesContent(
                         theme = theme,
                         index = index + 1,
                         isExpanded = theme.id in state.expandedThemeIds,
-                        courseId = state.courseId,
                         onToggle = {
                             component.onIntent(
                                 CourseDetailComponent.Intent.ToggleTheme(theme.id),
@@ -223,7 +225,6 @@ private fun ThemeCard(
     theme: CourseTheme,
     index: Int,
     isExpanded: Boolean,
-    courseId: Int,
     onToggle: () -> Unit,
     onOpenLongread: (longreadId: Int, themeId: Int) -> Unit,
     modifier: Modifier = Modifier,
@@ -399,10 +400,9 @@ private fun ExerciseRow(
         )
 
         if (exercise.deadline != null) {
-            val isOverdue = isDeadlineOverdue(exercise.deadline)
             Text(
                 text = formatDeadlineShort(exercise.deadline),
-                color = if (isOverdue) AppColors.Error else AppColors.TextSecondary,
+                color = AppColors.TextSecondary,
                 fontSize = 11.sp,
             )
         }
@@ -461,33 +461,6 @@ private fun exerciseCountLabel(count: Int): String {
         else -> "заданий"
     }
     return "$count $form"
-}
-
-/**
- * Formats an ISO 8601 deadline string to a short display format.
- * E.g. "2025-06-01T23:59:00Z" → "01.06".
- */
-private fun formatDeadlineShort(deadline: String): String {
-    if (deadline.length < 10) return deadline
-    val datePart = deadline.substring(0, 10) // "2025-06-01"
-    val parts = datePart.split("-")
-    return if (parts.size == 3) {
-        "${parts[2]}.${parts[1]}"
-    } else {
-        deadline
-    }
-}
-
-/**
- * Checks if a deadline ISO 8601 string is in the past.
- * Simple string comparison works for ISO 8601 format.
- */
-private fun isDeadlineOverdue(deadline: String): Boolean {
-    // Simple heuristic: compare with a known "now" threshold.
-    // For a proper implementation, use kotlinx-datetime.
-    // For now, deadlines ending in the past are not detectable without
-    // a clock, so we return false. This can be enhanced later.
-    return false
 }
 
 // endregion

@@ -7,7 +7,6 @@ import io.github.kroune.cumobile.data.model.GradebookResponse
 import io.github.kroune.cumobile.data.model.StudentPerformanceResponse
 import io.github.kroune.cumobile.data.network.ApiService
 import io.github.kroune.cumobile.domain.repository.PerformanceRepository
-import kotlinx.coroutines.flow.first
 
 /**
  * Implementation of [PerformanceRepository].
@@ -16,28 +15,27 @@ import kotlinx.coroutines.flow.first
  * all network calls to [ApiService].
  */
 class PerformanceRepositoryImpl(
-    private val authLocal: AuthLocalDataSource,
-    private val apiService: ApiService,
-) : PerformanceRepository {
-    private suspend fun cookie(): String? = authLocal.cookieFlow.first()
+    authLocal: AuthLocalDataSource,
+    apiService: ApiService,
+) : CookieAwareRepository(authLocal, apiService),
+    PerformanceRepository {
+    override suspend fun fetchPerformance(): StudentPerformanceResponse? =
+        withCookie {
+            apiService.fetchPerformance(it)
+        }
 
-    override suspend fun fetchPerformance(): StudentPerformanceResponse? {
-        val c = cookie() ?: return null
-        return apiService.fetchPerformance(c)
-    }
+    override suspend fun fetchCourseExercises(courseId: Int): CourseExercisesResponse? =
+        withCookie {
+            apiService.fetchCourseExercises(it, courseId)
+        }
 
-    override suspend fun fetchCourseExercises(courseId: Int): CourseExercisesResponse? {
-        val c = cookie() ?: return null
-        return apiService.fetchCourseExercises(c, courseId)
-    }
+    override suspend fun fetchCoursePerformance(courseId: Int): CourseStudentPerformanceResponse? =
+        withCookie {
+            apiService.fetchCoursePerformance(it, courseId)
+        }
 
-    override suspend fun fetchCoursePerformance(courseId: Int): CourseStudentPerformanceResponse? {
-        val c = cookie() ?: return null
-        return apiService.fetchCoursePerformance(c, courseId)
-    }
-
-    override suspend fun fetchGradebook(): GradebookResponse? {
-        val c = cookie() ?: return null
-        return apiService.fetchGradebook(c)
-    }
+    override suspend fun fetchGradebook(): GradebookResponse? =
+        withCookie {
+            apiService.fetchGradebook(it)
+        }
 }

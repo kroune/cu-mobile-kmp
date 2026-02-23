@@ -3,13 +3,11 @@ package io.github.kroune.cumobile.presentation.notifications
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
-import com.arkivanov.essenty.lifecycle.Lifecycle
+import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.data.model.NotificationItem
 import io.github.kroune.cumobile.domain.repository.NotificationRepository
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 /**
@@ -25,19 +23,12 @@ class DefaultNotificationsComponent(
     private val onOpenLongread: ((longreadId: Int) -> Unit)? = null,
 ) : NotificationsComponent,
     ComponentContext by componentContext {
-    private val scope = CoroutineScope(Dispatchers.Main.immediate + SupervisorJob())
+    private val scope = coroutineScope(Dispatchers.Main.immediate + SupervisorJob())
 
     private val _state = MutableValue(NotificationsComponent.State(isLoading = true))
     override val state: Value<NotificationsComponent.State> = _state
 
     init {
-        lifecycle.subscribe(
-            object : Lifecycle.Callbacks {
-                override fun onDestroy() {
-                    scope.cancel()
-                }
-            },
-        )
         loadNotifications()
     }
 
@@ -59,8 +50,8 @@ class DefaultNotificationsComponent(
             val other = notificationRepository.fetchNotifications(category = 2)
             if (education != null || other != null) {
                 _state.value = _state.value.copy(
-                    educationNotifications = sortByDate(education ?: emptyList()),
-                    otherNotifications = sortByDate(other ?: emptyList()),
+                    educationNotifications = sortByDate(education.orEmpty()),
+                    otherNotifications = sortByDate(other.orEmpty()),
                     isLoading = false,
                 )
             } else {

@@ -3,13 +3,11 @@ package io.github.kroune.cumobile.presentation.tasks
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
-import com.arkivanov.essenty.lifecycle.Lifecycle
+import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.data.model.StudentTask
 import io.github.kroune.cumobile.domain.repository.TaskRepository
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 /**
@@ -25,7 +23,7 @@ class DefaultTasksComponent(
     private val onOpenTask: (StudentTask) -> Unit,
 ) : TasksComponent,
     ComponentContext by componentContext {
-    private val scope = CoroutineScope(
+    private val scope = coroutineScope(
         Dispatchers.Main.immediate + SupervisorJob(),
     )
 
@@ -59,13 +57,6 @@ class DefaultTasksComponent(
     }
 
     init {
-        lifecycle.subscribe(
-            object : Lifecycle.Callbacks {
-                override fun onDestroy() {
-                    scope.cancel()
-                }
-            },
-        )
         loadTasks()
     }
 

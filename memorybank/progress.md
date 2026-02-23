@@ -1,6 +1,6 @@
 # CuMobile KMP — Implementation Progress
 
-## Last Updated: 2026-02-23 (Phase 10 complete)
+## Last Updated: 2026-02-23 (Code quality refactoring complete)
 
 ## Completed Phases
 
@@ -467,7 +467,50 @@
 
 ---
 
-### Phase 11: Polish & Testing (Days 22–25)
+### Code Quality Refactoring (across multiple sessions) ✅
+
+**Summary:** Production-quality code review and refactoring pass. Replaced lazy shortcuts (renamed exceptions to `ignored`, blanket `@Suppress`) with real fixes.
+
+**Dependencies added:**
+- `essenty-lifecycle-coroutines` v2.5.0 — auto-cancelling coroutine scopes from `ComponentContext`
+- `kotlin-logging` (io.github.oshai) v8.0.01 — structured logging in catch blocks
+
+**Refactoring completed:**
+
+| Category | Changes |
+|----------|---------|
+| **Coroutine scopes** | Replaced manual `CoroutineScope(Dispatchers.Main + SupervisorJob())` + `onDestroy` cleanup in all 12 components with `coroutineScope()` from essenty-lifecycle-coroutines |
+| **Logging** | Added `logger.error(e) { "..." }` to all catch blocks across ApiService.kt (26 blocks), FileRepositoryImpl.kt, DefaultFilesComponent.kt, DefaultHomeComponent.kt, AndroidFileStorage.kt, IosFileStorage.kt, FormatUtils.kt |
+| **Cookie dedup** | Created `CookieAwareRepository` open base class with `withCookie`/`withCookieOrFalse` helpers. Refactored all 6 cookie-based repositories to extend it, eliminating duplicate `cookie()` methods |
+| **Formatting dedup** | Created `FormatUtils.kt` consolidating 6 duplicate date/time/size formatting functions from 6 different files: `formatDeadline`, `formatDateTime`, `formatDateTimeFull`, `formatDeadlineShort`, `formatEpochDate`, `formatSizeBytes` |
+
+**Files created:**
+- `data/repository/CookieAwareRepository.kt` — base class for cookie-based repos
+- `presentation/common/FormatUtils.kt` — consolidated formatting utilities
+
+**Files modified (repositories):**
+- `ProfileRepositoryImpl.kt`, `TaskRepositoryImpl.kt`, `CourseRepositoryImpl.kt`, `ContentRepositoryImpl.kt`, `NotificationRepositoryImpl.kt`, `PerformanceRepositoryImpl.kt` — all rewritten to extend CookieAwareRepository
+
+**Files modified (formatting consumers):**
+- `TaskCard.kt`, `LongreadTaskInfo.kt`, `NotificationsScreen.kt`, `CourseDetailScreen.kt`, `FilesScreen.kt`, `LongreadScreen.kt`, `DownloadedFileInfo.kt` — removed local formatting functions, import from FormatUtils
+
+**ktlint rule discovered:**
+- "Newline expected before expression body" — for functions with `= expr {`, the expression must start on a new line after `=`
+- "Class body should not start with blank line" — no blank line after opening `{` of class body
+
+**Verification:**
+- ✅ `./gradlew ktlintCheck` — passes clean
+- ✅ `./gradlew detektMainAndroid` — passes (6 "compiler errors" are false positives from cross-module resolution)
+- ✅ `./gradlew :androidApp:assembleDebug` — passes clean
+
+---
+
+### Next steps
+
+#### Flutter comparison
+- [ ] Compare KMP implementation with Flutter app (`/home/olowo/StudioProjects/lms-mobile`, indexed on deepwiki: `cu-3rd-party/lms-mobile`) for missing features/behavior differences
+
+#### Phase 11: Polish & Testing (Days 22–25)
 - [ ] Dark theme refinement
 - [ ] Loading states (shimmer/skeleton)
 - [ ] Pull-to-refresh on all data screens
@@ -488,14 +531,14 @@ CuMobile/
 │       │   │   ├── local/        # DataStore, AuthLocalDataSource, FileStorage, DownloadedFileInfo
 │       │   │   ├── model/        # 13 model files, ~37 @Serializable DTOs
 │       │   │   ├── network/      # HttpClientFactory, ApiService (25 endpoints)
-│       │   │   └── repository/   # 8 repository implementations (incl. FileRepositoryImpl)
+│       │   │   └── repository/   # 8 repository impls (incl. CookieAwareRepository base class)
 │       │   ├── di/               # Koin modules (8 repository bindings)
 │       │   ├── domain/
 │       │   │   └── repository/   # 8 repository interfaces (incl. FileRepository)
 │       │   ├── presentation/
 │       │   │   ├── auth/         # LoginComponent, LoginScreen
 │       │   │   │   └── webview/  # WebViewLoginComponent, PlatformWebView
-│       │   │   ├── common/       # Theme, TopBar, TaskCard, CourseCard
+│       │   │   ├── common/       # Theme, TopBar, TaskCard, CourseCard, FormatUtils
 │       │   │   ├── courses/      # CoursesComponent, CourseDetailComponent
 │       │   │   ├── files/        # FilesComponent, FilesScreen (full file manager)
 │       │   │   ├── home/         # HomeComponent, HomeScreen (deadlines + courses)

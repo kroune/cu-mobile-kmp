@@ -83,53 +83,68 @@ fun TasksScreen(
         Spacer(modifier = Modifier.height(8.dp))
 
         // Content
-        when {
-            state.isLoading -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    CircularProgressIndicator(color = AppColors.Accent)
-                }
+        TasksContentArea(
+            state = state,
+            tasks = tasks,
+            onIntent = { component.onIntent(it) },
+        )
+    }
+}
+
+/**
+ * Content area showing loading, error, empty, or task list states.
+ */
+@Composable
+private fun TasksContentArea(
+    state: TasksComponent.State,
+    tasks: List<io.github.kroune.cumobile.data.model.StudentTask>,
+    onIntent: (TasksComponent.Intent) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    when {
+        state.isLoading -> {
+            Box(
+                modifier = modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center,
+            ) {
+                CircularProgressIndicator(color = AppColors.Accent)
             }
-            state.error != null -> {
-                ErrorContent(
-                    error = state.error!!,
-                    onRetry = {
-                        component.onIntent(TasksComponent.Intent.Refresh)
-                    },
+        }
+        state.error != null -> {
+            ErrorContent(
+                error = state.error,
+                onRetry = { onIntent(TasksComponent.Intent.Refresh) },
+                modifier = modifier,
+            )
+        }
+        tasks.isEmpty() -> {
+            Box(
+                modifier = modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = "Нет заданий по выбранным фильтрам",
+                    color = AppColors.TextSecondary,
+                    fontSize = 14.sp,
                 )
             }
-            tasks.isEmpty() -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text = "Нет заданий по выбранным фильтрам",
-                        color = AppColors.TextSecondary,
-                        fontSize = 14.sp,
+        }
+        else -> {
+            LazyColumn(
+                modifier = modifier,
+                contentPadding = PaddingValues(vertical = 4.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                items(
+                    items = tasks,
+                    key = { it.id },
+                ) { task ->
+                    TaskListItem(
+                        task = task,
+                        onClick = {
+                            onIntent(TasksComponent.Intent.OpenTask(task))
+                        },
                     )
-                }
-            }
-            else -> {
-                LazyColumn(
-                    contentPadding = PaddingValues(vertical = 4.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    items(
-                        items = tasks,
-                        key = { it.id },
-                    ) { task ->
-                        TaskListItem(
-                            task = task,
-                            onClick = {
-                                component.onIntent(
-                                    TasksComponent.Intent.OpenTask(task),
-                                )
-                            },
-                        )
-                    }
                 }
             }
         }
@@ -230,77 +245,102 @@ private fun FiltersRow(
             modifier = Modifier.fillMaxWidth(),
         )
 
-        // Status filter chips
-        val statuses = availableStatuses(allTasks, state.segment)
-        if (statuses.isNotEmpty()) {
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-            ) {
-                items(
-                    items = statuses,
-                    key = { it },
-                ) { status ->
-                    FilterChip(
-                        label = taskStateLabel(status),
-                        selected = state.statusFilter == status,
-                        onClick = {
-                            val newFilter = if (state.statusFilter == status) {
-                                null
-                            } else {
-                                status
-                            }
-                            onIntent(TasksComponent.Intent.FilterByStatus(newFilter))
-                        },
-                    )
-                }
-            }
-        }
+        StatusFilterChips(
+            allTasks = allTasks,
+            segment = state.segment,
+            statusFilter = state.statusFilter,
+            onIntent = onIntent,
+        )
 
-        // Course filter chips
-        val courses = availableCourses(allTasks)
-        if (courses.isNotEmpty()) {
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-            ) {
-                items(
-                    items = courses,
-                    key = { it.first },
-                ) { (courseId, courseName) ->
-                    FilterChip(
-                        label = stripEmojiPrefix(courseName),
-                        selected = state.courseFilter == courseId,
-                        onClick = {
-                            val newFilter = if (state.courseFilter == courseId) {
-                                null
-                            } else {
-                                courseId
-                            }
-                            onIntent(TasksComponent.Intent.FilterByCourse(newFilter))
-                        },
-                    )
-                }
-            }
-        }
+        CourseFilterChips(
+            allTasks = allTasks,
+            courseFilter = state.courseFilter,
+            onIntent = onIntent,
+        )
 
-        // Reset button (only if any filter is active)
-        val hasFilters = state.statusFilter != null ||
-            state.courseFilter != null ||
-            state.searchQuery.isNotEmpty()
-        if (hasFilters) {
-            TextButton(
+        ResetFiltersButton(state = state, onIntent = onIntent)
+    }
+}
+
+/** Status filter chips row. */
+@Composable
+private fun StatusFilterChips(
+    allTasks: List<io.github.kroune.cumobile.data.model.StudentTask>,
+    segment: Int,
+    statusFilter: String?,
+    onIntent: (TasksComponent.Intent) -> Unit,
+) {
+    val statuses = availableStatuses(allTasks, segment)
+    if (statuses.isEmpty()) return
+    LazyRow(
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        items(
+            items = statuses,
+            key = { it },
+        ) { status ->
+            FilterChip(
+                label = taskStateLabel(status),
+                selected = statusFilter == status,
                 onClick = {
-                    onIntent(TasksComponent.Intent.FilterByStatus(null))
-                    onIntent(TasksComponent.Intent.FilterByCourse(null))
-                    onIntent(TasksComponent.Intent.Search(""))
+                    val newFilter = if (statusFilter == status) null else status
+                    onIntent(TasksComponent.Intent.FilterByStatus(newFilter))
                 },
-            ) {
-                Text(
-                    text = "Сбросить фильтры",
-                    color = AppColors.Accent,
-                    fontSize = 13.sp,
-                )
-            }
+            )
         }
+    }
+}
+
+/** Course filter chips row. */
+@Composable
+private fun CourseFilterChips(
+    allTasks: List<io.github.kroune.cumobile.data.model.StudentTask>,
+    courseFilter: Int?,
+    onIntent: (TasksComponent.Intent) -> Unit,
+) {
+    val courses = availableCourses(allTasks)
+    if (courses.isEmpty()) return
+    LazyRow(
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        items(
+            items = courses,
+            key = { it.first },
+        ) { (courseId, courseName) ->
+            FilterChip(
+                label = stripEmojiPrefix(courseName),
+                selected = courseFilter == courseId,
+                onClick = {
+                    val newFilter = if (courseFilter == courseId) null else courseId
+                    onIntent(TasksComponent.Intent.FilterByCourse(newFilter))
+                },
+            )
+        }
+    }
+}
+
+/** Reset button shown only when filters are active. */
+@Composable
+private fun ResetFiltersButton(
+    state: TasksComponent.State,
+    onIntent: (TasksComponent.Intent) -> Unit,
+) {
+    val hasFilters = state.statusFilter != null ||
+        state.courseFilter != null ||
+        state.searchQuery.isNotEmpty()
+    if (!hasFilters) return
+    TextButton(
+        onClick = {
+            onIntent(TasksComponent.Intent.FilterByStatus(null))
+            onIntent(TasksComponent.Intent.FilterByCourse(null))
+            onIntent(TasksComponent.Intent.Search(""))
+        },
+    ) {
+        Text(
+            text = "Сбросить фильтры",
+            color = AppColors.Accent,
+            fontSize = 13.sp,
+        )
     }
 }
 

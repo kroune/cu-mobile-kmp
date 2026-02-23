@@ -3,13 +3,11 @@ package io.github.kroune.cumobile.presentation.courses
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
-import com.arkivanov.essenty.lifecycle.Lifecycle
+import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.domain.repository.CourseRepository
 import io.github.kroune.cumobile.domain.repository.PerformanceRepository
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 /**
@@ -26,7 +24,7 @@ class DefaultCoursesComponent(
     private val onOpenCoursePerformance: (courseId: Int, courseName: String, totalGrade: Int) -> Unit,
 ) : CoursesComponent,
     ComponentContext by componentContext {
-    private val scope = CoroutineScope(
+    private val scope = coroutineScope(
         Dispatchers.Main.immediate + SupervisorJob(),
     )
 
@@ -55,13 +53,6 @@ class DefaultCoursesComponent(
     }
 
     init {
-        lifecycle.subscribe(
-            object : Lifecycle.Callbacks {
-                override fun onDestroy() {
-                    scope.cancel()
-                }
-            },
-        )
         loadAllData()
     }
 
@@ -76,7 +67,7 @@ class DefaultCoursesComponent(
             if (courses != null) {
                 _state.value = _state.value.copy(
                     courses = courses,
-                    performanceCourses = performance?.courses ?: emptyList(),
+                    performanceCourses = performance?.courses.orEmpty(),
                     gradebook = gradebook,
                     isLoading = false,
                 )

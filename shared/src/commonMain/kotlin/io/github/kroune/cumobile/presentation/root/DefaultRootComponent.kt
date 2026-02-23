@@ -9,22 +9,14 @@ import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.router.stack.replaceAll
 import com.arkivanov.decompose.value.Value
-import com.arkivanov.essenty.lifecycle.Lifecycle
+import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.domain.repository.AuthRepository
-import io.github.kroune.cumobile.domain.repository.ContentRepository
-import io.github.kroune.cumobile.domain.repository.CourseRepository
-import io.github.kroune.cumobile.domain.repository.FileRepository
-import io.github.kroune.cumobile.domain.repository.NotificationRepository
-import io.github.kroune.cumobile.domain.repository.PerformanceRepository
-import io.github.kroune.cumobile.domain.repository.ProfileRepository
-import io.github.kroune.cumobile.domain.repository.TaskRepository
 import io.github.kroune.cumobile.presentation.auth.DefaultLoginComponent
 import io.github.kroune.cumobile.presentation.auth.webview.DefaultWebViewLoginComponent
 import io.github.kroune.cumobile.presentation.main.DefaultMainComponent
-import kotlinx.coroutines.CoroutineScope
+import io.github.kroune.cumobile.presentation.main.MainDependencies
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
@@ -39,16 +31,10 @@ import kotlinx.serialization.Serializable
 class DefaultRootComponent(
     componentContext: ComponentContext,
     private val authRepository: AuthRepository,
-    private val taskRepository: TaskRepository,
-    private val courseRepository: CourseRepository,
-    private val profileRepository: ProfileRepository,
-    private val performanceRepository: PerformanceRepository,
-    private val contentRepository: ContentRepository,
-    private val notificationRepository: NotificationRepository,
-    private val fileRepository: FileRepository,
+    private val mainDependencies: MainDependencies,
 ) : RootComponent,
     ComponentContext by componentContext {
-    private val scope = CoroutineScope(Dispatchers.Main.immediate + SupervisorJob())
+    private val scope = coroutineScope(Dispatchers.Main.immediate + SupervisorJob())
     private val navigation = StackNavigation<Config>()
 
     override val childStack: Value<ChildStack<*, RootComponent.Child>> =
@@ -61,13 +47,6 @@ class DefaultRootComponent(
         )
 
     init {
-        lifecycle.subscribe(
-            object : Lifecycle.Callbacks {
-                override fun onDestroy() {
-                    scope.cancel()
-                }
-            },
-        )
         checkSavedAuth()
     }
 
@@ -106,13 +85,7 @@ class DefaultRootComponent(
             is Config.Main -> RootComponent.Child.MainChild(
                 DefaultMainComponent(
                     componentContext = childContext,
-                    taskRepository = taskRepository,
-                    courseRepository = courseRepository,
-                    profileRepository = profileRepository,
-                    performanceRepository = performanceRepository,
-                    contentRepository = contentRepository,
-                    notificationRepository = notificationRepository,
-                    fileRepository = fileRepository,
+                    mainDependencies = mainDependencies,
                     onLogout = ::handleLogout,
                 ),
             )

@@ -3,12 +3,10 @@ package io.github.kroune.cumobile.presentation.auth.webview
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
-import com.arkivanov.essenty.lifecycle.Lifecycle
+import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.domain.repository.AuthRepository
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 class DefaultWebViewLoginComponent(
@@ -18,17 +16,7 @@ class DefaultWebViewLoginComponent(
     private val onBack: () -> Unit,
 ) : WebViewLoginComponent,
     ComponentContext by componentContext {
-    private val scope = CoroutineScope(Dispatchers.Main.immediate + SupervisorJob())
-
-    init {
-        lifecycle.subscribe(
-            object : Lifecycle.Callbacks {
-                override fun onDestroy() {
-                    scope.cancel()
-                }
-            },
-        )
-    }
+    private val scope = coroutineScope(Dispatchers.Main.immediate + SupervisorJob())
 
     private val _state = MutableValue(WebViewLoginComponent.State())
     override val state: Value<WebViewLoginComponent.State> = _state

@@ -4,12 +4,14 @@ import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.Lifecycle
+import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.domain.repository.FileRepository
-import kotlinx.coroutines.CoroutineScope
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+
+private val logger = KotlinLogging.logger {}
 
 /**
  * Default implementation of [FilesComponent].
@@ -24,7 +26,7 @@ class DefaultFilesComponent(
     private val onOpenFile: (path: String) -> Unit = {},
 ) : FilesComponent,
     ComponentContext by componentContext {
-    private val scope = CoroutineScope(
+    private val scope = coroutineScope(
         Dispatchers.Main.immediate + SupervisorJob(),
     )
 
@@ -49,10 +51,6 @@ class DefaultFilesComponent(
                 override fun onStart() {
                     loadFiles()
                 }
-
-                override fun onDestroy() {
-                    scope.cancel()
-                }
             },
         )
     }
@@ -66,7 +64,8 @@ class DefaultFilesComponent(
                     files = files,
                     isLoading = false,
                 )
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                logger.error(e) { "Failed to load downloaded files" }
                 _state.value = _state.value.copy(
                     isLoading = false,
                     error = "Не удалось загрузить список файлов",
