@@ -1,0 +1,85 @@
+package io.github.kroune.cumobile.presentation.profile
+
+import com.arkivanov.decompose.value.Value
+import io.github.kroune.cumobile.data.model.StudentLmsProfile
+import io.github.kroune.cumobile.data.model.StudentProfile
+
+/**
+ * MVI component for the profile screen.
+ *
+ * Displays the student's profile data (name, course, education level,
+ * contact info) and avatar management (view/delete).
+ */
+interface ProfileComponent {
+    val state: Value<State>
+
+    fun onIntent(intent: Intent)
+
+    data class State(
+        val profile: StudentProfile? = null,
+        val lmsProfile: StudentLmsProfile? = null,
+        val avatarBytes: ByteArray? = null,
+        val isLoading: Boolean = false,
+        val error: String? = null,
+        val isDeletingAvatar: Boolean = false,
+    ) {
+        /** User initials for avatar placeholder (first char of first + last name). */
+        val initials: String
+            get() {
+                val p = profile ?: return ""
+                val first = p.firstName.firstOrNull()?.uppercase() ?: ""
+                val last = p.lastName.firstOrNull()?.uppercase() ?: ""
+                return "$first$last"
+            }
+
+        /** Translated education level label. */
+        val educationLevelLabel: String
+            get() = when (profile?.educationLevel?.lowercase()) {
+                "bachelor" -> "Бакалавриат"
+                "master" -> "Магистратура"
+                "specialist" -> "Специалитет"
+                else -> profile?.educationLevel ?: ""
+            }
+
+        /**
+         * Non-university emails (all emails that are not the primary
+         * university email).
+         */
+        val otherEmails: List<io.github.kroune.cumobile.data.model.EmailInfo>
+            get() {
+                val uni = profile?.universityEmail ?: return profile?.emails ?: emptyList()
+                return profile?.emails?.filter { it.value != uni } ?: emptyList()
+            }
+
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (other !is State) return false
+            return profile == other.profile &&
+                lmsProfile == other.lmsProfile &&
+                avatarBytes.contentEquals(other.avatarBytes) &&
+                isLoading == other.isLoading &&
+                error == other.error &&
+                isDeletingAvatar == other.isDeletingAvatar
+        }
+
+        override fun hashCode(): Int {
+            var result = profile.hashCode()
+            result = 31 * result + lmsProfile.hashCode()
+            result = 31 * result + (avatarBytes?.contentHashCode() ?: 0)
+            result = 31 * result + isLoading.hashCode()
+            result = 31 * result + error.hashCode()
+            result = 31 * result + isDeletingAvatar.hashCode()
+            return result
+        }
+    }
+
+    sealed interface Intent {
+        data object Back : Intent
+
+        data object Refresh : Intent
+
+        data object DeleteAvatar : Intent
+
+        data object Logout : Intent
+    }
+}

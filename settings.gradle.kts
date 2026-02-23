@@ -40,7 +40,7 @@ develocity {
 }
 
 
-rootProject.name = "kmptemplate"
+rootProject.name = "cumobile"
 
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 

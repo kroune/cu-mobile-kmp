@@ -1,0 +1,329 @@
+package io.github.kroune.cumobile.presentation.main
+
+import com.arkivanov.decompose.ComponentContext
+import com.arkivanov.decompose.DelicateDecomposeApi
+import com.arkivanov.decompose.router.pages.ChildPages
+import com.arkivanov.decompose.router.pages.Pages
+import com.arkivanov.decompose.router.pages.PagesNavigation
+import com.arkivanov.decompose.router.pages.childPages
+import com.arkivanov.decompose.router.pages.select
+import com.arkivanov.decompose.router.stack.ChildStack
+import com.arkivanov.decompose.router.stack.StackNavigation
+import com.arkivanov.decompose.router.stack.childStack
+import com.arkivanov.decompose.router.stack.pop
+import com.arkivanov.decompose.router.stack.push
+import com.arkivanov.decompose.value.Value
+import com.arkivanov.essenty.lifecycle.Lifecycle
+import io.github.kroune.cumobile.data.model.StudentTask
+import io.github.kroune.cumobile.domain.repository.ContentRepository
+import io.github.kroune.cumobile.domain.repository.CourseRepository
+import io.github.kroune.cumobile.domain.repository.FileRepository
+import io.github.kroune.cumobile.domain.repository.NotificationRepository
+import io.github.kroune.cumobile.domain.repository.PerformanceRepository
+import io.github.kroune.cumobile.domain.repository.ProfileRepository
+import io.github.kroune.cumobile.domain.repository.TaskRepository
+import io.github.kroune.cumobile.presentation.courses.DefaultCoursesComponent
+import io.github.kroune.cumobile.presentation.courses.detail.DefaultCourseDetailComponent
+import io.github.kroune.cumobile.presentation.files.DefaultFilesComponent
+import io.github.kroune.cumobile.presentation.home.DefaultHomeComponent
+import io.github.kroune.cumobile.presentation.longread.DefaultLongreadComponent
+import io.github.kroune.cumobile.presentation.notifications.DefaultNotificationsComponent
+import io.github.kroune.cumobile.presentation.performance.DefaultCoursePerformanceComponent
+import io.github.kroune.cumobile.presentation.profile.DefaultProfileComponent
+import io.github.kroune.cumobile.presentation.tasks.DefaultTasksComponent
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
+
+/**
+ * Default implementation of [MainComponent].
+ *
+ * Manages bottom navigation via [ChildPages] and detail navigation
+ * via [ChildStack]. Tab components are created lazily and their state
+ * is preserved when switching tabs.
+ */
+@OptIn(DelicateDecomposeApi::class)
+class DefaultMainComponent(
+    componentContext: ComponentContext,
+    private val taskRepository: TaskRepository,
+    private val courseRepository: CourseRepository,
+    private val profileRepository: ProfileRepository,
+    private val performanceRepository: PerformanceRepository,
+    private val contentRepository: ContentRepository,
+    private val notificationRepository: NotificationRepository,
+    private val fileRepository: FileRepository,
+    private val onLogout: () -> Unit,
+) : MainComponent,
+    ComponentContext by componentContext {
+    private val scope = CoroutineScope(
+        Dispatchers.Main.immediate + SupervisorJob(),
+    )
+
+    // region Tab navigation (ChildPages)
+
+    private val tabNavigation = PagesNavigation<TabConfig>()
+
+    override val tabPages: Value<ChildPages<*, MainComponent.TabChild>> =
+        childPages(
+            source = tabNavigation,
+            serializer = TabConfig.serializer(),
+            initialPages = {
+                Pages(
+                    items = listOf(
+                        TabConfig.Home,
+                        TabConfig.Tasks,
+                        TabConfig.Courses,
+                        TabConfig.Files,
+                    ),
+                    selectedIndex = 0,
+                )
+            },
+            childFactory = ::createTabChild,
+        )
+
+    override fun selectTab(index: Int) {
+        tabNavigation.select(index)
+    }
+
+    private fun createTabChild(
+        config: TabConfig,
+        childContext: ComponentContext,
+    ): MainComponent.TabChild =
+        when (config) {
+            TabConfig.Home -> MainComponent.TabChild.HomeChild(
+                DefaultHomeComponent(
+                    componentContext = childContext,
+                    taskRepository = taskRepository,
+                    courseRepository = courseRepository,
+                    profileRepository = profileRepository,
+                    onOpenTask = ::handleOpenTask,
+                    onOpenCourse = ::navigateToCourseDetail,
+                ),
+            )
+            TabConfig.Tasks -> MainComponent.TabChild.TasksChild(
+                DefaultTasksComponent(
+                    componentContext = childContext,
+                    taskRepository = taskRepository,
+                    onOpenTask = ::handleOpenTask,
+                ),
+            )
+            TabConfig.Courses -> MainComponent.TabChild.CoursesChild(
+                DefaultCoursesComponent(
+                    componentContext = childContext,
+                    courseRepository = courseRepository,
+                    performanceRepository = performanceRepository,
+                    onOpenCourse = ::navigateToCourseDetail,
+                    onOpenCoursePerformance = ::navigateToCoursePerformance,
+                ),
+            )
+            TabConfig.Files -> MainComponent.TabChild.FilesChild(
+                DefaultFilesComponent(
+                    componentContext = childContext,
+                    fileRepository = fileRepository,
+                ),
+            )
+        }
+
+    // endregion
+
+    // region Detail navigation (ChildStack)
+
+    private val detailNavigation = StackNavigation<DetailConfig>()
+
+    override val detailStack: Value<ChildStack<*, MainComponent.DetailChild>> =
+        childStack(
+            source = detailNavigation,
+            serializer = DetailConfig.serializer(),
+            initialConfiguration = DetailConfig.None,
+            key = "DetailStack",
+            handleBackButton = true,
+            childFactory = ::createDetailChild,
+        )
+
+    override fun navigateToProfile() {
+        detailNavigation.push(DetailConfig.Profile)
+    }
+
+    override fun navigateToNotifications() {
+        detailNavigation.push(DetailConfig.Notifications)
+    }
+
+    override fun navigateToCourseDetail(courseId: Int) {
+        detailNavigation.push(DetailConfig.CourseDetail(courseId))
+    }
+
+    override fun navigateToCoursePerformance(
+        courseId: Int,
+        courseName: String,
+        totalGrade: Int,
+    ) {
+        detailNavigation.push(
+            DetailConfig.CoursePerformance(courseId, courseName, totalGrade),
+        )
+    }
+
+    override fun navigateToLongread(
+        longreadId: Int,
+        courseId: Int,
+        themeId: Int,
+    ) {
+        detailNavigation.push(
+            DetailConfig.Longread(longreadId, courseId, themeId),
+        )
+    }
+
+    override fun navigateDetailBack() {
+        detailNavigation.pop()
+    }
+
+    private fun createDetailChild(
+        config: DetailConfig,
+        childContext: ComponentContext,
+    ): MainComponent.DetailChild =
+        when (config) {
+            DetailConfig.None -> MainComponent.DetailChild.None
+            is DetailConfig.CourseDetail ->
+                MainComponent.DetailChild.CourseDetailChild(
+                    DefaultCourseDetailComponent(
+                        componentContext = childContext,
+                        courseId = config.courseId,
+                        courseRepository = courseRepository,
+                        onOpenLongread = { longreadId, cId, themeId ->
+                            navigateToLongread(longreadId, cId, themeId)
+                        },
+                        onBack = ::navigateDetailBack,
+                    ),
+                )
+            is DetailConfig.Longread ->
+                MainComponent.DetailChild.LongreadChild(
+                    DefaultLongreadComponent(
+                        componentContext = childContext,
+                        longreadId = config.longreadId,
+                        courseId = config.courseId,
+                        themeId = config.themeId,
+                        contentRepository = contentRepository,
+                        taskRepository = taskRepository,
+                        onBack = ::navigateDetailBack,
+                        onDownloadReady = { url, filename ->
+                            scope.launch {
+                                fileRepository.downloadAndSave(url, filename)
+                            }
+                        },
+                    ),
+                )
+            is DetailConfig.CoursePerformance ->
+                MainComponent.DetailChild.CoursePerformanceChild(
+                    DefaultCoursePerformanceComponent(
+                        componentContext = childContext,
+                        courseId = config.courseId,
+                        courseName = config.courseName,
+                        totalGrade = config.totalGrade,
+                        performanceRepository = performanceRepository,
+                        onBack = ::navigateDetailBack,
+                    ),
+                )
+            DetailConfig.Profile ->
+                MainComponent.DetailChild.ProfileChild(
+                    DefaultProfileComponent(
+                        componentContext = childContext,
+                        profileRepository = profileRepository,
+                        onBack = ::navigateDetailBack,
+                        onLogout = onLogout,
+                    ),
+                )
+            DetailConfig.Notifications ->
+                MainComponent.DetailChild.NotificationsChild(
+                    DefaultNotificationsComponent(
+                        componentContext = childContext,
+                        notificationRepository = notificationRepository,
+                        onBack = ::navigateDetailBack,
+                    ),
+                )
+        }
+
+    // endregion
+
+    // region Logout
+
+    override fun onLogout() {
+        scope.launch {
+            onLogout.invoke()
+        }
+    }
+
+    // endregion
+
+    /**
+     * Handles opening a task from the home screen deadlines section.
+     *
+     * Navigates to the course detail since the task does not carry a
+     * longreadId. Direct longread navigation requires resolving through
+     * the course overview (deferred to a later phase).
+     */
+    private fun handleOpenTask(task: StudentTask) {
+        navigateToCourseDetail(task.course.id)
+    }
+
+    init {
+        lifecycle.subscribe(
+            object : Lifecycle.Callbacks {
+                override fun onDestroy() {
+                    scope.cancel()
+                }
+            },
+        )
+    }
+
+    // region Serializable configs
+
+    @Serializable
+    private sealed interface TabConfig {
+        @Serializable
+        data object Home : TabConfig
+
+        @Serializable
+        data object Tasks : TabConfig
+
+        @Serializable
+        data object Courses : TabConfig
+
+        @Serializable
+        data object Files : TabConfig
+    }
+
+    @Serializable
+    private sealed interface DetailConfig {
+        @Serializable
+        data object None : DetailConfig
+
+        @Serializable
+        data class CourseDetail(
+            val courseId: Int,
+        ) : DetailConfig
+
+        @Serializable
+        data class Longread(
+            val longreadId: Int,
+            val courseId: Int,
+            val themeId: Int,
+        ) : DetailConfig
+
+        @Serializable
+        data class CoursePerformance(
+            val courseId: Int,
+            val courseName: String,
+            val totalGrade: Int,
+        ) : DetailConfig
+
+        @Serializable
+        data object Profile : DetailConfig
+
+        @Serializable
+        data object Notifications : DetailConfig
+    }
+
+    // endregion
+}

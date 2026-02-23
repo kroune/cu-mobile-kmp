@@ -1,0 +1,377 @@
+package io.github.kroune.cumobile.presentation.longread
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import io.github.kroune.cumobile.data.model.TaskComment
+import io.github.kroune.cumobile.data.model.TaskDetails
+import io.github.kroune.cumobile.data.model.TaskEvent
+import io.github.kroune.cumobile.presentation.common.AppColors
+import io.github.kroune.cumobile.presentation.common.StatusBadge
+import io.github.kroune.cumobile.presentation.common.taskStateColor
+import io.github.kroune.cumobile.presentation.common.taskStateLabel
+
+/**
+ * Comments tab: displays comment list and input field.
+ */
+@Composable
+internal fun CommentsTab(
+    comments: List<TaskComment>,
+    commentText: String,
+    isSubmitting: Boolean,
+    onIntent: (LongreadComponent.Intent) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        // Comment input
+        OutlinedTextField(
+            value = commentText,
+            onValueChange = { text ->
+                onIntent(LongreadComponent.Intent.UpdateCommentText(text))
+            },
+            label = { Text("Комментарий") },
+            maxLines = 3,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
+            keyboardActions = KeyboardActions(
+                onSend = { onIntent(LongreadComponent.Intent.CreateComment) },
+            ),
+            modifier = Modifier.fillMaxWidth(),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = AppColors.TextPrimary,
+                unfocusedTextColor = AppColors.TextPrimary,
+                focusedBorderColor = AppColors.Accent,
+                unfocusedBorderColor = AppColors.TextSecondary,
+                focusedLabelColor = AppColors.Accent,
+                unfocusedLabelColor = AppColors.TextSecondary,
+                cursorColor = AppColors.Accent,
+            ),
+        )
+
+        Button(
+            onClick = { onIntent(LongreadComponent.Intent.CreateComment) },
+            enabled = !isSubmitting && commentText.isNotBlank(),
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = AppColors.Accent,
+            ),
+            shape = RoundedCornerShape(8.dp),
+        ) {
+            if (isSubmitting) {
+                CircularProgressIndicator(
+                    color = AppColors.Background,
+                    modifier = Modifier.padding(4.dp),
+                )
+            } else {
+                Text(text = "Отправить", color = AppColors.Background)
+            }
+        }
+
+        // Comment list
+        if (comments.isEmpty()) {
+            Text(
+                text = "Нет комментариев",
+                color = AppColors.TextSecondary,
+                fontSize = 13.sp,
+                modifier = Modifier.padding(vertical = 8.dp),
+            )
+        } else {
+            comments.forEach { comment ->
+                CommentCard(comment)
+            }
+        }
+    }
+}
+
+/** Single comment card. */
+@Composable
+private fun CommentCard(
+    comment: TaskComment,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .background(AppColors.Background)
+            .padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(
+                text = comment.sender.name.ifBlank { comment.sender.email },
+                color = AppColors.Accent,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f),
+            )
+            comment.createdAt?.let { date ->
+                Text(
+                    text = formatDateTime(date),
+                    color = AppColors.TextSecondary,
+                    fontSize = 11.sp,
+                )
+            }
+        }
+        Text(
+            text = comment.content,
+            color = AppColors.TextPrimary,
+            fontSize = 13.sp,
+        )
+        // Attachments
+        comment.attachments.forEach { attachment ->
+            Text(
+                text = "\uD83D\uDCCE ${attachment.name}",
+                color = AppColors.TextSecondary,
+                fontSize = 12.sp,
+            )
+        }
+    }
+}
+
+/**
+ * Info tab: task summary and events timeline.
+ */
+@Composable
+internal fun InfoTab(
+    taskDetails: TaskDetails,
+    events: List<TaskEvent>,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        TaskInfoSummary(taskDetails)
+
+        if (events.isNotEmpty()) {
+            Text(
+                text = "История",
+                color = AppColors.TextPrimary,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(top = 4.dp),
+            )
+            events.forEach { event ->
+                EventCard(event)
+                HorizontalDivider(
+                    color = AppColors.TextSecondary.copy(alpha = 0.2f),
+                )
+            }
+        }
+    }
+}
+
+/** Task info summary: status, score, deadline, late days. */
+@Composable
+private fun TaskInfoSummary(
+    taskDetails: TaskDetails,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .background(AppColors.Background)
+            .padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        InfoRow(
+            label = "Статус",
+            value = taskStateLabel(taskDetails.state ?: ""),
+            valueColor = taskStateColor(taskDetails.state ?: ""),
+        )
+        InfoRow(
+            label = "Оценка",
+            value = "${taskDetails.score?.toInt() ?: "-"} / ${taskDetails.maxScore ?: "-"}",
+        )
+        InfoRow(
+            label = "Дедлайн",
+            value = io.github.kroune.cumobile.presentation.common.formatDeadline(
+                taskDetails.deadline,
+            ),
+        )
+        if (taskDetails.isLateDaysEnabled) {
+            InfoRow(
+                label = "Late days",
+                value = "Исп.: ${taskDetails.lateDays ?: 0}" +
+                    " | Баланс: ${taskDetails.lateDaysBalance ?: 0}",
+            )
+        }
+        taskDetails.solutionUrl?.let { url ->
+            InfoRow(label = "Решение", value = url)
+        }
+    }
+}
+
+/** Label-value row for the task info summary. */
+@Composable
+private fun InfoRow(
+    label: String,
+    value: String,
+    valueColor: androidx.compose.ui.graphics.Color = AppColors.TextPrimary,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Text(
+            text = label,
+            color = AppColors.TextSecondary,
+            fontSize = 13.sp,
+        )
+        Text(
+            text = value,
+            color = valueColor,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Medium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(start = 8.dp),
+        )
+    }
+}
+
+/** Single event card in the timeline. */
+@Composable
+private fun EventCard(
+    event: TaskEvent,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            StatusBadge(
+                label = eventTypeLabel(event.type),
+                color = eventTypeColor(event.type),
+            )
+            event.occurredOn?.let { date ->
+                Text(
+                    text = formatDateTime(date),
+                    color = AppColors.TextSecondary,
+                    fontSize = 11.sp,
+                )
+            }
+        }
+
+        // Actor
+        event.actorName?.let { name ->
+            Text(
+                text = name,
+                color = AppColors.TextSecondary,
+                fontSize = 12.sp,
+            )
+        }
+
+        // State change
+        event.content.state?.let { state ->
+            Text(
+                text = "Статус: ${taskStateLabel(state)}",
+                color = taskStateColor(state),
+                fontSize = 12.sp,
+            )
+        }
+
+        // Score change
+        event.content.score?.let { score ->
+            score.value?.let { value ->
+                Text(
+                    text = "Оценка: ${value.toInt()}",
+                    color = AppColors.TaskEvaluated,
+                    fontSize = 12.sp,
+                )
+            }
+        }
+
+        // Late days
+        event.content.lateDaysValue?.let { days ->
+            Text(
+                text = "Late days: $days",
+                color = AppColors.TextSecondary,
+                fontSize = 12.sp,
+            )
+        }
+    }
+}
+
+/** Returns a display label for an event type. */
+private fun eventTypeLabel(type: String): String =
+    when (type) {
+        "task_started" -> "Начато"
+        "task_submitted" -> "Отправлено"
+        "task_evaluated" -> "Оценено"
+        "task_reworked" -> "На доработку"
+        "task_revision" -> "Доработка"
+        "comment_added" -> "Комментарий"
+        "late_days_prolonged" -> "Late days +"
+        "late_days_cancelled" -> "Late days -"
+        "task_created" -> "Создано"
+        "reviewer_assigned" -> "Назначен ревьюер"
+        else -> type
+    }
+
+/** Returns a color for an event type. */
+private fun eventTypeColor(type: String): androidx.compose.ui.graphics.Color =
+    when (type) {
+        "task_started" -> AppColors.TaskInProgress
+        "task_submitted" -> AppColors.TaskHasSolution
+        "task_evaluated" -> AppColors.TaskEvaluated
+        "task_reworked", "task_revision" -> AppColors.TaskRevision
+        "comment_added" -> AppColors.Accent
+        "late_days_prolonged", "late_days_cancelled" -> AppColors.TextSecondary
+        else -> AppColors.TextSecondary
+    }
+
+/**
+ * Formats an ISO 8601 datetime string into a short display format.
+ *
+ * Example: "2026-02-15T14:00:00.000Z" -> "15.02 14:00"
+ */
+internal fun formatDateTime(dateTime: String): String {
+    return try {
+        val parts = dateTime.split("T")
+        if (parts.size < 2) return dateTime
+        val dateParts = parts[0].split("-")
+        val timeParts = parts[1].split(":")
+        if (dateParts.size < 3 || timeParts.size < 2) return dateTime
+        "${dateParts[2]}.${dateParts[1]} ${timeParts[0]}:${timeParts[1]}"
+    } catch (_: Exception) {
+        dateTime
+    }
+}

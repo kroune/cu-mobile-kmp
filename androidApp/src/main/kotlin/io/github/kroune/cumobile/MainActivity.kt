@@ -1,27 +1,21 @@
 package io.github.kroune.cumobile
 
-import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.tooling.preview.Preview
+import com.arkivanov.decompose.defaultComponentContext
+import io.github.kroune.cumobile.di.createRootComponent
 
-@SuppressLint("Registered")
 class MainActivity : ComponentActivity() {
-  override fun onCreate(savedInstanceState: Bundle?) {
-    enableEdgeToEdge()
-    super.onCreate(savedInstanceState)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
+        super.onCreate(savedInstanceState)
 
-    setContent {
-      App()
+        val rootComponent = createRootComponent(defaultComponentContext())
+
+        setContent {
+            App(rootComponent)
+        }
     }
-  }
-}
-
-@Preview
-@Composable
-fun AppAndroidPreview() {
-  App()
 }

@@ -1,0 +1,416 @@
+package io.github.kroune.cumobile.presentation.files
+
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.arkivanov.decompose.extensions.compose.subscribeAsState
+import io.github.kroune.cumobile.data.local.DownloadedFileInfo
+import io.github.kroune.cumobile.data.local.formatSizeBytes
+import io.github.kroune.cumobile.presentation.common.AppColors
+
+/**
+ * Files tab screen displaying locally downloaded files.
+ *
+ * Shows a list of files with extension badges, filename, size,
+ * and modification date. Supports tap-to-open, long-press-to-select,
+ * and batch/single delete actions.
+ */
+@Composable
+fun FilesScreen(
+    component: FilesComponent,
+    modifier: Modifier = Modifier,
+) {
+    val state by component.state.subscribeAsState()
+
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(AppColors.Background),
+    ) {
+        FilesHeader(
+            state = state,
+            onDeleteAll = { component.onIntent(FilesComponent.Intent.DeleteAll) },
+            onDeleteSelected = {
+                component.onIntent(FilesComponent.Intent.DeleteSelected)
+            },
+            onClearSelection = {
+                component.onIntent(FilesComponent.Intent.ClearSelection)
+            },
+        )
+
+        when {
+            state.isLoading -> LoadingState()
+            state.error != null -> ErrorState(
+                message = state.error!!,
+                onRetry = { component.onIntent(FilesComponent.Intent.Refresh) },
+            )
+            state.files.isEmpty() -> EmptyState()
+            else -> FileList(
+                files = state.files,
+                selectedFiles = state.selectedFiles,
+                onOpen = { path ->
+                    component.onIntent(FilesComponent.Intent.OpenFile(path))
+                },
+                onToggleSelect = { name ->
+                    component.onIntent(FilesComponent.Intent.ToggleSelect(name))
+                },
+                onDelete = { name ->
+                    component.onIntent(FilesComponent.Intent.DeleteFile(name))
+                },
+            )
+        }
+    }
+}
+
+@Composable
+private fun FilesHeader(
+    state: FilesComponent.State,
+    onDeleteAll: () -> Unit,
+    onDeleteSelected: () -> Unit,
+    onClearSelection: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column {
+            Text(
+                text = "Файлы",
+                color = AppColors.TextPrimary,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+            )
+            if (state.files.isNotEmpty()) {
+                Text(
+                    text = "${state.files.size} файл(ов) • ${
+                        formatSizeBytes(state.totalSizeBytes)
+                    }",
+                    color = AppColors.TextSecondary,
+                    fontSize = 12.sp,
+                )
+            }
+        }
+
+        if (state.isSelecting) {
+            Row {
+                TextButton(onClick = onDeleteSelected) {
+                    Text(
+                        text = "Удалить (${state.selectedFiles.size})",
+                        color = AppColors.Error,
+                        fontSize = 14.sp,
+                    )
+                }
+                TextButton(onClick = onClearSelection) {
+                    Text(
+                        text = "Отмена",
+                        color = AppColors.TextSecondary,
+                        fontSize = 14.sp,
+                    )
+                }
+            }
+        } else if (state.files.isNotEmpty()) {
+            TextButton(onClick = onDeleteAll) {
+                Text(
+                    text = "Очистить",
+                    color = AppColors.Error,
+                    fontSize = 14.sp,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun FileList(
+    files: List<DownloadedFileInfo>,
+    selectedFiles: Set<String>,
+    onOpen: (path: String) -> Unit,
+    onToggleSelect: (name: String) -> Unit,
+    onDelete: (name: String) -> Unit,
+) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+    ) {
+        items(files, key = { it.name }) { file ->
+            FileRow(
+                file = file,
+                isSelected = file.name in selectedFiles,
+                isSelecting = selectedFiles.isNotEmpty(),
+                onTap = { onOpen(file.path) },
+                onLongPress = { onToggleSelect(file.name) },
+                onDelete = { onDelete(file.name) },
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun FileRow(
+    file: DownloadedFileInfo,
+    isSelected: Boolean,
+    isSelecting: Boolean,
+    onTap: () -> Unit,
+    onLongPress: () -> Unit,
+    onDelete: () -> Unit,
+) {
+    val backgroundColor = when {
+        isSelected -> AppColors.Accent.copy(alpha = 0.15f)
+        else -> AppColors.Surface
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 4.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(backgroundColor)
+            .combinedClickable(
+                onClick = {
+                    if (isSelecting) onLongPress() else onTap()
+                },
+                onLongClick = onLongPress,
+            ).padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        ExtensionBadge(extension = file.extension)
+        Spacer(modifier = Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = file.name,
+                color = AppColors.TextPrimary,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = "${formatSizeBytes(file.sizeBytes)} • ${
+                    formatDate(file.lastModifiedMillis)
+                }",
+                color = AppColors.TextSecondary,
+                fontSize = 12.sp,
+            )
+        }
+        if (!isSelecting) {
+            TextButton(onClick = onDelete) {
+                Text(
+                    text = "×",
+                    color = AppColors.TextSecondary,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ExtensionBadge(extension: String) {
+    val badgeColor = extensionColor(extension)
+    val label = if (extension.isNotEmpty() && extension.length <= 4) {
+        extension
+    } else {
+        "FILE"
+    }
+    Box(
+        modifier = Modifier
+            .size(40.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(badgeColor.copy(alpha = 0.2f)),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = label,
+            color = badgeColor,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center,
+        )
+    }
+}
+
+@Composable
+private fun LoadingState() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center,
+    ) {
+        CircularProgressIndicator(color = AppColors.Accent)
+    }
+}
+
+@Composable
+private fun ErrorState(
+    message: String,
+    onRetry: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Text(
+            text = message,
+            color = AppColors.Error,
+            fontSize = 14.sp,
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        TextButton(onClick = onRetry) {
+            Text(text = "Повторить", color = AppColors.Accent)
+        }
+    }
+}
+
+@Composable
+private fun EmptyState() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(64.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(AppColors.TextSecondary.copy(alpha = 0.1f)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = "FILE",
+                color = AppColors.TextSecondary,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+            )
+        }
+        Spacer(modifier = Modifier.height(12.dp))
+        Text(
+            text = "Нет загруженных файлов",
+            color = AppColors.TextSecondary,
+            fontSize = 16.sp,
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = "Скачанные материалы появятся здесь",
+            color = AppColors.TextSecondary.copy(alpha = 0.6f),
+            fontSize = 13.sp,
+        )
+    }
+}
+
+/**
+ * Returns a color for the extension badge based on file type.
+ */
+private fun extensionColor(ext: String) =
+    when (ext) {
+        "PDF" -> AppColors.Error
+        "DOC", "DOCX" -> AppColors.TaskInProgress
+        "XLS", "XLSX" -> AppColors.TaskEvaluated
+        "PPT", "PPTX" -> AppColors.TaskRework
+        "ZIP", "RAR", "7Z" -> AppColors.TaskReview
+        "JPG", "JPEG", "PNG", "GIF", "SVG" -> AppColors.CategorySoftSkills
+        "MP4", "MOV", "AVI" -> AppColors.CategoryBusiness
+        else -> AppColors.TextSecondary
+    }
+
+/**
+ * Formats a millisecond timestamp to a date string (dd.MM.yyyy).
+ *
+ * Uses manual calculation to avoid JVM-only APIs.
+ */
+private fun formatDate(millis: Long): String {
+    if (millis <= 0L) return ""
+    val totalDays = (millis / 86_400_000L).toInt()
+    val date = daysToDate(totalDays)
+    val day = date.first.toString().padStart(2, '0')
+    val month = date.second.toString().padStart(2, '0')
+    return "$day.$month.${date.third}"
+}
+
+/**
+ * Converts days since epoch to (day, month, year) triple.
+ */
+private fun daysToDate(totalDays: Int): Triple<Int, Int, Int> {
+    var remaining = totalDays
+    var year = 1970
+    while (true) {
+        val daysInYear = if (isLeapYear(year)) 366 else 365
+        if (remaining < daysInYear) break
+        remaining -= daysInYear
+        year++
+    }
+    val monthDays = if (isLeapYear(year)) LEAP_MONTH_DAYS else MONTH_DAYS
+    var month = 1
+    for (days in monthDays) {
+        if (remaining < days) break
+        remaining -= days
+        month++
+    }
+    return Triple(remaining + 1, month, year)
+}
+
+private fun isLeapYear(year: Int): Boolean = (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)
+
+private val MONTH_DAYS = intArrayOf(
+    31,
+    28,
+    31,
+    30,
+    31,
+    30,
+    31,
+    31,
+    30,
+    31,
+    30,
+    31,
+)
+private val LEAP_MONTH_DAYS = intArrayOf(
+    31,
+    29,
+    31,
+    30,
+    31,
+    30,
+    31,
+    31,
+    30,
+    31,
+    30,
+    31,
+)

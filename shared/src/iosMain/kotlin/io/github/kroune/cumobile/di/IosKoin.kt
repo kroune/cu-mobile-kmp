@@ -1,0 +1,18 @@
+package io.github.kroune.cumobile.di
+
+import io.github.kroune.cumobile.data.local.FileStorage
+import io.github.kroune.cumobile.data.local.IosFileStorage
+import io.github.kroune.cumobile.data.local.createDataStore
+import io.github.kroune.cumobile.data.local.dataStorePath
+import org.koin.core.module.Module
+import org.koin.dsl.module
+
+/**
+ * iOS-specific Koin module providing platform dependencies (DataStore, FileStorage).
+ * Called from Swift via `IosKoinKt.iosKoinModule()`.
+ */
+fun iosKoinModule(): Module =
+    module {
+        single { createDataStore { dataStorePath() } }
+        single<FileStorage> { IosFileStorage() }
+    }

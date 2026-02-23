@@ -4,7 +4,7 @@ import ComposeApp
 @main
 struct iOSApp: App {
     init() {
-        KoinKt.doInitKoin()
+        KoinKt.doInitKoin(platformModule: IosKoinKt.iosKoinModule())
     }
 
     @UIApplicationDelegateAdaptor(AppDelegate.self)
@@ -37,12 +37,12 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 
 class RootHolder : ObservableObject {
     let lifecycle: LifecycleRegistry
-    let root: RootComponent
+    let root: DefaultRootComponent
 
     init() {
         lifecycle = LifecycleRegistryKt.LifecycleRegistry()
 
-        root = RootComponent(
+        root = MainViewControllerKt.createRootComponent(
             componentContext: DefaultComponentContext(lifecycle: lifecycle)
         )
 
