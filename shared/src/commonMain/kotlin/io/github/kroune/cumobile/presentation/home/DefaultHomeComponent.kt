@@ -6,12 +6,16 @@ import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.data.model.StudentTask
 import io.github.kroune.cumobile.data.model.TaskState
+import io.github.kroune.cumobile.domain.repository.CalendarRepository
 import io.github.kroune.cumobile.domain.repository.CourseRepository
 import io.github.kroune.cumobile.domain.repository.ProfileRepository
 import io.github.kroune.cumobile.domain.repository.TaskRepository
+import io.github.kroune.cumobile.presentation.common.DateTimeProvider
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 private val logger = KotlinLogging.logger {}
@@ -27,6 +31,7 @@ class DefaultHomeComponent(
     private val taskRepository: TaskRepository,
     private val courseRepository: CourseRepository,
     private val profileRepository: ProfileRepository,
+    private val calendarRepository: CalendarRepository,
     private val onOpenTask: (StudentTask) -> Unit,
     private val onOpenCourse: (Int) -> Unit,
 ) : HomeComponent,
@@ -35,11 +40,17 @@ class DefaultHomeComponent(
         Dispatchers.Main.immediate + SupervisorJob(),
     )
 
-    private val _state = MutableValue(HomeComponent.State())
+    private val dateTimeProvider = DateTimeProvider()
+    private val _state = MutableValue(
+        HomeComponent.State(
+            selectedDateMillis = dateTimeProvider.todayMillis(),
+        ),
+    )
     override val state: Value<HomeComponent.State> = _state
 
     init {
         loadData()
+        observeCalendarStatus()
     }
 
     override fun onIntent(intent: HomeComponent.Intent) {
@@ -47,6 +58,58 @@ class DefaultHomeComponent(
             is HomeComponent.Intent.OpenTask -> onOpenTask(intent.task)
             is HomeComponent.Intent.OpenCourse -> onOpenCourse(intent.courseId)
             is HomeComponent.Intent.Refresh -> loadData()
+            HomeComponent.Intent.PreviousDay -> changeDate(-1)
+            HomeComponent.Intent.NextDay -> changeDate(1)
+            HomeComponent.Intent.Today -> setToday()
+            is HomeComponent.Intent.ConnectCalendar -> connectCalendar(intent.url)
+            HomeComponent.Intent.DisconnectCalendar -> disconnectCalendar()
+        }
+    }
+
+    private fun observeCalendarStatus() {
+        calendarRepository.calendarUrlFlow
+            .onEach { url ->
+                val isConnected = !url.isNullOrBlank()
+                _state.value = _state.value.copy(isCalendarConnected = isConnected)
+                if (isConnected) {
+                    loadSchedule()
+                } else {
+                    _state.value = _state.value.copy(classes = emptyList())
+                }
+            }
+            .launchIn(scope)
+    }
+
+    private fun changeDate(days: Int) {
+        val current = _state.value.selectedDateMillis
+        val updated = current + (days * 86_400_000L)
+        _state.value = _state.value.copy(selectedDateMillis = updated)
+        loadSchedule()
+    }
+
+    private fun setToday() {
+        _state.value = _state.value.copy(selectedDateMillis = dateTimeProvider.todayMillis())
+        loadSchedule()
+    }
+
+    private fun connectCalendar(url: String) {
+        scope.launch {
+            calendarRepository.saveCalendarUrl(url)
+        }
+    }
+
+    private fun disconnectCalendar() {
+        scope.launch {
+            calendarRepository.saveCalendarUrl(null)
+        }
+    }
+
+    private fun loadSchedule() {
+        if (!_state.value.isCalendarConnected) return
+        scope.launch {
+            val dateMillis = _state.value.selectedDateMillis
+            val classes = calendarRepository.getClassesForDate(dateMillis)
+            _state.value = _state.value.copy(classes = classes)
         }
     }
 

@@ -1,7 +1,9 @@
 package io.github.kroune.cumobile.presentation.main
 
+import io.github.kroune.cumobile.domain.repository.CalendarRepository
 import io.github.kroune.cumobile.domain.repository.ContentRepository
 import io.github.kroune.cumobile.domain.repository.CourseRepository
+import io.github.kroune.cumobile.domain.repository.FileRenameRepository
 import io.github.kroune.cumobile.domain.repository.FileRepository
 import io.github.kroune.cumobile.domain.repository.NotificationRepository
 import io.github.kroune.cumobile.domain.repository.PerformanceRepository
@@ -22,4 +24,6 @@ data class MainDependencies(
     val contentRepository: ContentRepository,
     val notificationRepository: NotificationRepository,
     val fileRepository: FileRepository,
+    val fileRenameRepository: FileRenameRepository,
+    val calendarRepository: CalendarRepository,
 )

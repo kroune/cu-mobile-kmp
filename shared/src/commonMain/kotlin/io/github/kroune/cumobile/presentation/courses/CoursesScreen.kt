@@ -19,7 +19,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -44,6 +47,7 @@ import io.github.kroune.cumobile.presentation.common.stripEmojiPrefix
  *
  * Matches the Flutter reference CoursesTab layout.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CoursesScreen(
     component: CoursesComponent,
@@ -51,34 +55,41 @@ fun CoursesScreen(
 ) {
     val state by component.state.subscribeAsState()
 
-    Column(
+    PullToRefreshBox(
+        isRefreshing = state.isLoading,
+        onRefresh = { component.onIntent(CoursesComponent.Intent.Refresh) },
         modifier = modifier
             .fillMaxSize()
-            .background(AppColors.Background)
-            .padding(horizontal = 16.dp),
+            .background(AppColors.Background),
     ) {
-        Spacer(modifier = Modifier.height(8.dp))
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp),
+        ) {
+            Spacer(modifier = Modifier.height(8.dp))
 
-        SegmentedControl(
-            labels = listOf("Курсы", "Ведомость", "Зачетка"),
-            selectedIndex = state.segment,
-            onSelect = {
-                component.onIntent(CoursesComponent.Intent.SelectSegment(it))
-            },
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        when {
-            state.isLoading -> LoadingContent()
-            state.error != null -> ErrorContent(
-                error = state.error.orEmpty(),
-                onRetry = { component.onIntent(CoursesComponent.Intent.Refresh) },
+            SegmentedControl(
+                labels = listOf("Курсы", "Ведомость", "Зачетка"),
+                selectedIndex = state.segment,
+                onSelect = {
+                    component.onIntent(CoursesComponent.Intent.SelectSegment(it))
+                },
             )
-            else -> when (state.segment) {
-                0 -> CoursesListContent(state = state, component = component)
-                1 -> GradeSheetContent(state = state, component = component)
-                2 -> GradebookContent(state = state)
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            when {
+                state.isLoading && state.courses.isEmpty() -> LoadingContent()
+                state.error != null && state.courses.isEmpty() -> ErrorContent(
+                    error = state.error.orEmpty(),
+                    onRetry = { component.onIntent(CoursesComponent.Intent.Refresh) },
+                )
+                else -> when (state.segment) {
+                    0 -> CoursesListContent(state = state, component = component)
+                    1 -> GradeSheetContent(state = state, component = component)
+                    2 -> GradebookContent(state = state)
+                }
             }
         }
     }
@@ -92,17 +103,57 @@ private fun CoursesListContent(
     component: CoursesComponent,
     modifier: Modifier = Modifier,
 ) {
-    val active = activeCourses(state.courses)
-    val archived = archivedCourses(state.courses)
+    val active = activeCourses(state.courses, state.courseOrder)
+    val archived = archivedCourses(state.courses, state.courseOrder)
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(vertical = 4.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+            ) {
+                TextButton(
+                    onClick = {
+                        component.onIntent(CoursesComponent.Intent.ToggleEditMode)
+                    },
+                ) {
+                    Text(
+                        text = if (state.isEditMode) "Готово" else "Изменить",
+                        color = AppColors.Accent,
+                        fontSize = 14.sp,
+                    )
+                }
+            }
+        }
+
         items(items = active, key = { it.id }) { course ->
             CourseListTile(
                 course = course,
+                isEditMode = state.isEditMode,
+                onMoveUp = {
+                    val index = active.indexOf(course)
+                    if (index > 0) {
+                        val newOrder = active.map { it.id }.toMutableList()
+                        val temp = newOrder[index]
+                        newOrder[index] = newOrder[index - 1]
+                        newOrder[index - 1] = temp
+                        component.onIntent(CoursesComponent.Intent.ReorderCourses(newOrder))
+                    }
+                },
+                onMoveDown = {
+                    val index = active.indexOf(course)
+                    if (index < active.size - 1) {
+                        val newOrder = active.map { it.id }.toMutableList()
+                        val temp = newOrder[index]
+                        newOrder[index] = newOrder[index + 1]
+                        newOrder[index + 1] = temp
+                        component.onIntent(CoursesComponent.Intent.ReorderCourses(newOrder))
+                    }
+                },
                 onClick = {
                     component.onIntent(CoursesComponent.Intent.OpenCourse(course.id))
                 },
@@ -143,6 +194,9 @@ private fun CoursesListContent(
 private fun CourseListTile(
     course: Course,
     onClick: () -> Unit,
+    isEditMode: Boolean = false,
+    onMoveUp: () -> Unit = {},
+    onMoveDown: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val catColor = courseCategoryColor(course.category)
@@ -155,6 +209,22 @@ private fun CourseListTile(
             .padding(horizontal = 12.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        if (isEditMode) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = "\u25B2", // Up arrow
+                    modifier = Modifier.clickable { onMoveUp() }.padding(4.dp),
+                    color = AppColors.Accent,
+                )
+                Text(
+                    text = "\u25BC", // Down arrow
+                    modifier = Modifier.clickable { onMoveDown() }.padding(4.dp),
+                    color = AppColors.Accent,
+                )
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+        }
+
         Box(
             modifier = Modifier
                 .size(10.dp)

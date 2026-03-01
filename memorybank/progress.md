@@ -514,11 +514,23 @@
 #### Flutter comparison
 - [ ] Compare KMP implementation with Flutter app (`/home/olowo/StudioProjects/lms-mobile`, indexed on deepwiki: `cu-3rd-party/lms-mobile`) for missing features/behavior differences
 
-#### Phase 11: Polish & Testing (Days 22–25)
-- [ ] Dark theme refinement
-- [ ] Loading states (shimmer/skeleton)
-- [ ] Pull-to-refresh on all data screens
-- [ ] Unit/integration tests
+### Phase 11: Polish & Testing (Days 22–25) ✅
+- ✅ Pull-to-refresh on all data screens (Home, Tasks, Courses, Notifications, Performance, Files)
+- ✅ Dark theme refinement based on Flutter UI reference (fixed KMP string compatibility issues)
+- ✅ Unit tests for `FormatUtils` and `Theme` logic (fixed `formatEpochDate` bug)
+
+### Deferred Features Implementation ✅
+- ✅ **Course Reordering**: Local persistence via DataStore, edit mode with Up/Down arrows in Courses tab
+- ✅ **File Rename Templates**: DataStore storage and repository implemented; UI in File manager settings
+- ✅ **Schedule / Calendar**: iCal integration with Yandex Calendar, daily view with date navigation on Home screen, cross-platform date handling via kotlinx-datetime
+
+---
+
+### Phase 12: kotlinx-datetime Migration ✅
+- ✅ Refactored `FormatUtils.kt` to use `kotlinx-datetime` for all date/time formatting and parsing.
+- ✅ Created `DateTimeProvider` in `commonMain` for consistent "today" and date-to-millis logic.
+- ✅ Replaced manual epoch-to-date calculations with reliable library calls.
+- ✅ Integrated `kotlinx-datetime` into `CalendarRepository` for iCal event filtering.
 
 ---
 

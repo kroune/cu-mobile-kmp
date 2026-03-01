@@ -19,8 +19,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -46,6 +50,7 @@ import io.github.kroune.cumobile.presentation.common.formatSizeBytes
  * and modification date. Supports tap-to-open, long-press-to-select,
  * and batch/single delete actions.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FilesScreen(
     component: FilesComponent,
@@ -53,42 +58,55 @@ fun FilesScreen(
 ) {
     val state by component.state.subscribeAsState()
 
-    Column(
+    PullToRefreshBox(
+        isRefreshing = state.isLoading,
+        onRefresh = { component.onIntent(FilesComponent.Intent.Refresh) },
         modifier = modifier
             .fillMaxSize()
             .background(AppColors.Background),
     ) {
-        FilesHeader(
-            state = state,
-            onDeleteAll = { component.onIntent(FilesComponent.Intent.DeleteAll) },
-            onDeleteSelected = {
-                component.onIntent(FilesComponent.Intent.DeleteSelected)
-            },
-            onClearSelection = {
-                component.onIntent(FilesComponent.Intent.ClearSelection)
-            },
-        )
+        Column(
+            modifier = Modifier.fillMaxSize(),
+        ) {
+            FilesHeader(
+                state = state,
+                onDeleteAll = { component.onIntent(FilesComponent.Intent.DeleteAll) },
+                onDeleteSelected = {
+                    component.onIntent(FilesComponent.Intent.DeleteSelected)
+                },
+                onClearSelection = {
+                    component.onIntent(FilesComponent.Intent.ClearSelection)
+                },
+                onOpenRenameSettings = {
+                    component.onIntent(FilesComponent.Intent.OpenRenameSettings)
+                },
+            )
 
-        when {
-            state.isLoading -> LoadingContent()
-            state.error != null -> ErrorContent(
-                error = state.error.orEmpty(),
-                onRetry = { component.onIntent(FilesComponent.Intent.Refresh) },
-            )
-            state.files.isEmpty() -> EmptyState()
-            else -> FileList(
-                files = state.files,
-                selectedFiles = state.selectedFiles,
-                onOpen = { path ->
-                    component.onIntent(FilesComponent.Intent.OpenFile(path))
-                },
-                onToggleSelect = { name ->
-                    component.onIntent(FilesComponent.Intent.ToggleSelect(name))
-                },
-                onDelete = { name ->
-                    component.onIntent(FilesComponent.Intent.DeleteFile(name))
-                },
-            )
+            when {
+                state.isLoading && state.files.isEmpty() -> LoadingContent()
+                state.error != null && state.files.isEmpty() -> ErrorContent(
+                    error = state.error.orEmpty(),
+                    onRetry = { component.onIntent(FilesComponent.Intent.Refresh) },
+                )
+                state.files.isEmpty() -> EmptyState(
+                    onOpenRenameSettings = {
+                        component.onIntent(FilesComponent.Intent.OpenRenameSettings)
+                    },
+                )
+                else -> FileList(
+                    files = state.files,
+                    selectedFiles = state.selectedFiles,
+                    onOpen = { path ->
+                        component.onIntent(FilesComponent.Intent.OpenFile(path))
+                    },
+                    onToggleSelect = { name ->
+                        component.onIntent(FilesComponent.Intent.ToggleSelect(name))
+                    },
+                    onDelete = { name ->
+                        component.onIntent(FilesComponent.Intent.DeleteFile(name))
+                    },
+                )
+            }
         }
     }
 }
@@ -99,6 +117,7 @@ private fun FilesHeader(
     onDeleteAll: () -> Unit,
     onDeleteSelected: () -> Unit,
     onClearSelection: () -> Unit,
+    onOpenRenameSettings: () -> Unit,
 ) {
     Row(
         modifier = Modifier
@@ -143,12 +162,21 @@ private fun FilesHeader(
                 }
             }
         } else if (state.files.isNotEmpty()) {
-            TextButton(onClick = onDeleteAll) {
-                Text(
-                    text = "Очистить",
-                    color = AppColors.Error,
-                    fontSize = 14.sp,
-                )
+            Row {
+                TextButton(onClick = onOpenRenameSettings) {
+                    Text(
+                        text = "⚙",
+                        color = AppColors.Accent,
+                        fontSize = 18.sp,
+                    )
+                }
+                TextButton(onClick = onDeleteAll) {
+                    Text(
+                        text = "Очистить",
+                        color = AppColors.Error,
+                        fontSize = 14.sp,
+                    )
+                }
             }
         }
     }
@@ -266,7 +294,9 @@ private fun ExtensionBadge(extension: String) {
 }
 
 @Composable
-private fun EmptyState() {
+private fun EmptyState(
+    onOpenRenameSettings: () -> Unit,
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -291,7 +321,7 @@ private fun EmptyState() {
         Spacer(modifier = Modifier.height(12.dp))
         Text(
             text = "Нет загруженных файлов",
-            color = AppColors.TextSecondary,
+            color = AppColors.TextPrimary,
             fontSize = 16.sp,
         )
         Spacer(modifier = Modifier.height(4.dp))
@@ -299,7 +329,16 @@ private fun EmptyState() {
             text = "Скачанные материалы появятся здесь",
             color = AppColors.TextSecondary.copy(alpha = 0.6f),
             fontSize = 13.sp,
+            textAlign = TextAlign.Center,
         )
+        Spacer(modifier = Modifier.height(24.dp))
+        Button(
+            onClick = onOpenRenameSettings,
+            colors = ButtonDefaults.buttonColors(containerColor = AppColors.Accent),
+            shape = RoundedCornerShape(12.dp),
+        ) {
+            Text("Настроить шаблоны", color = AppColors.Background)
+        }
     }
 }
 

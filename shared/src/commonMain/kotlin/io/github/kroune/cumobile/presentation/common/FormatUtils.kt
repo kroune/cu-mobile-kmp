@@ -3,6 +3,11 @@
 package io.github.kroune.cumobile.presentation.common
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toInstant
+import kotlinx.datetime.toLocalDateTime
 import kotlin.math.roundToLong
 
 private val logger = KotlinLogging.logger {}
@@ -22,12 +27,12 @@ private val logger = KotlinLogging.logger {}
 fun formatDeadline(isoDate: String?): String {
     if (isoDate == null) return "Без дедлайна"
     return try {
-        val parts = isoDate.split("T")
-        if (parts.size < 2) return isoDate
-        val dateParts = parts[0].split("-")
-        val timeParts = parts[1].split(":")
-        if (dateParts.size < 3 || timeParts.size < 2) return isoDate
-        "${dateParts[2]}.${dateParts[1]} ${timeParts[0]}:${timeParts[1]}"
+        val dt = parseIsoDateTime(isoDate)
+        val day = dt.dayOfMonth.toString().padStart(2, '0')
+        val month = dt.monthNumber.toString().padStart(2, '0')
+        val hour = dt.hour.toString().padStart(2, '0')
+        val minute = dt.minute.toString().padStart(2, '0')
+        "$day.$month $hour:$minute"
     } catch (e: Exception) {
         logger.error(e) { "Failed to format deadline: $isoDate" }
         isoDate
@@ -43,12 +48,12 @@ fun formatDeadline(isoDate: String?): String {
  */
 fun formatDateTime(dateTime: String): String {
     return try {
-        val parts = dateTime.split("T")
-        if (parts.size < 2) return dateTime
-        val dateParts = parts[0].split("-")
-        val timeParts = parts[1].split(":")
-        if (dateParts.size < 3 || timeParts.size < 2) return dateTime
-        "${dateParts[2]}.${dateParts[1]} ${timeParts[0]}:${timeParts[1]}"
+        val dt = parseIsoDateTime(dateTime)
+        val day = dt.dayOfMonth.toString().padStart(2, '0')
+        val month = dt.monthNumber.toString().padStart(2, '0')
+        val hour = dt.hour.toString().padStart(2, '0')
+        val minute = dt.minute.toString().padStart(2, '0')
+        "$day.$month $hour:$minute"
     } catch (e: Exception) {
         logger.error(e) { "Failed to format datetime: $dateTime" }
         dateTime
@@ -63,12 +68,17 @@ fun formatDateTime(dateTime: String): String {
  * Falls back to the raw string on parse errors.
  */
 fun formatDateTimeFull(isoDate: String): String {
-    if (isoDate.length < 16) return isoDate
-    val date = isoDate.substring(0, 10) // "2026-02-22"
-    val time = isoDate.substring(11, 16) // "14:30"
-    val parts = date.split("-")
-    if (parts.size != 3) return isoDate
-    return "${parts[2]}.${parts[1]}.${parts[0]} $time"
+    return try {
+        val dt = parseIsoDateTime(isoDate)
+        val day = dt.dayOfMonth.toString().padStart(2, '0')
+        val month = dt.monthNumber.toString().padStart(2, '0')
+        val hour = dt.hour.toString().padStart(2, '0')
+        val minute = dt.minute.toString().padStart(2, '0')
+        "$day.$month.${dt.year} $hour:$minute"
+    } catch (e: Exception) {
+        logger.error(e) { "Failed to format full datetime: $isoDate" }
+        isoDate
+    }
 }
 
 /**
@@ -79,13 +89,29 @@ fun formatDateTimeFull(isoDate: String): String {
  * Falls back to the raw string on parse errors.
  */
 fun formatDeadlineShort(deadline: String): String {
-    if (deadline.length < 10) return deadline
-    val datePart = deadline.substring(0, 10)
-    val parts = datePart.split("-")
-    return if (parts.size == 3) {
-        "${parts[2]}.${parts[1]}"
-    } else {
+    return try {
+        val dt = parseIsoDateTime(deadline)
+        val day = dt.dayOfMonth.toString().padStart(2, '0')
+        val month = dt.monthNumber.toString().padStart(2, '0')
+        "$day.$month"
+    } catch (e: Exception) {
+        logger.error(e) { "Failed to format short deadline: $deadline" }
         deadline
+    }
+}
+
+private fun parseIsoDateTime(iso: String): LocalDateTime {
+    // kotlinx-datetime parser is strict, handle common variants
+    val normalized = if (iso.endsWith("Z")) {
+        iso.removeSuffix("Z")
+    } else {
+        iso
+    }
+    // If it's just a date, append T00:00
+    return if (!normalized.contains("T")) {
+        LocalDateTime.parse("${normalized}T00:00:00")
+    } else {
+        LocalDateTime.parse(normalized)
     }
 }
 
@@ -96,38 +122,21 @@ fun formatDeadlineShort(deadline: String): String {
 /**
  * Formats a millisecond timestamp to `"dd.MM.yyyy"`.
  *
- * Uses manual calculation to avoid JVM-only APIs.
+ * Uses kotlinx-datetime for reliable cross-platform formatting.
  */
 fun formatEpochDate(millis: Long): String {
-    if (millis <= 0L) return ""
-    val totalDays = (millis / 86_400_000L).toInt()
-    val (day, month, year) = daysToDate(totalDays)
-    return "${day.toString().padStart(2, '0')}.${month.toString().padStart(2, '0')}.$year"
-}
-
-private fun daysToDate(totalDays: Int): Triple<Int, Int, Int> {
-    var remaining = totalDays
-    var year = 1970
-    while (true) {
-        val daysInYear = if (isLeapYear(year)) 366 else 365
-        if (remaining < daysInYear) break
-        remaining -= daysInYear
-        year++
+    if (millis < 0L) return ""
+    return try {
+        val instant = Instant.fromEpochMilliseconds(millis)
+        val localDate = instant.toLocalDateTime(TimeZone.currentSystemDefault()).date
+        val day = localDate.dayOfMonth.toString().padStart(2, '0')
+        val month = localDate.monthNumber.toString().padStart(2, '0')
+        "$day.$month.${localDate.year}"
+    } catch (e: Exception) {
+        logger.error(e) { "Failed to format epoch date: $millis" }
+        ""
     }
-    val monthDays = if (isLeapYear(year)) LEAP_MONTH_DAYS else MONTH_DAYS
-    var month = 1
-    for (days in monthDays) {
-        if (remaining < days) break
-        remaining -= days
-        month++
-    }
-    return Triple(remaining + 1, month, year)
 }
-
-private fun isLeapYear(year: Int): Boolean = (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)
-
-private val MONTH_DAYS = intArrayOf(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
-private val LEAP_MONTH_DAYS = intArrayOf(31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
 
 // ──────────────────────────────────────────────────────
 // File size formatting

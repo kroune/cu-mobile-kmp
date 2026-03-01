@@ -187,6 +187,12 @@ private fun DetailOverlay(
                     onBack = { component.navigateDetailBack() },
                 )
             }
+            is MainComponent.DetailChild.FileRenameSettingsChild -> {
+                io.github.kroune.cumobile.presentation.files.rename.FileRenameSettingsScreen(
+                    component = instance.component,
+                    onBack = { component.navigateDetailBack() },
+                )
+            }
         }
     }
 }

@@ -57,5 +57,8 @@ interface FilesComponent {
         data class OpenFile(
             val path: String,
         ) : Intent
+
+        /** Open file rename settings. */
+        data object OpenRenameSettings : Intent
     }
 }

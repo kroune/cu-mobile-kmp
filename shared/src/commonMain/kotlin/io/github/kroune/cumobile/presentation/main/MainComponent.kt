@@ -6,6 +6,7 @@ import com.arkivanov.decompose.value.Value
 import io.github.kroune.cumobile.presentation.courses.CoursesComponent
 import io.github.kroune.cumobile.presentation.courses.detail.CourseDetailComponent
 import io.github.kroune.cumobile.presentation.files.FilesComponent
+import io.github.kroune.cumobile.presentation.files.rename.FileRenameSettingsComponent
 import io.github.kroune.cumobile.presentation.home.HomeComponent
 import io.github.kroune.cumobile.presentation.longread.LongreadComponent
 import io.github.kroune.cumobile.presentation.notifications.NotificationsComponent
@@ -66,6 +67,9 @@ interface MainComponent {
         totalGrade: Int,
     )
 
+    /** Navigate to file rename settings. */
+    fun navigateToFileRenameSettings()
+
     /** Navigate back from detail screen. */
     fun navigateDetailBack()
 
@@ -119,6 +123,10 @@ interface MainComponent {
 
         data class NotificationsChild(
             val component: NotificationsComponent,
+        ) : DetailChild()
+
+        data class FileRenameSettingsChild(
+            val component: FileRenameSettingsComponent,
         ) : DetailChild()
     }
 }

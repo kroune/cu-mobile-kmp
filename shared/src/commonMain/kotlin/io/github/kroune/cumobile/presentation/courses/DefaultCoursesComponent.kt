@@ -8,6 +8,8 @@ import io.github.kroune.cumobile.domain.repository.CourseRepository
 import io.github.kroune.cumobile.domain.repository.PerformanceRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 /**
@@ -39,6 +41,10 @@ class DefaultCoursesComponent(
                 _state.value = _state.value.copy(
                     showArchived = !_state.value.showArchived,
                 )
+            CoursesComponent.Intent.ToggleEditMode ->
+                _state.value = _state.value.copy(
+                    isEditMode = !_state.value.isEditMode,
+                )
             is CoursesComponent.Intent.OpenCourse ->
                 onOpenCourse(intent.courseId)
             is CoursesComponent.Intent.OpenCoursePerformance ->
@@ -49,11 +55,28 @@ class DefaultCoursesComponent(
                 )
             CoursesComponent.Intent.Refresh ->
                 loadAllData()
+            is CoursesComponent.Intent.ReorderCourses ->
+                reorderCourses(intent.ids)
         }
     }
 
     init {
         loadAllData()
+        observeOrder()
+    }
+
+    private fun observeOrder() {
+        courseRepository.courseIdOrderFlow
+            .onEach { order ->
+                _state.value = _state.value.copy(courseOrder = order)
+            }
+            .launchIn(scope)
+    }
+
+    private fun reorderCourses(ids: List<Int>) {
+        scope.launch {
+            courseRepository.saveCourseIdOrder(ids)
+        }
     }
 
     private fun loadAllData() {

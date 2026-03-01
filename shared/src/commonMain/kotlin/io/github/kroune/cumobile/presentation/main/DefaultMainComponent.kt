@@ -89,6 +89,7 @@ class DefaultMainComponent(
                     taskRepository = mainDependencies.taskRepository,
                     courseRepository = mainDependencies.courseRepository,
                     profileRepository = mainDependencies.profileRepository,
+                    calendarRepository = mainDependencies.calendarRepository,
                     onOpenTask = ::handleOpenTask,
                     onOpenCourse = ::navigateToCourseDetail,
                 ),
@@ -113,6 +114,7 @@ class DefaultMainComponent(
                 DefaultFilesComponent(
                     componentContext = childContext,
                     fileRepository = mainDependencies.fileRepository,
+                    onOpenRenameSettings = ::navigateToFileRenameSettings,
                 ),
             )
         }
@@ -165,6 +167,10 @@ class DefaultMainComponent(
         )
     }
 
+    override fun navigateToFileRenameSettings() {
+        detailNavigation.push(DetailConfig.FileRenameSettings)
+    }
+
     override fun navigateDetailBack() {
         detailNavigation.pop()
     }
@@ -198,6 +204,7 @@ class DefaultMainComponent(
                         ),
                         contentRepository = mainDependencies.contentRepository,
                         taskRepository = mainDependencies.taskRepository,
+                        renameRepository = mainDependencies.fileRenameRepository,
                         onBack = ::navigateDetailBack,
                         onDownloadReady = { url, filename ->
                             scope.launch {
@@ -234,6 +241,15 @@ class DefaultMainComponent(
                     DefaultNotificationsComponent(
                         componentContext = childContext,
                         notificationRepository = mainDependencies.notificationRepository,
+                        onBack = ::navigateDetailBack,
+                    ),
+                )
+            DetailConfig.FileRenameSettings ->
+                MainComponent.DetailChild.FileRenameSettingsChild(
+                    io.github.kroune.cumobile.presentation.files.rename.DefaultFileRenameSettingsComponent(
+                        componentContext = childContext,
+                        renameRepository = mainDependencies.fileRenameRepository,
+                        courseRepository = mainDependencies.courseRepository,
                         onBack = ::navigateDetailBack,
                     ),
                 )
@@ -308,6 +324,9 @@ class DefaultMainComponent(
 
         @Serializable
         data object Notifications : DetailConfig
+
+        @Serializable
+        data object FileRenameSettings : DetailConfig
     }
 
     // endregion

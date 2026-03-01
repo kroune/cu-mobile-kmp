@@ -12,8 +12,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -40,6 +42,7 @@ import io.github.kroune.cumobile.presentation.common.formatSizeBytes
  * - coding: task management card (delegated to [CodingMaterialCard])
  * - questions: unsupported placeholder
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LongreadScreen(
     component: LongreadComponent,
@@ -47,26 +50,32 @@ fun LongreadScreen(
 ) {
     val state by component.state.subscribeAsState()
 
-    Column(
+    PullToRefreshBox(
+        isRefreshing = state.isLoading,
+        onRefresh = { component.onIntent(LongreadComponent.Intent.Refresh) },
         modifier = modifier
             .fillMaxSize()
             .background(AppColors.Background),
     ) {
-        DetailTopBar(
-            title = state.title,
-            onBack = { component.onIntent(LongreadComponent.Intent.Back) },
-        )
+        Column(
+            modifier = Modifier.fillMaxSize(),
+        ) {
+            DetailTopBar(
+                title = state.title,
+                onBack = { component.onIntent(LongreadComponent.Intent.Back) },
+            )
 
-        when {
-            state.isLoading -> LoadingContent()
-            state.error != null -> ErrorContent(
-                error = state.error.orEmpty(),
-                onRetry = { component.onIntent(LongreadComponent.Intent.Refresh) },
-            )
-            else -> MaterialList(
-                state = state,
-                onIntent = component::onIntent,
-            )
+            when {
+                state.isLoading && state.materials.isEmpty() -> LoadingContent()
+                state.error != null && state.materials.isEmpty() -> ErrorContent(
+                    error = state.error.orEmpty(),
+                    onRetry = { component.onIntent(LongreadComponent.Intent.Refresh) },
+                )
+                else -> MaterialList(
+                    state = state,
+                    onIntent = component::onIntent,
+                )
+            }
         }
     }
 }
@@ -174,7 +183,7 @@ private fun FileCard(
             TextButton(
                 onClick = {
                     onIntent(
-                        LongreadComponent.Intent.DownloadFile(filename, version),
+                        LongreadComponent.Intent.DownloadFile(material),
                     )
                 },
             ) {

@@ -13,8 +13,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -38,6 +40,7 @@ import io.github.kroune.cumobile.presentation.common.gradeDescription
  * Course performance screen with two tabs:
  * "Набранные баллы" (Scores) and "Успеваемость" (Performance).
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CoursePerformanceScreen(
     component: CoursePerformanceComponent,
@@ -46,31 +49,37 @@ fun CoursePerformanceScreen(
 ) {
     val state by component.state.subscribeAsState()
 
-    Column(
+    PullToRefreshBox(
+        isRefreshing = state.isLoading,
+        onRefresh = { component.onIntent(CoursePerformanceComponent.Intent.Refresh) },
         modifier = modifier
             .fillMaxSize()
             .background(AppColors.Background),
     ) {
-        TopBar(
-            title = "Успеваемость",
-            profileInitials = "",
-            lateDaysBalance = null,
-            onNotificationsClick = {},
-            onProfileClick = {},
-        )
-        TextButton(onClick = onBack) {
-            Text("← Назад", color = AppColors.Accent)
-        }
-
-        when {
-            state.isLoading -> LoadingContent()
-            state.error != null -> ErrorContent(
-                error = state.error.orEmpty(),
-                onRetry = {
-                    component.onIntent(CoursePerformanceComponent.Intent.Refresh)
-                },
+        Column(
+            modifier = Modifier.fillMaxSize(),
+        ) {
+            TopBar(
+                title = "Успеваемость",
+                profileInitials = "",
+                lateDaysBalance = null,
+                onNotificationsClick = {},
+                onProfileClick = {},
             )
-            else -> PerformanceContent(state = state, component = component)
+            TextButton(onClick = onBack) {
+                Text("← Назад", color = AppColors.Accent)
+            }
+
+            when {
+                state.isLoading && state.exercises.isEmpty() -> LoadingContent()
+                state.error != null && state.exercises.isEmpty() -> ErrorContent(
+                    error = state.error.orEmpty(),
+                    onRetry = {
+                        component.onIntent(CoursePerformanceComponent.Intent.Refresh)
+                    },
+                )
+                else -> PerformanceContent(state = state, component = component)
+            }
         }
     }
 }

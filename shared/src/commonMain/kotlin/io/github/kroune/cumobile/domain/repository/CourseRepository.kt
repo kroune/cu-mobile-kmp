@@ -2,6 +2,7 @@ package io.github.kroune.cumobile.domain.repository
 
 import io.github.kroune.cumobile.data.model.Course
 import io.github.kroune.cumobile.data.model.CourseOverview
+import kotlinx.coroutines.flow.Flow
 
 /** Repository for course-related operations. */
 interface CourseRepository {
@@ -10,4 +11,10 @@ interface CourseRepository {
 
     /** Fetches the overview (themes + longreads) for a course. */
     suspend fun fetchCourseOverview(courseId: Int): CourseOverview?
+
+    /** Flow emitting the list of course IDs in the preferred order. */
+    val courseIdOrderFlow: Flow<List<Int>>
+
+    /** Saves a new course ID list to represent the manual order. */
+    suspend fun saveCourseIdOrder(ids: List<Int>)
 }

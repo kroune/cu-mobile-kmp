@@ -6,6 +6,7 @@ import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.data.model.LongreadMaterial
 import io.github.kroune.cumobile.domain.repository.ContentRepository
+import io.github.kroune.cumobile.domain.repository.FileRenameRepository
 import io.github.kroune.cumobile.domain.repository.TaskRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -23,6 +24,7 @@ class DefaultLongreadComponent(
     params: LongreadParams,
     private val contentRepository: ContentRepository,
     private val taskRepository: TaskRepository,
+    private val renameRepository: FileRenameRepository,
     private val onBack: () -> Unit,
     private val onDownloadReady: (url: String, filename: String) -> Unit,
 ) : LongreadComponent,
@@ -57,7 +59,7 @@ class DefaultLongreadComponent(
             LongreadComponent.Intent.ProlongLateDays -> prolongLateDays()
             LongreadComponent.Intent.CancelLateDays -> cancelLateDays()
             is LongreadComponent.Intent.DownloadFile ->
-                downloadFile(intent.filename, intent.version)
+                downloadFile(intent.material)
         }
     }
 
@@ -188,33 +190,49 @@ class DefaultLongreadComponent(
         }
     }
 
-    private fun downloadFile(
-        filename: String,
-        version: String,
-    ) {
+    private fun downloadFile(material: LongreadMaterial) {
+        val filename = material.filename ?: return
+        val version = material.version ?: "1"
         scope.launch {
             val url = contentRepository.getDownloadLink(filename, version)
             if (url != null) {
-                val localFilename = buildLocalFilename(filename, version)
+                val localFilename = buildLocalFilename(material)
                 onDownloadReady(url, localFilename)
             }
         }
     }
 
     /**
-     * Builds a local filename from the content filename and version.
+     * Builds a local filename for a material, applying rename templates if available.
      *
-     * Format: `{name}_{version}.{ext}` with unsafe characters replaced.
+     * Fallback format: `{name}_{version}.{ext}`
      */
-    private fun buildLocalFilename(
-        filename: String,
-        version: String,
-    ): String {
+    private suspend fun buildLocalFilename(material: LongreadMaterial): String {
+        val filename = material.filename ?: "file"
+        val version = material.version ?: "1"
         val dotIndex = filename.lastIndexOf('.')
+        val extension = if (dotIndex > 0) filename.substring(dotIndex + 1) else ""
+
+        val activityName = material.estimation?.activityName
+        if (activityName != null) {
+            val rule = renameRepository.getMatchingRule(
+                courseId = _state.value.courseId,
+                activityName = activityName,
+                extension = extension,
+            )
+            if (rule != null) {
+                return rule.apply(
+                    courseName = _state.value.title,
+                    activityName = activityName,
+                    version = version,
+                )
+            }
+        }
+
         val baseName = if (dotIndex > 0) filename.substring(0, dotIndex) else filename
-        val extension = if (dotIndex > 0) filename.substring(dotIndex) else ""
         val safeName = baseName.replace(UNSAFE_CHARS_REGEX, "_")
-        return "${safeName}_$version$extension"
+        val extPart = if (extension.isNotEmpty()) ".$extension" else ""
+        return "${safeName}_$version$extPart"
     }
 
     companion object {

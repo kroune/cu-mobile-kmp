@@ -85,8 +85,7 @@ interface LongreadComponent {
         data object CancelLateDays : Intent
 
         data class DownloadFile(
-            val filename: String,
-            val version: String,
+            val material: LongreadMaterial,
         ) : Intent
     }
 }

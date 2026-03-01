@@ -2,24 +2,33 @@ package io.github.kroune.cumobile.di
 
 import com.arkivanov.decompose.ComponentContext
 import io.github.kroune.cumobile.data.local.AuthLocalDataSource
+import io.github.kroune.cumobile.data.local.CalendarLocalDataSource
+import io.github.kroune.cumobile.data.local.CourseLocalDataSource
+import io.github.kroune.cumobile.data.local.FileRenameLocalDataSource
 import io.github.kroune.cumobile.data.network.ContentApiService
 import io.github.kroune.cumobile.data.network.CourseApiService
+import io.github.kroune.cumobile.data.network.IcalApiService
+import io.github.kroune.cumobile.data.network.IcalParser
 import io.github.kroune.cumobile.data.network.NotificationApiService
 import io.github.kroune.cumobile.data.network.PerformanceApiService
 import io.github.kroune.cumobile.data.network.ProfileApiService
 import io.github.kroune.cumobile.data.network.TaskApiService
 import io.github.kroune.cumobile.data.network.createHttpClient
 import io.github.kroune.cumobile.data.repository.AuthRepositoryImpl
+import io.github.kroune.cumobile.data.repository.CalendarRepositoryImpl
 import io.github.kroune.cumobile.data.repository.ContentRepositoryImpl
 import io.github.kroune.cumobile.data.repository.CourseRepositoryImpl
+import io.github.kroune.cumobile.data.repository.FileRenameRepositoryImpl
 import io.github.kroune.cumobile.data.repository.FileRepositoryImpl
 import io.github.kroune.cumobile.data.repository.NotificationRepositoryImpl
 import io.github.kroune.cumobile.data.repository.PerformanceRepositoryImpl
 import io.github.kroune.cumobile.data.repository.ProfileRepositoryImpl
 import io.github.kroune.cumobile.data.repository.TaskRepositoryImpl
 import io.github.kroune.cumobile.domain.repository.AuthRepository
+import io.github.kroune.cumobile.domain.repository.CalendarRepository
 import io.github.kroune.cumobile.domain.repository.ContentRepository
 import io.github.kroune.cumobile.domain.repository.CourseRepository
+import io.github.kroune.cumobile.domain.repository.FileRenameRepository
 import io.github.kroune.cumobile.domain.repository.FileRepository
 import io.github.kroune.cumobile.domain.repository.NotificationRepository
 import io.github.kroune.cumobile.domain.repository.PerformanceRepository
@@ -44,21 +53,28 @@ private val networkModule = module {
     single { ContentApiService(get()) }
     single { NotificationApiService(get()) }
     single { PerformanceApiService(get()) }
+    single { IcalParser() }
+    single { IcalApiService(get(), get()) }
 }
 
 private val dataModule = module {
     single { AuthLocalDataSource(get()) }
+    single { CourseLocalDataSource(get()) }
+    single { CalendarLocalDataSource(get()) }
+    single { FileRenameLocalDataSource(get()) }
 }
 
 private val repositoryModule = module {
     single<AuthRepository> { AuthRepositoryImpl(get(), get()) }
     single<ProfileRepository> { ProfileRepositoryImpl(get(), get()) }
     single<TaskRepository> { TaskRepositoryImpl(get(), get()) }
-    single<CourseRepository> { CourseRepositoryImpl(get(), get()) }
+    single<CourseRepository> { CourseRepositoryImpl(get(), get(), get()) }
     single<ContentRepository> { ContentRepositoryImpl(get(), get()) }
     single<FileRepository> { FileRepositoryImpl(get(), get()) }
     single<NotificationRepository> { NotificationRepositoryImpl(get(), get()) }
     single<PerformanceRepository> { PerformanceRepositoryImpl(get(), get()) }
+    single<CalendarRepository> { CalendarRepositoryImpl(get(), get()) }
+    single<FileRenameRepository> { FileRenameRepositoryImpl(get()) }
 }
 
 /**
@@ -91,6 +107,8 @@ fun createRootComponent(componentContext: ComponentContext): DefaultRootComponen
         contentRepository = koin.get<ContentRepository>(),
         notificationRepository = koin.get<NotificationRepository>(),
         fileRepository = koin.get<FileRepository>(),
+        fileRenameRepository = koin.get<FileRenameRepository>(),
+        calendarRepository = koin.get<CalendarRepository>(),
     )
     return DefaultRootComponent(
         componentContext = componentContext,

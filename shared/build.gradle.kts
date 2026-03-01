@@ -111,6 +111,7 @@ kotlin {
             implementation(libs.androidx.datastore.preferences)
 
             implementation(libs.kotlin.logging)
+            implementation(libs.kotlinx.datetime)
         }
         commonTest.dependencies {
             api(libs.kotlin.test)

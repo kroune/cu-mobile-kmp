@@ -118,10 +118,10 @@ fun courseCategoryColor(category: String): Color =
  */
 fun stripEmojiPrefix(name: String): String {
     if (name.isEmpty()) return name
-    val firstCodePoint = name.codePointAt(0)
-    // Skip if first character is in emoji ranges (above basic latin/cyrillic)
-    return if (firstCodePoint > 0x2600) {
-        name.dropWhile { it.code > 0x2600 || it == ' ' }.ifEmpty { name }
+    val firstCharCode = name[0].code
+    // Skip if first character is in emoji/symbols range (common in the LMS)
+    return if (firstCharCode > 0x2000) {
+        name.dropWhile { it.code > 0x2000 || it == ' ' }.ifEmpty { name }
     } else {
         name
     }

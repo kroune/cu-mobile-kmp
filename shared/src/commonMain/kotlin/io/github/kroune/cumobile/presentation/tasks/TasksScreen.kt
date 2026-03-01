@@ -16,10 +16,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -44,6 +46,7 @@ import io.github.kroune.cumobile.presentation.common.taskStateLabel
  * 3. Scrollable task list.
  * 4. Loading / error / empty states.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TasksScreen(
     component: TasksComponent,
@@ -53,43 +56,50 @@ fun TasksScreen(
     val tasks = filteredTasks(state)
     val allTasks = state.allTasks
 
-    Column(
+    PullToRefreshBox(
+        isRefreshing = state.isLoading,
+        onRefresh = { component.onIntent(TasksComponent.Intent.Refresh) },
         modifier = modifier
             .fillMaxSize()
-            .background(AppColors.Background)
-            .padding(horizontal = 16.dp),
+            .background(AppColors.Background),
     ) {
-        Spacer(modifier = Modifier.height(8.dp))
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp),
+        ) {
+            Spacer(modifier = Modifier.height(8.dp))
 
-        // Segment control
-        SegmentedControl(
-            labels = listOf(
-                "Активные (${countBySegment(allTasks, 0)})",
-                "Архив (${countBySegment(allTasks, 1)})",
-            ),
-            selectedIndex = state.segment,
-            onSelect = {
-                component.onIntent(TasksComponent.Intent.SelectSegment(it))
-            },
-        )
+            // Segment control
+            SegmentedControl(
+                labels = listOf(
+                    "Активные (${countBySegment(allTasks, 0)})",
+                    "Архив (${countBySegment(allTasks, 1)})",
+                ),
+                selectedIndex = state.segment,
+                onSelect = {
+                    component.onIntent(TasksComponent.Intent.SelectSegment(it))
+                },
+            )
 
-        Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-        // Filters row
-        FiltersRow(
-            state = state,
-            allTasks = allTasks,
-            onIntent = { component.onIntent(it) },
-        )
+            // Filters row
+            FiltersRow(
+                state = state,
+                allTasks = allTasks,
+                onIntent = { component.onIntent(it) },
+            )
 
-        Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-        // Content
-        TasksContentArea(
-            state = state,
-            tasks = tasks,
-            onIntent = { component.onIntent(it) },
-        )
+            // Content
+            TasksContentArea(
+                state = state,
+                tasks = tasks,
+                onIntent = { component.onIntent(it) },
+            )
+        }
     }
 }
 

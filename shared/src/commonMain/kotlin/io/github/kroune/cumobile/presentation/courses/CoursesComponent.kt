@@ -21,6 +21,8 @@ interface CoursesComponent {
     data class State(
         /** All courses loaded from the API. */
         val courses: List<Course> = emptyList(),
+        /** Manual course order (list of IDs). */
+        val courseOrder: List<Int> = emptyList(),
         /** Performance data for grade sheet segment. */
         val performanceCourses: List<StudentPerformanceCourse> = emptyList(),
         /** Gradebook data for record book segment. */
@@ -31,6 +33,8 @@ interface CoursesComponent {
         val segment: Int = 0,
         /** Whether to show archived courses in the courses segment. */
         val showArchived: Boolean = false,
+        /** Whether the courses list is in edit mode. */
+        val isEditMode: Boolean = false,
     )
 
     sealed interface Intent {
@@ -41,6 +45,9 @@ interface CoursesComponent {
 
         /** Toggle display of archived courses. */
         data object ToggleArchived : Intent
+
+        /** Toggle edit mode. */
+        data object ToggleEditMode : Intent
 
         /** Open course detail. */
         data class OpenCourse(
@@ -56,17 +63,44 @@ interface CoursesComponent {
 
         /** Refresh all data. */
         data object Refresh : Intent
+
+        /** Reorder courses. */
+        data class ReorderCourses(
+            val ids: List<Int>,
+        ) : Intent
     }
 }
 
-/** Returns active (non-archived) courses sorted alphabetically. */
-internal fun activeCourses(courses: List<Course>): List<Course> =
-    courses
-        .filter { !it.isArchived }
-        .sortedBy { it.name }
+/** Returns active (non-archived) courses, using manual order if available. */
+internal fun activeCourses(courses: List<Course>, order: List<Int>): List<Course> {
+    val active = courses.filter { !it.isArchived }
+    if (order.isEmpty()) return active.sortedBy { it.name }
 
-/** Returns archived courses sorted alphabetically. */
-internal fun archivedCourses(courses: List<Course>): List<Course> =
-    courses
-        .filter { it.isArchived }
-        .sortedBy { it.name }
+    val orderMap = order.withIndex().associate { it.value to it.index }
+    return active.sortedWith { a, b ->
+        val orderA = orderMap[a.id] ?: Int.MAX_VALUE
+        val orderB = orderMap[b.id] ?: Int.MAX_VALUE
+        if (orderA != orderB) {
+            orderA.compareTo(orderB)
+        } else {
+            a.name.compareTo(b.name)
+        }
+    }
+}
+
+/** Returns archived courses, using manual order if available. */
+internal fun archivedCourses(courses: List<Course>, order: List<Int>): List<Course> {
+    val archived = courses.filter { it.isArchived }
+    if (order.isEmpty()) return archived.sortedBy { it.name }
+
+    val orderMap = order.withIndex().associate { it.value to it.index }
+    return archived.sortedWith { a, b ->
+        val orderA = orderMap[a.id] ?: Int.MAX_VALUE
+        val orderB = orderMap[b.id] ?: Int.MAX_VALUE
+        if (orderA != orderB) {
+            orderA.compareTo(orderB)
+        } else {
+            a.name.compareTo(b.name)
+        }
+    }
+}

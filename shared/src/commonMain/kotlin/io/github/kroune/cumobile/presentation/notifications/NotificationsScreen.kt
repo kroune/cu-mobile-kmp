@@ -19,7 +19,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -48,6 +50,7 @@ import io.github.kroune.cumobile.presentation.common.formatDateTimeFull
  * 2. Tab selector (Education / Other)
  * 3. Notification cards list
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationsScreen(
     component: NotificationsComponent,
@@ -56,40 +59,46 @@ fun NotificationsScreen(
 ) {
     val state by component.state.subscribeAsState()
 
-    Column(
+    PullToRefreshBox(
+        isRefreshing = state.isLoading,
+        onRefresh = { component.onIntent(NotificationsComponent.Intent.Refresh) },
         modifier = modifier
             .fillMaxSize()
             .background(AppColors.Background),
     ) {
-        DetailTopBar(
-            title = "Уведомления",
-            onBack = onBack,
-        )
-
-        SegmentedControl(
-            labels = listOf("Учеба", "Другое"),
-            selectedIndex = state.selectedTab,
-            onSelect = {
-                component.onIntent(NotificationsComponent.Intent.SelectTab(it))
-            },
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-        )
-
-        when {
-            state.isLoading -> LoadingContent()
-            state.error != null && state.currentNotifications.isEmpty() -> ErrorContent(
-                error = state.error.orEmpty(),
-                onRetry = { component.onIntent(NotificationsComponent.Intent.Refresh) },
+        Column(
+            modifier = Modifier.fillMaxSize(),
+        ) {
+            DetailTopBar(
+                title = "Уведомления",
+                onBack = onBack,
             )
-            state.currentNotifications.isEmpty() -> EmptyContent(
-                text = "Нет уведомлений",
-            )
-            else -> NotificationsList(
-                notifications = state.currentNotifications,
-                onLinkClick = {
-                    component.onIntent(NotificationsComponent.Intent.OpenLink(it))
+
+            SegmentedControl(
+                labels = listOf("Учеба", "Другое"),
+                selectedIndex = state.selectedTab,
+                onSelect = {
+                    component.onIntent(NotificationsComponent.Intent.SelectTab(it))
                 },
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             )
+
+            when {
+                state.isLoading && state.currentNotifications.isEmpty() -> LoadingContent()
+                state.error != null && state.currentNotifications.isEmpty() -> ErrorContent(
+                    error = state.error.orEmpty(),
+                    onRetry = { component.onIntent(NotificationsComponent.Intent.Refresh) },
+                )
+                state.currentNotifications.isEmpty() -> EmptyContent(
+                    text = "Нет уведомлений",
+                )
+                else -> NotificationsList(
+                    notifications = state.currentNotifications,
+                    onLinkClick = {
+                        component.onIntent(NotificationsComponent.Intent.OpenLink(it))
+                    },
+                )
+            }
         }
     }
 }
