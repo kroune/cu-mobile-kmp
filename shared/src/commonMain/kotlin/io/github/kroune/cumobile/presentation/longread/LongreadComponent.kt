@@ -41,6 +41,14 @@ interface LongreadComponent {
         val commentText: String = "",
         /** Whether a task action is in progress. */
         val isSubmitting: Boolean = false,
+        /** Whether the search bar is visible. */
+        val isSearchVisible: Boolean = false,
+        /** Current search query text. */
+        val searchQuery: String = "",
+        /** Total number of search matches across all materials. */
+        val searchMatchCount: Int = 0,
+        /** Index of the currently focused match (0-based). */
+        val currentMatchIndex: Int = 0,
     ) {
         /** Title derived from the first material's name or a fallback. */
         val title: String
@@ -89,5 +97,15 @@ interface LongreadComponent {
         data class DownloadFile(
             val material: LongreadMaterial,
         ) : Intent
+
+        data object ToggleSearch : Intent
+
+        data class UpdateSearchQuery(
+            val query: String,
+        ) : Intent
+
+        data object NextMatch : Intent
+
+        data object PreviousMatch : Intent
     }
 }

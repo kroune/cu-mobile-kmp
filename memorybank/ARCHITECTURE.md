@@ -236,6 +236,8 @@ All phases complete:
 - Phase 11: Pull-to-refresh, dark theme polish, unit tests (FormatUtils, Theme)
 - Deferred: Course reordering, File rename templates, Schedule/Calendar
 - Phase 12: kotlinx-datetime migration
+- Content search in longreads: `LongreadComponent.State` has `isSearchVisible`, `searchQuery`, `searchMatchCount`, `currentMatchIndex`; `handleSearchIntent()` in DefaultLongreadComponent; `SearchBar`/`SearchInput`/`SearchNavigation`/`highlightMatches()` in LongreadScreen
+- In-app update checker: `UpdateChecker` (data/network/) checks GitHub releases API; `UpdateInfo`/`GithubRelease` (data/model/ReleaseInfo.kt); `MainComponent.updateInfo` + `dismissUpdate()`; `UpdateDialog` in MainScreen; `UpdateCheckerTest` unit tests
 
 ---
 
@@ -277,9 +279,9 @@ The API layer already supports attachments:
 |---------|----------|-------|
 | Late days dialog with stepper | **Done** | `ProlongLateDays(days: Int)` intent; stepper dialog; `formatDeadlinePlusDays()` in FormatUtils |
 | File upload system | High | expect/actual file picker, presigned URL upload, progress |
-| Content search in longreads | Medium | Case-insensitive, highlight, match navigation |
+| Content search in longreads | **Done** | Search bar + highlighting in MarkdownCard; prev/next match nav; `SearchBar`/`SearchInput`/`SearchNavigation` composables |
 | Avatar upload | Medium | expect/actual image picker, POST multipart |
-| In-app update checker | Low | GitHub releases API, version compare, update dialog |
+| In-app update checker | **Done** | `UpdateChecker` in `data/network/`, `UpdateInfo`/`GithubRelease` in `data/model/ReleaseInfo.kt`, dialog in `MainScreen` |
 | Document scanner | Low | High complexity, platform-specific (camera, PDF gen) |
 | Model package restructuring | Low | Move `data/model/` → `model/`, rename `*Response` types |
 

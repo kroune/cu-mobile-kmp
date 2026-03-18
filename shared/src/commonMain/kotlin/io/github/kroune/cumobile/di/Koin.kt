@@ -13,6 +13,7 @@ import io.github.kroune.cumobile.data.network.NotificationApiService
 import io.github.kroune.cumobile.data.network.PerformanceApiService
 import io.github.kroune.cumobile.data.network.ProfileApiService
 import io.github.kroune.cumobile.data.network.TaskApiService
+import io.github.kroune.cumobile.data.network.UpdateChecker
 import io.github.kroune.cumobile.data.network.createHttpClient
 import io.github.kroune.cumobile.data.repository.AuthRepositoryImpl
 import io.github.kroune.cumobile.data.repository.CalendarRepositoryImpl
@@ -55,6 +56,7 @@ private val networkModule = module {
     single { PerformanceApiService(get()) }
     single { IcalParser() }
     single { IcalApiService(get(), get()) }
+    single { UpdateChecker(get()) }
 }
 
 private val dataModule = module {
@@ -109,6 +111,7 @@ fun createRootComponent(componentContext: ComponentContext): DefaultRootComponen
         fileRepository = koin.get<FileRepository>(),
         fileRenameRepository = koin.get<FileRenameRepository>(),
         calendarRepository = koin.get<CalendarRepository>(),
+        updateChecker = koin.get<UpdateChecker>(),
     )
     return DefaultRootComponent(
         componentContext = componentContext,

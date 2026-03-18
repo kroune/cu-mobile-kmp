@@ -13,9 +13,11 @@ import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.push
+import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.data.model.StudentTask
+import io.github.kroune.cumobile.data.model.UpdateInfo
 import io.github.kroune.cumobile.presentation.courses.DefaultCoursesComponent
 import io.github.kroune.cumobile.presentation.courses.detail.DefaultCourseDetailComponent
 import io.github.kroune.cumobile.presentation.files.DefaultFilesComponent
@@ -48,6 +50,27 @@ class DefaultMainComponent(
     private val scope = coroutineScope(
         Dispatchers.Main.immediate + SupervisorJob(),
     )
+
+    // region Update check
+
+    private val noUpdate = UpdateInfo(latestVersion = "", releasePageUrl = "")
+    private val _updateInfo = MutableValue(noUpdate)
+    override val updateInfo: Value<UpdateInfo> = _updateInfo
+
+    override fun dismissUpdate() {
+        _updateInfo.value = noUpdate
+    }
+
+    init {
+        scope.launch {
+            val info = mainDependencies.updateChecker.checkForUpdate()
+            if (info != null) {
+                _updateInfo.value = info
+            }
+        }
+    }
+
+    // endregion
 
     // region Tab navigation (ChildPages)
 

@@ -9,11 +9,11 @@
 - [ ] **File upload system** — expect/actual file picker (Android: ActivityResultContract, iOS: UIDocumentPickerViewController); upload flow: `getUploadLink` → presigned URL → PUT; progress tracking; attach to solutions + comments in `LongreadTaskSection`. **Start in new session (large feature)**
 
 ### Medium Priority
-- [ ] **Content search in longreads** — search bar in `LongreadScreen`; case-insensitive search in markdown content; match highlighting; navigation between matches
+- [x] **Content search in longreads** — DONE: search bar in `LongreadScreen`; case-insensitive search in markdown content; match highlighting with `AnnotatedString`; prev/next navigation between matches; match counter; toggle via search icon in top bar
 - [ ] **Avatar upload** — expect/actual image picker (Android: photo picker, iOS: PHPickerViewController); POST `/hub/avatars/me` multipart; camera + gallery; size validation <8MB
 
 ### Low Priority
-- [ ] **In-app update checker** — check GitHub releases API; version compare; update dialog with download link
+- [x] **In-app update checker** — DONE: `UpdateChecker` fetches GitHub releases API; `isNewerVersion()` semantic version compare; update dialog in `MainScreen`; `UpdateInfo`/`GithubRelease` data models; unit tests for version comparison
 - [ ] **Document scanner** — camera/gallery capture (expect/actual); multi-page with reorder; rotation/cropping; PDF generation (high complexity, deferred)
 - [ ] **Model package restructuring** — move `data/model/` to standalone `model/` package; rename `*Response` types
 

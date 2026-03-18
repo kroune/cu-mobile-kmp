@@ -60,6 +60,11 @@ class DefaultLongreadComponent(
             LongreadComponent.Intent.CancelLateDays -> cancelLateDays()
             is LongreadComponent.Intent.DownloadFile ->
                 downloadFile(intent.material)
+            is LongreadComponent.Intent.ToggleSearch,
+            is LongreadComponent.Intent.UpdateSearchQuery,
+            is LongreadComponent.Intent.NextMatch,
+            is LongreadComponent.Intent.PreviousMatch,
+            -> handleSearchIntent(intent)
         }
     }
 
@@ -233,6 +238,74 @@ class DefaultLongreadComponent(
         val safeName = baseName.replace(UNSAFE_CHARS_REGEX, "_")
         val extPart = if (extension.isNotEmpty()) ".$extension" else ""
         return "${safeName}_$version$extPart"
+    }
+
+    private fun handleSearchIntent(intent: LongreadComponent.Intent) {
+        when (intent) {
+            LongreadComponent.Intent.ToggleSearch -> toggleSearch()
+            is LongreadComponent.Intent.UpdateSearchQuery ->
+                updateSearchQuery(intent.query)
+            LongreadComponent.Intent.NextMatch -> navigateMatch(forward = true)
+            LongreadComponent.Intent.PreviousMatch -> navigateMatch(forward = false)
+            else -> Unit
+        }
+    }
+
+    private fun toggleSearch() {
+        val current = _state.value
+        if (current.isSearchVisible) {
+            _state.value = current.copy(
+                isSearchVisible = false,
+                searchQuery = "",
+                searchMatchCount = 0,
+                currentMatchIndex = 0,
+            )
+        } else {
+            _state.value = current.copy(isSearchVisible = true)
+        }
+    }
+
+    private fun updateSearchQuery(query: String) {
+        val matchCount = if (query.isBlank()) {
+            0
+        } else {
+            countMatches(query)
+        }
+        _state.value = _state.value.copy(
+            searchQuery = query,
+            searchMatchCount = matchCount,
+            currentMatchIndex = if (matchCount > 0) 0 else 0,
+        )
+    }
+
+    private fun countMatches(query: String): Int {
+        val lowerQuery = query.lowercase()
+        return _state.value.materials.sumOf { material ->
+            val text = material.viewContent?.let { stripHtmlTags(it) }.orEmpty()
+            if (text.isBlank()) return@sumOf 0
+            var count = 0
+            var startIndex = 0
+            val lowerText = text.lowercase()
+            while (true) {
+                val index = lowerText.indexOf(lowerQuery, startIndex)
+                if (index < 0) break
+                count++
+                startIndex = index + 1
+            }
+            count
+        }
+    }
+
+    private fun navigateMatch(forward: Boolean) {
+        val current = _state.value
+        if (current.searchMatchCount <= 0) return
+        val newIndex = if (forward) {
+            (current.currentMatchIndex + 1) % current.searchMatchCount
+        } else {
+            (current.currentMatchIndex - 1 + current.searchMatchCount) %
+                current.searchMatchCount
+        }
+        _state.value = current.copy(currentMatchIndex = newIndex)
     }
 
     companion object {

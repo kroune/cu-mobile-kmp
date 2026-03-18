@@ -3,6 +3,7 @@ package io.github.kroune.cumobile.presentation.main
 import com.arkivanov.decompose.router.pages.ChildPages
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.value.Value
+import io.github.kroune.cumobile.data.model.UpdateInfo
 import io.github.kroune.cumobile.presentation.courses.CoursesComponent
 import io.github.kroune.cumobile.presentation.courses.detail.CourseDetailComponent
 import io.github.kroune.cumobile.presentation.files.FilesComponent
@@ -40,6 +41,12 @@ interface MainComponent {
 
     /** Detail navigation stack (overlays tabs when non-empty). */
     val detailStack: Value<ChildStack<*, DetailChild>>
+
+    /** Available update info (empty latestVersion if none). */
+    val updateInfo: Value<UpdateInfo>
+
+    /** Dismiss the update dialog. */
+    fun dismissUpdate()
 
     /** Select a bottom navigation tab by index. */
     fun selectTab(index: Int)

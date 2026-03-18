@@ -1,20 +1,29 @@
 package io.github.kroune.cumobile.presentation.main
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import com.arkivanov.decompose.extensions.compose.pages.ChildPages
 import com.arkivanov.decompose.extensions.compose.stack.Children
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
@@ -45,12 +54,21 @@ import com.arkivanov.decompose.router.pages.ChildPages as PagesState
 fun MainScreen(component: MainComponent) {
     val pages by component.tabPages.subscribeAsState()
     val detailStack by component.detailStack.subscribeAsState()
+    val updateInfo by component.updateInfo.subscribeAsState()
     val selectedIndex = pages.selectedIndex
     val hasDetail =
         detailStack.active.instance !is MainComponent.DetailChild.None
 
     // Extract profile initials and late days from the Home tab (observed reactively)
     val homeState = extractHomeState(pages)
+
+    if (updateInfo.latestVersion.isNotEmpty()) {
+        UpdateDialog(
+            latestVersion = updateInfo.latestVersion,
+            releaseName = updateInfo.releaseName,
+            onDismiss = { component.dismissUpdate() },
+        )
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         // Main content: top bar + tabs + bottom nav
@@ -211,6 +229,55 @@ private fun extractHomeState(pages: PagesState<*, MainComponent.TabChild>): Home
     return homeChild.component.state
         .subscribeAsState()
         .value
+}
+
+/** Update available dialog. */
+@Composable
+private fun UpdateDialog(
+    latestVersion: String,
+    releaseName: String,
+    onDismiss: () -> Unit,
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Column(
+            modifier = Modifier
+                .clip(RoundedCornerShape(16.dp))
+                .background(AppColors.Surface)
+                .padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text(
+                text = "Доступно обновление",
+                color = AppColors.TextPrimary,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+            )
+            if (releaseName.isNotBlank()) {
+                Text(
+                    text = releaseName,
+                    color = AppColors.TextPrimary,
+                    fontSize = 14.sp,
+                )
+            }
+            Text(
+                text = "Новая версия: $latestVersion",
+                color = AppColors.TextSecondary,
+                fontSize = 14.sp,
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                TextButton(onClick = onDismiss) {
+                    Text(
+                        text = "Позже",
+                        color = AppColors.Accent,
+                    )
+                }
+            }
+        }
+    }
 }
 
 /** Bottom nav tab labels. */
