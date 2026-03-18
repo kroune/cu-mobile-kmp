@@ -100,6 +100,31 @@ fun formatDeadlineShort(deadline: String): String {
     }
 }
 
+/**
+ * Adds [days] to an ISO 8601 deadline and returns formatted `"dd.MM HH:mm"`.
+ *
+ * Returns `null` when [isoDate] is null or on parse errors.
+ */
+fun formatDeadlinePlusDays(isoDate: String?, days: Int): String? {
+    if (isoDate == null) return null
+    return try {
+        val dt = parseIsoDateTime(isoDate)
+        val instant = dt.toInstant(TimeZone.currentSystemDefault())
+        val shifted = Instant.fromEpochMilliseconds(
+            instant.toEpochMilliseconds() + days * 86_400_000L,
+        )
+        val local = shifted.toLocalDateTime(TimeZone.currentSystemDefault())
+        val day = local.dayOfMonth.toString().padStart(2, '0')
+        val month = local.monthNumber.toString().padStart(2, '0')
+        val hour = local.hour.toString().padStart(2, '0')
+        val minute = local.minute.toString().padStart(2, '0')
+        "$day.$month $hour:$minute"
+    } catch (e: Exception) {
+        logger.error(e) { "Failed to compute deadline + $days days: $isoDate" }
+        null
+    }
+}
+
 private fun parseIsoDateTime(iso: String): LocalDateTime {
     // kotlinx-datetime parser is strict, handle common variants
     val normalized = if (iso.endsWith("Z")) {

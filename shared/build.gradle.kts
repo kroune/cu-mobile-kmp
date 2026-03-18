@@ -12,6 +12,12 @@ plugins {
     alias(libs.plugins.detekt)
 }
 
+tasks.register("detektAll") {
+    allprojects {
+        this@register.dependsOn(tasks.withType<Detekt>())
+    }
+}
+
 detekt {
     config.setFrom(file("config/detekt/detekt.yml"))
 }

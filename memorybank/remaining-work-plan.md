@@ -1,30 +1,27 @@
-# Remaining Work Plan — CuMobile KMP
+# Remaining Work — CuMobile KMP
 
-## Created: 2026-02-23
+> Last updated: 2026-03-18
 
-## Priority Order
+## Pending Features (by priority)
 
-### Batch 1: UI Polish (High Priority)
-1. [x] Theme refinement — fix task state colors to match Flutter exactly
-2. [x] Login page polish — add instructions, version, proper button styling
-3. [x] Pull-to-refresh on Home, Tasks, Courses, Longread, Notifications, Files screens
-4. [x] Loading/error/empty states — ensure consistent use across all screens
+### High Priority
+- [ ] **Late days dialog with stepper** — currently `prolongLateDays` sends a hardcoded value; need a dialog with a day selector showing new effective deadline
+- [ ] **File upload system** — expect/actual file picker (Android: ActivityResultContract, iOS: UIDocumentPickerViewController); upload flow: `getUploadLink` → presigned URL → PUT; progress tracking; attach to solutions + comments in `LongreadTaskSection`
 
-### Batch 2: Missing Features (Medium Priority)
-5. [ ] Late days dialog with stepper (currently just sends fixed request)
-6. [ ] Upload system for file attachments (solutions + comments)
-7. [ ] Content search & highlighting in longreads
-8. [ ] Schedule/Calendar integration (ICS parser + day view)
+### Medium Priority
+- [ ] **Content search in longreads** — search bar in `LongreadScreen`; case-insensitive search in markdown content; match highlighting; navigation between matches
+- [ ] **Avatar upload** — expect/actual image picker (Android: photo picker, iOS: PHPickerViewController); POST `/hub/avatars/me` multipart; camera + gallery; size validation <8MB
 
-### Batch 3: Low Priority Features
-9. [ ] Course reordering & archiving (drag-and-drop, local persistence)
-10. [ ] File rename templates
-11. [ ] In-app update checker
-12. [ ] Document scanner (platform-specific, most complex)
+### Low Priority
+- [ ] **In-app update checker** — check GitHub releases API; version compare; update dialog with download link
+- [ ] **Document scanner** — camera/gallery capture (expect/actual); multi-page with reorder; rotation/cropping; PDF generation (high complexity, deferred)
+- [ ] **Model package restructuring** — move `data/model/` to standalone `model/` package; rename `*Response` types
 
-### Batch 4: Code Quality
-13. [ ] Model refactoring: move data/model/ to standalone model/ package
-14. [ ] Rename *Response types to non-API-specific names
-
-## Status
-- Currently implementing: Batch 1
+## Already Done (for reference)
+- ✅ Pull-to-refresh on all screens (Phase 11)
+- ✅ Dark theme refinement (Phase 11)
+- ✅ Unit tests for FormatUtils + Theme (Phase 11)
+- ✅ Course reordering (DataStore + edit mode with Up/Down)
+- ✅ File rename templates (DataStore + settings UI)
+- ✅ Schedule/Calendar integration (ICS parser + day view on Home)
+- ✅ kotlinx-datetime migration

@@ -56,7 +56,7 @@ class DefaultLongreadComponent(
             LongreadComponent.Intent.StartTask -> startTask()
             LongreadComponent.Intent.SubmitSolution -> submitSolution()
             LongreadComponent.Intent.CreateComment -> createComment()
-            LongreadComponent.Intent.ProlongLateDays -> prolongLateDays()
+            is LongreadComponent.Intent.ProlongLateDays -> prolongLateDays(intent.days)
             LongreadComponent.Intent.CancelLateDays -> cancelLateDays()
             is LongreadComponent.Intent.DownloadFile ->
                 downloadFile(intent.material)
@@ -170,11 +170,11 @@ class DefaultLongreadComponent(
         }
     }
 
-    private fun prolongLateDays() {
+    private fun prolongLateDays(days: Int) {
         val taskId = _state.value.activeTaskId ?: return
         scope.launch {
             _state.value = _state.value.copy(isSubmitting = true)
-            taskRepository.prolongLateDays(taskId, 1)
+            taskRepository.prolongLateDays(taskId, days)
             _state.value = _state.value.copy(isSubmitting = false)
             refreshTaskDetails(taskId)
         }

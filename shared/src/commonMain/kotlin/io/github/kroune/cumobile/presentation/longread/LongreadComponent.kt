@@ -80,7 +80,9 @@ interface LongreadComponent {
 
         data object CreateComment : Intent
 
-        data object ProlongLateDays : Intent
+        data class ProlongLateDays(
+            val days: Int,
+        ) : Intent
 
         data object CancelLateDays : Intent
 
