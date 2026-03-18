@@ -5,8 +5,8 @@
 ## Pending Features (by priority)
 
 ### High Priority
-- [ ] **Late days dialog with stepper** — currently `prolongLateDays` sends a hardcoded value; need a dialog with a day selector showing new effective deadline
-- [ ] **File upload system** — expect/actual file picker (Android: ActivityResultContract, iOS: UIDocumentPickerViewController); upload flow: `getUploadLink` → presigned URL → PUT; progress tracking; attach to solutions + comments in `LongreadTaskSection`
+- [x] **Late days dialog with stepper** — DONE: `ProlongLateDays(days: Int)` intent; stepper dialog shows current/new deadline, balance remaining; `formatDeadlinePlusDays()` helper in FormatUtils
+- [ ] **File upload system** — expect/actual file picker (Android: ActivityResultContract, iOS: UIDocumentPickerViewController); upload flow: `getUploadLink` → presigned URL → PUT; progress tracking; attach to solutions + comments in `LongreadTaskSection`. **Start in new session (large feature)**
 
 ### Medium Priority
 - [ ] **Content search in longreads** — search bar in `LongreadScreen`; case-insensitive search in markdown content; match highlighting; navigation between matches

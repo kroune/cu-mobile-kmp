@@ -239,11 +239,43 @@ All phases complete:
 
 ---
 
+## File Upload System — Implementation Notes (not yet started)
+
+The API layer already supports attachments:
+- `TaskApiService.submitTask(taskId, solutionUrl, attachments: List<MaterialAttachment>)` ✅
+- `TaskApiService.createComment(taskId, content, attachments: List<MaterialAttachment>)` ✅
+- `ContentApiService.getUploadLink(cookie, directory, filename, contentType): UploadLinkData` ✅
+- `ContentRepository.getUploadLink(directory, filename, contentType): UploadLinkData?` ✅
+- `UploadLinkData(shortName, filename, objectKey, version, url)` — presigned URL data ✅
+
+**Still needed:**
+1. `ContentApiService.uploadFileToUrl(url, bytes, contentType): Boolean` — PUT to presigned URL (full URL, not base URL)
+2. `ContentRepository.uploadFile(directory, filename, contentType, bytes): MaterialAttachment?` — orchestrates steps 1+2
+3. `PickedFile(name, bytes, contentType, size)` data class in commonMain
+4. `expect fun rememberFilePicker(onFilePicked: (PickedFile) -> Unit): () -> Unit` — expect/actual Composable
+   - Android: `rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument())`
+   - iOS: UIDocumentPickerViewController
+5. `PendingAttachment(name, size, status, uploadedAttachment?)` state class
+6. New state fields in `LongreadComponent.State`: `pendingSolutionAttachments`, `pendingCommentAttachments`
+7. New intents: `PickSolutionAttachment`, `RemoveSolutionAttachment(index)`, `PickCommentAttachment`, `RemoveCommentAttachment(index)`
+8. UI: attach button + pending file chips in `SolutionTab` and `CommentsTab`
+
+**Directory parameter**: solutions → `"tasks/$taskId/solutions"`, comments → `"tasks/$taskId/comments/{uuid}"`
+
+**File upload flow in component:**
+1. User taps "Attach" → `rememberFilePicker` returns `PickedFile`
+2. Add `PendingAttachment(status=uploading)` to state
+3. Background: `contentRepository.uploadFile(...)` → get `MaterialAttachment`
+4. Update `PendingAttachment(status=uploaded, uploadedAttachment=...)`
+5. On submit: collect all `.uploadedAttachment` from pending list → pass to `submitTask`/`createComment`
+
+---
+
 ## Remaining Work
 
 | Feature | Priority | Notes |
 |---------|----------|-------|
-| Late days dialog with stepper | High | Currently sends fixed request, needs stepper UI |
+| Late days dialog with stepper | **Done** | `ProlongLateDays(days: Int)` intent; stepper dialog; `formatDeadlinePlusDays()` in FormatUtils |
 | File upload system | High | expect/actual file picker, presigned URL upload, progress |
 | Content search in longreads | Medium | Case-insensitive, highlight, match navigation |
 | Avatar upload | Medium | expect/actual image picker, POST multipart |
