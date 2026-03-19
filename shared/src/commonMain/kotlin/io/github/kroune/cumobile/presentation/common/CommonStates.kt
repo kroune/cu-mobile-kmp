@@ -83,25 +83,25 @@ internal fun EmptyContent(
     }
 }
 
-//@Preview
-//@Composable
-//private fun PreviewLoadingDark() {
-//    CuMobileTheme(darkTheme = true) {
-//        Box(Modifier.background(AppTheme.colors.background)) {
-//            LoadingContent()
-//        }
-//    }
-//}
-//
-//@Preview
-//@Composable
-//private fun PreviewLoadingLight() {
-//    CuMobileTheme(darkTheme = false) {
-//        Box(Modifier.background(AppTheme.colors.background)) {
-//            LoadingContent()
-//        }
-//    }
-//}
+@Preview
+@Composable
+private fun PreviewLoadingDark() {
+    CuMobileTheme(darkTheme = true) {
+        Box(Modifier.background(AppTheme.colors.background)) {
+            LoadingContent()
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewLoadingLight() {
+    CuMobileTheme(darkTheme = false) {
+        Box(Modifier.background(AppTheme.colors.background)) {
+            LoadingContent()
+        }
+    }
+}
 
 @Preview
 @Composable

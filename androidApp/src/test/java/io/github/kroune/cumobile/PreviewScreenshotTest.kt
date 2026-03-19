@@ -3,6 +3,7 @@ package io.github.kroune.cumobile
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onRoot
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
+import com.github.takahirom.roborazzi.RoborazziOptions
 import com.github.takahirom.roborazzi.captureRoboImage
 import org.junit.Rule
 import org.junit.Test
@@ -17,7 +18,7 @@ import sergio.sastre.composable.preview.scanner.core.preview.ComposablePreview
 
 @RunWith(ParameterizedRobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
-@Config(sdk = [35], application = TestApplication::class)
+@Config(sdk = [31], application = TestApplication::class, qualifiers = "w411dp-h891dp-560dpi")
 class PreviewScreenshotTest(
     private val preview: ComposablePreview<AndroidPreviewInfo>,
 ) {
@@ -48,6 +49,11 @@ class PreviewScreenshotTest(
             mainClock.advanceTimeBy(5_000)
             onRoot().captureRoboImage(
                 filePath = "$SCREENSHOT_DIR/$screenshotId.png",
+                roborazziOptions = RoborazziOptions(
+                    recordOptions = RoborazziOptions.RecordOptions(
+                        resizeScale = 0.4,
+                    )
+                )
             )
             mainClock.autoAdvance = true
         }
