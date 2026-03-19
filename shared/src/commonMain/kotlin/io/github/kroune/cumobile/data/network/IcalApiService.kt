@@ -19,8 +19,8 @@ internal class IcalApiService(
      * Fetches a calendar feed from the given [url] and returns
      * the parsed events. Returns empty list on failure.
      */
-    suspend fun fetchCalendar(url: String): List<CalendarEvent> {
-        return try {
+    suspend fun fetchCalendar(url: String): List<CalendarEvent> =
+        try {
             val response = client.get(url)
             val body = response.bodyAsText()
             parser.parse(body)
@@ -28,5 +28,4 @@ internal class IcalApiService(
             logger.error(e) { "Failed to fetch calendar from $url" }
             emptyList()
         }
-    }
 }

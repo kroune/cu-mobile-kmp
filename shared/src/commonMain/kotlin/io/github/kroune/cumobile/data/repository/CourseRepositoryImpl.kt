@@ -22,11 +22,14 @@ internal class CourseRepositoryImpl(
     private val courseApi: CourseApiService,
 ) : CookieAwareRepository(authLocal),
     CourseRepository {
-    override suspend fun fetchCourses(): List<Course>? = withCookie { courseApi.fetchCourses(it) }
+    override suspend fun fetchCourses(): List<Course>? =
+        withCookie { courseApi.fetchCourses(it) }
 
-    override suspend fun fetchCourseOverview(courseId: Int): CourseOverview? = withCookie { courseApi.fetchCourseOverview(it, courseId) }
+    override suspend fun fetchCourseOverview(courseId: Int): CourseOverview? =
+        withCookie { courseApi.fetchCourseOverview(it, courseId) }
 
     override val courseIdOrderFlow: Flow<List<Int>> = courseLocal.courseIdOrderFlow
 
-    override suspend fun saveCourseIdOrder(ids: List<Int>) = courseLocal.saveCourseIdOrder(ids)
+    override suspend fun saveCourseIdOrder(ids: List<Int>) =
+        courseLocal.saveCourseIdOrder(ids)
 }

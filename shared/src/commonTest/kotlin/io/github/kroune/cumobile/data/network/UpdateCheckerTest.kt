@@ -5,7 +5,6 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class UpdateCheckerTest {
-
     @Test
     fun newerMajorVersion() {
         assertTrue(UpdateChecker.isNewerVersion("2.0.0", "1.0.0"))

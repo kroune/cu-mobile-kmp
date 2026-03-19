@@ -69,8 +69,7 @@ class DefaultCoursesComponent(
         courseRepository.courseIdOrderFlow
             .onEach { order ->
                 _state.value = _state.value.copy(courseOrder = order)
-            }
-            .launchIn(scope)
+            }.launchIn(scope)
     }
 
     private fun reorderCourses(ids: List<Int>) {

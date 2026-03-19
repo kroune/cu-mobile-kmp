@@ -4,10 +4,13 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+
+private val logger = KotlinLogging.logger {}
 
 /**
  * Local data source for persisting file renaming templates.
@@ -21,7 +24,8 @@ internal class FileRenameLocalDataSource(
         if (json.isBlank()) return@map emptyList()
         try {
             Json.decodeFromString<List<FileRenameRule>>(json)
-        } catch (e: Exception) {
+        } catch (e: kotlinx.serialization.SerializationException) {
+            logger.warn(e) { "Failed to parse rename rules" }
             emptyList()
         }
     }

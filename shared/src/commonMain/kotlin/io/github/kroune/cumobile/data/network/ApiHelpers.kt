@@ -14,11 +14,15 @@ internal const val TargetCookieName = "bff.cookie"
 /** Default list limit for paginated API endpoints. */
 internal const val MaxListLimit = 10_000
 
+/** Max chars to read from an error response body for logging. */
+private const val ErrorBodyMaxChars = 500
+
 /** Entity type identifier used in the comments API. */
 internal const val CommentEntityType = "task"
 
 /** Formats a cookie string for the HTTP Cookie header. */
-internal fun cookieHeader(cookie: String): String = "$TargetCookieName=$cookie"
+internal fun cookieHeader(cookie: String): String =
+    "$TargetCookieName=$cookie"
 
 /** Checks whether the HTTP status indicates a successful mutation (200, 201, 204). */
 internal fun isSuccessStatus(status: HttpStatusCode): Boolean =
@@ -44,8 +48,8 @@ internal suspend inline fun <reified T> safeApiCall(
             response.body<T>()
         } else {
             val body = try {
-                response.bodyAsText().take(500)
-            } catch (_: Exception) {
+                response.bodyAsText().take(ErrorBodyMaxChars)
+            } catch (ignored: Exception) {
                 "<unable to read body>"
             }
             logger.warn { "$description returned ${response.status}, body: $body" }
@@ -86,4 +90,5 @@ internal suspend inline fun safeApiAction(
     }
 
 /** URL-encodes a string for use in query parameters. */
-internal fun String.encodeUrlParam(): String = encodeURLQueryComponent()
+internal fun String.encodeUrlParam(): String =
+    encodeURLQueryComponent()

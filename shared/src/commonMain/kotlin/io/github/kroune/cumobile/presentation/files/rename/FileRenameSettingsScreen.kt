@@ -38,7 +38,6 @@ import io.github.kroune.cumobile.presentation.common.DetailTopBar
 import io.github.kroune.cumobile.presentation.common.EmptyContent
 import io.github.kroune.cumobile.presentation.common.ErrorContent
 import io.github.kroune.cumobile.presentation.common.LoadingContent
-import io.github.kroune.cumobile.presentation.common.stripEmojiPrefix
 
 @Composable
 fun FileRenameSettingsScreen(
@@ -175,7 +174,7 @@ private fun AddRuleDialog(
     onConfirm: (FileRenameRule) -> Unit,
 ) {
     // Simple inline dialog using Column
-    var selectedCourseId by remember { mutableStateOf(courses.firstOrNull()?.id ?: 0) }
+    val selectedCourseId by remember { mutableStateOf(courses.firstOrNull()?.id ?: 0) }
     var activityName by remember { mutableStateOf("") }
     var extension by remember { mutableStateOf("pdf") }
     var template by remember { mutableStateOf("") }

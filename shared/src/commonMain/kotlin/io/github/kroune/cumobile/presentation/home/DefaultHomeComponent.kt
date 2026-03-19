@@ -6,10 +6,6 @@ import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.data.model.StudentTask
 import io.github.kroune.cumobile.data.model.TaskState
-import io.github.kroune.cumobile.domain.repository.CalendarRepository
-import io.github.kroune.cumobile.domain.repository.CourseRepository
-import io.github.kroune.cumobile.domain.repository.ProfileRepository
-import io.github.kroune.cumobile.domain.repository.TaskRepository
 import io.github.kroune.cumobile.presentation.common.DateTimeProvider
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
@@ -20,6 +16,8 @@ import kotlinx.coroutines.launch
 
 private val logger = KotlinLogging.logger {}
 
+private const val MillisPerDay = 86_400_000L
+
 /**
  * Default implementation of [HomeComponent].
  *
@@ -28,15 +26,16 @@ private val logger = KotlinLogging.logger {}
  */
 class DefaultHomeComponent(
     componentContext: ComponentContext,
-    private val taskRepository: TaskRepository,
-    private val courseRepository: CourseRepository,
-    private val profileRepository: ProfileRepository,
-    private val calendarRepository: CalendarRepository,
+    deps: HomeDependencies,
     private val onOpenTask: (StudentTask) -> Unit,
     private val onOpenCourse: (Int) -> Unit,
     private val onOpenProfile: () -> Unit = {},
 ) : HomeComponent,
     ComponentContext by componentContext {
+    private val taskRepository = deps.taskRepository
+    private val courseRepository = deps.courseRepository
+    private val profileRepository = deps.profileRepository
+    private val calendarRepository = deps.calendarRepository
     private val scope = coroutineScope(
         Dispatchers.Main.immediate + SupervisorJob(),
     )
@@ -78,13 +77,12 @@ class DefaultHomeComponent(
                 } else {
                     _state.value = _state.value.copy(classes = emptyList())
                 }
-            }
-            .launchIn(scope)
+            }.launchIn(scope)
     }
 
     private fun changeDate(days: Int) {
         val current = _state.value.selectedDateMillis
-        val updated = current + (days * 86_400_000L)
+        val updated = current + (days * MillisPerDay)
         _state.value = _state.value.copy(selectedDateMillis = updated)
         loadSchedule()
     }

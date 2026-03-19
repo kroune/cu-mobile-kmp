@@ -72,7 +72,10 @@ interface CoursesComponent {
 }
 
 /** Returns active (non-archived) courses, using manual order if available. */
-internal fun activeCourses(courses: List<Course>, order: List<Int>): List<Course> {
+internal fun activeCourses(
+    courses: List<Course>,
+    order: List<Int>,
+): List<Course> {
     val active = courses.filter { !it.isArchived }
     if (order.isEmpty()) return active.sortedBy { it.name }
 
@@ -89,7 +92,10 @@ internal fun activeCourses(courses: List<Course>, order: List<Int>): List<Course
 }
 
 /** Returns archived courses, using manual order if available. */
-internal fun archivedCourses(courses: List<Course>, order: List<Int>): List<Course> {
+internal fun archivedCourses(
+    courses: List<Course>,
+    order: List<Int>,
+): List<Course> {
     val archived = courses.filter { it.isArchived }
     if (order.isEmpty()) return archived.sortedBy { it.name }
 

@@ -18,6 +18,7 @@ decompose = "3.5.0"
 essenty = "2.5.0"
 
 detekt = "2.0.0-alpha.2"
+vkompose = "0.7.2"
 
 datastore = "1.2.0"
 
@@ -107,3 +108,4 @@ kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", versio
 kotlinCocoapods = { id = "org.jetbrains.kotlin.native.cocoapods", version.ref = "kotlin" }
 
 roborazziPlugin = { id = "io.github.takahirom.roborazzi", version.ref = "roborazzi" }
+vkompose = { id = "com.vk.vkompose", version.ref = "vkompose" }

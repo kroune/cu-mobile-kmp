@@ -97,7 +97,7 @@ internal fun CoursesScreenContent(
             when {
                 state.isLoading && state.courses.isEmpty() -> LoadingContent()
                 state.error != null && state.courses.isEmpty() -> ErrorContent(
-                    error = state.error.orEmpty(),
+                    error = state.error,
                     onRetry = { onIntent(CoursesComponent.Intent.Refresh) },
                 )
                 else -> when (state.segment) {
@@ -221,7 +221,11 @@ private fun ActiveCourseItem(
     )
 }
 
-private fun swapIds(courses: List<Course>, from: Int, to: Int): List<Int> {
+private fun swapIds(
+    courses: List<Course>,
+    from: Int,
+    to: Int,
+): List<Int> {
     val ids = courses.map { it.id }.toMutableList()
     val temp = ids[from]
     ids[from] = ids[to]

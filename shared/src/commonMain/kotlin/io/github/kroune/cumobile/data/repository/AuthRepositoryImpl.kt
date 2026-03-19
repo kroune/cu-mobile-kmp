@@ -10,6 +10,8 @@ import kotlinx.coroutines.flow.map
 
 private val logger = KotlinLogging.logger {}
 
+private const val CookieLogPrefixLen = 20
+
 /**
  * Implementation of [AuthRepository] that uses [AuthLocalDataSource] for cookie
  * persistence and [ProfileApiService] for cookie validation.
@@ -38,7 +40,7 @@ internal class AuthRepositoryImpl(
             logger.warn { "validateCookie: no cookie stored" }
             return false
         }
-        logger.info { "validateCookie: cookie length=${cookie.length}, prefix=${cookie.take(20)}..." }
+        logger.info { "validateCookie: cookie length=${cookie.length}, prefix=${cookie.take(CookieLogPrefixLen)}..." }
         val profile = profileApi.fetchProfile(cookie)
         val isValid = profile != null
         logger.info { "validateCookie: fetchProfile returned ${if (isValid) "profile" else "null"}" }

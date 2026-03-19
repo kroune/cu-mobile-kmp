@@ -97,5 +97,6 @@ class DefaultNotificationsComponent(
         return false
     }
 
-    private fun sortByDate(items: List<NotificationItem>) = items.sortedByDescending { it.createdAt }
+    private fun sortByDate(items: List<NotificationItem>) =
+        items.sortedByDescending { it.createdAt }
 }

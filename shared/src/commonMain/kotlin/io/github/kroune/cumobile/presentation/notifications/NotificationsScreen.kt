@@ -32,6 +32,7 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
@@ -39,7 +40,6 @@ import io.github.kroune.cumobile.data.model.NotificationItem
 import io.github.kroune.cumobile.presentation.common.AppTheme
 import io.github.kroune.cumobile.presentation.common.CuMobileTheme
 import io.github.kroune.cumobile.presentation.common.DetailTopBar
-import androidx.compose.ui.tooling.preview.Preview
 import io.github.kroune.cumobile.presentation.common.EmptyContent
 import io.github.kroune.cumobile.presentation.common.ErrorContent
 import io.github.kroune.cumobile.presentation.common.LoadingContent
@@ -121,7 +121,7 @@ internal fun NotificationsScreenContent(
             when {
                 state.isLoading && state.currentNotifications.isEmpty() -> LoadingContent()
                 state.error != null && state.currentNotifications.isEmpty() -> ErrorContent(
-                    error = state.error.orEmpty(),
+                    error = state.error,
                     onRetry = { onIntent(NotificationsComponent.Intent.Refresh) },
                 )
                 state.currentNotifications.isEmpty() -> EmptyContent(

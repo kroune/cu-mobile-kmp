@@ -2,12 +2,12 @@ package io.github.kroune.cumobile.presentation.longread
 
 import com.arkivanov.decompose.value.Value
 import io.github.kroune.cumobile.data.model.LongreadMaterial
-import kotlinx.coroutines.flow.Flow
 import io.github.kroune.cumobile.data.model.PendingAttachment
 import io.github.kroune.cumobile.data.model.PickedFile
 import io.github.kroune.cumobile.data.model.TaskComment
 import io.github.kroune.cumobile.data.model.TaskDetails
 import io.github.kroune.cumobile.data.model.TaskEvent
+import kotlinx.coroutines.flow.Flow
 
 /**
  * MVI component for the longread/material viewer screen.
@@ -23,7 +23,9 @@ interface LongreadComponent {
     fun onIntent(intent: Intent)
 
     sealed interface Effect {
-        data class ShowError(val message: String) : Effect
+        data class ShowError(
+            val message: String,
+        ) : Effect
     }
 
     data class State(

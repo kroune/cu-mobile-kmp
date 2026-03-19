@@ -62,14 +62,14 @@ class DefaultProfileComponent(
     }
 
     private fun observeCalendarUrl() {
-        calendarRepository?.calendarUrlFlow
+        calendarRepository
+            ?.calendarUrlFlow
             ?.onEach { url ->
                 _state.value = _state.value.copy(
                     calendarUrl = url,
                     calendarUrlInput = url.orEmpty(),
                 )
-            }
-            ?.launchIn(scope)
+            }?.launchIn(scope)
     }
 
     private fun saveCalendarUrl() {

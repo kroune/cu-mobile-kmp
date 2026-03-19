@@ -21,7 +21,8 @@ internal class PerformanceRepositoryImpl(
     private val performanceApi: PerformanceApiService,
 ) : CookieAwareRepository(authLocal),
     PerformanceRepository {
-    override suspend fun fetchPerformance(): StudentPerformanceResponse? = withCookie { performanceApi.fetchPerformance(it) }
+    override suspend fun fetchPerformance(): StudentPerformanceResponse? =
+        withCookie { performanceApi.fetchPerformance(it) }
 
     override suspend fun fetchCourseExercises(courseId: Int): CourseExercisesResponse? =
         withCookie { performanceApi.fetchCourseExercises(it, courseId) }
@@ -29,5 +30,6 @@ internal class PerformanceRepositoryImpl(
     override suspend fun fetchCoursePerformance(courseId: Int): CourseStudentPerformanceResponse? =
         withCookie { performanceApi.fetchCoursePerformance(it, courseId) }
 
-    override suspend fun fetchGradebook(): GradebookResponse? = withCookie { performanceApi.fetchGradebook(it) }
+    override suspend fun fetchGradebook(): GradebookResponse? =
+        withCookie { performanceApi.fetchGradebook(it) }
 }

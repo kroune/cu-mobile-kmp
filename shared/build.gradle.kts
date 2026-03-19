@@ -28,6 +28,7 @@ object AppInfo {
 
 dependencies {
     detektPlugins(project(":detekt-rules"))
+    detektPlugins("com.vk.vkompose:detekt:0.6.1")
 }
 
 tasks.withType<Detekt> { dependsOn(":detekt-rules:assemble") }

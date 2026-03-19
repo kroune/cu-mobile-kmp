@@ -19,6 +19,8 @@ import platform.Foundation.writeToFile
 
 private val logger = KotlinLogging.logger {}
 
+private const val MillisPerSecond = 1000
+
 /**
  * iOS implementation of [FileStorage].
  *
@@ -102,7 +104,7 @@ internal class IosFileStorage : FileStorage {
         val size = (attributes[NSFileSize] as? Number)?.toLong() ?: 0L
         val modDate = attributes[NSFileModificationDate]
         val modMillis = if (modDate is platform.Foundation.NSDate) {
-            (modDate.timeIntervalSince1970 * 1000).toLong()
+            (modDate.timeIntervalSince1970 * MillisPerSecond).toLong()
         } else {
             0L
         }
@@ -193,7 +195,8 @@ internal class IosFileStorage : FileStorage {
         return resolved
     }
 
-    private fun nsString(value: String): NSString = NSString.create(string = value)
+    private fun nsString(value: String): NSString =
+        NSString.create(string = value)
 }
 
 /**

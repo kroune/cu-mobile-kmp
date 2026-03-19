@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.kroune.cumobile.data.model.StudentTask
@@ -26,7 +27,6 @@ import io.github.kroune.cumobile.data.model.TaskExercise
 import io.github.kroune.cumobile.data.model.TaskState
 import io.github.kroune.cumobile.presentation.common.AppTheme
 import io.github.kroune.cumobile.presentation.common.CuMobileTheme
-import androidx.compose.ui.tooling.preview.Preview
 import io.github.kroune.cumobile.presentation.common.StatusBadge
 import io.github.kroune.cumobile.presentation.common.formatDeadline
 import io.github.kroune.cumobile.presentation.common.isOverdue

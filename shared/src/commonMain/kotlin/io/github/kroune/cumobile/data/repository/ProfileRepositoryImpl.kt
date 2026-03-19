@@ -17,11 +17,14 @@ internal class ProfileRepositoryImpl(
     private val profileApi: ProfileApiService,
 ) : CookieAwareRepository(authLocal),
     ProfileRepository {
-    override suspend fun fetchProfile(): StudentProfile? = withCookie { profileApi.fetchProfile(it) }
+    override suspend fun fetchProfile(): StudentProfile? =
+        withCookie { profileApi.fetchProfile(it) }
 
-    override suspend fun fetchLmsProfile(): StudentLmsProfile? = withCookie { profileApi.fetchLmsProfile(it) }
+    override suspend fun fetchLmsProfile(): StudentLmsProfile? =
+        withCookie { profileApi.fetchLmsProfile(it) }
 
-    override suspend fun fetchAvatar(): ByteArray? = withCookie { profileApi.fetchAvatar(it) }
+    override suspend fun fetchAvatar(): ByteArray? =
+        withCookie { profileApi.fetchAvatar(it) }
 
     override suspend fun uploadAvatar(
         bytes: ByteArray,
@@ -31,5 +34,6 @@ internal class ProfileRepositoryImpl(
             profileApi.uploadAvatar(it, bytes, contentType)
         }
 
-    override suspend fun deleteAvatar(): Boolean = withCookieOrFalse { profileApi.deleteAvatar(it) }
+    override suspend fun deleteAvatar(): Boolean =
+        withCookieOrFalse { profileApi.deleteAvatar(it) }
 }

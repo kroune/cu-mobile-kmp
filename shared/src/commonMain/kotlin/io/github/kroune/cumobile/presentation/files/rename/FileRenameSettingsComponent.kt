@@ -20,9 +20,16 @@ interface FileRenameSettingsComponent {
     )
 
     sealed interface Intent {
-        data class AddRule(val rule: FileRenameRule) : Intent
-        data class DeleteRule(val rule: FileRenameRule) : Intent
+        data class AddRule(
+            val rule: FileRenameRule,
+        ) : Intent
+
+        data class DeleteRule(
+            val rule: FileRenameRule,
+        ) : Intent
+
         data object Back : Intent
+
         data object Refresh : Intent
     }
 }

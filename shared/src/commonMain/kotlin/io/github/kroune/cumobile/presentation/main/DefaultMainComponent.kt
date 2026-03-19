@@ -16,17 +16,11 @@ import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
-import io.github.kroune.cumobile.data.model.StudentTask
 import io.github.kroune.cumobile.data.model.UpdateInfo
 import io.github.kroune.cumobile.presentation.courses.DefaultCoursesComponent
-import io.github.kroune.cumobile.presentation.courses.detail.DefaultCourseDetailComponent
 import io.github.kroune.cumobile.presentation.files.DefaultFilesComponent
 import io.github.kroune.cumobile.presentation.home.DefaultHomeComponent
-import io.github.kroune.cumobile.presentation.longread.DefaultLongreadComponent
-import io.github.kroune.cumobile.presentation.longread.LongreadParams
-import io.github.kroune.cumobile.presentation.notifications.DefaultNotificationsComponent
-import io.github.kroune.cumobile.presentation.performance.DefaultCoursePerformanceComponent
-import io.github.kroune.cumobile.presentation.profile.DefaultProfileComponent
+import io.github.kroune.cumobile.presentation.home.HomeDependencies
 import io.github.kroune.cumobile.presentation.tasks.DefaultTasksComponent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -109,11 +103,13 @@ class DefaultMainComponent(
             TabConfig.Home -> MainComponent.TabChild.HomeChild(
                 DefaultHomeComponent(
                     componentContext = childContext,
-                    taskRepository = mainDependencies.taskRepository,
-                    courseRepository = mainDependencies.courseRepository,
-                    profileRepository = mainDependencies.profileRepository,
-                    calendarRepository = mainDependencies.calendarRepository,
-                    onOpenTask = ::handleOpenTask,
+                    deps = HomeDependencies(
+                        taskRepository = mainDependencies.taskRepository,
+                        courseRepository = mainDependencies.courseRepository,
+                        profileRepository = mainDependencies.profileRepository,
+                        calendarRepository = mainDependencies.calendarRepository,
+                    ),
+                    onOpenTask = { navigateToCourseDetail(it.course.id) },
                     onOpenCourse = ::navigateToCourseDetail,
                     onOpenProfile = ::navigateToProfile,
                 ),
@@ -122,7 +118,7 @@ class DefaultMainComponent(
                 DefaultTasksComponent(
                     componentContext = childContext,
                     taskRepository = mainDependencies.taskRepository,
-                    onOpenTask = ::handleOpenTask,
+                    onOpenTask = { navigateToCourseDetail(it.course.id) },
                 ),
             )
             TabConfig.Courses -> MainComponent.TabChild.CoursesChild(
@@ -152,6 +148,14 @@ class DefaultMainComponent(
 
     private val detailNavigation = StackNavigation<DetailConfig>()
 
+    private val detailChildFactory = DetailChildFactory(
+        deps = mainDependencies,
+        navigateBack = ::navigateDetailBack,
+        navigateToLongread = ::navigateToLongread,
+        onLogout = onLogout,
+        scope = scope,
+    )
+
     override val detailStack: Value<ChildStack<*, MainComponent.DetailChild>> =
         childStack(
             source = detailNavigation,
@@ -159,7 +163,7 @@ class DefaultMainComponent(
             initialConfiguration = DetailConfig.None,
             key = "DetailStack",
             handleBackButton = true,
-            childFactory = ::createDetailChild,
+            childFactory = detailChildFactory::create,
         )
 
     override fun navigateToProfile() {
@@ -202,90 +206,6 @@ class DefaultMainComponent(
         detailNavigation.pop()
     }
 
-    private fun createDetailChild(
-        config: DetailConfig,
-        childContext: ComponentContext,
-    ): MainComponent.DetailChild =
-        when (config) {
-            DetailConfig.None -> MainComponent.DetailChild.None
-            is DetailConfig.CourseDetail ->
-                MainComponent.DetailChild.CourseDetailChild(
-                    DefaultCourseDetailComponent(
-                        componentContext = childContext,
-                        courseId = config.courseId,
-                        courseRepository = mainDependencies.courseRepository,
-                        onOpenLongread = { longreadId, cId, themeId ->
-                            navigateToLongread(longreadId, cId, themeId)
-                        },
-                        onBack = ::navigateDetailBack,
-                    ),
-                )
-            is DetailConfig.Longread ->
-                MainComponent.DetailChild.LongreadChild(
-                    DefaultLongreadComponent(
-                        componentContext = childContext,
-                        params = LongreadParams(
-                            longreadId = config.longreadId,
-                            courseId = config.courseId,
-                            themeId = config.themeId,
-                        ),
-                        contentRepository = mainDependencies.contentRepository,
-                        taskRepository = mainDependencies.taskRepository,
-                        renameRepository = mainDependencies.fileRenameRepository,
-                        onBack = ::navigateDetailBack,
-                        onDownloadReady = { url, filename ->
-                            scope.launch {
-                                mainDependencies.fileRepository.downloadAndSave(
-                                    url,
-                                    filename,
-                                )
-                            }
-                        },
-                    ),
-                )
-            is DetailConfig.CoursePerformance ->
-                MainComponent.DetailChild.CoursePerformanceChild(
-                    DefaultCoursePerformanceComponent(
-                        componentContext = childContext,
-                        courseId = config.courseId,
-                        courseName = config.courseName,
-                        totalGrade = config.totalGrade,
-                        performanceRepository = mainDependencies.performanceRepository,
-                        onBack = ::navigateDetailBack,
-                    ),
-                )
-            DetailConfig.Profile ->
-                MainComponent.DetailChild.ProfileChild(
-                    DefaultProfileComponent(
-                        componentContext = childContext,
-                        profileRepository = mainDependencies.profileRepository,
-                        calendarRepository = mainDependencies.calendarRepository,
-                        onBack = ::navigateDetailBack,
-                        onLogout = onLogout,
-                    ),
-                )
-            DetailConfig.Notifications ->
-                MainComponent.DetailChild.NotificationsChild(
-                    DefaultNotificationsComponent(
-                        componentContext = childContext,
-                        notificationRepository = mainDependencies.notificationRepository,
-                        onBack = ::navigateDetailBack,
-                        onOpenLongread = { longreadId, courseId, themeId ->
-                            navigateToLongread(longreadId, courseId, themeId)
-                        },
-                    ),
-                )
-            DetailConfig.FileRenameSettings ->
-                MainComponent.DetailChild.FileRenameSettingsChild(
-                    io.github.kroune.cumobile.presentation.files.rename.DefaultFileRenameSettingsComponent(
-                        componentContext = childContext,
-                        renameRepository = mainDependencies.fileRenameRepository,
-                        courseRepository = mainDependencies.courseRepository,
-                        onBack = ::navigateDetailBack,
-                    ),
-                )
-        }
-
     // endregion
 
     // region Logout
@@ -297,17 +217,6 @@ class DefaultMainComponent(
     }
 
     // endregion
-
-    /**
-     * Handles opening a task from the home screen deadlines section.
-     *
-     * Navigates to the course detail since the task does not carry a
-     * longreadId. Direct longread navigation requires resolving through
-     * the course overview (deferred to a later phase).
-     */
-    private fun handleOpenTask(task: StudentTask) {
-        navigateToCourseDetail(task.course.id)
-    }
 
     // region Serializable configs
 
@@ -327,7 +236,7 @@ class DefaultMainComponent(
     }
 
     @Serializable
-    private sealed interface DetailConfig {
+    internal sealed interface DetailConfig {
         @Serializable
         data object None : DetailConfig
 

@@ -9,8 +9,8 @@ import kotlinx.serialization.Serializable
 data class FileRenameRule(
     val courseId: Int,
     val activityName: String, // e.g., "Домашнее задание"
-    val extension: String,    // e.g., "pdf"
-    val template: String,      // e.g., "HW_{course}_{student}_{date}.pdf"
+    val extension: String, // e.g., "pdf"
+    val template: String, // e.g., "HW_{course}_{student}_{date}.pdf"
 ) {
     /**
      * Applies the template using the provided context.
@@ -24,11 +24,10 @@ data class FileRenameRule(
         courseName: String,
         activityName: String,
         version: String,
-    ): String {
-        return template
+    ): String =
+        template
             .replace("{course}", courseName.replace(" ", "_"))
             .replace("{activity}", activityName.replace(" ", "_"))
             .replace("{version}", version)
             .replace(" ", "_")
-    }
 }

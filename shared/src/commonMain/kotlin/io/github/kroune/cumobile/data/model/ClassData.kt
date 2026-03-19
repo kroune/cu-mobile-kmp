@@ -7,7 +7,7 @@ package io.github.kroune.cumobile.data.model
  */
 data class ClassData(
     val startTime: String, // "13:00"
-    val endTime: String,   // "14:30"
+    val endTime: String, // "14:30"
     val room: String,
     val type: String,
     val title: String,

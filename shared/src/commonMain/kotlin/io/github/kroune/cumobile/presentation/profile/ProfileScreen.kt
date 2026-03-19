@@ -38,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
@@ -45,7 +46,6 @@ import io.github.kroune.cumobile.data.model.StudentProfile
 import io.github.kroune.cumobile.presentation.common.ActionErrorBar
 import io.github.kroune.cumobile.presentation.common.AppTheme
 import io.github.kroune.cumobile.presentation.common.CuMobileTheme
-import androidx.compose.ui.tooling.preview.Preview
 import io.github.kroune.cumobile.presentation.common.DetailTopBar
 import io.github.kroune.cumobile.presentation.common.ErrorContent
 import io.github.kroune.cumobile.presentation.common.LoadingContent
@@ -124,7 +124,7 @@ internal fun ProfileScreenContent(
         when {
             state.isLoading -> LoadingContent()
             state.error != null && state.profile == null -> ErrorContent(
-                error = state.error.orEmpty(),
+                error = state.error,
                 onRetry = { onIntent(ProfileComponent.Intent.Refresh) },
             )
             state.profile != null -> ProfileContent(

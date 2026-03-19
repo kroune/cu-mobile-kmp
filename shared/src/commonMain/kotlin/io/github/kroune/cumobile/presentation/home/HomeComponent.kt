@@ -72,7 +72,9 @@ interface HomeComponent {
         data object Today : Intent
 
         /** Connect a new iCal calendar URL. */
-        data class ConnectCalendar(val url: String) : Intent
+        data class ConnectCalendar(
+            val url: String,
+        ) : Intent
 
         /** Disconnect the current calendar. */
         data object DisconnectCalendar : Intent

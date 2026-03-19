@@ -4,7 +4,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class ThemeTest {
-
     @Test
     fun testStripEmojiPrefix() {
         assertEquals("Математика", stripEmojiPrefix("📐 Математика"))

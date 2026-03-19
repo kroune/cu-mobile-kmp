@@ -15,6 +15,8 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 
 private val logger = KotlinLogging.logger {}
 
+private const val CookieLogPrefixLen = 20
+
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
 actual fun PlatformWebView(
@@ -78,7 +80,7 @@ private fun tryCaptureCookie(
         logger.debug { "bff.cookie not found yet" }
         return
     }
-    logger.info { "bff.cookie captured, length=${cookie.length}, prefix=${cookie.take(20)}..." }
+    logger.info { "bff.cookie captured, length=${cookie.length}, prefix=${cookie.take(CookieLogPrefixLen)}..." }
     captureState.isCaptured = true
     onCookieCaptured(cookie)
 }

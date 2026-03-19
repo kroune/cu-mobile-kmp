@@ -8,9 +8,6 @@ import io.github.kroune.cumobile.data.model.LongreadMaterial
 import io.github.kroune.cumobile.data.model.PendingAttachment
 import io.github.kroune.cumobile.data.model.PickedFile
 import io.github.kroune.cumobile.data.model.UploadStatus
-import io.github.kroune.cumobile.domain.repository.ContentRepository
-import io.github.kroune.cumobile.domain.repository.FileRenameRepository
-import io.github.kroune.cumobile.domain.repository.TaskRepository
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -31,13 +28,14 @@ private val logger = KotlinLogging.logger {}
 class DefaultLongreadComponent(
     componentContext: ComponentContext,
     params: LongreadParams,
-    private val contentRepository: ContentRepository,
-    private val taskRepository: TaskRepository,
-    private val renameRepository: FileRenameRepository,
+    deps: LongreadDependencies,
     private val onBack: () -> Unit,
     private val onDownloadReady: (url: String, filename: String) -> Unit,
 ) : LongreadComponent,
     ComponentContext by componentContext {
+    private val contentRepository = deps.contentRepository
+    private val taskRepository = deps.taskRepository
+    private val renameRepository = deps.renameRepository
     private val scope = coroutineScope(
         Dispatchers.Main.immediate + SupervisorJob(),
     )

@@ -70,8 +70,7 @@ class DefaultFileRenameSettingsComponent(
         renameRepository.rules
             .onEach { rules ->
                 _state.value = _state.value.copy(rules = rules)
-            }
-            .launchIn(scope)
+            }.launchIn(scope)
     }
 
     private fun addRule(rule: FileRenameRule) {

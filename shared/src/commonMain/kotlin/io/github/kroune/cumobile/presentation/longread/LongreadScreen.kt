@@ -34,6 +34,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
@@ -44,7 +45,6 @@ import io.github.kroune.cumobile.presentation.common.CuMobileTheme
 import io.github.kroune.cumobile.presentation.common.DetailTopBar
 import io.github.kroune.cumobile.presentation.common.ErrorContent
 import io.github.kroune.cumobile.presentation.common.LoadingContent
-import androidx.compose.ui.tooling.preview.Preview
 import io.github.kroune.cumobile.presentation.common.formatSizeBytes
 
 /**
@@ -131,7 +131,7 @@ internal fun LongreadScreenContent(
             when {
                 state.isLoading && state.materials.isEmpty() -> LoadingContent()
                 state.error != null && state.materials.isEmpty() -> ErrorContent(
-                    error = state.error.orEmpty(),
+                    error = state.error,
                     onRetry = { onIntent(LongreadComponent.Intent.Refresh) },
                 )
                 else -> MaterialList(
@@ -331,24 +331,25 @@ private fun MarkdownCard(
 private fun highlightMatches(
     text: String,
     query: String,
-) = buildAnnotatedString {
-    val lowerText = text.lowercase()
-    val lowerQuery = query.lowercase()
-    var lastIndex = 0
-    val highlightStyle = SpanStyle(
-        background = AppTheme.colors.accent.copy(alpha = 0.3f),
-    )
-    while (true) {
-        val index = lowerText.indexOf(lowerQuery, lastIndex)
-        if (index < 0) break
-        append(text.substring(lastIndex, index))
-        pushStyle(highlightStyle)
-        append(text.substring(index, index + query.length))
-        pop()
-        lastIndex = index + query.length
+) =
+    buildAnnotatedString {
+        val lowerText = text.lowercase()
+        val lowerQuery = query.lowercase()
+        var lastIndex = 0
+        val highlightStyle = SpanStyle(
+            background = AppTheme.colors.accent.copy(alpha = 0.3f),
+        )
+        while (true) {
+            val index = lowerText.indexOf(lowerQuery, lastIndex)
+            if (index < 0) break
+            append(text.substring(lastIndex, index))
+            pushStyle(highlightStyle)
+            append(text.substring(index, index + query.length))
+            pop()
+            lastIndex = index + query.length
+        }
+        append(text.substring(lastIndex))
     }
-    append(text.substring(lastIndex))
-}
 
 /** File material: shows filename, size, and download button. */
 @Composable

@@ -32,7 +32,7 @@ import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import io.github.kroune.cumobile.presentation.common.AppTheme
 import io.github.kroune.cumobile.presentation.common.CuMobileTheme
 
-private const val APP_VERSION = "1.0.1"
+private const val AppVersion = "1.0.1"
 
 /**
  * Login screen matching the Flutter reference design.
@@ -198,7 +198,7 @@ private fun ErrorMessage(error: String?) {
 @Composable
 private fun VersionLabel() {
     Text(
-        text = "Версия $APP_VERSION",
+        text = "Версия $AppVersion",
         color = AppTheme.colors.textSecondary,
         fontSize = 12.sp,
     )

@@ -19,13 +19,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.AlertDialog
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -38,6 +38,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
@@ -47,7 +48,6 @@ import io.github.kroune.cumobile.presentation.common.AppTheme
 import io.github.kroune.cumobile.presentation.common.CuMobileTheme
 import io.github.kroune.cumobile.presentation.common.ErrorContent
 import io.github.kroune.cumobile.presentation.common.LoadingContent
-import androidx.compose.ui.tooling.preview.Preview
 import io.github.kroune.cumobile.presentation.common.formatEpochDate
 import io.github.kroune.cumobile.presentation.common.formatSizeBytes
 
@@ -137,7 +137,7 @@ internal fun FilesScreenContent(
             when {
                 state.isLoading && state.files.isEmpty() -> LoadingContent()
                 state.error != null && state.files.isEmpty() -> ErrorContent(
-                    error = state.error.orEmpty(),
+                    error = state.error,
                     onRetry = { onIntent(FilesComponent.Intent.Refresh) },
                 )
                 state.files.isEmpty() -> EmptyState(
@@ -346,9 +346,7 @@ private fun ExtensionBadge(extension: String) {
 }
 
 @Composable
-private fun EmptyState(
-    onOpenRenameSettings: () -> Unit,
-) {
+private fun EmptyState(onOpenRenameSettings: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()

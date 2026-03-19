@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.ktlint)
     alias(libs.plugins.roborazziPlugin)
+    alias(libs.plugins.vkompose)
 }
 
 val jdkVersion =

@@ -2,10 +2,8 @@ package io.github.kroune.cumobile.presentation.common
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class FormatUtilsTest {
-
     @Test
     fun testFormatDeadline() {
         assertEquals("15.02 14:00", formatDeadline("2026-02-15T14:00:00"))

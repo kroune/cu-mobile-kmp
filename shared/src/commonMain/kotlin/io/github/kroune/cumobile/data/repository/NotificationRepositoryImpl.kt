@@ -20,5 +20,6 @@ internal class NotificationRepositoryImpl(
         category: Int,
         limit: Int,
         offset: Int,
-    ): List<NotificationItem>? = withCookie { notificationApi.fetchNotifications(it, category, limit, offset) }
+    ): List<NotificationItem>? =
+        withCookie { notificationApi.fetchNotifications(it, category, limit, offset) }
 }

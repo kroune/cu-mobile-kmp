@@ -23,7 +23,7 @@ internal class CourseLocalDataSource(
         if (orderString.isBlank()) return@map emptyList()
         try {
             orderString.split(",").map { it.trim().toInt() }
-        } catch (e: Exception) {
+        } catch (e: NumberFormatException) {
             emptyList()
         }
     }

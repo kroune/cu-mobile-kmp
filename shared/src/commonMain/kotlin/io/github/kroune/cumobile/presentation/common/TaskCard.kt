@@ -21,6 +21,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.kroune.cumobile.data.model.StudentTask
@@ -29,7 +30,6 @@ import io.github.kroune.cumobile.data.model.TaskExercise
 import io.github.kroune.cumobile.data.model.TaskState
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.datetime.LocalDateTime
-import androidx.compose.ui.tooling.preview.Preview
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
 
@@ -185,7 +185,8 @@ internal fun isOverdue(deadline: String?): Boolean {
         }
         val deadlineDateTime = LocalDateTime.parse(isoString)
         val deadlineInstant = deadlineDateTime.toInstant(TimeZone.currentSystemDefault())
-        val now = kotlin.time.Clock.System.now()
+        val now = kotlin.time.Clock.System
+            .now()
         deadlineInstant < now
     } catch (e: Exception) {
         logger.error(e) { "Failed to parse deadline for overdue check: $deadline" }

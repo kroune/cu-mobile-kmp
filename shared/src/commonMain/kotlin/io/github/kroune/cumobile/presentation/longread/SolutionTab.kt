@@ -175,7 +175,10 @@ private fun SolutionUrlInput(
 }
 
 /** Returns true if the task state allows submitting a solution. */
-internal fun canSubmitSolution(state: String?): Boolean = state in listOf(TaskState.InProgress, TaskState.Revision, TaskState.Rework)
+private val SubmittableStates = listOf(TaskState.InProgress, TaskState.Revision, TaskState.Rework)
+
+internal fun canSubmitSolution(state: String?): Boolean =
+    state in SubmittableStates
 
 /** "Attach file" button. */
 @Composable
@@ -281,4 +284,5 @@ private fun PendingAttachmentChip(
 }
 
 /** Returns true if any attachment is still uploading. */
-internal fun hasUploading(attachments: List<PendingAttachment>): Boolean = attachments.any { it.status == UploadStatus.Uploading }
+internal fun hasUploading(attachments: List<PendingAttachment>): Boolean =
+    attachments.any { it.status == UploadStatus.Uploading }

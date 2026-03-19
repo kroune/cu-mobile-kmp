@@ -27,12 +27,11 @@ class PreviewScreenshotTest(
 
         @JvmStatic
         @ParameterizedRobolectricTestRunner.Parameters(name = "{0}")
-        fun previews(): List<ComposablePreview<AndroidPreviewInfo>> {
-            return AndroidComposablePreviewScanner()
+        fun previews(): List<ComposablePreview<AndroidPreviewInfo>> =
+            AndroidComposablePreviewScanner()
                 .scanPackageTrees("io.github.kroune.cumobile")
                 .includePrivatePreviews()
                 .getPreviews()
-        }
     }
 
     @get:Rule
@@ -52,8 +51,8 @@ class PreviewScreenshotTest(
                 roborazziOptions = RoborazziOptions(
                     recordOptions = RoborazziOptions.RecordOptions(
                         resizeScale = 0.4,
-                    )
-                )
+                    ),
+                ),
             )
             mainClock.autoAdvance = true
         }

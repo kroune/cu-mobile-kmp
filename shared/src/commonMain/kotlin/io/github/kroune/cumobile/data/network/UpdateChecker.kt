@@ -15,8 +15,9 @@ private val logger = KotlinLogging.logger {}
  * Compares the current app version against the latest release
  * tag and returns [UpdateInfo] if a newer version is available.
  */
-class UpdateChecker(private val httpClient: HttpClient) {
-
+class UpdateChecker(
+    private val httpClient: HttpClient,
+) {
     /**
      * Checks for an available update.
      *
@@ -59,7 +60,10 @@ class UpdateChecker(private val httpClient: HttpClient) {
          *
          * @return true if [latest] is strictly newer than [current].
          */
-        internal fun isNewerVersion(latest: String, current: String): Boolean {
+        internal fun isNewerVersion(
+            latest: String,
+            current: String,
+        ): Boolean {
             val latestParts = latest.split(".").mapNotNull { it.toIntOrNull() }
             val currentParts = current.split(".").mapNotNull { it.toIntOrNull() }
             val maxLen = maxOf(latestParts.size, currentParts.size)

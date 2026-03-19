@@ -46,7 +46,7 @@ internal class TaskApiService(
         taskId: Int,
     ): TaskDetails? =
         safeApiCall(logger, "fetch task details for taskId=$taskId") {
-            httpClient.get(ApiEndpoints.taskById(taskId.toString())) {
+            httpClient.get(ApiEndpoints.Tasks.byId(taskId.toString())) {
                 header("Cookie", cookieHeader(cookie))
             }
         }
@@ -57,7 +57,7 @@ internal class TaskApiService(
         taskId: Int,
     ): List<TaskEvent>? =
         safeApiCall(logger, "fetch task events for taskId=$taskId") {
-            httpClient.get(ApiEndpoints.taskEvents(taskId.toString())) {
+            httpClient.get(ApiEndpoints.Tasks.events(taskId.toString())) {
                 header("Cookie", cookieHeader(cookie))
             }
         }
@@ -68,7 +68,7 @@ internal class TaskApiService(
         taskId: Int,
     ): List<TaskComment>? =
         safeApiCall(logger, "fetch task comments for taskId=$taskId") {
-            httpClient.get(ApiEndpoints.taskComments(taskId.toString())) {
+            httpClient.get(ApiEndpoints.Tasks.comments(taskId.toString())) {
                 header("Cookie", cookieHeader(cookie))
             }
         }
@@ -79,7 +79,7 @@ internal class TaskApiService(
         taskId: Int,
     ): Boolean =
         safeApiAction(logger, "start task taskId=$taskId") {
-            httpClient.put(ApiEndpoints.taskStart(taskId.toString())) {
+            httpClient.put(ApiEndpoints.Tasks.start(taskId.toString())) {
                 header("Cookie", cookieHeader(cookie))
                 contentType(ContentType.Application.Json)
             }
@@ -98,7 +98,7 @@ internal class TaskApiService(
         attachments: List<MaterialAttachment> = emptyList(),
     ): Boolean =
         safeApiAction(logger, "submit task taskId=$taskId") {
-            httpClient.put(ApiEndpoints.taskSubmit(taskId.toString())) {
+            httpClient.put(ApiEndpoints.Tasks.submit(taskId.toString())) {
                 header("Cookie", cookieHeader(cookie))
                 contentType(ContentType.Application.Json)
                 setBody(
@@ -117,7 +117,7 @@ internal class TaskApiService(
         lateDays: Int,
     ): Boolean =
         safeApiAction(logger, "prolong late days for taskId=$taskId") {
-            httpClient.put(ApiEndpoints.taskLateDaysProlong(taskId.toString())) {
+            httpClient.put(ApiEndpoints.Tasks.lateDaysProlong(taskId.toString())) {
                 header("Cookie", cookieHeader(cookie))
                 contentType(ContentType.Application.Json)
                 setBody(mapOf("lateDays" to lateDays))
@@ -130,7 +130,7 @@ internal class TaskApiService(
         taskId: Int,
     ): Boolean =
         safeApiAction(logger, "cancel late days for taskId=$taskId") {
-            httpClient.put(ApiEndpoints.taskLateDaysCancel(taskId.toString())) {
+            httpClient.put(ApiEndpoints.Tasks.lateDaysCancel(taskId.toString())) {
                 header("Cookie", cookieHeader(cookie))
                 contentType(ContentType.Application.Json)
             }

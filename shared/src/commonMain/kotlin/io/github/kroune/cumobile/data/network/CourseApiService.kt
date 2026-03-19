@@ -48,8 +48,9 @@ internal class CourseApiService(
                 is JsonArray -> json.decodeFromString<List<Course>>(text)
                 is JsonObject -> {
                     val items = element["items"]?.jsonArray
-                    items?.let { json.decodeFromString<List<Course>>(it.toString()) }
-                        ?: emptyList()
+                    items
+                        ?.let { json.decodeFromString<List<Course>>(it.toString()) }
+                        .orEmpty()
                 }
                 else -> emptyList()
             }

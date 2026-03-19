@@ -42,9 +42,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.tooling.preview.Preview
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import io.github.kroune.cumobile.data.model.ClassData
 import io.github.kroune.cumobile.data.model.Course
@@ -53,8 +53,8 @@ import io.github.kroune.cumobile.data.model.TaskCourse
 import io.github.kroune.cumobile.data.model.TaskExercise
 import io.github.kroune.cumobile.data.model.TaskState
 import io.github.kroune.cumobile.presentation.common.AppTheme
-import io.github.kroune.cumobile.presentation.common.CuMobileTheme
 import io.github.kroune.cumobile.presentation.common.CourseCard
+import io.github.kroune.cumobile.presentation.common.CuMobileTheme
 import io.github.kroune.cumobile.presentation.common.DeadlineTaskCard
 import io.github.kroune.cumobile.presentation.common.ErrorContent
 import io.github.kroune.cumobile.presentation.common.LoadingContent
@@ -125,7 +125,7 @@ internal fun HomeContent(
 
         ScheduleSection(
             state = state,
-            onIntent = onIntent
+            onIntent = onIntent,
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -288,7 +288,7 @@ private fun DateNavigationRow(
             color = AppTheme.colors.textPrimary,
             fontSize = 16.sp,
             fontWeight = FontWeight.Medium,
-            modifier = Modifier.clickable { onIntent(HomeComponent.Intent.Today) }
+            modifier = Modifier.clickable { onIntent(HomeComponent.Intent.Today) },
         )
 
         IconButton(onClick = { onIntent(HomeComponent.Intent.NextDay) }) {
@@ -331,7 +331,7 @@ private fun ClassCard(classData: ClassData) {
             modifier = Modifier
                 .width(2.dp)
                 .height(40.dp)
-                .background(AppTheme.colors.accent)
+                .background(AppTheme.colors.accent),
         )
 
         Spacer(modifier = Modifier.width(16.dp))
@@ -364,9 +364,7 @@ private fun ClassCard(classData: ClassData) {
 }
 
 @Composable
-private fun ConnectCalendarSection(
-    onIntent: (HomeComponent.Intent) -> Unit,
-) {
+private fun ConnectCalendarSection(onIntent: (HomeComponent.Intent) -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -390,6 +388,7 @@ private fun ConnectCalendarSection(
         }
     }
 }
+
 @Composable
 private fun SectionHeader(
     title: String,

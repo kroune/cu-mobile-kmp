@@ -3,12 +3,12 @@
 package io.github.kroune.cumobile.presentation.common
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
 import kotlin.math.roundToLong
+import kotlin.time.Instant
 
 private val logger = KotlinLogging.logger {}
 
@@ -28,8 +28,8 @@ fun formatDeadline(isoDate: String?): String {
     if (isoDate == null) return "Без дедлайна"
     return try {
         val dt = parseIsoDateTime(isoDate)
-        val day = dt.dayOfMonth.toString().padStart(2, '0')
-        val month = dt.monthNumber.toString().padStart(2, '0')
+        val day = dt.day.toString().padStart(2, '0')
+        val month = dt.month.toString().padStart(2, '0')
         val hour = dt.hour.toString().padStart(2, '0')
         val minute = dt.minute.toString().padStart(2, '0')
         "$day.$month $hour:$minute"
@@ -46,11 +46,11 @@ fun formatDeadline(isoDate: String?): String {
  *
  * Falls back to the raw string on parse errors.
  */
-fun formatDateTime(dateTime: String): String {
-    return try {
+fun formatDateTime(dateTime: String): String =
+    try {
         val dt = parseIsoDateTime(dateTime)
-        val day = dt.dayOfMonth.toString().padStart(2, '0')
-        val month = dt.monthNumber.toString().padStart(2, '0')
+        val day = dt.day.toString().padStart(2, '0')
+        val month = dt.month.toString().padStart(2, '0')
         val hour = dt.hour.toString().padStart(2, '0')
         val minute = dt.minute.toString().padStart(2, '0')
         "$day.$month $hour:$minute"
@@ -58,7 +58,6 @@ fun formatDateTime(dateTime: String): String {
         logger.error(e) { "Failed to format datetime: $dateTime" }
         dateTime
     }
-}
 
 /**
  * Formats an ISO 8601 datetime string to `"dd.MM.yyyy HH:mm"`.
@@ -67,11 +66,11 @@ fun formatDateTime(dateTime: String): String {
  *
  * Falls back to the raw string on parse errors.
  */
-fun formatDateTimeFull(isoDate: String): String {
-    return try {
+fun formatDateTimeFull(isoDate: String): String =
+    try {
         val dt = parseIsoDateTime(isoDate)
-        val day = dt.dayOfMonth.toString().padStart(2, '0')
-        val month = dt.monthNumber.toString().padStart(2, '0')
+        val day = dt.day.toString().padStart(2, '0')
+        val month = dt.month.toString().padStart(2, '0')
         val hour = dt.hour.toString().padStart(2, '0')
         val minute = dt.minute.toString().padStart(2, '0')
         "$day.$month.${dt.year} $hour:$minute"
@@ -79,7 +78,6 @@ fun formatDateTimeFull(isoDate: String): String {
         logger.error(e) { "Failed to format full datetime: $isoDate" }
         isoDate
     }
-}
 
 /**
  * Formats an ISO 8601 deadline string to a short day-month display.
@@ -88,24 +86,26 @@ fun formatDateTimeFull(isoDate: String): String {
  *
  * Falls back to the raw string on parse errors.
  */
-fun formatDeadlineShort(deadline: String): String {
-    return try {
+fun formatDeadlineShort(deadline: String): String =
+    try {
         val dt = parseIsoDateTime(deadline)
-        val day = dt.dayOfMonth.toString().padStart(2, '0')
-        val month = dt.monthNumber.toString().padStart(2, '0')
+        val day = dt.day.toString().padStart(2, '0')
+        val month = dt.month.toString().padStart(2, '0')
         "$day.$month"
     } catch (e: Exception) {
         logger.error(e) { "Failed to format short deadline: $deadline" }
         deadline
     }
-}
 
 /**
  * Adds [days] to an ISO 8601 deadline and returns formatted `"dd.MM HH:mm"`.
  *
  * Returns `null` when [isoDate] is null or on parse errors.
  */
-fun formatDeadlinePlusDays(isoDate: String?, days: Int): String? {
+fun formatDeadlinePlusDays(
+    isoDate: String?,
+    days: Int,
+): String? {
     if (isoDate == null) return null
     return try {
         val dt = parseIsoDateTime(isoDate)
@@ -114,8 +114,8 @@ fun formatDeadlinePlusDays(isoDate: String?, days: Int): String? {
             instant.toEpochMilliseconds() + days * 86_400_000L,
         )
         val local = shifted.toLocalDateTime(TimeZone.currentSystemDefault())
-        val day = local.dayOfMonth.toString().padStart(2, '0')
-        val month = local.monthNumber.toString().padStart(2, '0')
+        val day = local.day.toString().padStart(2, '0')
+        val month = local.month.toString().padStart(2, '0')
         val hour = local.hour.toString().padStart(2, '0')
         val minute = local.minute.toString().padStart(2, '0')
         "$day.$month $hour:$minute"
@@ -154,8 +154,8 @@ fun formatEpochDate(millis: Long): String {
     return try {
         val instant = Instant.fromEpochMilliseconds(millis)
         val localDate = instant.toLocalDateTime(TimeZone.currentSystemDefault()).date
-        val day = localDate.dayOfMonth.toString().padStart(2, '0')
-        val month = localDate.monthNumber.toString().padStart(2, '0')
+        val day = localDate.day.toString().padStart(2, '0')
+        val month = localDate.month.toString().padStart(2, '0')
         "$day.$month.${localDate.year}"
     } catch (e: Exception) {
         logger.error(e) { "Failed to format epoch date: $millis" }
