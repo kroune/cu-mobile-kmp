@@ -11,9 +11,7 @@ import kotlinx.serialization.json.jsonPrimitive
 /**
  * Material within a longread.
  *
- * API endpoints:
- * - List: `GET /micro-lms/longreads/{longreadId}/materials?limit=10000`
- * - Single: `GET /micro-lms/materials/{materialId}`
+ * Fetched via longread materials and single material endpoints.
  *
  * Known [discriminator] values: `"markdown"`, `"file"`, `"coding"`, `"questions"`.
  *

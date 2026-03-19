@@ -17,7 +17,7 @@ private val logger = KotlinLogging.logger {}
 internal class PerformanceApiService(
     private val httpClient: HttpClient,
 ) {
-    /** GET /micro-lms/performance/student */
+    /** Fetches overall student performance summary. */
     suspend fun fetchPerformance(cookie: String): StudentPerformanceResponse? =
         safeApiCall(logger, "fetch performance") {
             httpClient.get(ApiEndpoints.PERFORMANCE_STUDENT) {
@@ -25,7 +25,7 @@ internal class PerformanceApiService(
             }
         }
 
-    /** GET /micro-lms/courses/{courseId}/exercises */
+    /** Fetches exercises for a specific course. */
     suspend fun fetchCourseExercises(
         cookie: String,
         courseId: Int,
@@ -36,7 +36,7 @@ internal class PerformanceApiService(
             }
         }
 
-    /** GET /micro-lms/courses/{courseId}/student-performance */
+    /** Fetches per-student performance for a course. */
     suspend fun fetchCoursePerformance(
         cookie: String,
         courseId: Int,
@@ -47,7 +47,7 @@ internal class PerformanceApiService(
             }
         }
 
-    /** GET /micro-lms/gradebook */
+    /** Fetches the student's gradebook. */
     suspend fun fetchGradebook(cookie: String): GradebookResponse? =
         safeApiCall(logger, "fetch gradebook") {
             httpClient.get(ApiEndpoints.GRADEBOOK) {

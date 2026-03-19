@@ -28,11 +28,7 @@ private val logger = KotlinLogging.logger {}
 internal class TaskApiService(
     private val httpClient: HttpClient,
 ) {
-    /**
-     * GET /micro-lms/tasks/student?state=…&state=…
-     *
-     * @param states list of task state filter values, e.g. `["inProgress", "backlog"]`.
-     */
+    /** @param states list of task state filter values, e.g. `["inProgress", "backlog"]`. */
     suspend fun fetchTasks(
         cookie: String,
         states: List<String>,
@@ -44,7 +40,7 @@ internal class TaskApiService(
             }
         }
 
-    /** GET /micro-lms/tasks/{taskId} → [TaskDetails] */
+    /** Fetches task details by [taskId]. */
     suspend fun fetchTaskDetails(
         cookie: String,
         taskId: Int,
@@ -55,7 +51,7 @@ internal class TaskApiService(
             }
         }
 
-    /** GET /micro-lms/tasks/{taskId}/events → list of [TaskEvent] */
+    /** Fetches the event history for a task. */
     suspend fun fetchTaskEvents(
         cookie: String,
         taskId: Int,
@@ -66,7 +62,7 @@ internal class TaskApiService(
             }
         }
 
-    /** GET /micro-lms/tasks/{taskId}/comments → list of [TaskComment] */
+    /** Fetches comments for a task. */
     suspend fun fetchTaskComments(
         cookie: String,
         taskId: Int,
@@ -77,7 +73,7 @@ internal class TaskApiService(
             }
         }
 
-    /** PUT /micro-lms/tasks/{taskId}/start */
+    /** Starts a backlog task. */
     suspend fun startTask(
         cookie: String,
         taskId: Int,
@@ -90,7 +86,7 @@ internal class TaskApiService(
         }
 
     /**
-     * PUT /micro-lms/tasks/{taskId}/submit
+     * Submits a task solution.
      *
      * @param solutionUrl optional URL of the solution.
      * @param attachments list of attachment metadata maps.
@@ -114,11 +110,7 @@ internal class TaskApiService(
             }
         }
 
-    /**
-     * PUT /micro-lms/tasks/{taskId}/late-days-prolong
-     *
-     * @param lateDays number of late days to request.
-     */
+    /** @param lateDays number of late days to request. */
     suspend fun prolongLateDays(
         cookie: String,
         taskId: Int,
@@ -132,7 +124,7 @@ internal class TaskApiService(
             }
         }
 
-    /** PUT /micro-lms/tasks/{taskId}/late-days-cancel */
+    /** Cancels late days for a task. */
     suspend fun cancelLateDays(
         cookie: String,
         taskId: Int,
@@ -144,11 +136,7 @@ internal class TaskApiService(
             }
         }
 
-    /**
-     * POST /micro-lms/comments
-     *
-     * @return the created comment's ID, or null on failure.
-     */
+    /** @return the created comment's ID, or null on failure. */
     suspend fun createComment(
         cookie: String,
         taskId: Int,

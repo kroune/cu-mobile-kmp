@@ -14,6 +14,12 @@ interface ProfileRepository {
     /** Fetches the student's avatar as raw bytes. */
     suspend fun fetchAvatar(): ByteArray?
 
+    /** Uploads a new avatar image. */
+    suspend fun uploadAvatar(
+        bytes: ByteArray,
+        contentType: String,
+    ): Boolean
+
     /** Deletes the student's avatar. */
     suspend fun deleteAvatar(): Boolean
 }

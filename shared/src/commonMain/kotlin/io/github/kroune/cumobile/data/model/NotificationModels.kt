@@ -4,8 +4,6 @@ import kotlinx.serialization.Serializable
 
 /**
  * In-app notification item.
- *
- * API endpoint: `POST /notification-hub/notifications/in-app`
  */
 @Serializable
 data class NotificationItem(
@@ -29,8 +27,6 @@ data class NotificationLink(
 
 /**
  * Request body for fetching notifications.
- *
- * API endpoint: `POST /notification-hub/notifications/in-app`
  */
 @Serializable
 data class NotificationRequest(

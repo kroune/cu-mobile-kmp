@@ -9,7 +9,7 @@ package io.github.kroune.cumobile.data.network
 internal object ApiEndpoints {
     // Profile / Auth
     const val PROFILE_ME = "student-hub/students/me"
-    const val AVATAR_ME = "student-hub/avatars/me"
+    const val AVATAR_ME = "hub/avatars/me"
     const val LMS_PROFILE_ME = "micro-lms/students/me"
 
     // Tasks

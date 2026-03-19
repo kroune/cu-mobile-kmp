@@ -1,16 +1,16 @@
 # Remaining Work — CuMobile KMP
 
-> Last updated: 2026-03-19
+> Last updated: 2026-03-19 (file upload done)
 
 ## Pending Features (by priority)
 
 ### High Priority
 - [x] **Late days dialog with stepper** — DONE: `ProlongLateDays(days: Int)` intent; stepper dialog shows current/new deadline, balance remaining; `formatDeadlinePlusDays()` helper in FormatUtils
-- [ ] **File upload system** — expect/actual file picker (Android: ActivityResultContract, iOS: UIDocumentPickerViewController); upload flow: `getUploadLink` → presigned URL → PUT; progress tracking; attach to solutions + comments in `LongreadTaskSection`. **Start in new session (large feature)**
+- [x] **File upload system** — DONE: `FilePicker` expect/actual (Android: `ActivityResultContracts.OpenDocument`, iOS: `UIDocumentPickerViewController`); `ContentApiService.uploadFileToUrl()` PUT to presigned URL; `ContentRepository.uploadFile()` orchestration; `PendingAttachment`/`UploadStatus` state tracking; `AttachButton` + `PendingAttachmentChip` composables in SolutionTab + CommentsTab; `material-icons-extended:1.7.3` added
 
 ### Medium Priority
 - [x] **Content search in longreads** — DONE: search bar in `LongreadScreen`; case-insensitive search in markdown content; match highlighting with `AnnotatedString`; prev/next navigation between matches; match counter; toggle via search icon in top bar
-- [ ] **Avatar upload** — expect/actual image picker (Android: photo picker, iOS: PHPickerViewController); POST `/hub/avatars/me` multipart; camera + gallery; size validation <8MB
+- [x] **Avatar upload** — DONE: `ProfileApiService.uploadAvatar()` POST multipart to `/student-hub/avatars/me`; `ProfileRepository.uploadAvatar()`; `UploadAvatar(PickedFile)` intent; reuses `FilePicker` from file upload feature; green "+" button on avatar in ProfileScreen; `isUploadingAvatar` state with spinner
 
 ### Low Priority
 - [x] **In-app update checker** — DONE: `UpdateChecker` fetches GitHub releases API; `isNewerVersion()` semantic version compare; update dialog in `MainScreen`; `UpdateInfo`/`GithubRelease` data models; unit tests for version comparison

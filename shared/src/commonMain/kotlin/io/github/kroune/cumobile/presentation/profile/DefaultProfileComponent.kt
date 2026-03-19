@@ -4,6 +4,7 @@ import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
+import io.github.kroune.cumobile.data.model.PickedFile
 import io.github.kroune.cumobile.domain.repository.CalendarRepository
 import io.github.kroune.cumobile.domain.repository.ProfileRepository
 import kotlinx.coroutines.Dispatchers
@@ -40,6 +41,7 @@ class DefaultProfileComponent(
         when (intent) {
             ProfileComponent.Intent.Back -> onBack()
             ProfileComponent.Intent.Refresh -> loadProfile()
+            is ProfileComponent.Intent.UploadAvatar -> uploadAvatar(intent.file)
             ProfileComponent.Intent.DeleteAvatar -> deleteAvatar()
             ProfileComponent.Intent.Logout -> onLogout()
             is ProfileComponent.Intent.UpdateCalendarUrl -> {
@@ -93,6 +95,25 @@ class DefaultProfileComponent(
                 _state.value = _state.value.copy(
                     isLoading = false,
                     error = "Не удалось загрузить профиль",
+                )
+            }
+        }
+    }
+
+    private fun uploadAvatar(file: PickedFile) {
+        scope.launch {
+            _state.value = _state.value.copy(isUploadingAvatar = true)
+            val success = profileRepository.uploadAvatar(file.bytes, file.contentType)
+            if (success) {
+                val avatar = profileRepository.fetchAvatar()
+                _state.value = _state.value.copy(
+                    avatarBytes = avatar,
+                    isUploadingAvatar = false,
+                )
+            } else {
+                _state.value = _state.value.copy(
+                    isUploadingAvatar = false,
+                    error = "Не удалось загрузить аватар",
                 )
             }
         }

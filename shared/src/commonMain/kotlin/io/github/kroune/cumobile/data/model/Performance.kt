@@ -6,8 +6,6 @@ import kotlinx.serialization.Serializable
 
 /**
  * Overall student performance across all courses.
- *
- * API endpoint: `GET /micro-lms/performance/student`
  */
 @Serializable
 data class StudentPerformanceResponse(
@@ -27,8 +25,6 @@ data class StudentPerformanceCourse(
 
 /**
  * Course exercises response.
- *
- * API endpoint: `GET /micro-lms/courses/{courseId}/exercises`
  */
 @Serializable
 data class CourseExercisesResponse(
@@ -66,8 +62,6 @@ data class CourseExerciseTheme(
 
 /**
  * Per-course student performance with individual task scores.
- *
- * API endpoint: `GET /micro-lms/courses/{courseId}/student-performance`
  */
 @Serializable
 data class CourseStudentPerformanceResponse(

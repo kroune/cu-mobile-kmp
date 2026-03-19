@@ -255,37 +255,27 @@ All phases complete:
   - File opening: `FileOpener` interface in commonMain; `AndroidFileOpener` (FileProvider + Intent.ACTION_VIEW) in androidMain; `IosFileOpener` stub in iosMain; registered in Koin platform modules; wired through `MainDependencies.fileOpener`; FileProvider configured in AndroidManifest.xml with `file_paths.xml`
   - Notification links: relative paths (e.g. `/schedule`) now expanded with `https://my.centraluniversity.ru` base URL
 
----
-
-## File Upload System — Implementation Notes (not yet started)
-
-The API layer already supports attachments:
-- `TaskApiService.submitTask(taskId, solutionUrl, attachments: List<MaterialAttachment>)` ✅
-- `TaskApiService.createComment(taskId, content, attachments: List<MaterialAttachment>)` ✅
-- `ContentApiService.getUploadLink(cookie, directory, filename, contentType): UploadLinkData` ✅
-- `ContentRepository.getUploadLink(directory, filename, contentType): UploadLinkData?` ✅
-- `UploadLinkData(shortName, filename, objectKey, version, url)` — presigned URL data ✅
-
-**Still needed:**
-1. `ContentApiService.uploadFileToUrl(url, bytes, contentType): Boolean` — PUT to presigned URL (full URL, not base URL)
-2. `ContentRepository.uploadFile(directory, filename, contentType, bytes): MaterialAttachment?` — orchestrates steps 1+2
-3. `PickedFile(name, bytes, contentType, size)` data class in commonMain
-4. `expect fun rememberFilePicker(onFilePicked: (PickedFile) -> Unit): () -> Unit` — expect/actual Composable
-   - Android: `rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument())`
-   - iOS: UIDocumentPickerViewController
-5. `PendingAttachment(name, size, status, uploadedAttachment?)` state class
-6. New state fields in `LongreadComponent.State`: `pendingSolutionAttachments`, `pendingCommentAttachments`
-7. New intents: `PickSolutionAttachment`, `RemoveSolutionAttachment(index)`, `PickCommentAttachment`, `RemoveCommentAttachment(index)`
-8. UI: attach button + pending file chips in `SolutionTab` and `CommentsTab`
-
-**Directory parameter**: solutions → `"tasks/$taskId/solutions"`, comments → `"tasks/$taskId/comments/{uuid}"`
-
-**File upload flow in component:**
-1. User taps "Attach" → `rememberFilePicker` returns `PickedFile`
-2. Add `PendingAttachment(status=uploading)` to state
-3. Background: `contentRepository.uploadFile(...)` → get `MaterialAttachment`
-4. Update `PendingAttachment(status=uploaded, uploadedAttachment=...)`
-5. On submit: collect all `.uploadedAttachment` from pending list → pass to `submitTask`/`createComment`
+- File upload system (2026-03-19):
+  - `PickedFile` data class (data/model/): name, bytes, contentType, size
+  - `PendingAttachment` + `UploadStatus` (data/model/): tracks upload lifecycle (Uploading/Uploaded/Failed)
+  - `ContentApiService.uploadFileToUrl()`: PUT raw bytes to presigned URL using `ByteArrayContent`
+  - `ContentRepository.uploadFile()`: orchestrates getUploadLink → uploadFileToUrl → returns `MaterialAttachment`
+  - `FilePicker` interface + `rememberFilePicker()` expect/actual Composable:
+    - Android: `rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument())` + ContentResolver
+    - iOS: `UIDocumentPickerViewController` + `NSData.dataWithContentsOfURL` + security-scoped resource access
+  - `LongreadComponent.State`: `pendingSolutionAttachments`, `pendingCommentAttachments`
+  - New intents: `PickSolutionAttachment`, `RemoveSolutionAttachment`, `PickCommentAttachment`, `RemoveCommentAttachment`
+  - `handleAttachmentIntent()` + `handleTaskActionIntent()` extracted from `onIntent` to stay under cyclomatic complexity limit
+  - `SolutionTab`: `AttachButton`, `PendingAttachmentsList`, `PendingAttachmentChip` composables; submit blocked while uploads in progress
+  - `CommentsTab`: same attach button + pending chips; send blocked while uploads in progress
+  - `CodingMaterialCard` creates `rememberFilePicker` launchers for solution and comment pickers
+  - `material-icons-extended:1.7.3` added for `AttachFile` and `Close` icons
+- Avatar upload (2026-03-19):
+  - `ProfileApiService.uploadAvatar()`: POST multipart (`submitFormWithBinaryData`) to `student-hub/avatars/me`
+  - `ProfileRepository.uploadAvatar(bytes, contentType): Boolean`
+  - `ProfileComponent.Intent.UploadAvatar(PickedFile)` + `isUploadingAvatar` state
+  - `AvatarSection` has green "+" button (bottom-right); reuses `FilePicker` expect/actual
+  - After successful upload, fetches updated avatar bytes to refresh UI
 
 ---
 
@@ -294,9 +284,9 @@ The API layer already supports attachments:
 | Feature | Priority | Notes |
 |---------|----------|-------|
 | Late days dialog with stepper | **Done** | `ProlongLateDays(days: Int)` intent; stepper dialog; `formatDeadlinePlusDays()` in FormatUtils |
-| File upload system | High | expect/actual file picker, presigned URL upload, progress |
+| File upload system | **Done** | expect/actual file picker, presigned URL upload, attach to solutions + comments |
 | Content search in longreads | **Done** | Search bar + highlighting in MarkdownCard; prev/next match nav; `SearchBar`/`SearchInput`/`SearchNavigation` composables |
-| Avatar upload | Medium | expect/actual image picker, POST multipart |
+| Avatar upload | **Done** | `ProfileApiService.uploadAvatar()` multipart POST; reuses `FilePicker`; green "+" on avatar |
 | In-app update checker | **Done** | `UpdateChecker` in `data/network/`, `UpdateInfo`/`GithubRelease` in `data/model/ReleaseInfo.kt`, dialog in `MainScreen` |
 | Document scanner | Low | High complexity, platform-specific (camera, PDF gen) |
 | Model package restructuring | Low | Move `data/model/` → `model/`, rename `*Response` types |

@@ -5,8 +5,6 @@ import kotlinx.serialization.Serializable
 /**
  * Detailed task information.
  *
- * API endpoint: `GET /micro-lms/tasks/{taskId}`
- *
  * The raw JSON contains nested `exercise`, `solution`, and `student` objects.
  * These are represented as separate DTO classes to enable direct deserialization.
  *

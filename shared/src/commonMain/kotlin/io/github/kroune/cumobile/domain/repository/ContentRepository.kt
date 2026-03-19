@@ -1,6 +1,7 @@
 package io.github.kroune.cumobile.domain.repository
 
 import io.github.kroune.cumobile.data.model.LongreadMaterial
+import io.github.kroune.cumobile.data.model.MaterialAttachment
 import io.github.kroune.cumobile.data.model.UploadLinkData
 
 /** Repository for longread/material content and file links. */
@@ -36,4 +37,21 @@ interface ContentRepository {
         filename: String,
         contentType: String,
     ): UploadLinkData?
+
+    /**
+     * Uploads a file to storage: obtains a pre-signed URL, then PUTs the bytes.
+     *
+     * @param directory the target directory in storage (e.g. "tasks/123/solutions").
+     * @param filename the file name.
+     * @param contentType the MIME type of the file.
+     * @param bytes the raw file content.
+     * @return a [MaterialAttachment] ready to be included in a task submission or comment,
+     *         or null if any step failed.
+     */
+    suspend fun uploadFile(
+        directory: String,
+        filename: String,
+        contentType: String,
+        bytes: ByteArray,
+    ): MaterialAttachment?
 }

@@ -2,6 +2,8 @@ package io.github.kroune.cumobile.presentation.longread
 
 import com.arkivanov.decompose.value.Value
 import io.github.kroune.cumobile.data.model.LongreadMaterial
+import io.github.kroune.cumobile.data.model.PendingAttachment
+import io.github.kroune.cumobile.data.model.PickedFile
 import io.github.kroune.cumobile.data.model.TaskComment
 import io.github.kroune.cumobile.data.model.TaskDetails
 import io.github.kroune.cumobile.data.model.TaskEvent
@@ -41,6 +43,10 @@ interface LongreadComponent {
         val commentText: String = "",
         /** Whether a task action is in progress. */
         val isSubmitting: Boolean = false,
+        /** Pending file attachments for the solution (upload in progress or complete). */
+        val pendingSolutionAttachments: List<PendingAttachment> = emptyList(),
+        /** Pending file attachments for a new comment (upload in progress or complete). */
+        val pendingCommentAttachments: List<PendingAttachment> = emptyList(),
         /** Whether the search bar is visible. */
         val isSearchVisible: Boolean = false,
         /** Current search query text. */
@@ -93,6 +99,22 @@ interface LongreadComponent {
         ) : Intent
 
         data object CancelLateDays : Intent
+
+        data class PickSolutionAttachment(
+            val file: PickedFile,
+        ) : Intent
+
+        data class RemoveSolutionAttachment(
+            val index: Int,
+        ) : Intent
+
+        data class PickCommentAttachment(
+            val file: PickedFile,
+        ) : Intent
+
+        data class RemoveCommentAttachment(
+            val index: Int,
+        ) : Intent
 
         data class DownloadFile(
             val material: LongreadMaterial,

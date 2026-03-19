@@ -5,8 +5,6 @@ import kotlinx.serialization.json.JsonElement
 
 /**
  * Event in the task history timeline.
- *
- * API endpoint: `GET /micro-lms/tasks/{taskId}/events`
  */
 @Serializable
 data class TaskEvent(

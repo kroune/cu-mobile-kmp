@@ -4,8 +4,6 @@ import kotlinx.serialization.Serializable
 
 /**
  * Gradebook response containing semester grades.
- *
- * API endpoint: `GET /micro-lms/gradebook`
  */
 @Serializable
 data class GradebookResponse(

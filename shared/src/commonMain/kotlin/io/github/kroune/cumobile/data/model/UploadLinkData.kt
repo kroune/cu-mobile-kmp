@@ -4,8 +4,6 @@ import kotlinx.serialization.Serializable
 
 /**
  * Response from the content upload link endpoint.
- *
- * API endpoint: `GET /micro-lms/content/upload-link?directory=...&filename=...&contentType=...`
  */
 @Serializable
 data class UploadLinkData(

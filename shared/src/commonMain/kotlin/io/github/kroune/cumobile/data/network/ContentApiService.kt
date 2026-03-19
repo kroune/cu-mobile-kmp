@@ -7,7 +7,11 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.header
+import io.ktor.client.request.put
+import io.ktor.client.request.setBody
+import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.content.ByteArrayContent
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -23,7 +27,7 @@ private const val UrlJsonKey = "url"
 internal class ContentApiService(
     private val httpClient: HttpClient,
 ) {
-    /** GET /micro-lms/longreads/{longreadId}/materials?limit=10000 */
+    /** Fetches all materials for a longread. */
     suspend fun fetchLongreadMaterials(
         cookie: String,
         longreadId: Int,
@@ -35,7 +39,7 @@ internal class ContentApiService(
             }
         }
 
-    /** GET /micro-lms/materials/{materialId} → [LongreadMaterial] */
+    /** Fetches a single material by ID. */
     suspend fun fetchMaterial(
         cookie: String,
         materialId: Int,
@@ -46,10 +50,7 @@ internal class ContentApiService(
             }
         }
 
-    /**
-     * GET /micro-lms/content/download-link?filename=…&version=…
-     * @return the pre-signed download URL, or null.
-     */
+    /** @return the pre-signed download URL, or null. */
     suspend fun getDownloadLink(
         cookie: String,
         filename: String,
@@ -75,10 +76,7 @@ internal class ContentApiService(
             null
         }
 
-    /**
-     * GET /micro-lms/content/upload-link?directory=…&filename=…&contentType=…
-     * @return [UploadLinkData] with pre-signed upload URL, or null.
-     */
+    /** @return [UploadLinkData] with pre-signed upload URL, or null. */
     suspend fun getUploadLink(
         cookie: String,
         directory: String,
@@ -93,5 +91,35 @@ internal class ContentApiService(
             httpClient.get(url) {
                 header("Cookie", cookieHeader(cookie))
             }
+        }
+
+    /**
+     * PUT file bytes to a pre-signed upload URL.
+     *
+     * The [presignedUrl] is an absolute URL (e.g. S3/MinIO), not relative to [BaseUrl].
+     * No auth cookie is needed — the URL itself contains the authorization token.
+     *
+     * @return true if the upload succeeded (HTTP 2xx).
+     */
+    suspend fun uploadFileToUrl(
+        presignedUrl: String,
+        bytes: ByteArray,
+        contentType: String,
+    ): Boolean =
+        try {
+            val response = httpClient.put(presignedUrl) {
+                setBody(ByteArrayContent(bytes, ContentType.parse(contentType)))
+            }
+            if (isSuccessStatus(response.status)) {
+                true
+            } else {
+                logger.warn { "Upload to presigned URL returned ${response.status}" }
+                false
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            logger.error(e) { "Failed to upload file to presigned URL" }
+            false
         }
 }

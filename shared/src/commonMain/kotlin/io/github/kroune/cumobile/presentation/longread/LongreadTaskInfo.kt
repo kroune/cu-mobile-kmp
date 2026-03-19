@@ -26,6 +26,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import io.github.kroune.cumobile.data.model.PendingAttachment
 import io.github.kroune.cumobile.data.model.TaskComment
 import io.github.kroune.cumobile.data.model.TaskDetails
 import io.github.kroune.cumobile.data.model.TaskEvent
@@ -37,14 +38,16 @@ import io.github.kroune.cumobile.presentation.common.taskStateColor
 import io.github.kroune.cumobile.presentation.common.taskStateLabel
 
 /**
- * Comments tab: displays comment list and input field.
+ * Comments tab: displays comment list and input field with file attachments.
  */
 @Composable
 internal fun CommentsTab(
     comments: List<TaskComment>,
     commentText: String,
     isSubmitting: Boolean,
+    pendingAttachments: List<PendingAttachment>,
     onIntent: (LongreadComponent.Intent) -> Unit,
+    onAttach: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -75,9 +78,20 @@ internal fun CommentsTab(
             ),
         )
 
+        AttachButton(onAttach = onAttach, isSubmitting = isSubmitting)
+
+        PendingAttachmentsList(
+            attachments = pendingAttachments,
+            onRemove = { index ->
+                onIntent(LongreadComponent.Intent.RemoveCommentAttachment(index))
+            },
+        )
+
         Button(
             onClick = { onIntent(LongreadComponent.Intent.CreateComment) },
-            enabled = !isSubmitting && commentText.isNotBlank(),
+            enabled = !isSubmitting &&
+                commentText.isNotBlank() &&
+                !hasUploading(pendingAttachments),
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(
                 containerColor = AppColors.Accent,

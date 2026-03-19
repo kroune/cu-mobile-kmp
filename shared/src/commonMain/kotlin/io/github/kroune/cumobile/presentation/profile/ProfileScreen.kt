@@ -40,6 +40,7 @@ import io.github.kroune.cumobile.presentation.common.AppColors
 import io.github.kroune.cumobile.presentation.common.DetailTopBar
 import io.github.kroune.cumobile.presentation.common.ErrorContent
 import io.github.kroune.cumobile.presentation.common.LoadingContent
+import io.github.kroune.cumobile.presentation.common.rememberFilePicker
 
 /**
  * Profile screen displaying student info, avatar, and logout button.
@@ -87,8 +88,7 @@ fun ProfileScreen(
             )
             state.profile != null -> ProfileContent(
                 state = state,
-                onDeleteAvatar = { component.onIntent(ProfileComponent.Intent.DeleteAvatar) },
-                onCalendarIntent = { component.onIntent(it) },
+                onIntent = { component.onIntent(it) },
             )
         }
     }
@@ -97,11 +97,13 @@ fun ProfileScreen(
 @Composable
 private fun ProfileContent(
     state: ProfileComponent.State,
-    onDeleteAvatar: () -> Unit,
-    onCalendarIntent: (ProfileComponent.Intent) -> Unit,
+    onIntent: (ProfileComponent.Intent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val profile = state.profile ?: return
+    val avatarPicker = rememberFilePicker { file ->
+        onIntent(ProfileComponent.Intent.UploadAvatar(file))
+    }
 
     Column(
         modifier = modifier
@@ -117,7 +119,9 @@ private fun ProfileContent(
             initials = state.initials,
             hasAvatar = state.avatarBytes != null,
             isDeleting = state.isDeletingAvatar,
-            onDelete = onDeleteAvatar,
+            isUploading = state.isUploadingAvatar,
+            onDelete = { onIntent(ProfileComponent.Intent.DeleteAvatar) },
+            onUpload = { avatarPicker.launch() },
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -159,11 +163,11 @@ private fun ProfileContent(
         CalendarSection(
             state = state,
             onUpdateUrl = { url ->
-                onCalendarIntent(ProfileComponent.Intent.UpdateCalendarUrl(url))
+                onIntent(ProfileComponent.Intent.UpdateCalendarUrl(url))
             },
-            onSave = { onCalendarIntent(ProfileComponent.Intent.SaveCalendarUrl) },
+            onSave = { onIntent(ProfileComponent.Intent.SaveCalendarUrl) },
             onDisconnect = {
-                onCalendarIntent(ProfileComponent.Intent.DisconnectCalendar)
+                onIntent(ProfileComponent.Intent.DisconnectCalendar)
             },
         )
 
@@ -176,9 +180,12 @@ private fun AvatarSection(
     initials: String,
     hasAvatar: Boolean,
     isDeleting: Boolean,
+    isUploading: Boolean,
     onDelete: () -> Unit,
+    onUpload: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val isBusy = isDeleting || isUploading
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
         // Main avatar circle
         Box(
@@ -189,7 +196,7 @@ private fun AvatarSection(
                 .background(AppColors.Accent.copy(alpha = 0.2f), CircleShape),
             contentAlignment = Alignment.Center,
         ) {
-            if (isDeleting) {
+            if (isBusy) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(24.dp),
                     color = AppColors.Accent,
@@ -206,7 +213,7 @@ private fun AvatarSection(
         }
 
         // Delete button (bottom-left of avatar)
-        if (hasAvatar && !isDeleting) {
+        if (hasAvatar && !isBusy) {
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
@@ -217,6 +224,21 @@ private fun AvatarSection(
                 contentAlignment = Alignment.Center,
             ) {
                 Text(text = "\u2715", fontSize = 14.sp, color = AppColors.TextPrimary)
+            }
+        }
+
+        // Upload button (bottom-right of avatar)
+        if (!isBusy) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .size(28.dp)
+                    .clip(CircleShape)
+                    .background(AppColors.Accent, CircleShape)
+                    .clickable(onClick = onUpload),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(text = "+", fontSize = 16.sp, color = AppColors.Background)
             }
         }
     }

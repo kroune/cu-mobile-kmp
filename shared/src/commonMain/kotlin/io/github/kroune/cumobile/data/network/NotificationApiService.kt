@@ -19,7 +19,7 @@ internal class NotificationApiService(
     private val httpClient: HttpClient,
 ) {
     /**
-     * POST /notification-hub/notifications/in-app
+     * Fetches in-app notifications.
      *
      * @param category notification category filter (e.g. 1 = education, 2 = other).
      * @param limit page size.

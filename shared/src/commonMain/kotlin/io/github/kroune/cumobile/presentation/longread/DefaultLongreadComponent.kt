@@ -5,6 +5,9 @@ import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.data.model.LongreadMaterial
+import io.github.kroune.cumobile.data.model.PendingAttachment
+import io.github.kroune.cumobile.data.model.PickedFile
+import io.github.kroune.cumobile.data.model.UploadStatus
 import io.github.kroune.cumobile.domain.repository.ContentRepository
 import io.github.kroune.cumobile.domain.repository.FileRenameRepository
 import io.github.kroune.cumobile.domain.repository.TaskRepository
@@ -53,18 +56,49 @@ class DefaultLongreadComponent(
                 _state.value = _state.value.copy(solutionUrl = intent.url)
             is LongreadComponent.Intent.UpdateCommentText ->
                 _state.value = _state.value.copy(commentText = intent.text)
-            LongreadComponent.Intent.StartTask -> startTask()
-            LongreadComponent.Intent.SubmitSolution -> submitSolution()
-            LongreadComponent.Intent.CreateComment -> createComment()
-            is LongreadComponent.Intent.ProlongLateDays -> prolongLateDays(intent.days)
-            LongreadComponent.Intent.CancelLateDays -> cancelLateDays()
             is LongreadComponent.Intent.DownloadFile ->
                 downloadFile(intent.material)
+            LongreadComponent.Intent.StartTask,
+            LongreadComponent.Intent.SubmitSolution,
+            LongreadComponent.Intent.CreateComment,
+            is LongreadComponent.Intent.ProlongLateDays,
+            LongreadComponent.Intent.CancelLateDays,
+            -> handleTaskActionIntent(intent)
+            is LongreadComponent.Intent.PickSolutionAttachment,
+            is LongreadComponent.Intent.RemoveSolutionAttachment,
+            is LongreadComponent.Intent.PickCommentAttachment,
+            is LongreadComponent.Intent.RemoveCommentAttachment,
+            -> handleAttachmentIntent(intent)
             is LongreadComponent.Intent.ToggleSearch,
             is LongreadComponent.Intent.UpdateSearchQuery,
             is LongreadComponent.Intent.NextMatch,
             is LongreadComponent.Intent.PreviousMatch,
             -> handleSearchIntent(intent)
+        }
+    }
+
+    private fun handleTaskActionIntent(intent: LongreadComponent.Intent) {
+        when (intent) {
+            LongreadComponent.Intent.StartTask -> startTask()
+            LongreadComponent.Intent.SubmitSolution -> submitSolution()
+            LongreadComponent.Intent.CreateComment -> createComment()
+            is LongreadComponent.Intent.ProlongLateDays -> prolongLateDays(intent.days)
+            LongreadComponent.Intent.CancelLateDays -> cancelLateDays()
+            else -> Unit
+        }
+    }
+
+    private fun handleAttachmentIntent(intent: LongreadComponent.Intent) {
+        when (intent) {
+            is LongreadComponent.Intent.PickSolutionAttachment ->
+                uploadAttachment(intent.file, isSolution = true)
+            is LongreadComponent.Intent.RemoveSolutionAttachment ->
+                removeSolutionAttachment(intent.index)
+            is LongreadComponent.Intent.PickCommentAttachment ->
+                uploadAttachment(intent.file, isSolution = false)
+            is LongreadComponent.Intent.RemoveCommentAttachment ->
+                removeCommentAttachment(intent.index)
+            else -> Unit
         }
     }
 
@@ -116,6 +150,8 @@ class DefaultLongreadComponent(
             commentText = "",
             taskEvents = emptyList(),
             taskComments = emptyList(),
+            pendingSolutionAttachments = emptyList(),
+            pendingCommentAttachments = emptyList(),
         )
         if (!isToggleOff) {
             loadTaskEventsAndComments(taskId)
@@ -146,12 +182,17 @@ class DefaultLongreadComponent(
     private fun submitSolution() {
         val taskId = _state.value.activeTaskId ?: return
         val url = _state.value.solutionUrl.takeIf { it.isNotBlank() }
+        val attachments = _state.value.pendingSolutionAttachments
+            .mapNotNull { it.uploadedAttachment }
         scope.launch {
             _state.value = _state.value.copy(isSubmitting = true)
-            val success = taskRepository.submitTask(taskId, url)
+            val success = taskRepository.submitTask(taskId, url, attachments)
             _state.value = _state.value.copy(isSubmitting = false)
             if (success) {
-                _state.value = _state.value.copy(solutionUrl = "")
+                _state.value = _state.value.copy(
+                    solutionUrl = "",
+                    pendingSolutionAttachments = emptyList(),
+                )
                 refreshTaskDetails(taskId)
             }
         }
@@ -161,12 +202,15 @@ class DefaultLongreadComponent(
         val taskId = _state.value.activeTaskId ?: return
         val text = _state.value.commentText.trim()
         if (text.isEmpty()) return
+        val attachments = _state.value.pendingCommentAttachments
+            .mapNotNull { it.uploadedAttachment }
         scope.launch {
             _state.value = _state.value.copy(isSubmitting = true)
-            taskRepository.createComment(taskId, text)
+            taskRepository.createComment(taskId, text, attachments)
             _state.value = _state.value.copy(
                 isSubmitting = false,
                 commentText = "",
+                pendingCommentAttachments = emptyList(),
             )
             val comments = taskRepository.fetchTaskComments(taskId)
             _state.value = _state.value.copy(
@@ -192,6 +236,97 @@ class DefaultLongreadComponent(
             taskRepository.cancelLateDays(taskId)
             _state.value = _state.value.copy(isSubmitting = false)
             refreshTaskDetails(taskId)
+        }
+    }
+
+    private fun uploadAttachment(
+        file: PickedFile,
+        isSolution: Boolean,
+    ) {
+        val taskId = _state.value.activeTaskId ?: return
+        val pending = PendingAttachment(
+            name = file.name,
+            size = file.size,
+            status = UploadStatus.Uploading,
+        )
+        if (isSolution) {
+            _state.value = _state.value.copy(
+                pendingSolutionAttachments =
+                    _state.value.pendingSolutionAttachments + pending,
+            )
+        } else {
+            _state.value = _state.value.copy(
+                pendingCommentAttachments =
+                    _state.value.pendingCommentAttachments + pending,
+            )
+        }
+        val directory = if (isSolution) {
+            "tasks/$taskId/solutions"
+        } else {
+            "tasks/$taskId/comments"
+        }
+        scope.launch {
+            val attachment = contentRepository.uploadFile(
+                directory = directory,
+                filename = file.name,
+                contentType = file.contentType,
+                bytes = file.bytes,
+            )
+            if (isSolution) {
+                updateSolutionAttachment(file.name, attachment)
+            } else {
+                updateCommentAttachment(file.name, attachment)
+            }
+        }
+    }
+
+    private fun updateSolutionAttachment(
+        fileName: String,
+        attachment: io.github.kroune.cumobile.data.model.MaterialAttachment?,
+    ) {
+        val list = _state.value.pendingSolutionAttachments.toMutableList()
+        val idx = list.indexOfFirst {
+            it.name == fileName && it.status == UploadStatus.Uploading
+        }
+        if (idx >= 0) {
+            list[idx] = list[idx].copy(
+                status = if (attachment != null) UploadStatus.Uploaded else UploadStatus.Failed,
+                uploadedAttachment = attachment,
+            )
+            _state.value = _state.value.copy(pendingSolutionAttachments = list)
+        }
+    }
+
+    private fun updateCommentAttachment(
+        fileName: String,
+        attachment: io.github.kroune.cumobile.data.model.MaterialAttachment?,
+    ) {
+        val list = _state.value.pendingCommentAttachments.toMutableList()
+        val idx = list.indexOfFirst {
+            it.name == fileName && it.status == UploadStatus.Uploading
+        }
+        if (idx >= 0) {
+            list[idx] = list[idx].copy(
+                status = if (attachment != null) UploadStatus.Uploaded else UploadStatus.Failed,
+                uploadedAttachment = attachment,
+            )
+            _state.value = _state.value.copy(pendingCommentAttachments = list)
+        }
+    }
+
+    private fun removeSolutionAttachment(index: Int) {
+        val list = _state.value.pendingSolutionAttachments.toMutableList()
+        if (index in list.indices) {
+            list.removeAt(index)
+            _state.value = _state.value.copy(pendingSolutionAttachments = list)
+        }
+    }
+
+    private fun removeCommentAttachment(index: Int) {
+        val list = _state.value.pendingCommentAttachments.toMutableList()
+        if (index in list.indices) {
+            list.removeAt(index)
+            _state.value = _state.value.copy(pendingCommentAttachments = list)
         }
     }
 

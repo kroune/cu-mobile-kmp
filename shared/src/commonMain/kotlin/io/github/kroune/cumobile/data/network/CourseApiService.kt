@@ -28,7 +28,7 @@ internal class CourseApiService(
     private val httpClient: HttpClient,
 ) {
     /**
-     * GET /micro-lms/courses/student?limit=10000 → list of [Course].
+     * Fetches all courses for the current student.
      *
      * The API may return either a bare JSON array or a wrapper object
      * with an `"items"` key containing the array.
@@ -60,7 +60,7 @@ internal class CourseApiService(
             null
         }
 
-    /** GET /micro-lms/courses/{courseId}/overview → [CourseOverview] */
+    /** Fetches the overview for a specific course. */
     suspend fun fetchCourseOverview(
         cookie: String,
         courseId: Int,

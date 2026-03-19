@@ -5,8 +5,6 @@ import kotlinx.serialization.Serializable
 /**
  * Student task from the tasks list.
  *
- * API endpoint: `GET /micro-lms/tasks/student?state=...`
- *
  * Known [state] values: `"backlog"`, `"inProgress"`, `"review"`,
  * `"revision"`, `"rework"`, `"failed"`, `"rejected"`, `"evaluated"`.
  *

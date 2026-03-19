@@ -23,5 +23,13 @@ internal class ProfileRepositoryImpl(
 
     override suspend fun fetchAvatar(): ByteArray? = withCookie { profileApi.fetchAvatar(it) }
 
+    override suspend fun uploadAvatar(
+        bytes: ByteArray,
+        contentType: String,
+    ): Boolean =
+        withCookieOrFalse {
+            profileApi.uploadAvatar(it, bytes, contentType)
+        }
+
     override suspend fun deleteAvatar(): Boolean = withCookieOrFalse { profileApi.deleteAvatar(it) }
 }

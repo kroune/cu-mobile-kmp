@@ -26,6 +26,7 @@ import io.github.kroune.cumobile.data.model.TaskState
 import io.github.kroune.cumobile.presentation.common.AppColors
 import io.github.kroune.cumobile.presentation.common.StatusBadge
 import io.github.kroune.cumobile.presentation.common.formatDeadline
+import io.github.kroune.cumobile.presentation.common.rememberFilePicker
 import io.github.kroune.cumobile.presentation.common.taskStateColor
 import io.github.kroune.cumobile.presentation.common.taskStateLabel
 
@@ -45,6 +46,13 @@ internal fun CodingMaterialCard(
     val taskId = material.taskId ?: return
     val taskDetails = state.taskDetails[taskId]
     val isActive = state.activeTaskId == taskId
+
+    val solutionPicker = rememberFilePicker { file ->
+        onIntent(LongreadComponent.Intent.PickSolutionAttachment(file))
+    }
+    val commentPicker = rememberFilePicker { file ->
+        onIntent(LongreadComponent.Intent.PickCommentAttachment(file))
+    }
 
     Column(
         modifier = modifier
@@ -68,6 +76,8 @@ internal fun CodingMaterialCard(
                 taskDetails = taskDetails,
                 state = state,
                 onIntent = onIntent,
+                onAttachSolution = { solutionPicker.launch() },
+                onAttachComment = { commentPicker.launch() },
             )
         }
     }
@@ -135,6 +145,8 @@ private fun TaskManagementSection(
     taskDetails: TaskDetails,
     state: LongreadComponent.State,
     onIntent: (LongreadComponent.Intent) -> Unit,
+    onAttachSolution: () -> Unit,
+    onAttachComment: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -166,13 +178,17 @@ private fun TaskManagementSection(
                     taskDetails = taskDetails,
                     solutionUrl = state.solutionUrl,
                     isSubmitting = state.isSubmitting,
+                    pendingAttachments = state.pendingSolutionAttachments,
                     onIntent = onIntent,
+                    onAttach = onAttachSolution,
                 )
                 "comments" -> CommentsTab(
                     comments = state.taskComments,
                     commentText = state.commentText,
                     isSubmitting = state.isSubmitting,
+                    pendingAttachments = state.pendingCommentAttachments,
                     onIntent = onIntent,
+                    onAttach = onAttachComment,
                 )
                 "info" -> InfoTab(
                     taskDetails = taskDetails,

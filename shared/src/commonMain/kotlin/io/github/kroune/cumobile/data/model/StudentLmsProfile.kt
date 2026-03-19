@@ -4,8 +4,6 @@ import kotlinx.serialization.Serializable
 
 /**
  * Student profile from the micro-LMS service.
- *
- * API endpoint: `GET /micro-lms/students/me`
  */
 @Serializable
 data class StudentLmsProfile(

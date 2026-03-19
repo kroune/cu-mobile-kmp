@@ -4,8 +4,6 @@ import kotlinx.serialization.Serializable
 
 /**
  * Comment on a task.
- *
- * API endpoint: `GET /micro-lms/tasks/{taskId}/comments`
  */
 @Serializable
 data class TaskComment(

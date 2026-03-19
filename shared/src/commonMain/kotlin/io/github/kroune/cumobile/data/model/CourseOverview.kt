@@ -4,8 +4,6 @@ import kotlinx.serialization.Serializable
 
 /**
  * Full course overview with themes and longreads.
- *
- * API endpoint: `GET /micro-lms/courses/{courseId}/overview`
  */
 @Serializable
 data class CourseOverview(

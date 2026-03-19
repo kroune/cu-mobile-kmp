@@ -5,8 +5,6 @@ import kotlinx.serialization.Serializable
 /**
  * Course summary from the student course list.
  *
- * API endpoint: `GET /micro-lms/courses/student?limit=10000`
- *
  * Known [category] values: `"mathematics"`, `"development"`, `"stem"`,
  * `"general"`, `"business"`, `"softSkills"`, `"withoutCategory"`.
  *

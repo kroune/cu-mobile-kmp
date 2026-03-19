@@ -1,6 +1,7 @@
 package io.github.kroune.cumobile.presentation.profile
 
 import com.arkivanov.decompose.value.Value
+import io.github.kroune.cumobile.data.model.PickedFile
 import io.github.kroune.cumobile.data.model.StudentLmsProfile
 import io.github.kroune.cumobile.data.model.StudentProfile
 
@@ -22,6 +23,7 @@ interface ProfileComponent {
         val isLoading: Boolean = false,
         val error: String? = null,
         val isDeletingAvatar: Boolean = false,
+        val isUploadingAvatar: Boolean = false,
         /** Current calendar ICS URL (null if not connected). */
         val calendarUrl: String? = null,
         /** Input text for calendar URL editing. */
@@ -75,6 +77,7 @@ interface ProfileComponent {
                 isLoading == other.isLoading &&
                 error == other.error &&
                 isDeletingAvatar == other.isDeletingAvatar &&
+                isUploadingAvatar == other.isUploadingAvatar &&
                 calendarUrl == other.calendarUrl &&
                 calendarUrlInput == other.calendarUrlInput
         }
@@ -86,6 +89,7 @@ interface ProfileComponent {
             result = 31 * result + isLoading.hashCode()
             result = 31 * result + error.hashCode()
             result = 31 * result + isDeletingAvatar.hashCode()
+            result = 31 * result + isUploadingAvatar.hashCode()
             result = 31 * result + calendarUrl.hashCode()
             result = 31 * result + calendarUrlInput.hashCode()
             return result
@@ -96,6 +100,10 @@ interface ProfileComponent {
         data object Back : Intent
 
         data object Refresh : Intent
+
+        data class UploadAvatar(
+            val file: PickedFile,
+        ) : Intent
 
         data object DeleteAvatar : Intent
 
