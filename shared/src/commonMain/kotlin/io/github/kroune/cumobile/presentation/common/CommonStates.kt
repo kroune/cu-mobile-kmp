@@ -12,9 +12,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.tooling.preview.Preview
 
 /**
  * Full-screen centered loading indicator.
@@ -83,25 +83,25 @@ internal fun EmptyContent(
     }
 }
 
-@Preview
-@Composable
-private fun PreviewLoadingDark() {
-    CuMobileTheme(darkTheme = true) {
-        Box(Modifier.background(AppTheme.colors.background)) {
-            LoadingContent()
-        }
-    }
-}
-
-@Preview
-@Composable
-private fun PreviewLoadingLight() {
-    CuMobileTheme(darkTheme = false) {
-        Box(Modifier.background(AppTheme.colors.background)) {
-            LoadingContent()
-        }
-    }
-}
+//@Preview
+//@Composable
+//private fun PreviewLoadingDark() {
+//    CuMobileTheme(darkTheme = true) {
+//        Box(Modifier.background(AppTheme.colors.background)) {
+//            LoadingContent()
+//        }
+//    }
+//}
+//
+//@Preview
+//@Composable
+//private fun PreviewLoadingLight() {
+//    CuMobileTheme(darkTheme = false) {
+//        Box(Modifier.background(AppTheme.colors.background)) {
+//            LoadingContent()
+//        }
+//    }
+//}
 
 @Preview
 @Composable

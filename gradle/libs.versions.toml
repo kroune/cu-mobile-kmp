@@ -33,6 +33,11 @@ kotlinxDateTime = "0.7.1"
 
 screenshot = "0.0.1-alpha13"
 
+roborazzi = "1.59.0"
+composable-preview-scanner = "0.8.1"
+robolectric = "4.16.1"
+uiTestJunit4 = "1.10.5"
+
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlin-testJunit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
@@ -78,6 +83,13 @@ detekt-test = { group = "dev.detekt", name = "detekt-test", version.ref = "detek
 detekt-test-utils = { group = "dev.detekt", name = "detekt-test-utils", version.ref = "detekt" }
 kotlinx-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime", version.ref = "kotlinxDateTime" }
 
+roborazzi = { group = "io.github.takahirom.roborazzi", name = "roborazzi", version.ref = "roborazzi" }
+roborazzi-compose = { group = "io.github.takahirom.roborazzi", name = "roborazzi-compose", version.ref = "roborazzi" }
+composable-preview-scanner = { module = "io.github.sergio-sastre.ComposablePreviewScanner:android", version.ref = "composable-preview-scanner" }
+robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
+androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4", version.ref = "uiTestJunit4" }
+compose-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest", version.ref = "composeMultiplatform" }
+
 [plugins]
 kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 
@@ -93,3 +105,5 @@ detekt = { id = "dev.detekt", version.ref = "detekt" }
 kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 
 kotlinCocoapods = { id = "org.jetbrains.kotlin.native.cocoapods", version.ref = "kotlin" }
+
+roborazziPlugin = { id = "io.github.takahirom.roborazzi", version.ref = "roborazzi" }

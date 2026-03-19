@@ -443,11 +443,13 @@ private val previewHomeState = HomeComponent.State(
     lateDaysBalance = 5,
     tasks = listOf(
         StudentTask(
+            id = 1,
             state = TaskState.InProgress,
             exercise = TaskExercise(name = "ДЗ: Деревья", deadline = "2026-04-01T23:59:00"),
             course = TaskCourse(name = "Алгоритмы"),
         ),
         StudentTask(
+            id = 2,
             state = TaskState.Backlog,
             exercise = TaskExercise(name = "Лабораторная 3", deadline = "2026-04-05T23:59:00"),
             course = TaskCourse(name = "Линейная алгебра"),

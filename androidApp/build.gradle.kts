@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.ktlint)
+    alias(libs.plugins.roborazziPlugin)
 }
 
 val jdkVersion =
@@ -99,8 +100,6 @@ android {
     buildFeatures {
         compose = true
     }
-
-    experimentalProperties["android.experimental.enableScreenshotTest"] = true
 }
 
 dependencies {
@@ -110,10 +109,28 @@ dependencies {
     implementation(libs.compose.ui)
     implementation(libs.compose.uiTooling)
     implementation(libs.compose.uiToolingPreview)
+    implementation(libs.androidx.ui.test.junit4)
+
+    testImplementation(libs.junit)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.roborazzi)
+    testImplementation(libs.roborazzi.compose)
+    testImplementation(libs.composable.preview.scanner)
+
+    debugImplementation(libs.compose.ui.test.manifest)
 }
 
 java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(JavaVersion.toVersion(jdkVersion).toString()))
     }
+}
+
+// Shared module compiles to Java 21 bytecode (Gradle daemon JDK),
+// so the test worker must also run on Java 21.
+tasks.withType<Test>().configureEach {
+    javaLauncher =
+        javaToolchains.launcherFor {
+            languageVersion = JavaLanguageVersion.of(21)
+        }
 }

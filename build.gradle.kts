@@ -12,6 +12,7 @@ plugins {
     alias(libs.plugins.ktlint) apply false
     alias(libs.plugins.detekt) apply false
     alias(libs.plugins.kotlinJvm) apply false
+    alias(libs.plugins.roborazziPlugin) apply false
     idea
 }
 

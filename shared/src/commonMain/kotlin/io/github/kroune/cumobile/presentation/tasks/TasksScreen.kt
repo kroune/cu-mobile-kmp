@@ -353,16 +353,19 @@ private fun countBySegment(
 private val previewTasksState = TasksComponent.State(
     allTasks = listOf(
         StudentTask(
+            id = 1,
             state = TaskState.InProgress,
             exercise = TaskExercise(name = "ДЗ: Деревья и графы", deadline = "2026-04-01T23:59:00"),
             course = TaskCourse(id = 1, name = "Алгоритмы"),
         ),
         StudentTask(
+            id = 2,
             state = TaskState.Backlog,
             exercise = TaskExercise(name = "Лабораторная 3", deadline = "2026-04-05T23:59:00"),
             course = TaskCourse(id = 2, name = "Линейная алгебра"),
         ),
         StudentTask(
+            id = 3,
             state = TaskState.Review,
             exercise = TaskExercise(name = "Эссе по менеджменту"),
             course = TaskCourse(id = 3, name = "Менеджмент"),

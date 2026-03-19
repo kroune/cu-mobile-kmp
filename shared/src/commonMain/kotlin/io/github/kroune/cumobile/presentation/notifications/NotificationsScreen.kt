@@ -265,6 +265,7 @@ private fun notificationIconEmoji(
 private val previewNotificationsState = NotificationsComponent.State(
     educationNotifications = listOf(
         NotificationItem(
+            id = 1,
             title = "Новое задание",
             description = "Преподаватель назначил задание по курсу Алгоритмы",
             icon = "education",
@@ -272,6 +273,7 @@ private val previewNotificationsState = NotificationsComponent.State(
             createdAt = "2026-03-18T10:00:00",
         ),
         NotificationItem(
+            id = 2,
             title = "Оценка выставлена",
             description = "Получена оценка 8 за ДЗ: Деревья",
             icon = "education",
