@@ -16,6 +16,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.tooling.preview.Preview
 
 /**
  * Reusable segmented control (tab selector).
@@ -38,7 +39,7 @@ internal fun SegmentedControl(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
-            .background(AppColors.Surface)
+            .background(AppTheme.colors.surface)
             .padding(2.dp),
         horizontalArrangement = Arrangement.SpaceEvenly,
     ) {
@@ -49,18 +50,46 @@ internal fun SegmentedControl(
                     .weight(1f)
                     .clip(RoundedCornerShape(6.dp))
                     .background(
-                        if (selected) AppColors.Accent.copy(alpha = 0.2f) else AppColors.Surface,
+                        if (selected) AppTheme.colors.accent.copy(alpha = 0.2f) else AppTheme.colors.surface,
                     ).clickable { onSelect(index) }
                     .padding(vertical = 8.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
                     text = label,
-                    color = if (selected) AppColors.Accent else AppColors.TextSecondary,
+                    color = if (selected) AppTheme.colors.accent else AppTheme.colors.textSecondary,
                     fontSize = 13.sp,
                     fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
                 )
             }
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewSegmentedControlDark() {
+    CuMobileTheme(darkTheme = true) {
+        Box(Modifier.background(AppTheme.colors.background).padding(16.dp)) {
+            SegmentedControl(
+                labels = listOf("Курсы", "Ведомость", "Зачётка"),
+                selectedIndex = 0,
+                onSelect = {},
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewSegmentedControlLight() {
+    CuMobileTheme(darkTheme = false) {
+        Box(Modifier.background(AppTheme.colors.background).padding(16.dp)) {
+            SegmentedControl(
+                labels = listOf("Курсы", "Ведомость", "Зачётка"),
+                selectedIndex = 0,
+                onSelect = {},
+            )
         }
     }
 }

@@ -36,7 +36,7 @@ import io.github.kroune.cumobile.data.model.PendingAttachment
 import io.github.kroune.cumobile.data.model.TaskDetails
 import io.github.kroune.cumobile.data.model.TaskState
 import io.github.kroune.cumobile.data.model.UploadStatus
-import io.github.kroune.cumobile.presentation.common.AppColors
+import io.github.kroune.cumobile.presentation.common.AppTheme
 
 /** Solution tab: URL input, file attachments, submit button, existing solution display. */
 @Composable
@@ -85,17 +85,17 @@ private fun ExistingSolutionDisplay(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
-            .background(AppColors.Accent.copy(alpha = 0.1f))
+            .background(AppTheme.colors.accent.copy(alpha = 0.1f))
             .padding(12.dp),
     ) {
         Text(
             text = "Текущее решение:",
-            color = AppColors.TextSecondary,
+            color = AppTheme.colors.textSecondary,
             fontSize = 12.sp,
         )
         Text(
             text = url,
-            color = AppColors.Accent,
+            color = AppTheme.colors.accent,
             fontSize = 13.sp,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
@@ -132,13 +132,13 @@ private fun SolutionUrlInput(
             ),
             modifier = Modifier.fillMaxWidth(),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedTextColor = AppColors.TextPrimary,
-                unfocusedTextColor = AppColors.TextPrimary,
-                focusedBorderColor = AppColors.Accent,
-                unfocusedBorderColor = AppColors.TextSecondary,
-                focusedLabelColor = AppColors.Accent,
-                unfocusedLabelColor = AppColors.TextSecondary,
-                cursorColor = AppColors.Accent,
+                focusedTextColor = AppTheme.colors.textPrimary,
+                unfocusedTextColor = AppTheme.colors.textPrimary,
+                focusedBorderColor = AppTheme.colors.accent,
+                unfocusedBorderColor = AppTheme.colors.textSecondary,
+                focusedLabelColor = AppTheme.colors.accent,
+                unfocusedLabelColor = AppTheme.colors.textSecondary,
+                cursorColor = AppTheme.colors.accent,
             ),
         )
 
@@ -158,17 +158,17 @@ private fun SolutionUrlInput(
             enabled = !isSubmitting && !hasUploading(pendingAttachments),
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(
-                containerColor = AppColors.Accent,
+                containerColor = AppTheme.colors.accent,
             ),
             shape = RoundedCornerShape(8.dp),
         ) {
             if (isSubmitting) {
                 CircularProgressIndicator(
-                    color = AppColors.Background,
+                    color = AppTheme.colors.background,
                     modifier = Modifier.padding(4.dp),
                 )
             } else {
-                Text(text = "Отправить решение", color = AppColors.Background)
+                Text(text = "Отправить решение", color = AppTheme.colors.background)
             }
         }
     }
@@ -190,7 +190,7 @@ internal fun AttachButton(
         modifier = modifier,
         shape = RoundedCornerShape(8.dp),
         colors = ButtonDefaults.outlinedButtonColors(
-            contentColor = AppColors.Accent,
+            contentColor = AppTheme.colors.accent,
         ),
     ) {
         Icon(
@@ -241,9 +241,9 @@ private fun PendingAttachmentChip(
             .clip(RoundedCornerShape(16.dp))
             .background(
                 when (attachment.status) {
-                    UploadStatus.Uploading -> AppColors.Accent.copy(alpha = 0.1f)
-                    UploadStatus.Uploaded -> AppColors.Accent.copy(alpha = 0.2f)
-                    UploadStatus.Failed -> AppColors.TaskFailed.copy(alpha = 0.2f)
+                    UploadStatus.Uploading -> AppTheme.colors.accent.copy(alpha = 0.1f)
+                    UploadStatus.Uploaded -> AppTheme.colors.accent.copy(alpha = 0.2f)
+                    UploadStatus.Failed -> AppTheme.colors.taskFailed.copy(alpha = 0.2f)
                 },
             ).padding(start = 10.dp, top = 4.dp, bottom = 4.dp, end = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -252,15 +252,15 @@ private fun PendingAttachmentChip(
         if (attachment.status == UploadStatus.Uploading) {
             CircularProgressIndicator(
                 modifier = Modifier.size(14.dp),
-                color = AppColors.Accent,
+                color = AppTheme.colors.accent,
                 strokeWidth = 2.dp,
             )
         }
         Text(
             text = attachment.name,
             color = when (attachment.status) {
-                UploadStatus.Failed -> AppColors.TaskFailed
-                else -> AppColors.TextPrimary
+                UploadStatus.Failed -> AppTheme.colors.taskFailed
+                else -> AppTheme.colors.textPrimary
             },
             fontSize = 12.sp,
             maxLines = 1,
@@ -274,7 +274,7 @@ private fun PendingAttachmentChip(
                 imageVector = Icons.Default.Close,
                 contentDescription = "Удалить",
                 modifier = Modifier.size(14.dp),
-                tint = AppColors.TextSecondary,
+                tint = AppTheme.colors.textSecondary,
             )
         }
     }

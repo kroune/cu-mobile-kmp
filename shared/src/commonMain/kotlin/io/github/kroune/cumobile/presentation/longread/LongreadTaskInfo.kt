@@ -30,7 +30,7 @@ import io.github.kroune.cumobile.data.model.PendingAttachment
 import io.github.kroune.cumobile.data.model.TaskComment
 import io.github.kroune.cumobile.data.model.TaskDetails
 import io.github.kroune.cumobile.data.model.TaskEvent
-import io.github.kroune.cumobile.presentation.common.AppColors
+import io.github.kroune.cumobile.presentation.common.AppTheme
 import io.github.kroune.cumobile.presentation.common.StatusBadge
 import io.github.kroune.cumobile.presentation.common.formatDateTime
 import io.github.kroune.cumobile.presentation.common.formatDeadline
@@ -68,13 +68,13 @@ internal fun CommentsTab(
             ),
             modifier = Modifier.fillMaxWidth(),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedTextColor = AppColors.TextPrimary,
-                unfocusedTextColor = AppColors.TextPrimary,
-                focusedBorderColor = AppColors.Accent,
-                unfocusedBorderColor = AppColors.TextSecondary,
-                focusedLabelColor = AppColors.Accent,
-                unfocusedLabelColor = AppColors.TextSecondary,
-                cursorColor = AppColors.Accent,
+                focusedTextColor = AppTheme.colors.textPrimary,
+                unfocusedTextColor = AppTheme.colors.textPrimary,
+                focusedBorderColor = AppTheme.colors.accent,
+                unfocusedBorderColor = AppTheme.colors.textSecondary,
+                focusedLabelColor = AppTheme.colors.accent,
+                unfocusedLabelColor = AppTheme.colors.textSecondary,
+                cursorColor = AppTheme.colors.accent,
             ),
         )
 
@@ -94,17 +94,17 @@ internal fun CommentsTab(
                 !hasUploading(pendingAttachments),
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(
-                containerColor = AppColors.Accent,
+                containerColor = AppTheme.colors.accent,
             ),
             shape = RoundedCornerShape(8.dp),
         ) {
             if (isSubmitting) {
                 CircularProgressIndicator(
-                    color = AppColors.Background,
+                    color = AppTheme.colors.background,
                     modifier = Modifier.padding(4.dp),
                 )
             } else {
-                Text(text = "Отправить", color = AppColors.Background)
+                Text(text = "Отправить", color = AppTheme.colors.background)
             }
         }
 
@@ -112,7 +112,7 @@ internal fun CommentsTab(
         if (comments.isEmpty()) {
             Text(
                 text = "Нет комментариев",
-                color = AppColors.TextSecondary,
+                color = AppTheme.colors.textSecondary,
                 fontSize = 13.sp,
                 modifier = Modifier.padding(vertical = 8.dp),
             )
@@ -134,7 +134,7 @@ private fun CommentCard(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
-            .background(AppColors.Background)
+            .background(AppTheme.colors.background)
             .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
@@ -144,7 +144,7 @@ private fun CommentCard(
         ) {
             Text(
                 text = comment.sender.name.ifBlank { comment.sender.email },
-                color = AppColors.Accent,
+                color = AppTheme.colors.accent,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Medium,
                 maxLines = 1,
@@ -154,21 +154,21 @@ private fun CommentCard(
             comment.createdAt?.let { date ->
                 Text(
                     text = formatDateTime(date),
-                    color = AppColors.TextSecondary,
+                    color = AppTheme.colors.textSecondary,
                     fontSize = 11.sp,
                 )
             }
         }
         Text(
             text = comment.content,
-            color = AppColors.TextPrimary,
+            color = AppTheme.colors.textPrimary,
             fontSize = 13.sp,
         )
         // Attachments
         comment.attachments.forEach { attachment ->
             Text(
                 text = "\uD83D\uDCCE ${attachment.name}",
-                color = AppColors.TextSecondary,
+                color = AppTheme.colors.textSecondary,
                 fontSize = 12.sp,
             )
         }
@@ -193,7 +193,7 @@ internal fun InfoTab(
         if (events.isNotEmpty()) {
             Text(
                 text = "История",
-                color = AppColors.TextPrimary,
+                color = AppTheme.colors.textPrimary,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(top = 4.dp),
@@ -201,7 +201,7 @@ internal fun InfoTab(
             events.forEach { event ->
                 EventCard(event)
                 HorizontalDivider(
-                    color = AppColors.TextSecondary.copy(alpha = 0.2f),
+                    color = AppTheme.colors.textSecondary.copy(alpha = 0.2f),
                 )
             }
         }
@@ -218,7 +218,7 @@ private fun TaskInfoSummary(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
-            .background(AppColors.Background)
+            .background(AppTheme.colors.background)
             .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
@@ -255,7 +255,7 @@ private fun TaskInfoSummary(
 private fun InfoRow(
     label: String,
     value: String,
-    valueColor: androidx.compose.ui.graphics.Color = AppColors.TextPrimary,
+    valueColor: androidx.compose.ui.graphics.Color = AppTheme.colors.textPrimary,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -264,7 +264,7 @@ private fun InfoRow(
     ) {
         Text(
             text = label,
-            color = AppColors.TextSecondary,
+            color = AppTheme.colors.textSecondary,
             fontSize = 13.sp,
         )
         Text(
@@ -302,7 +302,7 @@ private fun EventCard(
             event.occurredOn?.let { date ->
                 Text(
                     text = formatDateTime(date),
-                    color = AppColors.TextSecondary,
+                    color = AppTheme.colors.textSecondary,
                     fontSize = 11.sp,
                 )
             }
@@ -312,7 +312,7 @@ private fun EventCard(
         event.actorName?.let { name ->
             Text(
                 text = name,
-                color = AppColors.TextSecondary,
+                color = AppTheme.colors.textSecondary,
                 fontSize = 12.sp,
             )
         }
@@ -331,7 +331,7 @@ private fun EventCard(
             score.value?.let { value ->
                 Text(
                     text = "Оценка: ${value.toInt()}",
-                    color = AppColors.TaskEvaluated,
+                    color = AppTheme.colors.taskEvaluated,
                     fontSize = 12.sp,
                 )
             }
@@ -341,7 +341,7 @@ private fun EventCard(
         event.content.lateDaysValue?.let { days ->
             Text(
                 text = "Late days: $days",
-                color = AppColors.TextSecondary,
+                color = AppTheme.colors.textSecondary,
                 fontSize = 12.sp,
             )
         }
@@ -365,13 +365,14 @@ private fun eventTypeLabel(type: String): String =
     }
 
 /** Returns a color for an event type. */
+@Composable
 private fun eventTypeColor(type: String): androidx.compose.ui.graphics.Color =
     when (type) {
-        "task_started" -> AppColors.TaskInProgress
-        "task_submitted" -> AppColors.TaskHasSolution
-        "task_evaluated" -> AppColors.TaskEvaluated
-        "task_reworked", "task_revision" -> AppColors.TaskRevision
-        "comment_added" -> AppColors.Accent
-        "late_days_prolonged", "late_days_cancelled" -> AppColors.TextSecondary
-        else -> AppColors.TextSecondary
+        "task_started" -> AppTheme.colors.taskInProgress
+        "task_submitted" -> AppTheme.colors.taskHasSolution
+        "task_evaluated" -> AppTheme.colors.taskEvaluated
+        "task_reworked", "task_revision" -> AppTheme.colors.taskRevision
+        "comment_added" -> AppTheme.colors.accent
+        "late_days_prolonged", "late_days_cancelled" -> AppTheme.colors.textSecondary
+        else -> AppTheme.colors.textSecondary
     }

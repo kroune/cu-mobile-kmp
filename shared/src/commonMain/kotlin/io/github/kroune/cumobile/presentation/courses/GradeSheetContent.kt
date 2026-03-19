@@ -28,7 +28,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.kroune.cumobile.data.model.StudentPerformanceCourse
-import io.github.kroune.cumobile.presentation.common.AppColors
+import io.github.kroune.cumobile.presentation.common.AppTheme
 import io.github.kroune.cumobile.presentation.common.EmptyContent
 import io.github.kroune.cumobile.presentation.common.gradeColor
 import io.github.kroune.cumobile.presentation.common.gradeDescription
@@ -42,7 +42,7 @@ import io.github.kroune.cumobile.presentation.common.stripEmojiPrefix
 @Composable
 internal fun GradeSheetContent(
     state: CoursesComponent.State,
-    component: CoursesComponent,
+    onIntent: (CoursesComponent.Intent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val items = state.performanceCourses.filter { perf ->
@@ -63,7 +63,7 @@ internal fun GradeSheetContent(
             GradeSheetTile(
                 performance = perf,
                 onClick = {
-                    component.onIntent(
+                    onIntent(
                         CoursesComponent.Intent.OpenCoursePerformance(
                             courseId = perf.id,
                             courseName = perf.name,
@@ -88,7 +88,7 @@ private fun GradeSheetTile(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(AppColors.Surface)
+            .background(AppTheme.colors.surface)
             .clickable(onClick = onClick)
             .padding(horizontal = 12.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -113,7 +113,7 @@ private fun GradeSheetTile(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = stripEmojiPrefix(performance.name),
-                color = AppColors.TextPrimary,
+                color = AppTheme.colors.textPrimary,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
                 maxLines = 2,
@@ -128,7 +128,7 @@ private fun GradeSheetTile(
 
         Text(
             text = "\u203A",
-            color = AppColors.TextSecondary,
+            color = AppTheme.colors.textSecondary,
             fontSize = 20.sp,
         )
     }

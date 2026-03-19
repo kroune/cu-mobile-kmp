@@ -36,8 +36,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import io.github.kroune.cumobile.data.model.NotificationItem
-import io.github.kroune.cumobile.presentation.common.AppColors
+import io.github.kroune.cumobile.presentation.common.AppTheme
+import io.github.kroune.cumobile.presentation.common.CuMobileTheme
 import io.github.kroune.cumobile.presentation.common.DetailTopBar
+import androidx.compose.ui.tooling.preview.Preview
 import io.github.kroune.cumobile.presentation.common.EmptyContent
 import io.github.kroune.cumobile.presentation.common.ErrorContent
 import io.github.kroune.cumobile.presentation.common.LoadingContent
@@ -78,12 +80,28 @@ fun NotificationsScreen(
         }
     }
 
+    NotificationsScreenContent(
+        state = state,
+        onIntent = component::onIntent,
+        onBack = onBack,
+        modifier = modifier,
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun NotificationsScreenContent(
+    state: NotificationsComponent.State,
+    onIntent: (NotificationsComponent.Intent) -> Unit,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     PullToRefreshBox(
         isRefreshing = state.isLoading,
-        onRefresh = { component.onIntent(NotificationsComponent.Intent.Refresh) },
+        onRefresh = { onIntent(NotificationsComponent.Intent.Refresh) },
         modifier = modifier
             .fillMaxSize()
-            .background(AppColors.Background),
+            .background(AppTheme.colors.background),
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -96,9 +114,7 @@ fun NotificationsScreen(
             SegmentedControl(
                 labels = listOf("Учеба", "Другое"),
                 selectedIndex = state.selectedTab,
-                onSelect = {
-                    component.onIntent(NotificationsComponent.Intent.SelectTab(it))
-                },
+                onSelect = { onIntent(NotificationsComponent.Intent.SelectTab(it)) },
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             )
 
@@ -106,7 +122,7 @@ fun NotificationsScreen(
                 state.isLoading && state.currentNotifications.isEmpty() -> LoadingContent()
                 state.error != null && state.currentNotifications.isEmpty() -> ErrorContent(
                     error = state.error.orEmpty(),
-                    onRetry = { component.onIntent(NotificationsComponent.Intent.Refresh) },
+                    onRetry = { onIntent(NotificationsComponent.Intent.Refresh) },
                 )
                 state.currentNotifications.isEmpty() -> EmptyContent(
                     text = "Нет уведомлений",
@@ -114,7 +130,7 @@ fun NotificationsScreen(
                 else -> NotificationsList(
                     notifications = state.currentNotifications,
                     onLinkClick = { uri ->
-                        component.onIntent(NotificationsComponent.Intent.OpenLink(uri))
+                        onIntent(NotificationsComponent.Intent.OpenLink(uri))
                     },
                 )
             }
@@ -150,7 +166,7 @@ private fun NotificationCard(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(AppColors.Surface, RoundedCornerShape(12.dp))
+            .background(AppTheme.colors.surface, RoundedCornerShape(12.dp))
             .padding(12.dp),
     ) {
         // Category icon
@@ -162,7 +178,7 @@ private fun NotificationCard(
             // Title
             Text(
                 text = item.title,
-                color = AppColors.TextPrimary,
+                color = AppTheme.colors.textPrimary,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
                 maxLines = 2,
@@ -173,7 +189,7 @@ private fun NotificationCard(
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = formatDateTimeFull(item.createdAt),
-                color = AppColors.TextSecondary,
+                color = AppTheme.colors.textSecondary,
                 fontSize = 11.sp,
             )
 
@@ -182,7 +198,7 @@ private fun NotificationCard(
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = item.description.trim(),
-                    color = AppColors.TextSecondary.copy(alpha = 0.8f),
+                    color = AppTheme.colors.textSecondary.copy(alpha = 0.8f),
                     fontSize = 12.sp,
                     maxLines = 3,
                     overflow = TextOverflow.Ellipsis,
@@ -195,7 +211,7 @@ private fun NotificationCard(
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
                     text = link.label.ifBlank { link.uri },
-                    color = AppColors.Accent,
+                    color = AppTheme.colors.accent,
                     fontSize = 12.sp,
                     textDecoration = TextDecoration.Underline,
                     modifier = Modifier.clickable { onLinkClick(link.uri) },
@@ -218,7 +234,7 @@ private fun NotificationIcon(
         modifier = modifier
             .size(36.dp)
             .clip(CircleShape)
-            .background(AppColors.Accent.copy(alpha = 0.15f), CircleShape),
+            .background(AppTheme.colors.accent.copy(alpha = 0.15f), CircleShape),
         contentAlignment = Alignment.Center,
     ) {
         Text(text = emoji, fontSize = 16.sp)
@@ -245,3 +261,46 @@ private fun notificationIconEmoji(
             "\uD83D\uDD14" // 🔔
         }
     }
+
+private val previewNotificationsState = NotificationsComponent.State(
+    educationNotifications = listOf(
+        NotificationItem(
+            title = "Новое задание",
+            description = "Преподаватель назначил задание по курсу Алгоритмы",
+            icon = "education",
+            category = "1",
+            createdAt = "2026-03-18T10:00:00",
+        ),
+        NotificationItem(
+            title = "Оценка выставлена",
+            description = "Получена оценка 8 за ДЗ: Деревья",
+            icon = "education",
+            category = "1",
+            createdAt = "2026-03-17T14:30:00",
+        ),
+    ),
+)
+
+@Preview
+@Composable
+private fun PreviewNotificationsScreenDark() {
+    CuMobileTheme(darkTheme = true) {
+        NotificationsScreenContent(
+            state = previewNotificationsState,
+            onIntent = {},
+            onBack = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewNotificationsScreenLight() {
+    CuMobileTheme(darkTheme = false) {
+        NotificationsScreenContent(
+            state = previewNotificationsState,
+            onIntent = {},
+            onBack = {},
+        )
+    }
+}

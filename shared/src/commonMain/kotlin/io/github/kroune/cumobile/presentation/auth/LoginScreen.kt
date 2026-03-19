@@ -25,10 +25,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
-import io.github.kroune.cumobile.presentation.common.AppColors
+import io.github.kroune.cumobile.presentation.common.AppTheme
+import io.github.kroune.cumobile.presentation.common.CuMobileTheme
 
 private const val APP_VERSION = "1.0.1"
 
@@ -41,10 +43,21 @@ private const val APP_VERSION = "1.0.1"
 fun LoginScreen(component: LoginComponent) {
     val state by component.state.subscribeAsState()
 
+    LoginScreenContent(
+        state = state,
+        onLoginClick = { component.onIntent(LoginComponent.Intent.LoginClicked) },
+    )
+}
+
+@Composable
+internal fun LoginScreenContent(
+    state: LoginComponent.State,
+    onLoginClick: () -> Unit,
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(AppColors.Background)
+            .background(AppTheme.colors.background)
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 32.dp),
         verticalArrangement = Arrangement.Center,
@@ -60,7 +73,7 @@ fun LoginScreen(component: LoginComponent) {
         Spacer(modifier = Modifier.height(32.dp))
         LoginButton(
             isLoading = state.isLoading,
-            onClick = { component.onIntent(LoginComponent.Intent.LoginClicked) },
+            onClick = onLoginClick,
         )
         ErrorMessage(error = state.error)
 
@@ -76,14 +89,14 @@ private fun LogoSection() {
     // Text-based logo (CU doesn't provide a shared SVG we can embed)
     Text(
         text = "ЦУ",
-        color = AppColors.Accent,
+        color = AppTheme.colors.accent,
         fontSize = 48.sp,
         fontWeight = FontWeight.Bold,
     )
     Spacer(modifier = Modifier.height(8.dp))
     Text(
         text = "Авторизация",
-        color = AppColors.TextPrimary,
+        color = AppTheme.colors.textPrimary,
         fontSize = 24.sp,
         fontWeight = FontWeight.Bold,
     )
@@ -93,7 +106,7 @@ private fun LogoSection() {
 private fun AuthDescription() {
     Text(
         text = "Авторизуйтесь через браузер,\nмы сохраним сессию автоматически.",
-        color = AppColors.TextSecondary,
+        color = AppTheme.colors.textSecondary,
         fontSize = 14.sp,
         textAlign = TextAlign.Center,
     )
@@ -105,13 +118,13 @@ private fun HowToLoginSection() {
         modifier = Modifier
             .fillMaxWidth()
             .background(
-                AppColors.Surface,
+                AppTheme.colors.surface,
                 RoundedCornerShape(12.dp),
             ).padding(16.dp),
     ) {
         Text(
             text = "Как войти",
-            color = AppColors.TextPrimary,
+            color = AppTheme.colors.textPrimary,
             fontSize = 16.sp,
             fontWeight = FontWeight.SemiBold,
         )
@@ -129,7 +142,7 @@ private fun LoginStep(
 ) {
     Text(
         text = "$number. $text",
-        color = AppColors.TextSecondary,
+        color = AppTheme.colors.textSecondary,
         fontSize = 13.sp,
         modifier = Modifier.padding(vertical = 2.dp),
     )
@@ -142,7 +155,7 @@ private fun LoginButton(
 ) {
     if (isLoading) {
         CircularProgressIndicator(
-            color = AppColors.Accent,
+            color = AppTheme.colors.accent,
             modifier = Modifier.size(40.dp),
         )
     } else {
@@ -153,12 +166,12 @@ private fun LoginButton(
                 .height(48.dp)
                 .border(
                     width = 1.dp,
-                    color = AppColors.Accent,
+                    color = AppTheme.colors.accent,
                     shape = RoundedCornerShape(24.dp),
                 ),
             shape = RoundedCornerShape(24.dp),
             colors = ButtonDefaults.outlinedButtonColors(
-                contentColor = AppColors.Accent,
+                contentColor = AppTheme.colors.accent,
             ),
         ) {
             Text(
@@ -175,7 +188,7 @@ private fun ErrorMessage(error: String?) {
         Spacer(modifier = Modifier.height(16.dp))
         Text(
             text = error,
-            color = AppColors.Error,
+            color = AppTheme.colors.error,
             fontSize = 14.sp,
             textAlign = TextAlign.Center,
         )
@@ -186,7 +199,23 @@ private fun ErrorMessage(error: String?) {
 private fun VersionLabel() {
     Text(
         text = "Версия $APP_VERSION",
-        color = AppColors.TextSecondary,
+        color = AppTheme.colors.textSecondary,
         fontSize = 12.sp,
     )
+}
+
+@Preview
+@Composable
+private fun PreviewLoginScreenDark() {
+    CuMobileTheme(darkTheme = true) {
+        LoginScreenContent(state = LoginComponent.State(), onLoginClick = {})
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewLoginScreenLight() {
+    CuMobileTheme(darkTheme = false) {
+        LoginScreenContent(state = LoginComponent.State(), onLoginClick = {})
+    }
 }

@@ -1,5 +1,6 @@
 package io.github.kroune.cumobile.presentation.common
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -13,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.tooling.preview.Preview
 
 /**
  * Full-screen centered loading indicator.
@@ -23,7 +25,7 @@ internal fun LoadingContent(modifier: Modifier = Modifier) {
         modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center,
     ) {
-        CircularProgressIndicator(color = AppColors.Accent)
+        CircularProgressIndicator(color = AppTheme.colors.accent)
     }
 }
 
@@ -46,13 +48,13 @@ internal fun ErrorContent(
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
                 text = error,
-                color = AppColors.Error,
+                color = AppTheme.colors.error,
                 fontSize = 14.sp,
             )
             if (onRetry != null) {
                 Spacer(modifier = Modifier.height(12.dp))
                 TextButton(onClick = onRetry) {
-                    Text(text = "Повторить", color = AppColors.Accent)
+                    Text(text = "Повторить", color = AppTheme.colors.accent)
                 }
             }
         }
@@ -75,8 +77,68 @@ internal fun EmptyContent(
     ) {
         Text(
             text = text,
-            color = AppColors.TextSecondary,
+            color = AppTheme.colors.textSecondary,
             fontSize = 14.sp,
         )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewLoadingDark() {
+    CuMobileTheme(darkTheme = true) {
+        Box(Modifier.background(AppTheme.colors.background)) {
+            LoadingContent()
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewLoadingLight() {
+    CuMobileTheme(darkTheme = false) {
+        Box(Modifier.background(AppTheme.colors.background)) {
+            LoadingContent()
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewErrorDark() {
+    CuMobileTheme(darkTheme = true) {
+        Box(Modifier.background(AppTheme.colors.background)) {
+            ErrorContent(error = "Ошибка загрузки", onRetry = {})
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewErrorLight() {
+    CuMobileTheme(darkTheme = false) {
+        Box(Modifier.background(AppTheme.colors.background)) {
+            ErrorContent(error = "Ошибка загрузки", onRetry = {})
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewEmptyDark() {
+    CuMobileTheme(darkTheme = true) {
+        Box(Modifier.background(AppTheme.colors.background)) {
+            EmptyContent(text = "Нет данных")
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewEmptyLight() {
+    CuMobileTheme(darkTheme = false) {
+        Box(Modifier.background(AppTheme.colors.background)) {
+            EmptyContent(text = "Нет данных")
+        }
     }
 }

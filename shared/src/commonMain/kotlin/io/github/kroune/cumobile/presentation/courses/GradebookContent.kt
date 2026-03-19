@@ -28,7 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.kroune.cumobile.data.model.GradebookGrade
 import io.github.kroune.cumobile.data.model.GradebookSemester
-import io.github.kroune.cumobile.presentation.common.AppColors
+import io.github.kroune.cumobile.presentation.common.AppTheme
 import io.github.kroune.cumobile.presentation.common.EmptyContent
 
 /**
@@ -70,12 +70,12 @@ private fun SemesterCard(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(AppColors.Surface)
+            .background(AppTheme.colors.surface)
             .padding(12.dp),
     ) {
         Text(
             text = "${semester.year}/${semester.year + 1}, семестр ${semester.semesterNumber}",
-            color = AppColors.TextPrimary,
+            color = AppTheme.colors.textPrimary,
             fontSize = 15.sp,
             fontWeight = FontWeight.SemiBold,
         )
@@ -90,7 +90,7 @@ private fun SemesterCard(
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = "Элективы",
-                color = AppColors.TextSecondary,
+                color = AppTheme.colors.textSecondary,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold,
             )
@@ -117,14 +117,14 @@ private fun GradeRow(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = grade.subject,
-                color = AppColors.TextPrimary,
+                color = AppTheme.colors.textPrimary,
                 fontSize = 13.sp,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
                 text = assessmentTypeLabel(grade.assessmentType),
-                color = AppColors.TextSecondary,
+                color = AppTheme.colors.textSecondary,
                 fontSize = 11.sp,
             )
         }

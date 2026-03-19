@@ -34,7 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import io.github.kroune.cumobile.data.model.LongreadMaterial
-import io.github.kroune.cumobile.presentation.common.AppColors
+import io.github.kroune.cumobile.presentation.common.AppTheme
 import io.github.kroune.cumobile.presentation.common.DetailTopBar
 import io.github.kroune.cumobile.presentation.common.ErrorContent
 import io.github.kroune.cumobile.presentation.common.LoadingContent
@@ -62,7 +62,7 @@ fun LongreadScreen(
         onRefresh = { component.onIntent(LongreadComponent.Intent.Refresh) },
         modifier = modifier
             .fillMaxSize()
-            .background(AppColors.Background),
+            .background(AppTheme.colors.background),
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -151,7 +151,7 @@ private fun SearchBar(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(AppColors.Surface)
+            .background(AppTheme.colors.surface)
             .padding(horizontal = 12.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -177,7 +177,7 @@ private fun SearchBar(
             Text(
                 text = "\u2715",
                 fontSize = 16.sp,
-                color = AppColors.TextPrimary,
+                color = AppTheme.colors.textPrimary,
             )
         }
     }
@@ -195,21 +195,21 @@ private fun SearchInput(
         onValueChange = onQueryChange,
         singleLine = true,
         textStyle = androidx.compose.ui.text.TextStyle(
-            color = AppColors.TextPrimary,
+            color = AppTheme.colors.textPrimary,
             fontSize = 14.sp,
         ),
-        cursorBrush = SolidColor(AppColors.Accent),
+        cursorBrush = SolidColor(AppTheme.colors.accent),
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
         keyboardActions = KeyboardActions(onSearch = { onSearch() }),
         modifier = modifier
             .clip(RoundedCornerShape(8.dp))
-            .background(AppColors.Background)
+            .background(AppTheme.colors.background)
             .padding(horizontal = 12.dp, vertical = 8.dp),
         decorationBox = { innerTextField ->
             if (query.isEmpty()) {
                 Text(
                     text = "Поиск...",
-                    color = AppColors.TextSecondary,
+                    color = AppTheme.colors.textSecondary,
                     fontSize = 14.sp,
                 )
             }
@@ -225,10 +225,10 @@ private fun SearchNavigation(
     onIntent: (LongreadComponent.Intent) -> Unit,
 ) {
     val hasMatches = matchCount > 0
-    val arrowColor = if (hasMatches) AppColors.TextPrimary else AppColors.TextSecondary
+    val arrowColor = if (hasMatches) AppTheme.colors.textPrimary else AppTheme.colors.textSecondary
     Text(
         text = if (hasMatches) "${currentIndex + 1}/$matchCount" else "0/0",
-        color = AppColors.TextSecondary,
+        color = AppTheme.colors.textSecondary,
         fontSize = 12.sp,
     )
     TextButton(
@@ -259,14 +259,14 @@ private fun MarkdownCard(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(AppColors.Surface)
+            .background(AppTheme.colors.surface)
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         material.contentName?.let { name ->
             Text(
                 text = name,
-                color = AppColors.TextPrimary,
+                color = AppTheme.colors.textPrimary,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
             )
@@ -274,14 +274,14 @@ private fun MarkdownCard(
         if (searchQuery.isNotBlank()) {
             Text(
                 text = highlightMatches(content, searchQuery),
-                color = AppColors.TextPrimary,
+                color = AppTheme.colors.textPrimary,
                 fontSize = 14.sp,
                 lineHeight = 20.sp,
             )
         } else {
             Text(
                 text = content,
-                color = AppColors.TextPrimary,
+                color = AppTheme.colors.textPrimary,
                 fontSize = 14.sp,
                 lineHeight = 20.sp,
             )
@@ -290,6 +290,7 @@ private fun MarkdownCard(
 }
 
 /** Builds an [AnnotatedString] with highlighted search matches. */
+@Composable
 private fun highlightMatches(
     text: String,
     query: String,
@@ -298,7 +299,7 @@ private fun highlightMatches(
     val lowerQuery = query.lowercase()
     var lastIndex = 0
     val highlightStyle = SpanStyle(
-        background = AppColors.Accent.copy(alpha = 0.3f),
+        background = AppTheme.colors.accent.copy(alpha = 0.3f),
     )
     while (true) {
         val index = lowerText.indexOf(lowerQuery, lastIndex)
@@ -326,7 +327,7 @@ private fun FileCard(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(AppColors.Surface)
+            .background(AppTheme.colors.surface)
             .padding(16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
@@ -334,7 +335,7 @@ private fun FileCard(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = "\uD83D\uDCC4 $filename",
-                color = AppColors.TextPrimary,
+                color = AppTheme.colors.textPrimary,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
                 maxLines = 2,
@@ -343,7 +344,7 @@ private fun FileCard(
             material.length?.let { size ->
                 Text(
                     text = formatSizeBytes(size.toLong()),
-                    color = AppColors.TextSecondary,
+                    color = AppTheme.colors.textSecondary,
                     fontSize = 12.sp,
                 )
             }
@@ -356,7 +357,7 @@ private fun FileCard(
                     )
                 },
             ) {
-                Text(text = "Скачать", color = AppColors.Accent)
+                Text(text = "Скачать", color = AppTheme.colors.accent)
             }
         }
     }
@@ -372,18 +373,18 @@ private fun QuestionsCard(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(AppColors.Surface)
+            .background(AppTheme.colors.surface)
             .padding(16.dp),
     ) {
         Text(
             text = material.contentName ?: "Вопросы",
-            color = AppColors.TextPrimary,
+            color = AppTheme.colors.textPrimary,
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
         )
         Text(
             text = "Этот тип материала недоступен в мобильном приложении",
-            color = AppColors.TextSecondary,
+            color = AppTheme.colors.textSecondary,
             fontSize = 14.sp,
             modifier = Modifier.padding(top = 8.dp),
         )

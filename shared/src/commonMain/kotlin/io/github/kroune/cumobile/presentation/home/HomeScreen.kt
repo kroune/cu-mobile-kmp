@@ -37,11 +37,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.tooling.preview.Preview
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
+import io.github.kroune.cumobile.data.model.ClassData
 import io.github.kroune.cumobile.data.model.Course
 import io.github.kroune.cumobile.data.model.StudentTask
-import io.github.kroune.cumobile.data.model.ClassData
-import io.github.kroune.cumobile.presentation.common.AppColors
+import io.github.kroune.cumobile.data.model.TaskCourse
+import io.github.kroune.cumobile.data.model.TaskExercise
+import io.github.kroune.cumobile.data.model.TaskState
+import io.github.kroune.cumobile.presentation.common.AppTheme
+import io.github.kroune.cumobile.presentation.common.CuMobileTheme
 import io.github.kroune.cumobile.presentation.common.CourseCard
 import io.github.kroune.cumobile.presentation.common.DeadlineTaskCard
 import io.github.kroune.cumobile.presentation.common.ErrorContent
@@ -68,7 +73,7 @@ fun HomeScreen(
         onRefresh = { component.onIntent(HomeComponent.Intent.Refresh) },
         modifier = modifier
             .fillMaxSize()
-            .background(AppColors.Background),
+            .background(AppTheme.colors.background),
     ) {
         when {
             state.isLoading && state.tasks.isEmpty() && state.courses.isEmpty() -> LoadingContent()
@@ -91,7 +96,7 @@ fun HomeScreen(
 }
 
 @Composable
-private fun HomeContent(
+internal fun HomeContent(
     state: HomeComponent.State,
     onIntent: (HomeComponent.Intent) -> Unit,
     onTaskClick: (StudentTask) -> Unit,
@@ -101,7 +106,7 @@ private fun HomeContent(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(AppColors.Background)
+            .background(AppTheme.colors.background)
             .verticalScroll(rememberScrollState()),
     ) {
         DeadlinesSection(
@@ -264,19 +269,19 @@ private fun DateNavigationRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         TextButton(onClick = { onIntent(HomeComponent.Intent.PreviousDay) }) {
-            Text("<", color = AppColors.Accent, fontWeight = FontWeight.Bold)
+            Text("<", color = AppTheme.colors.accent, fontWeight = FontWeight.Bold)
         }
 
         Text(
             text = formatEpochDate(selectedDateMillis),
-            color = AppColors.TextPrimary,
+            color = AppTheme.colors.textPrimary,
             fontSize = 16.sp,
             fontWeight = FontWeight.Medium,
             modifier = Modifier.clickable { onIntent(HomeComponent.Intent.Today) }
         )
 
         TextButton(onClick = { onIntent(HomeComponent.Intent.NextDay) }) {
-            Text(">", color = AppColors.Accent, fontWeight = FontWeight.Bold)
+            Text(">", color = AppTheme.colors.accent, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -287,20 +292,20 @@ private fun ClassCard(classData: ClassData) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(AppColors.Surface)
+            .background(AppTheme.colors.surface)
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
                 text = classData.startTime,
-                color = AppColors.TextPrimary,
+                color = AppTheme.colors.textPrimary,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
             )
             Text(
                 text = classData.endTime,
-                color = AppColors.TextSecondary,
+                color = AppTheme.colors.textSecondary,
                 fontSize = 12.sp,
             )
         }
@@ -311,7 +316,7 @@ private fun ClassCard(classData: ClassData) {
             modifier = Modifier
                 .width(2.dp)
                 .height(40.dp)
-                .background(AppColors.Accent)
+                .background(AppTheme.colors.accent)
         )
 
         Spacer(modifier = Modifier.width(16.dp))
@@ -319,7 +324,7 @@ private fun ClassCard(classData: ClassData) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = classData.title,
-                color = AppColors.TextPrimary,
+                color = AppTheme.colors.textPrimary,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
                 maxLines = 2,
@@ -329,13 +334,13 @@ private fun ClassCard(classData: ClassData) {
                 if (classData.room.isNotEmpty()) {
                     Text(
                         text = "📍 ${classData.room}",
-                        color = AppColors.TextSecondary,
+                        color = AppTheme.colors.textSecondary,
                         fontSize = 12.sp,
                     )
                 }
                 Text(
                     text = "🏷️ ${classData.type}",
-                    color = AppColors.TextSecondary,
+                    color = AppTheme.colors.textSecondary,
                     fontSize = 12.sp,
                 )
             }
@@ -356,7 +361,7 @@ private fun ConnectCalendarSection(
     ) {
         Text(
             text = "Календарь не подключен",
-            color = AppColors.TextSecondary,
+            color = AppTheme.colors.textSecondary,
             fontSize = 14.sp,
         )
         TextButton(
@@ -364,7 +369,7 @@ private fun ConnectCalendarSection(
         ) {
             Text(
                 text = "Подключить в настройках профиля",
-                color = AppColors.Accent,
+                color = AppTheme.colors.accent,
                 fontSize = 13.sp,
             )
         }
@@ -385,7 +390,7 @@ private fun SectionHeader(
     ) {
         Text(
             text = title,
-            color = AppColors.TextPrimary,
+            color = AppTheme.colors.textPrimary,
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
         )
@@ -394,14 +399,14 @@ private fun SectionHeader(
             Box(
                 modifier = Modifier
                     .background(
-                        AppColors.Accent,
+                        AppTheme.colors.accent,
                         RoundedCornerShape(12.dp),
                     ).padding(horizontal = 8.dp, vertical = 2.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
                     text = "$count",
-                    color = AppColors.Background,
+                    color = AppTheme.colors.background,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
                 )
@@ -426,8 +431,47 @@ private fun EmptySection(
     ) {
         Text(
             text = text,
-            color = AppColors.TextSecondary,
+            color = AppTheme.colors.textSecondary,
             fontSize = 14.sp,
         )
+    }
+}
+
+private val previewHomeState = HomeComponent.State(
+    isLoading = false,
+    profileInitials = "ИП",
+    lateDaysBalance = 5,
+    tasks = listOf(
+        StudentTask(
+            state = TaskState.InProgress,
+            exercise = TaskExercise(name = "ДЗ: Деревья", deadline = "2026-04-01T23:59:00"),
+            course = TaskCourse(name = "Алгоритмы"),
+        ),
+        StudentTask(
+            state = TaskState.Backlog,
+            exercise = TaskExercise(name = "Лабораторная 3", deadline = "2026-04-05T23:59:00"),
+            course = TaskCourse(name = "Линейная алгебра"),
+        ),
+    ),
+    courses = listOf(
+        Course(id = 1, name = "Алгоритмы", category = "development"),
+        Course(id = 2, name = "Линейная алгебра", category = "mathematics"),
+        Course(id = 3, name = "Менеджмент", category = "business"),
+    ),
+)
+
+@Preview
+@Composable
+private fun PreviewHomeScreenDark() {
+    CuMobileTheme(darkTheme = true) {
+        HomeContent(state = previewHomeState, onIntent = {}, onTaskClick = {}, onCourseClick = {})
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewHomeScreenLight() {
+    CuMobileTheme(darkTheme = false) {
+        HomeContent(state = previewHomeState, onIntent = {}, onTaskClick = {}, onCourseClick = {})
     }
 }

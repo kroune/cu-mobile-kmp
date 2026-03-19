@@ -36,7 +36,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
-import io.github.kroune.cumobile.presentation.common.AppColors
+import io.github.kroune.cumobile.data.model.StudentProfile
+import io.github.kroune.cumobile.presentation.common.AppTheme
+import io.github.kroune.cumobile.presentation.common.CuMobileTheme
+import androidx.compose.ui.tooling.preview.Preview
 import io.github.kroune.cumobile.presentation.common.DetailTopBar
 import io.github.kroune.cumobile.presentation.common.ErrorContent
 import io.github.kroune.cumobile.presentation.common.LoadingContent
@@ -59,21 +62,36 @@ fun ProfileScreen(
 ) {
     val state by component.state.subscribeAsState()
 
+    ProfileScreenContent(
+        state = state,
+        onIntent = component::onIntent,
+        onBack = onBack,
+        modifier = modifier,
+    )
+}
+
+@Composable
+internal fun ProfileScreenContent(
+    state: ProfileComponent.State,
+    onIntent: (ProfileComponent.Intent) -> Unit,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(AppColors.Background),
+            .background(AppTheme.colors.background),
     ) {
         DetailTopBar(
             title = "Профиль",
             onBack = onBack,
             trailingContent = {
                 TextButton(
-                    onClick = { component.onIntent(ProfileComponent.Intent.Logout) },
+                    onClick = { onIntent(ProfileComponent.Intent.Logout) },
                 ) {
                     Text(
                         text = "Выйти",
-                        color = AppColors.Error,
+                        color = AppTheme.colors.error,
                         fontSize = 14.sp,
                     )
                 }
@@ -84,11 +102,11 @@ fun ProfileScreen(
             state.isLoading -> LoadingContent()
             state.error != null && state.profile == null -> ErrorContent(
                 error = state.error.orEmpty(),
-                onRetry = { component.onIntent(ProfileComponent.Intent.Refresh) },
+                onRetry = { onIntent(ProfileComponent.Intent.Refresh) },
             )
             state.profile != null -> ProfileContent(
                 state = state,
-                onIntent = { component.onIntent(it) },
+                onIntent = onIntent,
             )
         }
     }
@@ -129,7 +147,7 @@ private fun ProfileContent(
         // Name
         Text(
             text = profile.fullName,
-            color = AppColors.TextPrimary,
+            color = AppTheme.colors.textPrimary,
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
         )
@@ -147,7 +165,7 @@ private fun ProfileContent(
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = courseText,
-                color = AppColors.TextSecondary,
+                color = AppTheme.colors.textSecondary,
                 fontSize = 14.sp,
             )
         }
@@ -192,20 +210,20 @@ private fun AvatarSection(
             modifier = Modifier
                 .size(80.dp)
                 .clip(CircleShape)
-                .border(2.dp, AppColors.Accent, CircleShape)
-                .background(AppColors.Accent.copy(alpha = 0.2f), CircleShape),
+                .border(2.dp, AppTheme.colors.accent, CircleShape)
+                .background(AppTheme.colors.accent.copy(alpha = 0.2f), CircleShape),
             contentAlignment = Alignment.Center,
         ) {
             if (isBusy) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(24.dp),
-                    color = AppColors.Accent,
+                    color = AppTheme.colors.accent,
                     strokeWidth = 2.dp,
                 )
             } else {
                 Text(
                     text = initials.ifEmpty { "?" },
-                    color = AppColors.Accent,
+                    color = AppTheme.colors.accent,
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Bold,
                 )
@@ -219,11 +237,11 @@ private fun AvatarSection(
                     .align(Alignment.BottomStart)
                     .size(28.dp)
                     .clip(CircleShape)
-                    .background(AppColors.Error, CircleShape)
+                    .background(AppTheme.colors.error, CircleShape)
                     .clickable(onClick = onDelete),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(text = "\u2715", fontSize = 14.sp, color = AppColors.TextPrimary)
+                Text(text = "\u2715", fontSize = 14.sp, color = AppTheme.colors.textPrimary)
             }
         }
 
@@ -234,11 +252,11 @@ private fun AvatarSection(
                     .align(Alignment.BottomEnd)
                     .size(28.dp)
                     .clip(CircleShape)
-                    .background(AppColors.Accent, CircleShape)
+                    .background(AppTheme.colors.accent, CircleShape)
                     .clickable(onClick = onUpload),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(text = "+", fontSize = 16.sp, color = AppColors.Background)
+                Text(text = "+", fontSize = 16.sp, color = AppTheme.colors.background)
             }
         }
     }
@@ -254,7 +272,7 @@ private fun InfoCard(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(AppColors.Surface, RoundedCornerShape(12.dp))
+            .background(AppTheme.colors.surface, RoundedCornerShape(12.dp))
             .padding(16.dp),
     ) {
         // Login
@@ -304,13 +322,13 @@ private fun InfoRow(
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
             text = label,
-            color = AppColors.TextSecondary,
+            color = AppTheme.colors.textSecondary,
             fontSize = 12.sp,
         )
         Spacer(modifier = Modifier.height(2.dp))
         Text(
             text = value,
-            color = AppColors.TextPrimary,
+            color = AppTheme.colors.textPrimary,
             fontSize = 14.sp,
         )
     }
@@ -326,24 +344,24 @@ private fun InfoRowWithBadge(
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
             text = label,
-            color = AppColors.TextSecondary,
+            color = AppTheme.colors.textSecondary,
             fontSize = 12.sp,
         )
         Spacer(modifier = Modifier.height(2.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 text = value,
-                color = AppColors.TextPrimary,
+                color = AppTheme.colors.textPrimary,
                 fontSize = 14.sp,
             )
             if (badge != null) {
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = badge,
-                    color = AppColors.TextSecondary,
+                    color = AppTheme.colors.textSecondary,
                     fontSize = 11.sp,
                     modifier = Modifier
-                        .background(AppColors.Background, RoundedCornerShape(4.dp))
+                        .background(AppTheme.colors.background, RoundedCornerShape(4.dp))
                         .padding(horizontal = 6.dp, vertical = 2.dp),
                 )
             }
@@ -362,13 +380,13 @@ private fun CalendarSection(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(AppColors.Surface, RoundedCornerShape(12.dp))
+            .background(AppTheme.colors.surface, RoundedCornerShape(12.dp))
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Text(
             text = "Расписание (Яндекс Календарь)",
-            color = AppColors.TextPrimary,
+            color = AppTheme.colors.textPrimary,
             fontSize = 14.sp,
             fontWeight = FontWeight.SemiBold,
         )
@@ -376,7 +394,7 @@ private fun CalendarSection(
         if (state.isCalendarConnected) {
             Text(
                 text = "Подключено",
-                color = AppColors.Accent,
+                color = AppTheme.colors.accent,
                 fontSize = 12.sp,
             )
         }
@@ -388,13 +406,13 @@ private fun CalendarSection(
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedTextColor = AppColors.TextPrimary,
-                unfocusedTextColor = AppColors.TextPrimary,
-                focusedBorderColor = AppColors.Accent,
-                unfocusedBorderColor = AppColors.TextSecondary,
-                focusedLabelColor = AppColors.Accent,
-                unfocusedLabelColor = AppColors.TextSecondary,
-                cursorColor = AppColors.Accent,
+                focusedTextColor = AppTheme.colors.textPrimary,
+                unfocusedTextColor = AppTheme.colors.textPrimary,
+                focusedBorderColor = AppTheme.colors.accent,
+                unfocusedBorderColor = AppTheme.colors.textSecondary,
+                focusedLabelColor = AppTheme.colors.accent,
+                unfocusedLabelColor = AppTheme.colors.textSecondary,
+                cursorColor = AppTheme.colors.accent,
             ),
         )
 
@@ -407,11 +425,11 @@ private fun CalendarSection(
                 enabled = state.calendarUrlInput.isNotBlank(),
                 modifier = Modifier.weight(1f),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = AppColors.Accent,
+                    containerColor = AppTheme.colors.accent,
                 ),
                 shape = RoundedCornerShape(8.dp),
             ) {
-                Text(text = "Сохранить", color = AppColors.Background)
+                Text(text = "Сохранить", color = AppTheme.colors.background)
             }
 
             if (state.isCalendarConnected) {
@@ -419,11 +437,11 @@ private fun CalendarSection(
                     onClick = onDisconnect,
                     modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = AppColors.Error,
+                        containerColor = AppTheme.colors.error,
                     ),
                     shape = RoundedCornerShape(8.dp),
                 ) {
-                    Text(text = "Отключить", color = AppColors.TextPrimary)
+                    Text(text = "Отключить", color = AppTheme.colors.textPrimary)
                 }
             }
         }
@@ -453,4 +471,30 @@ internal fun maskPhone(phone: String): String {
     val suffix = phone.takeLast(2)
     val masked = "*".repeat(phone.length - 5)
     return "$prefix$masked$suffix"
+}
+
+private val previewProfileState = ProfileComponent.State(
+    profile = StudentProfile(
+        firstName = "Иван",
+        lastName = "Петров",
+        educationLevel = "bachelor",
+        course = 2,
+        telegram = "@ipetrov",
+    ),
+)
+
+@Preview
+@Composable
+private fun PreviewProfileScreenDark() {
+    CuMobileTheme(darkTheme = true) {
+        ProfileScreenContent(state = previewProfileState, onIntent = {}, onBack = {})
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewProfileScreenLight() {
+    CuMobileTheme(darkTheme = false) {
+        ProfileScreenContent(state = previewProfileState, onIntent = {}, onBack = {})
+    }
 }

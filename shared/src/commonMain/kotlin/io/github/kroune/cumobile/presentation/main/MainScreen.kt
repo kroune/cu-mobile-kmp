@@ -31,7 +31,7 @@ import androidx.compose.ui.window.Dialog
 import com.arkivanov.decompose.extensions.compose.pages.ChildPages
 import com.arkivanov.decompose.extensions.compose.stack.Children
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
-import io.github.kroune.cumobile.presentation.common.AppColors
+import io.github.kroune.cumobile.presentation.common.AppTheme
 import io.github.kroune.cumobile.presentation.common.TopBar
 import io.github.kroune.cumobile.presentation.courses.CoursesScreen
 import io.github.kroune.cumobile.presentation.courses.detail.CourseDetailScreen
@@ -79,7 +79,7 @@ fun MainScreen(component: MainComponent) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(AppColors.Background)
+                .background(AppTheme.colors.background)
                 .windowInsetsPadding(WindowInsets.statusBars),
         ) {
             TopBar(
@@ -137,7 +137,7 @@ private fun BottomNavBar(
 ) {
     NavigationBar(
         modifier = modifier.windowInsetsPadding(WindowInsets.navigationBars),
-        containerColor = AppColors.Background,
+        containerColor = AppTheme.colors.background,
     ) {
         TAB_LABELS.forEachIndexed { index, label ->
             NavigationBarItem(
@@ -157,11 +157,11 @@ private fun BottomNavBar(
                     )
                 },
                 colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = AppColors.Accent,
-                    selectedTextColor = AppColors.Accent,
-                    unselectedIconColor = AppColors.TextSecondary,
-                    unselectedTextColor = AppColors.TextSecondary,
-                    indicatorColor = AppColors.Accent.copy(alpha = 0.1f),
+                    selectedIconColor = AppTheme.colors.accent,
+                    selectedTextColor = AppTheme.colors.accent,
+                    unselectedIconColor = AppTheme.colors.textSecondary,
+                    unselectedTextColor = AppTheme.colors.textSecondary,
+                    indicatorColor = AppTheme.colors.accent.copy(alpha = 0.1f),
                 ),
             )
         }
@@ -249,26 +249,26 @@ private fun UpdateDialog(
         Column(
             modifier = Modifier
                 .clip(RoundedCornerShape(16.dp))
-                .background(AppColors.Surface)
+                .background(AppTheme.colors.surface)
                 .padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text(
                 text = "Доступно обновление",
-                color = AppColors.TextPrimary,
+                color = AppTheme.colors.textPrimary,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
             )
             if (releaseName.isNotBlank()) {
                 Text(
                     text = releaseName,
-                    color = AppColors.TextPrimary,
+                    color = AppTheme.colors.textPrimary,
                     fontSize = 14.sp,
                 )
             }
             Text(
                 text = "Новая версия: $latestVersion",
-                color = AppColors.TextSecondary,
+                color = AppTheme.colors.textSecondary,
                 fontSize = 14.sp,
             )
             Row(
@@ -279,7 +279,7 @@ private fun UpdateDialog(
                 TextButton(onClick = onDismiss) {
                     Text(
                         text = "Позже",
-                        color = AppColors.Accent,
+                        color = AppTheme.colors.accent,
                     )
                 }
             }

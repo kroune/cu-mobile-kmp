@@ -19,7 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import io.github.kroune.cumobile.presentation.common.AppColors
+import io.github.kroune.cumobile.presentation.common.AppTheme
 import io.github.kroune.cumobile.presentation.common.gradeColor
 
 /**
@@ -40,7 +40,7 @@ internal fun PerformanceTab(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(12.dp))
-                .background(AppColors.Surface)
+                .background(AppTheme.colors.surface)
                 .padding(12.dp),
         ) {
             PerformanceHeaderRow()
@@ -75,7 +75,7 @@ private fun HeaderCell(
 ) {
     Text(
         text = text,
-        color = AppColors.TextSecondary,
+        color = AppTheme.colors.textSecondary,
         fontSize = 11.sp,
         modifier = modifier,
     )
@@ -95,7 +95,7 @@ private fun PerformanceSummaryRow(
     ) {
         Text(
             summary.activityName,
-            color = AppColors.TextPrimary,
+            color = AppTheme.colors.textPrimary,
             fontSize = 12.sp,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -103,7 +103,7 @@ private fun PerformanceSummaryRow(
         )
         Text(
             text = summary.count.toString(),
-            color = AppColors.TextPrimary,
+            color = AppTheme.colors.textPrimary,
             fontSize = 12.sp,
             modifier = Modifier.weight(0.8f),
         )
@@ -116,19 +116,19 @@ private fun PerformanceSummaryRow(
         )
         Text(
             text = "x",
-            color = AppColors.TextSecondary,
+            color = AppTheme.colors.textSecondary,
             fontSize = 12.sp,
             modifier = Modifier.weight(0.3f),
         )
         Text(
             text = formatScore(summary.weight),
-            color = AppColors.TextPrimary,
+            color = AppTheme.colors.textPrimary,
             fontSize = 12.sp,
             modifier = Modifier.weight(0.6f),
         )
         Text(
             text = "=",
-            color = AppColors.TextSecondary,
+            color = AppTheme.colors.textSecondary,
             fontSize = 12.sp,
             modifier = Modifier.weight(0.3f),
         )
@@ -152,13 +152,13 @@ private fun PerformanceTotalRow(
         modifier = modifier
             .fillMaxWidth()
             .padding(top = 8.dp)
-            .background(AppColors.Background.copy(alpha = 0.5f))
+            .background(AppTheme.colors.background.copy(alpha = 0.5f))
             .padding(vertical = 6.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Text(
             "Итого",
-            color = AppColors.TextPrimary,
+            color = AppTheme.colors.textPrimary,
             fontSize = 13.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.weight(5.3f),

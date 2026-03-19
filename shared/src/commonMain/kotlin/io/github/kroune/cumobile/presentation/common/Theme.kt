@@ -1,55 +1,198 @@
-@file:Suppress("MatchingDeclarationName", "MagicNumber")
+@file:Suppress("MagicNumber")
 
 package io.github.kroune.cumobile.presentation.common
 
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import io.github.kroune.cumobile.data.model.TaskState
 
 /**
- * App color palette matching the Flutter reference app.
+ * Complete color palette for the CuMobile app.
  *
- * Dark theme with green accent, based on the CU LMS design.
+ * Theme-varying colors (background, surface, text, etc.) differ between
+ * dark and light themes. Semantic colors (task states, grades, categories)
+ * stay the same in both themes.
  */
-object AppColors {
-    val Background = Color(0xFF121212)
-    val Surface = Color(0xFF1E1E1E)
-    val Accent = Color(0xFF00E676)
-    val TextPrimary = Color.White
-    val TextSecondary = Color(0xFF9E9E9E)
-    val Error = Color(0xFFEF5350)
+data class AppColorScheme(
+    // Theme-varying
+    val background: Color,
+    val surface: Color,
+    val accent: Color,
+    val textPrimary: Color,
+    val textSecondary: Color,
+    val error: Color,
+    val codeBlockBackground: Color,
+    val blockquoteBackground: Color,
+    // Task state (semantic)
+    val taskBacklog: Color,
+    val taskInProgress: Color,
+    val taskRevision: Color,
+    val taskRework: Color,
+    val taskReview: Color,
+    val taskHasSolution: Color,
+    val taskFailed: Color,
+    val taskEvaluated: Color,
+    // Grade (semantic)
+    val gradeExcellent: Color,
+    val gradeGood: Color,
+    val gradeSatisfactory: Color,
+    val gradeFail: Color,
+    // Level score (semantic)
+    val levelBasic: Color,
+    val levelMedium: Color,
+    // Course category (semantic)
+    val categoryMathematics: Color,
+    val categoryDevelopment: Color,
+    val categoryStem: Color,
+    val categoryGeneral: Color,
+    val categoryBusiness: Color,
+    val categorySoftSkills: Color,
+    val categoryDefault: Color,
+)
 
-    // Task state colors (matching Flutter reference exactly)
-    val TaskBacklog = Color(0xFF9E9E9E)
-    val TaskInProgress = Color(0xFF42A5F5)
-    val TaskRevision = Color(0xFFEF5350)
-    val TaskRework = Color(0xFFEF5350)
-    val TaskReview = Color(0xFFFFA726)
-    val TaskHasSolution = Color(0xFF00E676)
-    val TaskFailed = Color(0xFFEF5350)
-    val TaskEvaluated = Color(0xFF00E676)
+// Shared semantic colors (identical in both themes)
+private val taskBacklog = Color(0xFF9E9E9E)
+private val taskInProgress = Color(0xFF42A5F5)
+private val taskRevision = Color(0xFFEF5350)
+private val taskRework = Color(0xFFEF5350)
+private val taskReview = Color(0xFFFFA726)
+private val taskHasSolution = Color(0xFF00E676)
+private val taskFailed = Color(0xFFEF5350)
+private val taskEvaluated = Color(0xFF00E676)
 
-    // Grade colors
-    val GradeExcellent = Color(0xFF00E676)
-    val GradeGood = Color(0xFFFFCA28)
-    val GradeSatisfactory = Color(0xFFFF9800)
-    val GradeFail = Color(0xFFEF5350)
+private val gradeExcellent = Color(0xFF00E676)
+private val gradeGood = Color(0xFFFFCA28)
+private val gradeSatisfactory = Color(0xFFFF9800)
+private val gradeFail = Color(0xFFEF5350)
 
-    // Level score colors (longread)
-    val LevelBasic = Color(0xFF3044FF)
-    val LevelMedium = Color(0xFFE63F07)
+private val levelBasic = Color(0xFF3044FF)
+private val levelMedium = Color(0xFFE63F07)
 
-    // Additional surface colors
-    val CodeBlockBackground = Color(0xFF2A2A2A)
-    val BlockquoteBackground = Color(0xFF1A1A2E)
+private val categoryMathematics = Color(0xFF42A5F5)
+private val categoryDevelopment = Color(0xFF66BB6A)
+private val categoryStem = Color(0xFF7E57C2)
+private val categoryGeneral = Color(0xFF9E9E9E)
+private val categoryBusiness = Color(0xFFFFA726)
+private val categorySoftSkills = Color(0xFFEC407A)
+private val categoryDefault = Color(0xFF9E9E9E)
 
-    // Course category colors
-    val CategoryMathematics = Color(0xFF42A5F5)
-    val CategoryDevelopment = Color(0xFF66BB6A)
-    val CategoryStem = Color(0xFF7E57C2)
-    val CategoryGeneral = Color(0xFF9E9E9E)
-    val CategoryBusiness = Color(0xFFFFA726)
-    val CategorySoftSkills = Color(0xFFEC407A)
-    val CategoryDefault = Color(0xFF9E9E9E)
+/** Dark theme palette (matching the CU LMS design). */
+val DarkAppColors = AppColorScheme(
+    background = Color(0xFF121212),
+    surface = Color(0xFF1E1E1E),
+    accent = Color(0xFF00E676),
+    textPrimary = Color.White,
+    textSecondary = Color(0xFF9E9E9E),
+    error = Color(0xFFEF5350),
+    codeBlockBackground = Color(0xFF2A2A2A),
+    blockquoteBackground = Color(0xFF1A1A2E),
+    taskBacklog = taskBacklog,
+    taskInProgress = taskInProgress,
+    taskRevision = taskRevision,
+    taskRework = taskRework,
+    taskReview = taskReview,
+    taskHasSolution = taskHasSolution,
+    taskFailed = taskFailed,
+    taskEvaluated = taskEvaluated,
+    gradeExcellent = gradeExcellent,
+    gradeGood = gradeGood,
+    gradeSatisfactory = gradeSatisfactory,
+    gradeFail = gradeFail,
+    levelBasic = levelBasic,
+    levelMedium = levelMedium,
+    categoryMathematics = categoryMathematics,
+    categoryDevelopment = categoryDevelopment,
+    categoryStem = categoryStem,
+    categoryGeneral = categoryGeneral,
+    categoryBusiness = categoryBusiness,
+    categorySoftSkills = categorySoftSkills,
+    categoryDefault = categoryDefault,
+)
+
+/** Light theme palette. */
+val LightAppColors = AppColorScheme(
+    background = Color(0xFFF5F5F5),
+    surface = Color.White,
+    accent = Color(0xFF007B32),
+    textPrimary = Color(0xFF1B1B1B),
+    textSecondary = Color(0xFF666666),
+    error = Color(0xFFD32F2F),
+    codeBlockBackground = Color(0xFFEEEEEE),
+    blockquoteBackground = Color(0xFFE8EAF6),
+    taskBacklog = taskBacklog,
+    taskInProgress = taskInProgress,
+    taskRevision = taskRevision,
+    taskRework = taskRework,
+    taskReview = taskReview,
+    taskHasSolution = taskHasSolution,
+    taskFailed = taskFailed,
+    taskEvaluated = taskEvaluated,
+    gradeExcellent = gradeExcellent,
+    gradeGood = gradeGood,
+    gradeSatisfactory = gradeSatisfactory,
+    gradeFail = gradeFail,
+    levelBasic = levelBasic,
+    levelMedium = levelMedium,
+    categoryMathematics = categoryMathematics,
+    categoryDevelopment = categoryDevelopment,
+    categoryStem = categoryStem,
+    categoryGeneral = categoryGeneral,
+    categoryBusiness = categoryBusiness,
+    categorySoftSkills = categorySoftSkills,
+    categoryDefault = categoryDefault,
+)
+
+val LocalAppColors = staticCompositionLocalOf { DarkAppColors }
+
+/** App-wide theme accessor. Use [AppTheme.colors] inside composables. */
+object AppTheme {
+    val colors: AppColorScheme
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppColors.current
+}
+
+// Material 3 color schemes wired to AppColorScheme
+private val DarkMaterialColors = darkColorScheme(
+    background = DarkAppColors.background,
+    surface = DarkAppColors.surface,
+    primary = DarkAppColors.accent,
+    onBackground = DarkAppColors.textPrimary,
+    onSurface = DarkAppColors.textPrimary,
+    error = DarkAppColors.error,
+)
+
+private val LightMaterialColors = lightColorScheme(
+    background = LightAppColors.background,
+    surface = LightAppColors.surface,
+    primary = LightAppColors.accent,
+    onBackground = LightAppColors.textPrimary,
+    onSurface = LightAppColors.textPrimary,
+    error = LightAppColors.error,
+)
+
+/**
+ * Wraps content with both [MaterialTheme] and the custom [AppTheme].
+ *
+ * Used in [io.github.kroune.cumobile.App] and in `@Preview` functions.
+ */
+@Composable
+fun CuMobileTheme(
+    darkTheme: Boolean = isSystemInDarkTheme(),
+    content: @Composable () -> Unit,
+) {
+    val appColors = if (darkTheme) DarkAppColors else LightAppColors
+    val materialColors = if (darkTheme) DarkMaterialColors else LightMaterialColors
+    CompositionLocalProvider(LocalAppColors provides appColors) {
+        MaterialTheme(colorScheme = materialColors, content = content)
+    }
 }
 
 /**
@@ -70,18 +213,22 @@ fun taskStateLabel(state: String): String =
 /**
  * Returns the color for a task state indicator.
  */
-fun taskStateColor(state: String): Color =
-    when (state) {
-        TaskState.Backlog -> AppColors.TaskBacklog
-        TaskState.InProgress -> AppColors.TaskInProgress
-        TaskState.Revision -> AppColors.TaskRevision
-        TaskState.Rework -> AppColors.TaskRework
-        TaskState.Review -> AppColors.TaskReview
-        TaskState.HasSolution -> AppColors.TaskHasSolution
-        TaskState.Failed, TaskState.Rejected -> AppColors.TaskFailed
-        TaskState.Evaluated -> AppColors.TaskEvaluated
-        else -> AppColors.TaskBacklog
+@Composable
+@ReadOnlyComposable
+fun taskStateColor(state: String): Color {
+    val colors = AppTheme.colors
+    return when (state) {
+        TaskState.Backlog -> colors.taskBacklog
+        TaskState.InProgress -> colors.taskInProgress
+        TaskState.Revision -> colors.taskRevision
+        TaskState.Rework -> colors.taskRework
+        TaskState.Review -> colors.taskReview
+        TaskState.HasSolution -> colors.taskHasSolution
+        TaskState.Failed, TaskState.Rejected -> colors.taskFailed
+        TaskState.Evaluated -> colors.taskEvaluated
+        else -> colors.taskBacklog
     }
+}
 
 /**
  * Returns the display label for a course category.
@@ -100,16 +247,20 @@ fun courseCategoryLabel(category: String): String =
 /**
  * Returns the color for a course category.
  */
-fun courseCategoryColor(category: String): Color =
-    when (category) {
-        "mathematics" -> AppColors.CategoryMathematics
-        "development" -> AppColors.CategoryDevelopment
-        "stem" -> AppColors.CategoryStem
-        "general" -> AppColors.CategoryGeneral
-        "business" -> AppColors.CategoryBusiness
-        "softSkills" -> AppColors.CategorySoftSkills
-        else -> AppColors.CategoryDefault
+@Composable
+@ReadOnlyComposable
+fun courseCategoryColor(category: String): Color {
+    val colors = AppTheme.colors
+    return when (category) {
+        "mathematics" -> colors.categoryMathematics
+        "development" -> colors.categoryDevelopment
+        "stem" -> colors.categoryStem
+        "general" -> colors.categoryGeneral
+        "business" -> colors.categoryBusiness
+        "softSkills" -> colors.categorySoftSkills
+        else -> colors.categoryDefault
     }
+}
 
 /**
  * Strips common emoji prefixes from course names.

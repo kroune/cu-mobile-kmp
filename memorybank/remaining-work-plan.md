@@ -19,8 +19,8 @@
 
 ### Known Remaining Issues
 - [x] **Files tab: `onOpenFile`** — DONE: `FileOpener` interface + `AndroidFileOpener` (FileProvider + Intent.ACTION_VIEW); iOS stub (`IosFileOpener`). FileProvider configured in AndroidManifest with `file_paths.xml`.
-- [ ] **Light theme** — `AppColors` is hardcoded dark. All 15+ screen files use `AppColors` directly. Migration to `CompositionLocal`-based dynamic colors requires touching every screen. **Start in new session (large feature, >15 files).**
-- [ ] **`@Preview` functions missing** — 10+ screens need preview composables with mock component implementations. **Start in new session (large feature, >10 files).**
+- [x] **Light theme** — DONE: `AppColorScheme` data class + `DarkAppColors`/`LightAppColors` instances; `LocalAppColors` CompositionLocal; `AppTheme.colors` composable accessor; `CuMobileTheme(darkTheme)` wrapper; all 30 files migrated from `AppColors.X` to `AppTheme.colors.x`
+- [x] **`@Preview` functions** — DONE: `@Preview` for both themes on 6 common components (TopBar, DetailTopBar, TaskCard, CourseCard, SegmentedControl, CommonStates) + 7 screens (Login, Home, Tasks, Courses, Notifications, Profile, TaskListItem); content-function pattern (screen extracts `XxxScreenContent(state, onIntent)` for previews)
 
 ## Already Done (for reference)
 - ✅ Pull-to-refresh on all screens (Phase 11)

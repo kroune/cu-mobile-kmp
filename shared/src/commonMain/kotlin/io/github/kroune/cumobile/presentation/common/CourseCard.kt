@@ -17,6 +17,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.kroune.cumobile.data.model.Course
+import androidx.compose.ui.tooling.preview.Preview
 
 /**
  * Course card for the home screen grid.
@@ -41,7 +42,7 @@ fun CourseCard(
         modifier = modifier
             .fillMaxWidth()
             .clip(shape)
-            .background(AppColors.Surface, shape)
+            .background(AppTheme.colors.surface, shape)
             .clickable(onClick = onClick)
             .padding(12.dp),
         verticalArrangement = Arrangement.SpaceBetween,
@@ -49,7 +50,7 @@ fun CourseCard(
         // Course name
         Text(
             text = stripEmojiPrefix(course.name),
-            color = AppColors.TextPrimary,
+            color = AppTheme.colors.textPrimary,
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
             maxLines = 2,
@@ -69,6 +70,32 @@ fun CourseCard(
                 color = categoryColor,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Medium,
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewCourseCardDark() {
+    CuMobileTheme(darkTheme = true) {
+        Box(Modifier.background(AppTheme.colors.background).padding(16.dp)) {
+            CourseCard(
+                course = Course(name = "Линейная алгебра", category = "mathematics"),
+                onClick = {},
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewCourseCardLight() {
+    CuMobileTheme(darkTheme = false) {
+        Box(Modifier.background(AppTheme.colors.background).padding(16.dp)) {
+            CourseCard(
+                course = Course(name = "Линейная алгебра", category = "mathematics"),
+                onClick = {},
             )
         }
     }

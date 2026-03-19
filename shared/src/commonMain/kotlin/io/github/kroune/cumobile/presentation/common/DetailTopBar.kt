@@ -13,6 +13,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.tooling.preview.Preview
 
 /**
  * Reusable detail-screen top bar with a back button and title.
@@ -34,20 +35,20 @@ internal fun DetailTopBar(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(AppColors.Background)
+            .background(AppTheme.colors.background)
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         TextButton(onClick = onBack) {
             Text(
                 text = "\u2190 Назад",
-                color = AppColors.Accent,
+                color = AppTheme.colors.accent,
                 fontSize = 14.sp,
             )
         }
         Text(
             text = title,
-            color = AppColors.TextPrimary,
+            color = AppTheme.colors.textPrimary,
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
             maxLines = 1,
@@ -55,5 +56,21 @@ internal fun DetailTopBar(
             modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
         )
         trailingContent?.invoke()
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewDetailTopBarDark() {
+    CuMobileTheme(darkTheme = true) {
+        DetailTopBar(title = "Задание", onBack = {})
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewDetailTopBarLight() {
+    CuMobileTheme(darkTheme = false) {
+        DetailTopBar(title = "Задание", onBack = {})
     }
 }

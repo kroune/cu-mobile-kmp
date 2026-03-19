@@ -24,9 +24,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.kroune.cumobile.data.model.StudentTask
+import io.github.kroune.cumobile.data.model.TaskCourse
+import io.github.kroune.cumobile.data.model.TaskExercise
 import io.github.kroune.cumobile.data.model.TaskState
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.datetime.LocalDateTime
+import androidx.compose.ui.tooling.preview.Preview
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
 
@@ -56,7 +59,7 @@ fun DeadlineTaskCard(
             .width(200.dp)
             .clip(shape)
             .border(1.dp, stateColor, shape)
-            .background(AppColors.Surface, shape)
+            .background(AppTheme.colors.surface, shape)
             .clickable(onClick = onClick)
             .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp),
@@ -64,7 +67,7 @@ fun DeadlineTaskCard(
         // Exercise name
         Text(
             text = stripEmojiPrefix(task.exercise.name),
-            color = AppColors.TextPrimary,
+            color = AppTheme.colors.textPrimary,
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
             maxLines = 1,
@@ -74,7 +77,7 @@ fun DeadlineTaskCard(
         // Course name
         Text(
             text = stripEmojiPrefix(task.course.name),
-            color = AppColors.TextSecondary,
+            color = AppTheme.colors.textSecondary,
             fontSize = 12.sp,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -115,7 +118,7 @@ private fun DeadlineDateRow(
         )
         Text(
             text = displayText,
-            color = if (overdue) AppColors.Error else AppColors.TextSecondary,
+            color = if (overdue) AppTheme.colors.error else AppTheme.colors.textSecondary,
             fontSize = 12.sp,
         )
     }
@@ -187,5 +190,51 @@ internal fun isOverdue(deadline: String?): Boolean {
     } catch (e: Exception) {
         logger.error(e) { "Failed to parse deadline for overdue check: $deadline" }
         false
+    }
+}
+
+private val previewTask = StudentTask(
+    state = TaskState.InProgress,
+    exercise = TaskExercise(name = "ДЗ: Линейные отображения", deadline = "2026-04-01T23:59:00"),
+    course = TaskCourse(name = "Линейная алгебра"),
+)
+
+@Preview
+@Composable
+private fun PreviewDeadlineTaskCardDark() {
+    CuMobileTheme(darkTheme = true) {
+        Box(Modifier.background(AppTheme.colors.background).padding(16.dp)) {
+            DeadlineTaskCard(task = previewTask, onClick = {})
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewDeadlineTaskCardLight() {
+    CuMobileTheme(darkTheme = false) {
+        Box(Modifier.background(AppTheme.colors.background).padding(16.dp)) {
+            DeadlineTaskCard(task = previewTask, onClick = {})
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewStatusBadgeDark() {
+    CuMobileTheme(darkTheme = true) {
+        Box(Modifier.background(AppTheme.colors.background).padding(16.dp)) {
+            StatusBadge(label = "В работе", color = AppTheme.colors.taskInProgress)
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewStatusBadgeLight() {
+    CuMobileTheme(darkTheme = false) {
+        Box(Modifier.background(AppTheme.colors.background).padding(16.dp)) {
+            StatusBadge(label = "В работе", color = AppTheme.colors.taskInProgress)
+        }
     }
 }

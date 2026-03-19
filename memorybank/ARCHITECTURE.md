@@ -193,12 +193,14 @@ Design decisions:
 
 ## UI Conventions
 
-### Colors (dark theme only)
-- Primary accent: `#00E676` (green)
-- Scaffold background: `#121212`
-- Surface/cards: `#1E1E1E`
-- Grade colors: `#00E676` ≥8, `#FFCA28` ≥6, `#FF9800` ≥4, `#EF5350` <4
-- Theme, colors, task state labels: `presentation/common/Theme.kt`
+### Theme System (dark + light)
+- `AppColorScheme` data class in `Theme.kt`: all colors (theme-varying + semantic)
+- `DarkAppColors` / `LightAppColors` instances; semantic colors (task states, grades, categories) are identical in both
+- `LocalAppColors` — `staticCompositionLocalOf`; `AppTheme.colors` — `@Composable @ReadOnlyComposable` accessor
+- `CuMobileTheme(darkTheme)` — wraps `CompositionLocalProvider` + `MaterialTheme`; used in `App()` and `@Preview` functions
+- Dark accent: `#00E676`; Light accent: `#007B32`
+- All screens use `AppTheme.colors.xxx` (camelCase), never hardcoded colors
+- Functions `taskStateColor()`, `courseCategoryColor()`, `gradeColor()` are `@Composable` (read from `AppTheme.colors`)
 
 ### Icons
 - Material Icons Extended **is available** (`androidx.compose.material:material-icons-extended:1.11.0-alpha02`) but **not currently declared** in `shared/build.gradle.kts`
@@ -206,7 +208,10 @@ Design decisions:
 - Bottom nav currently uses Unicode emoji (can be migrated to Material icons after adding the dependency)
 
 ### Previews
-- Every `@Composable` screen function must have a `@Preview` companion
+- Every `@Composable` screen function must have a `@Preview` companion (dark + light)
+- Pattern: `XxxScreen(component)` delegates to `XxxScreenContent(state, onIntent, ...)` which is `internal`; previews call the content function with mock state
+- Common components (TopBar, TaskCard, etc.) have previews wrapping in `CuMobileTheme` + `Box(background)`
+- Import: `import androidx.compose.ui.tooling.preview.Preview`
 
 ### Detekt
 - Run `./gradlew detektAll` — fix violations, never suppress

@@ -2,6 +2,8 @@
 
 package io.github.kroune.cumobile.presentation.common
 
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.Color
 
 /**
@@ -10,13 +12,17 @@ import androidx.compose.ui.graphics.Color
  * Matches the Flutter reference app's color coding:
  * green (>= 8), yellow (>= 6), orange (>= 4), red (< 4).
  */
-internal fun gradeColor(grade: Int): Color =
-    when {
-        grade >= 8 -> AppColors.GradeExcellent
-        grade >= 6 -> AppColors.GradeGood
-        grade >= 4 -> AppColors.GradeSatisfactory
-        else -> AppColors.GradeFail
+@Composable
+@ReadOnlyComposable
+internal fun gradeColor(grade: Int): Color {
+    val colors = AppTheme.colors
+    return when {
+        grade >= 8 -> colors.gradeExcellent
+        grade >= 6 -> colors.gradeGood
+        grade >= 4 -> colors.gradeSatisfactory
+        else -> colors.gradeFail
     }
+}
 
 /**
  * Returns a human-readable description for a grade value on a 0-10 scale.

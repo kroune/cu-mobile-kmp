@@ -31,7 +31,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.kroune.cumobile.data.model.TaskDetails
-import io.github.kroune.cumobile.presentation.common.AppColors
+import io.github.kroune.cumobile.presentation.common.AppTheme
 import io.github.kroune.cumobile.presentation.common.formatDeadline
 import io.github.kroune.cumobile.presentation.common.formatDeadlinePlusDays
 import kotlin.math.min
@@ -53,7 +53,7 @@ internal fun LateDaysInfo(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
-            .background(AppColors.Background)
+            .background(AppTheme.colors.background)
             .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
@@ -85,13 +85,13 @@ private fun LateDaysHeader(taskDetails: TaskDetails) {
     ) {
         Text(
             text = "Late days",
-            color = AppColors.TextPrimary,
+            color = AppTheme.colors.textPrimary,
             fontSize = 13.sp,
         )
         Text(
             text = "Использовано: ${taskDetails.lateDays ?: 0}" +
                 " | Баланс: ${taskDetails.lateDaysBalance ?: 0}",
-            color = AppColors.TextSecondary,
+            color = AppTheme.colors.textSecondary,
             fontSize = 12.sp,
         )
     }
@@ -116,11 +116,11 @@ private fun LateDaysActions(
                 onClick = onProlongClick,
                 modifier = Modifier.weight(1f),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = AppColors.Accent,
+                    containerColor = AppTheme.colors.accent,
                 ),
                 shape = RoundedCornerShape(8.dp),
             ) {
-                Text(text = "Продлить", color = AppColors.Background, fontSize = 12.sp)
+                Text(text = "Продлить", color = AppTheme.colors.background, fontSize = 12.sp)
             }
         }
         if (used > 0) {
@@ -128,11 +128,11 @@ private fun LateDaysActions(
                 onClick = onCancelClick,
                 modifier = Modifier.weight(1f),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = AppColors.Error,
+                    containerColor = AppTheme.colors.error,
                 ),
                 shape = RoundedCornerShape(8.dp),
             ) {
-                Text(text = "Отменить", color = AppColors.TextPrimary, fontSize = 12.sp)
+                Text(text = "Отменить", color = AppTheme.colors.textPrimary, fontSize = 12.sp)
             }
         }
     }
@@ -151,11 +151,11 @@ private fun LateDaysDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = AppColors.Surface,
+        containerColor = AppTheme.colors.surface,
         title = {
             Text(
                 text = "Продлить дедлайн",
-                color = AppColors.TextPrimary,
+                color = AppTheme.colors.textPrimary,
             )
         },
         text = {
@@ -166,7 +166,7 @@ private fun LateDaysDialog(
             ) {
                 Text(
                     text = "Текущий дедлайн: ${formatDeadline(taskDetails.deadline)}",
-                    color = AppColors.TextSecondary,
+                    color = AppTheme.colors.textSecondary,
                     fontSize = 13.sp,
                 )
 
@@ -184,7 +184,7 @@ private fun LateDaysDialog(
                 if (newDeadline != null) {
                     Text(
                         text = "Новый дедлайн: $newDeadline",
-                        color = AppColors.Accent,
+                        color = AppTheme.colors.accent,
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Medium,
                     )
@@ -192,19 +192,19 @@ private fun LateDaysDialog(
 
                 Text(
                     text = "Останется late days: ${balance - selectedDays}",
-                    color = AppColors.TextSecondary,
+                    color = AppTheme.colors.textSecondary,
                     fontSize = 12.sp,
                 )
             }
         },
         confirmButton = {
             TextButton(onClick = { onConfirm(selectedDays) }) {
-                Text(text = "Продлить", color = AppColors.Accent)
+                Text(text = "Продлить", color = AppTheme.colors.accent)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(text = "Отмена", color = AppColors.TextSecondary)
+                Text(text = "Отмена", color = AppTheme.colors.textSecondary)
             }
         },
     )
@@ -226,12 +226,12 @@ private fun DayStepper(
             enabled = value > min,
             modifier = Modifier.size(40.dp),
             colors = IconButtonDefaults.iconButtonColors(
-                containerColor = AppColors.Background,
+                containerColor = AppTheme.colors.background,
             ),
         ) {
             Text(
                 text = "−",
-                color = if (value > min) AppColors.TextPrimary else AppColors.TextSecondary,
+                color = if (value > min) AppTheme.colors.textPrimary else AppTheme.colors.textSecondary,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
@@ -240,7 +240,7 @@ private fun DayStepper(
 
         Text(
             text = "$value",
-            color = AppColors.TextPrimary,
+            color = AppTheme.colors.textPrimary,
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
         )
@@ -250,12 +250,12 @@ private fun DayStepper(
             enabled = value < max,
             modifier = Modifier.size(40.dp),
             colors = IconButtonDefaults.iconButtonColors(
-                containerColor = AppColors.Background,
+                containerColor = AppTheme.colors.background,
             ),
         ) {
             Text(
                 text = "+",
-                color = if (value < max) AppColors.TextPrimary else AppColors.TextSecondary,
+                color = if (value < max) AppTheme.colors.textPrimary else AppTheme.colors.textSecondary,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
@@ -274,18 +274,18 @@ internal fun ScoreDisplay(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
-            .background(AppColors.TaskEvaluated.copy(alpha = 0.1f))
+            .background(AppTheme.colors.taskEvaluated.copy(alpha = 0.1f))
             .padding(12.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Text(
             text = "Оценка",
-            color = AppColors.TextPrimary,
+            color = AppTheme.colors.textPrimary,
             fontSize = 14.sp,
         )
         Text(
             text = "${taskDetails.score?.toInt() ?: 0} / ${taskDetails.maxScore ?: 0}",
-            color = AppColors.TaskEvaluated,
+            color = AppTheme.colors.taskEvaluated,
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
         )

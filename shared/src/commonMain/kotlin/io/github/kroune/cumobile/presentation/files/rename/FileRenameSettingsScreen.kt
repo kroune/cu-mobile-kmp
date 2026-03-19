@@ -33,7 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import io.github.kroune.cumobile.data.local.FileRenameRule
-import io.github.kroune.cumobile.presentation.common.AppColors
+import io.github.kroune.cumobile.presentation.common.AppTheme
 import io.github.kroune.cumobile.presentation.common.DetailTopBar
 import io.github.kroune.cumobile.presentation.common.EmptyContent
 import io.github.kroune.cumobile.presentation.common.ErrorContent
@@ -52,7 +52,7 @@ fun FileRenameSettingsScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(AppColors.Background),
+            .background(AppTheme.colors.background),
     ) {
         DetailTopBar(
             title = "Шаблоны имен",
@@ -100,13 +100,13 @@ fun FileRenameSettingsScreen(
 private fun AddRuleButton(onClick: () -> Unit) {
     Button(
         onClick = onClick,
-        colors = ButtonDefaults.buttonColors(containerColor = AppColors.Accent),
+        colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.accent),
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp),
         shape = RoundedCornerShape(12.dp),
     ) {
-        Text(text = "Добавить шаблон", color = AppColors.Background)
+        Text(text = "Добавить шаблон", color = AppTheme.colors.background)
     }
 }
 
@@ -135,7 +135,7 @@ private fun RuleCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(AppColors.Surface)
+            .background(AppTheme.colors.surface)
             .padding(16.dp),
     ) {
         Row(
@@ -145,24 +145,24 @@ private fun RuleCard(
         ) {
             Text(
                 text = rule.extension.uppercase(),
-                color = AppColors.Accent,
+                color = AppTheme.colors.accent,
                 fontWeight = FontWeight.Bold,
                 fontSize = 12.sp,
             )
             TextButton(onClick = onDelete) {
-                Text(text = "Удалить", color = AppColors.Error, fontSize = 12.sp)
+                Text(text = "Удалить", color = AppTheme.colors.error, fontSize = 12.sp)
             }
         }
         Text(
             text = "Для: ${rule.activityName}",
-            color = AppColors.TextPrimary,
+            color = AppTheme.colors.textPrimary,
             fontSize = 14.sp,
             fontWeight = FontWeight.SemiBold,
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = "Шаблон: ${rule.template}",
-            color = AppColors.TextSecondary,
+            color = AppTheme.colors.textSecondary,
             fontSize = 13.sp,
         )
     }
@@ -185,12 +185,12 @@ private fun AddRuleDialog(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(16.dp))
-                .background(AppColors.Surface)
+                .background(AppTheme.colors.surface)
                 .padding(20.dp),
         ) {
             Text(
                 text = "Новый шаблон",
-                color = AppColors.TextPrimary,
+                color = AppTheme.colors.textPrimary,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
             )
@@ -225,7 +225,7 @@ private fun AddRuleDialog(
                 horizontalArrangement = Arrangement.End,
             ) {
                 TextButton(onClick = onDismiss) {
-                    Text("Отмена", color = AppColors.TextSecondary)
+                    Text("Отмена", color = AppTheme.colors.textSecondary)
                 }
                 TextButton(
                     onClick = {
@@ -241,7 +241,7 @@ private fun AddRuleDialog(
                         }
                     },
                 ) {
-                    Text("Добавить", color = AppColors.Accent)
+                    Text("Добавить", color = AppTheme.colors.accent)
                 }
             }
         }
@@ -252,7 +252,7 @@ private fun AddRuleDialog(
 private fun Label(text: String) {
     Text(
         text = text,
-        color = AppColors.TextSecondary,
+        color = AppTheme.colors.textSecondary,
         fontSize = 12.sp,
         modifier = Modifier.padding(bottom = 4.dp, top = 8.dp),
     )
@@ -267,17 +267,17 @@ private fun DarkTextField(
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        placeholder = { Text(placeholder, color = AppColors.TextSecondary.copy(alpha = 0.5f)) },
+        placeholder = { Text(placeholder, color = AppTheme.colors.textSecondary.copy(alpha = 0.5f)) },
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
         singleLine = true,
         colors = TextFieldDefaults.colors(
-            focusedContainerColor = AppColors.Background,
-            unfocusedContainerColor = AppColors.Background,
-            focusedTextColor = AppColors.TextPrimary,
-            unfocusedTextColor = AppColors.TextPrimary,
-            cursorColor = AppColors.Accent,
-            focusedIndicatorColor = AppColors.Accent,
+            focusedContainerColor = AppTheme.colors.background,
+            unfocusedContainerColor = AppTheme.colors.background,
+            focusedTextColor = AppTheme.colors.textPrimary,
+            unfocusedTextColor = AppTheme.colors.textPrimary,
+            cursorColor = AppTheme.colors.accent,
+            focusedIndicatorColor = AppTheme.colors.accent,
         ),
     )
 }

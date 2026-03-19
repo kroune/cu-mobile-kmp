@@ -27,7 +27,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
-import io.github.kroune.cumobile.presentation.common.AppColors
+import io.github.kroune.cumobile.presentation.common.AppTheme
 import io.github.kroune.cumobile.presentation.common.DetailTopBar
 import io.github.kroune.cumobile.presentation.common.ErrorContent
 import io.github.kroune.cumobile.presentation.common.LoadingContent
@@ -53,7 +53,7 @@ fun CoursePerformanceScreen(
         onRefresh = { component.onIntent(CoursePerformanceComponent.Intent.Refresh) },
         modifier = modifier
             .fillMaxSize()
-            .background(AppColors.Background),
+            .background(AppTheme.colors.background),
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -128,7 +128,7 @@ private fun TotalGradeCard(
             .fillMaxWidth()
             .padding(16.dp)
             .clip(RoundedCornerShape(12.dp))
-            .background(AppColors.Surface)
+            .background(AppTheme.colors.surface)
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -150,19 +150,19 @@ private fun TotalGradeCard(
         Column {
             Text(
                 text = "Итоговая оценка",
-                color = AppColors.TextSecondary,
+                color = AppTheme.colors.textSecondary,
                 fontSize = 12.sp,
             )
             Text(
                 text = gradeDescription(grade),
-                color = AppColors.TextPrimary,
+                color = AppTheme.colors.textPrimary,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
             )
             if (courseName.isNotEmpty()) {
                 Text(
                     text = courseName,
-                    color = AppColors.TextSecondary,
+                    color = AppTheme.colors.textSecondary,
                     fontSize = 12.sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,

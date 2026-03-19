@@ -36,7 +36,7 @@ import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import io.github.kroune.cumobile.data.model.CourseTheme
 import io.github.kroune.cumobile.data.model.Longread
 import io.github.kroune.cumobile.data.model.ThemeExercise
-import io.github.kroune.cumobile.presentation.common.AppColors
+import io.github.kroune.cumobile.presentation.common.AppTheme
 import io.github.kroune.cumobile.presentation.common.DetailTopBar
 import io.github.kroune.cumobile.presentation.common.ErrorContent
 import io.github.kroune.cumobile.presentation.common.LoadingContent
@@ -64,7 +64,7 @@ fun CourseDetailScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(AppColors.Background),
+            .background(AppTheme.colors.background),
     ) {
         // Top bar
         DetailTopBar(
@@ -117,7 +117,7 @@ private fun ThemesContent(
             ) {
                 Text(
                     text = "Ничего не найдено",
-                    color = AppColors.TextSecondary,
+                    color = AppTheme.colors.textSecondary,
                     fontSize = 14.sp,
                 )
             }
@@ -167,19 +167,19 @@ private fun SearchField(
         placeholder = {
             Text(
                 text = "Поиск по темам...",
-                color = AppColors.TextSecondary,
+                color = AppTheme.colors.textSecondary,
                 fontSize = 14.sp,
             )
         },
         singleLine = true,
         colors = TextFieldDefaults.colors(
-            focusedContainerColor = AppColors.Surface,
-            unfocusedContainerColor = AppColors.Surface,
-            focusedTextColor = AppColors.TextPrimary,
-            unfocusedTextColor = AppColors.TextPrimary,
-            cursorColor = AppColors.Accent,
-            focusedIndicatorColor = AppColors.Accent,
-            unfocusedIndicatorColor = AppColors.TextSecondary.copy(alpha = 0.3f),
+            focusedContainerColor = AppTheme.colors.surface,
+            unfocusedContainerColor = AppTheme.colors.surface,
+            focusedTextColor = AppTheme.colors.textPrimary,
+            unfocusedTextColor = AppTheme.colors.textPrimary,
+            cursorColor = AppTheme.colors.accent,
+            focusedIndicatorColor = AppTheme.colors.accent,
+            unfocusedIndicatorColor = AppTheme.colors.textSecondary.copy(alpha = 0.3f),
         ),
         modifier = modifier.fillMaxWidth(),
     )
@@ -201,7 +201,7 @@ private fun ThemeCard(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(AppColors.Surface),
+            .background(AppTheme.colors.surface),
     ) {
         // Header
         ThemeHeader(
@@ -252,12 +252,12 @@ private fun ThemeHeader(
             modifier = Modifier
                 .size(32.dp)
                 .clip(RoundedCornerShape(6.dp))
-                .background(AppColors.Accent.copy(alpha = 0.2f)),
+                .background(AppTheme.colors.accent.copy(alpha = 0.2f)),
             contentAlignment = Alignment.Center,
         ) {
             Text(
                 text = index.toString(),
-                color = AppColors.Accent,
+                color = AppTheme.colors.accent,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
             )
@@ -268,7 +268,7 @@ private fun ThemeHeader(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = theme.name,
-                color = AppColors.TextPrimary,
+                color = AppTheme.colors.textPrimary,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
                 maxLines = 2,
@@ -277,7 +277,7 @@ private fun ThemeHeader(
             if (theme.hasExercises) {
                 Text(
                     text = exerciseCountLabel(theme.totalExercises),
-                    color = AppColors.TextSecondary,
+                    color = AppTheme.colors.textSecondary,
                     fontSize = 12.sp,
                 )
             }
@@ -285,7 +285,7 @@ private fun ThemeHeader(
 
         Text(
             text = if (isExpanded) "\u25B2" else "\u25BC",
-            color = AppColors.TextSecondary,
+            color = AppTheme.colors.textSecondary,
             fontSize = 12.sp,
         )
     }
@@ -323,7 +323,7 @@ private fun LongreadRow(
 
             Text(
                 text = longread.name,
-                color = AppColors.TextPrimary,
+                color = AppTheme.colors.textPrimary,
                 fontSize = 13.sp,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
@@ -332,7 +332,7 @@ private fun LongreadRow(
 
             Text(
                 text = "\u203A",
-                color = AppColors.TextSecondary,
+                color = AppTheme.colors.textSecondary,
                 fontSize = 18.sp,
             )
         }
@@ -360,7 +360,7 @@ private fun ExerciseRow(
     ) {
         Text(
             text = exercise.name,
-            color = AppColors.TextSecondary,
+            color = AppTheme.colors.textSecondary,
             fontSize = 12.sp,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -370,7 +370,7 @@ private fun ExerciseRow(
         if (exercise.deadline != null) {
             Text(
                 text = formatDeadlineShort(exercise.deadline),
-                color = AppColors.TextSecondary,
+                color = AppTheme.colors.textSecondary,
                 fontSize = 11.sp,
             )
         }

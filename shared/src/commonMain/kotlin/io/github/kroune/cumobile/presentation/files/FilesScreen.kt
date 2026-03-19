@@ -41,7 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import io.github.kroune.cumobile.data.local.DownloadedFileInfo
-import io.github.kroune.cumobile.presentation.common.AppColors
+import io.github.kroune.cumobile.presentation.common.AppTheme
 import io.github.kroune.cumobile.presentation.common.ErrorContent
 import io.github.kroune.cumobile.presentation.common.LoadingContent
 import io.github.kroune.cumobile.presentation.common.formatEpochDate
@@ -80,7 +80,7 @@ fun FilesScreen(
         onRefresh = { component.onIntent(FilesComponent.Intent.Refresh) },
         modifier = modifier
             .fillMaxSize()
-            .background(AppColors.Background),
+            .background(AppTheme.colors.background),
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -146,7 +146,7 @@ private fun FilesHeader(
         Column {
             Text(
                 text = "Файлы",
-                color = AppColors.TextPrimary,
+                color = AppTheme.colors.textPrimary,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
             )
@@ -155,7 +155,7 @@ private fun FilesHeader(
                     text = "${state.files.size} файл(ов) • ${
                         formatSizeBytes(state.totalSizeBytes)
                     }",
-                    color = AppColors.TextSecondary,
+                    color = AppTheme.colors.textSecondary,
                     fontSize = 12.sp,
                 )
             }
@@ -166,14 +166,14 @@ private fun FilesHeader(
                 TextButton(onClick = onDeleteSelected) {
                     Text(
                         text = "Удалить (${state.selectedFiles.size})",
-                        color = AppColors.Error,
+                        color = AppTheme.colors.error,
                         fontSize = 14.sp,
                     )
                 }
                 TextButton(onClick = onClearSelection) {
                     Text(
                         text = "Отмена",
-                        color = AppColors.TextSecondary,
+                        color = AppTheme.colors.textSecondary,
                         fontSize = 14.sp,
                     )
                 }
@@ -183,14 +183,14 @@ private fun FilesHeader(
                 TextButton(onClick = onOpenRenameSettings) {
                     Text(
                         text = "⚙",
-                        color = AppColors.Accent,
+                        color = AppTheme.colors.accent,
                         fontSize = 18.sp,
                     )
                 }
                 TextButton(onClick = onDeleteAll) {
                     Text(
                         text = "Очистить",
-                        color = AppColors.Error,
+                        color = AppTheme.colors.error,
                         fontSize = 14.sp,
                     )
                 }
@@ -234,8 +234,8 @@ private fun FileRow(
     onDelete: () -> Unit,
 ) {
     val backgroundColor = when {
-        isSelected -> AppColors.Accent.copy(alpha = 0.15f)
-        else -> AppColors.Surface
+        isSelected -> AppTheme.colors.accent.copy(alpha = 0.15f)
+        else -> AppTheme.colors.surface
     }
 
     Row(
@@ -257,7 +257,7 @@ private fun FileRow(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = file.name,
-                color = AppColors.TextPrimary,
+                color = AppTheme.colors.textPrimary,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
                 maxLines = 1,
@@ -268,7 +268,7 @@ private fun FileRow(
                 text = "${formatSizeBytes(file.sizeBytes)} • ${
                     formatEpochDate(file.lastModifiedMillis)
                 }",
-                color = AppColors.TextSecondary,
+                color = AppTheme.colors.textSecondary,
                 fontSize = 12.sp,
             )
         }
@@ -276,7 +276,7 @@ private fun FileRow(
             TextButton(onClick = onDelete) {
                 Text(
                     text = "×",
-                    color = AppColors.TextSecondary,
+                    color = AppTheme.colors.textSecondary,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                 )
@@ -325,12 +325,12 @@ private fun EmptyState(
             modifier = Modifier
                 .size(64.dp)
                 .clip(RoundedCornerShape(12.dp))
-                .background(AppColors.TextSecondary.copy(alpha = 0.1f)),
+                .background(AppTheme.colors.textSecondary.copy(alpha = 0.1f)),
             contentAlignment = Alignment.Center,
         ) {
             Text(
                 text = "FILE",
-                color = AppColors.TextSecondary,
+                color = AppTheme.colors.textSecondary,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
             )
@@ -338,23 +338,23 @@ private fun EmptyState(
         Spacer(modifier = Modifier.height(12.dp))
         Text(
             text = "Нет загруженных файлов",
-            color = AppColors.TextPrimary,
+            color = AppTheme.colors.textPrimary,
             fontSize = 16.sp,
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = "Скачанные материалы появятся здесь",
-            color = AppColors.TextSecondary.copy(alpha = 0.6f),
+            color = AppTheme.colors.textSecondary.copy(alpha = 0.6f),
             fontSize = 13.sp,
             textAlign = TextAlign.Center,
         )
         Spacer(modifier = Modifier.height(24.dp))
         Button(
             onClick = onOpenRenameSettings,
-            colors = ButtonDefaults.buttonColors(containerColor = AppColors.Accent),
+            colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.accent),
             shape = RoundedCornerShape(12.dp),
         ) {
-            Text("Настроить шаблоны", color = AppColors.Background)
+            Text("Настроить шаблоны", color = AppTheme.colors.background)
         }
     }
 }
@@ -368,21 +368,21 @@ private fun ConfirmDeleteDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = AppColors.Surface,
+        containerColor = AppTheme.colors.surface,
         title = {
-            Text(text = title, color = AppColors.TextPrimary)
+            Text(text = title, color = AppTheme.colors.textPrimary)
         },
         text = {
-            Text(text = text, color = AppColors.TextSecondary)
+            Text(text = text, color = AppTheme.colors.textSecondary)
         },
         confirmButton = {
             TextButton(onClick = onConfirm) {
-                Text(text = "Удалить", color = AppColors.Error)
+                Text(text = "Удалить", color = AppTheme.colors.error)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(text = "Отмена", color = AppColors.TextSecondary)
+                Text(text = "Отмена", color = AppTheme.colors.textSecondary)
             }
         },
     )
@@ -391,14 +391,15 @@ private fun ConfirmDeleteDialog(
 /**
  * Returns a color for the extension badge based on file type.
  */
+@Composable
 private fun extensionColor(ext: String) =
     when (ext) {
-        "PDF" -> AppColors.Error
-        "DOC", "DOCX" -> AppColors.TaskInProgress
-        "XLS", "XLSX" -> AppColors.TaskEvaluated
-        "PPT", "PPTX" -> AppColors.TaskRework
-        "ZIP", "RAR", "7Z" -> AppColors.TaskReview
-        "JPG", "JPEG", "PNG", "GIF", "SVG" -> AppColors.CategorySoftSkills
-        "MP4", "MOV", "AVI" -> AppColors.CategoryBusiness
-        else -> AppColors.TextSecondary
+        "PDF" -> AppTheme.colors.error
+        "DOC", "DOCX" -> AppTheme.colors.taskInProgress
+        "XLS", "XLSX" -> AppTheme.colors.taskEvaluated
+        "PPT", "PPTX" -> AppTheme.colors.taskRework
+        "ZIP", "RAR", "7Z" -> AppTheme.colors.taskReview
+        "JPG", "JPEG", "PNG", "GIF", "SVG" -> AppTheme.colors.categorySoftSkills
+        "MP4", "MOV", "AVI" -> AppTheme.colors.categoryBusiness
+        else -> AppTheme.colors.textSecondary
     }

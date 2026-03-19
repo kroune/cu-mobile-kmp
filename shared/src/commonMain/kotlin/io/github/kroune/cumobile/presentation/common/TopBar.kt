@@ -20,6 +20,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.tooling.preview.Preview
 
 /**
  * Top bar matching the Flutter reference app.
@@ -45,7 +46,7 @@ fun TopBar(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(AppColors.Background)
+            .background(AppTheme.colors.background)
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -53,7 +54,7 @@ fun TopBar(
         // Title (left-aligned, takes available space)
         Text(
             text = title,
-            color = AppColors.TextPrimary,
+            color = AppTheme.colors.textPrimary,
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.weight(1f),
@@ -63,7 +64,7 @@ fun TopBar(
         if (lateDaysBalance != null) {
             Text(
                 text = "Late Days: $lateDaysBalance",
-                color = AppColors.TextSecondary,
+                color = AppTheme.colors.textSecondary,
                 fontSize = 12.sp,
             )
             Spacer(modifier = Modifier.width(12.dp))
@@ -107,16 +108,44 @@ private fun AvatarCircle(
         modifier = modifier
             .size(40.dp)
             .clip(CircleShape)
-            .border(2.dp, AppColors.Accent, CircleShape)
-            .background(AppColors.Surface, CircleShape)
+            .border(2.dp, AppTheme.colors.accent, CircleShape)
+            .background(AppTheme.colors.surface, CircleShape)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         Text(
             text = initials.ifEmpty { "?" },
-            color = AppColors.Accent,
+            color = AppTheme.colors.accent,
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewTopBarDark() {
+    CuMobileTheme(darkTheme = true) {
+        TopBar(
+            title = "Главная",
+            profileInitials = "ИП",
+            lateDaysBalance = 5,
+            onNotificationsClick = {},
+            onProfileClick = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewTopBarLight() {
+    CuMobileTheme(darkTheme = false) {
+        TopBar(
+            title = "Главная",
+            profileInitials = "ИП",
+            lateDaysBalance = 5,
+            onNotificationsClick = {},
+            onProfileClick = {},
         )
     }
 }

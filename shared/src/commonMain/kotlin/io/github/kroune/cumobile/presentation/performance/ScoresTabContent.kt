@@ -25,7 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import io.github.kroune.cumobile.presentation.common.AppColors
+import io.github.kroune.cumobile.presentation.common.AppTheme
 
 /**
  * Scores tab content: activity filter chips + exercise tiles.
@@ -97,14 +97,14 @@ private fun FilterChip(
     modifier: Modifier = Modifier,
 ) {
     val bgColor = if (isSelected) {
-        AppColors.Accent.copy(alpha = 0.2f)
+        AppTheme.colors.accent.copy(alpha = 0.2f)
     } else {
-        AppColors.Surface
+        AppTheme.colors.surface
     }
     val textColor = if (isSelected) {
-        AppColors.Accent
+        AppTheme.colors.accent
     } else {
-        AppColors.TextSecondary
+        AppTheme.colors.textSecondary
     }
     Box(
         modifier = modifier
@@ -128,7 +128,7 @@ private fun ExerciseTile(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(AppColors.Surface)
+            .background(AppTheme.colors.surface)
             .padding(12.dp),
     ) {
         Row(
@@ -138,7 +138,7 @@ private fun ExerciseTile(
         ) {
             Text(
                 text = item.themeName,
-                color = AppColors.TextSecondary,
+                color = AppTheme.colors.textSecondary,
                 fontSize = 11.sp,
                 modifier = Modifier.weight(1f),
             )
@@ -147,7 +147,7 @@ private fun ExerciseTile(
         Spacer(Modifier.height(4.dp))
         Text(
             text = item.exercise.name,
-            color = AppColors.TextPrimary,
+            color = AppTheme.colors.textPrimary,
             fontSize = 14.sp,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
@@ -155,7 +155,7 @@ private fun ExerciseTile(
         Spacer(Modifier.height(4.dp))
         Text(
             text = item.activityName,
-            color = AppColors.TextSecondary,
+            color = AppTheme.colors.textSecondary,
             fontSize = 12.sp,
         )
     }

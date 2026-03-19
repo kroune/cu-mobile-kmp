@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -20,7 +21,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.kroune.cumobile.data.model.StudentTask
-import io.github.kroune.cumobile.presentation.common.AppColors
+import io.github.kroune.cumobile.data.model.TaskCourse
+import io.github.kroune.cumobile.data.model.TaskExercise
+import io.github.kroune.cumobile.data.model.TaskState
+import io.github.kroune.cumobile.presentation.common.AppTheme
+import io.github.kroune.cumobile.presentation.common.CuMobileTheme
+import androidx.compose.ui.tooling.preview.Preview
 import io.github.kroune.cumobile.presentation.common.StatusBadge
 import io.github.kroune.cumobile.presentation.common.formatDeadline
 import io.github.kroune.cumobile.presentation.common.isOverdue
@@ -49,14 +55,14 @@ fun TaskListItem(
             .fillMaxWidth()
             .clip(shape)
             .border(1.dp, stateColor, shape)
-            .background(AppColors.Surface, shape)
+            .background(AppTheme.colors.surface, shape)
             .clickable(onClick = onClick)
             .padding(12.dp),
     ) {
         // Exercise name
         Text(
             text = task.exercise.name,
-            color = AppColors.TextPrimary,
+            color = AppTheme.colors.textPrimary,
             fontSize = 15.sp,
             fontWeight = FontWeight.SemiBold,
             maxLines = 2,
@@ -67,7 +73,7 @@ fun TaskListItem(
         // Course name
         Text(
             text = stripEmojiPrefix(task.course.name),
-            color = AppColors.TextSecondary,
+            color = AppTheme.colors.textSecondary,
             fontSize = 13.sp,
             maxLines = 1,
         )
@@ -93,7 +99,7 @@ fun TaskListItem(
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = "Перенесено на ${task.lateDays} дн.",
-                color = AppColors.TextSecondary,
+                color = AppTheme.colors.textSecondary,
                 fontSize = 12.sp,
             )
         }
@@ -122,9 +128,43 @@ private fun DeadlineText(
             )
             Text(
                 text = formatDeadline(deadline),
-                color = if (overdue) AppColors.Error else AppColors.TextSecondary,
+                color = if (overdue) AppTheme.colors.error else AppTheme.colors.textSecondary,
                 fontSize = 12.sp,
             )
+        }
+    }
+}
+
+private val previewTask = StudentTask(
+    state = TaskState.InProgress,
+    exercise = TaskExercise(name = "ДЗ: Деревья и графы", deadline = "2026-04-01T23:59:00"),
+    course = TaskCourse(name = "Алгоритмы и структуры данных"),
+)
+
+@Preview
+@Composable
+private fun PreviewTaskListItemDark() {
+    CuMobileTheme(darkTheme = true) {
+        Box(
+            Modifier
+                .background(AppTheme.colors.background)
+                .padding(16.dp),
+        ) {
+            TaskListItem(task = previewTask, onClick = {})
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewTaskListItemLight() {
+    CuMobileTheme(darkTheme = false) {
+        Box(
+            Modifier
+                .background(AppTheme.colors.background)
+                .padding(16.dp),
+        ) {
+            TaskListItem(task = previewTask, onClick = {})
         }
     }
 }

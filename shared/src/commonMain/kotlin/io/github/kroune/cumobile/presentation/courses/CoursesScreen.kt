@@ -30,11 +30,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import io.github.kroune.cumobile.data.model.Course
-import io.github.kroune.cumobile.presentation.common.AppColors
+import io.github.kroune.cumobile.presentation.common.AppTheme
+import io.github.kroune.cumobile.presentation.common.CuMobileTheme
 import io.github.kroune.cumobile.presentation.common.EmptyContent
 import io.github.kroune.cumobile.presentation.common.ErrorContent
 import io.github.kroune.cumobile.presentation.common.LoadingContent
@@ -56,12 +58,26 @@ fun CoursesScreen(
 ) {
     val state by component.state.subscribeAsState()
 
+    CoursesScreenContent(
+        state = state,
+        onIntent = component::onIntent,
+        modifier = modifier,
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun CoursesScreenContent(
+    state: CoursesComponent.State,
+    onIntent: (CoursesComponent.Intent) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     PullToRefreshBox(
         isRefreshing = state.isLoading,
-        onRefresh = { component.onIntent(CoursesComponent.Intent.Refresh) },
+        onRefresh = { onIntent(CoursesComponent.Intent.Refresh) },
         modifier = modifier
             .fillMaxSize()
-            .background(AppColors.Background),
+            .background(AppTheme.colors.background),
     ) {
         Column(
             modifier = Modifier
@@ -73,9 +89,7 @@ fun CoursesScreen(
             SegmentedControl(
                 labels = listOf("Курсы", "Ведомость", "Зачетка"),
                 selectedIndex = state.segment,
-                onSelect = {
-                    component.onIntent(CoursesComponent.Intent.SelectSegment(it))
-                },
+                onSelect = { onIntent(CoursesComponent.Intent.SelectSegment(it)) },
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -84,11 +98,11 @@ fun CoursesScreen(
                 state.isLoading && state.courses.isEmpty() -> LoadingContent()
                 state.error != null && state.courses.isEmpty() -> ErrorContent(
                     error = state.error.orEmpty(),
-                    onRetry = { component.onIntent(CoursesComponent.Intent.Refresh) },
+                    onRetry = { onIntent(CoursesComponent.Intent.Refresh) },
                 )
                 else -> when (state.segment) {
-                    0 -> CoursesListContent(state = state, component = component)
-                    1 -> GradeSheetContent(state = state, component = component)
+                    0 -> CoursesListContent(state = state, onIntent = onIntent)
+                    1 -> GradeSheetContent(state = state, onIntent = onIntent)
                     2 -> GradebookContent(state = state)
                 }
             }
@@ -101,7 +115,7 @@ fun CoursesScreen(
 @Composable
 private fun CoursesListContent(
     state: CoursesComponent.State,
-    component: CoursesComponent,
+    onIntent: (CoursesComponent.Intent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val active = activeCourses(state.courses, state.courseOrder)
@@ -121,9 +135,7 @@ private fun CoursesListContent(
             item {
                 EditModeToggle(
                     isEditMode = state.isEditMode,
-                    onClick = {
-                        component.onIntent(CoursesComponent.Intent.ToggleEditMode)
-                    },
+                    onClick = { onIntent(CoursesComponent.Intent.ToggleEditMode) },
                 )
             }
         }
@@ -133,7 +145,7 @@ private fun CoursesListContent(
                 course = course,
                 active = active,
                 state = state,
-                component = component,
+                onIntent = onIntent,
             )
         }
 
@@ -142,9 +154,7 @@ private fun CoursesListContent(
                 ArchivedHeader(
                     count = archived.size,
                     expanded = state.showArchived,
-                    onClick = {
-                        component.onIntent(CoursesComponent.Intent.ToggleArchived)
-                    },
+                    onClick = { onIntent(CoursesComponent.Intent.ToggleArchived) },
                 )
             }
 
@@ -153,9 +163,7 @@ private fun CoursesListContent(
                     CourseListTile(
                         course = course,
                         onClick = {
-                            component.onIntent(
-                                CoursesComponent.Intent.OpenCourse(course.id),
-                            )
+                            onIntent(CoursesComponent.Intent.OpenCourse(course.id))
                         },
                     )
                 }
@@ -176,7 +184,7 @@ private fun EditModeToggle(
         TextButton(onClick = onClick) {
             Text(
                 text = if (isEditMode) "Готово" else "Изменить",
-                color = AppColors.Accent,
+                color = AppTheme.colors.accent,
                 fontSize = 14.sp,
             )
         }
@@ -188,7 +196,7 @@ private fun ActiveCourseItem(
     course: Course,
     active: List<Course>,
     state: CoursesComponent.State,
-    component: CoursesComponent,
+    onIntent: (CoursesComponent.Intent) -> Unit,
 ) {
     CourseListTile(
         course = course,
@@ -197,18 +205,18 @@ private fun ActiveCourseItem(
             val index = active.indexOf(course)
             if (index > 0) {
                 val newOrder = swapIds(active, index, index - 1)
-                component.onIntent(CoursesComponent.Intent.ReorderCourses(newOrder))
+                onIntent(CoursesComponent.Intent.ReorderCourses(newOrder))
             }
         },
         onMoveDown = {
             val index = active.indexOf(course)
             if (index < active.size - 1) {
                 val newOrder = swapIds(active, index, index + 1)
-                component.onIntent(CoursesComponent.Intent.ReorderCourses(newOrder))
+                onIntent(CoursesComponent.Intent.ReorderCourses(newOrder))
             }
         },
         onClick = {
-            component.onIntent(CoursesComponent.Intent.OpenCourse(course.id))
+            onIntent(CoursesComponent.Intent.OpenCourse(course.id))
         },
     )
 }
@@ -238,7 +246,7 @@ private fun CourseListTile(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(AppColors.Surface)
+            .background(AppTheme.colors.surface)
             .clickable(onClick = onClick)
             .padding(horizontal = 12.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -248,12 +256,12 @@ private fun CourseListTile(
                 Text(
                     text = "\u25B2", // Up arrow
                     modifier = Modifier.clickable { onMoveUp() }.padding(4.dp),
-                    color = AppColors.Accent,
+                    color = AppTheme.colors.accent,
                 )
                 Text(
                     text = "\u25BC", // Down arrow
                     modifier = Modifier.clickable { onMoveDown() }.padding(4.dp),
-                    color = AppColors.Accent,
+                    color = AppTheme.colors.accent,
                 )
             }
             Spacer(modifier = Modifier.width(8.dp))
@@ -271,7 +279,7 @@ private fun CourseListTile(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = stripEmojiPrefix(course.name),
-                color = AppColors.TextPrimary,
+                color = AppTheme.colors.textPrimary,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
                 maxLines = 2,
@@ -286,7 +294,7 @@ private fun CourseListTile(
 
         Text(
             text = "\u203A",
-            color = AppColors.TextSecondary,
+            color = AppTheme.colors.textSecondary,
             fontSize = 20.sp,
         )
     }
@@ -308,7 +316,7 @@ private fun ArchivedHeader(
     ) {
         Text(
             text = "Архив",
-            color = AppColors.TextSecondary,
+            color = AppTheme.colors.textSecondary,
             fontSize = 14.sp,
             fontWeight = FontWeight.SemiBold,
         )
@@ -318,12 +326,12 @@ private fun ArchivedHeader(
         Box(
             modifier = Modifier
                 .clip(RoundedCornerShape(10.dp))
-                .background(AppColors.TextSecondary.copy(alpha = 0.2f))
+                .background(AppTheme.colors.textSecondary.copy(alpha = 0.2f))
                 .padding(horizontal = 8.dp, vertical = 2.dp),
         ) {
             Text(
                 text = count.toString(),
-                color = AppColors.TextSecondary,
+                color = AppTheme.colors.textSecondary,
                 fontSize = 12.sp,
             )
         }
@@ -332,10 +340,35 @@ private fun ArchivedHeader(
 
         Text(
             text = if (expanded) "\u25B2" else "\u25BC",
-            color = AppColors.TextSecondary,
+            color = AppTheme.colors.textSecondary,
             fontSize = 12.sp,
         )
     }
 }
 
 // endregion
+
+private val previewCoursesState = CoursesComponent.State(
+    courses = listOf(
+        Course(id = 1, name = "Алгоритмы и структуры данных", category = "development"),
+        Course(id = 2, name = "Линейная алгебра", category = "mathematics"),
+        Course(id = 3, name = "Управление проектами", category = "business"),
+        Course(id = 4, name = "Физика", category = "stem"),
+    ),
+)
+
+@Preview
+@Composable
+private fun PreviewCoursesScreenDark() {
+    CuMobileTheme(darkTheme = true) {
+        CoursesScreenContent(state = previewCoursesState, onIntent = {})
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewCoursesScreenLight() {
+    CuMobileTheme(darkTheme = false) {
+        CoursesScreenContent(state = previewCoursesState, onIntent = {})
+    }
+}

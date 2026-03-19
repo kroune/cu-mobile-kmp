@@ -23,7 +23,7 @@ import androidx.compose.ui.unit.sp
 import io.github.kroune.cumobile.data.model.LongreadMaterial
 import io.github.kroune.cumobile.data.model.TaskDetails
 import io.github.kroune.cumobile.data.model.TaskState
-import io.github.kroune.cumobile.presentation.common.AppColors
+import io.github.kroune.cumobile.presentation.common.AppTheme
 import io.github.kroune.cumobile.presentation.common.StatusBadge
 import io.github.kroune.cumobile.presentation.common.formatDeadline
 import io.github.kroune.cumobile.presentation.common.rememberFilePicker
@@ -58,7 +58,7 @@ internal fun CodingMaterialCard(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(AppColors.Surface)
+            .background(AppTheme.colors.surface)
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
@@ -104,7 +104,7 @@ private fun TaskHeader(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = material.contentName ?: material.name ?: "Задание",
-                color = AppColors.TextPrimary,
+                color = AppTheme.colors.textPrimary,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
                 maxLines = 2,
@@ -114,7 +114,7 @@ private fun TaskHeader(
                 Text(
                     text = "Макс. балл: ${est.maxScore}" +
                         (est.activityName?.let { " \u2022 $it" }.orEmpty()),
-                    color = AppColors.TextSecondary,
+                    color = AppTheme.colors.textSecondary,
                     fontSize = 12.sp,
                 )
             }
@@ -126,7 +126,7 @@ private fun TaskHeader(
             )
             Text(
                 text = if (isActive) "\u25B2" else "\u25BC",
-                color = AppColors.TextSecondary,
+                color = AppTheme.colors.textSecondary,
                 fontSize = 12.sp,
                 modifier = Modifier.padding(top = 4.dp),
             )
@@ -155,7 +155,7 @@ private fun TaskManagementSection(
     ) {
         Text(
             text = "\u23F0 ${formatDeadline(taskDetails.deadline)}",
-            color = AppColors.TextSecondary,
+            color = AppTheme.colors.textSecondary,
             fontSize = 12.sp,
         )
 
@@ -211,17 +211,17 @@ private fun StartTaskButton(
         enabled = !isSubmitting,
         modifier = modifier.fillMaxWidth(),
         colors = ButtonDefaults.buttonColors(
-            containerColor = AppColors.Accent,
+            containerColor = AppTheme.colors.accent,
         ),
         shape = RoundedCornerShape(8.dp),
     ) {
         if (isSubmitting) {
             CircularProgressIndicator(
-                color = AppColors.Background,
+                color = AppTheme.colors.background,
                 modifier = Modifier.padding(4.dp),
             )
         } else {
-            Text(text = "Начать задание", color = AppColors.Background)
+            Text(text = "Начать задание", color = AppTheme.colors.background)
         }
     }
 }
@@ -242,14 +242,14 @@ private fun TabSelector(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
-            .background(AppColors.Background),
+            .background(AppTheme.colors.background),
         horizontalArrangement = Arrangement.SpaceEvenly,
     ) {
         tabs.forEach { (key, label) ->
             val isSelected = selectedTab == key
             Text(
                 text = label,
-                color = if (isSelected) AppColors.Accent else AppColors.TextSecondary,
+                color = if (isSelected) AppTheme.colors.accent else AppTheme.colors.textSecondary,
                 fontSize = 13.sp,
                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                 modifier = Modifier

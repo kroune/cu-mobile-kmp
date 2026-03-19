@@ -29,7 +29,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
-import io.github.kroune.cumobile.presentation.common.AppColors
+import io.github.kroune.cumobile.data.model.StudentTask
+import io.github.kroune.cumobile.data.model.TaskCourse
+import io.github.kroune.cumobile.data.model.TaskExercise
+import io.github.kroune.cumobile.data.model.TaskState
+import io.github.kroune.cumobile.presentation.common.AppTheme
+import io.github.kroune.cumobile.presentation.common.CuMobileTheme
+import androidx.compose.ui.tooling.preview.Preview
 import io.github.kroune.cumobile.presentation.common.EmptyContent
 import io.github.kroune.cumobile.presentation.common.ErrorContent
 import io.github.kroune.cumobile.presentation.common.LoadingContent
@@ -53,15 +59,30 @@ fun TasksScreen(
     modifier: Modifier = Modifier,
 ) {
     val state by component.state.subscribeAsState()
+
+    TasksScreenContent(
+        state = state,
+        onIntent = component::onIntent,
+        modifier = modifier,
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun TasksScreenContent(
+    state: TasksComponent.State,
+    onIntent: (TasksComponent.Intent) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val tasks = filteredTasks(state)
     val allTasks = state.allTasks
 
     PullToRefreshBox(
         isRefreshing = state.isLoading,
-        onRefresh = { component.onIntent(TasksComponent.Intent.Refresh) },
+        onRefresh = { onIntent(TasksComponent.Intent.Refresh) },
         modifier = modifier
             .fillMaxSize()
-            .background(AppColors.Background),
+            .background(AppTheme.colors.background),
     ) {
         Column(
             modifier = Modifier
@@ -70,34 +91,29 @@ fun TasksScreen(
         ) {
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Segment control
             SegmentedControl(
                 labels = listOf(
                     "Активные (${countBySegment(allTasks, 0)})",
                     "Архив (${countBySegment(allTasks, 1)})",
                 ),
                 selectedIndex = state.segment,
-                onSelect = {
-                    component.onIntent(TasksComponent.Intent.SelectSegment(it))
-                },
+                onSelect = { onIntent(TasksComponent.Intent.SelectSegment(it)) },
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Filters row
             FiltersRow(
                 state = state,
                 allTasks = allTasks,
-                onIntent = { component.onIntent(it) },
+                onIntent = onIntent,
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Content
             TasksContentArea(
                 state = state,
                 tasks = tasks,
-                onIntent = { component.onIntent(it) },
+                onIntent = onIntent,
             )
         }
     }
@@ -167,19 +183,19 @@ private fun FiltersRow(
             placeholder = {
                 Text(
                     text = "Поиск по названию...",
-                    color = AppColors.TextSecondary,
+                    color = AppTheme.colors.textSecondary,
                     fontSize = 14.sp,
                 )
             },
             singleLine = true,
             colors = TextFieldDefaults.colors(
-                focusedContainerColor = AppColors.Surface,
-                unfocusedContainerColor = AppColors.Surface,
-                focusedTextColor = AppColors.TextPrimary,
-                unfocusedTextColor = AppColors.TextPrimary,
-                cursorColor = AppColors.Accent,
-                focusedIndicatorColor = AppColors.Accent,
-                unfocusedIndicatorColor = AppColors.TextSecondary.copy(
+                focusedContainerColor = AppTheme.colors.surface,
+                unfocusedContainerColor = AppTheme.colors.surface,
+                focusedTextColor = AppTheme.colors.textPrimary,
+                unfocusedTextColor = AppTheme.colors.textPrimary,
+                cursorColor = AppTheme.colors.accent,
+                focusedIndicatorColor = AppTheme.colors.accent,
+                unfocusedIndicatorColor = AppTheme.colors.textSecondary.copy(
                     alpha = 0.3f,
                 ),
             ),
@@ -279,7 +295,7 @@ private fun ResetFiltersButton(
     ) {
         Text(
             text = "Сбросить фильтры",
-            color = AppColors.Accent,
+            color = AppTheme.colors.accent,
             fontSize = 13.sp,
         )
     }
@@ -301,20 +317,20 @@ private fun FilterChip(
             .clip(shape)
             .border(
                 width = 1.dp,
-                color = if (selected) AppColors.Accent else AppColors.TextSecondary,
+                color = if (selected) AppTheme.colors.accent else AppTheme.colors.textSecondary,
                 shape = shape,
             ).background(
                 if (selected) {
-                    AppColors.Accent.copy(alpha = 0.15f)
+                    AppTheme.colors.accent.copy(alpha = 0.15f)
                 } else {
-                    AppColors.Surface
+                    AppTheme.colors.surface
                 },
             ).clickable(onClick = onClick)
             .padding(horizontal = 12.dp, vertical = 6.dp),
     ) {
         Text(
             text = label,
-            color = if (selected) AppColors.Accent else AppColors.TextSecondary,
+            color = if (selected) AppTheme.colors.accent else AppTheme.colors.textSecondary,
             fontSize = 12.sp,
             maxLines = 1,
         )
@@ -325,11 +341,47 @@ private fun FilterChip(
  * Counts tasks belonging to the given segment.
  */
 private fun countBySegment(
-    tasks: List<io.github.kroune.cumobile.data.model.StudentTask>,
+    tasks: List<StudentTask>,
     segment: Int,
 ): Int {
     val segmentStates = if (segment == 0) ActiveStates else ArchiveStates
     return tasks.count {
         normalizeTaskState(effectiveTaskState(it)) in segmentStates
+    }
+}
+
+private val previewTasksState = TasksComponent.State(
+    allTasks = listOf(
+        StudentTask(
+            state = TaskState.InProgress,
+            exercise = TaskExercise(name = "ДЗ: Деревья и графы", deadline = "2026-04-01T23:59:00"),
+            course = TaskCourse(id = 1, name = "Алгоритмы"),
+        ),
+        StudentTask(
+            state = TaskState.Backlog,
+            exercise = TaskExercise(name = "Лабораторная 3", deadline = "2026-04-05T23:59:00"),
+            course = TaskCourse(id = 2, name = "Линейная алгебра"),
+        ),
+        StudentTask(
+            state = TaskState.Review,
+            exercise = TaskExercise(name = "Эссе по менеджменту"),
+            course = TaskCourse(id = 3, name = "Менеджмент"),
+        ),
+    ),
+)
+
+@Preview
+@Composable
+private fun PreviewTasksScreenDark() {
+    CuMobileTheme(darkTheme = true) {
+        TasksScreenContent(state = previewTasksState, onIntent = {})
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewTasksScreenLight() {
+    CuMobileTheme(darkTheme = false) {
+        TasksScreenContent(state = previewTasksState, onIntent = {})
     }
 }
