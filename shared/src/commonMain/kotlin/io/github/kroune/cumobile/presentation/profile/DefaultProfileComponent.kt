@@ -7,11 +7,17 @@ import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.data.model.PickedFile
 import io.github.kroune.cumobile.domain.repository.CalendarRepository
 import io.github.kroune.cumobile.domain.repository.ProfileRepository
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+
+private val logger = KotlinLogging.logger {}
 
 /**
  * Default implementation of [ProfileComponent].
@@ -31,6 +37,9 @@ class DefaultProfileComponent(
 
     private val _state = MutableValue(ProfileComponent.State(isLoading = true))
     override val state: Value<ProfileComponent.State> = _state
+
+    private val _effects = Channel<ProfileComponent.Effect>(Channel.BUFFERED)
+    override val effects: Flow<ProfileComponent.Effect> = _effects.receiveAsFlow()
 
     init {
         loadProfile()
@@ -111,9 +120,10 @@ class DefaultProfileComponent(
                     isUploadingAvatar = false,
                 )
             } else {
-                _state.value = _state.value.copy(
-                    isUploadingAvatar = false,
-                    error = "Не удалось загрузить аватар",
+                logger.warn { "Failed to upload avatar" }
+                _state.value = _state.value.copy(isUploadingAvatar = false)
+                _effects.trySend(
+                    ProfileComponent.Effect.ShowError("Не удалось загрузить аватар"),
                 )
             }
         }
@@ -129,9 +139,10 @@ class DefaultProfileComponent(
                     isDeletingAvatar = false,
                 )
             } else {
-                _state.value = _state.value.copy(
-                    isDeletingAvatar = false,
-                    error = "Не удалось удалить аватар",
+                logger.warn { "Failed to delete avatar" }
+                _state.value = _state.value.copy(isDeletingAvatar = false)
+                _effects.trySend(
+                    ProfileComponent.Effect.ShowError("Не удалось удалить аватар"),
                 )
             }
         }

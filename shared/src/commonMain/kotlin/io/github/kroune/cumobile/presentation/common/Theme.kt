@@ -57,15 +57,25 @@ data class AppColorScheme(
     val categoryDefault: Color,
 )
 
-// Shared semantic colors (identical in both themes)
-private val taskBacklog = Color(0xFF9E9E9E)
-private val taskInProgress = Color(0xFF42A5F5)
-private val taskRevision = Color(0xFFEF5350)
-private val taskRework = Color(0xFFEF5350)
-private val taskReview = Color(0xFFFFA726)
-private val taskHasSolution = Color(0xFF00E676)
-private val taskFailed = Color(0xFFEF5350)
-private val taskEvaluated = Color(0xFF00E676)
+// Dark theme task colors (bright, for dark backgrounds)
+private val darkTaskBacklog = Color(0xFF9E9E9E)
+private val darkTaskInProgress = Color(0xFF42A5F5)
+private val darkTaskRevision = Color(0xFFEF5350)
+private val darkTaskRework = Color(0xFFEF5350)
+private val darkTaskReview = Color(0xFFFFA726)
+private val darkTaskHasSolution = Color(0xFF00E676)
+private val darkTaskFailed = Color(0xFFEF5350)
+private val darkTaskEvaluated = Color(0xFF00E676)
+
+// Light theme task colors (darker shades for contrast on light backgrounds)
+private val lightTaskBacklog = Color(0xFF757575)
+private val lightTaskInProgress = Color(0xFF1976D2)
+private val lightTaskRevision = Color(0xFFD32F2F)
+private val lightTaskRework = Color(0xFFD32F2F)
+private val lightTaskReview = Color(0xFFEF6C00)
+private val lightTaskHasSolution = Color(0xFF2E7D32)
+private val lightTaskFailed = Color(0xFFD32F2F)
+private val lightTaskEvaluated = Color(0xFF2E7D32)
 
 private val gradeExcellent = Color(0xFF00E676)
 private val gradeGood = Color(0xFFFFCA28)
@@ -93,14 +103,14 @@ val DarkAppColors = AppColorScheme(
     error = Color(0xFFEF5350),
     codeBlockBackground = Color(0xFF2A2A2A),
     blockquoteBackground = Color(0xFF1A1A2E),
-    taskBacklog = taskBacklog,
-    taskInProgress = taskInProgress,
-    taskRevision = taskRevision,
-    taskRework = taskRework,
-    taskReview = taskReview,
-    taskHasSolution = taskHasSolution,
-    taskFailed = taskFailed,
-    taskEvaluated = taskEvaluated,
+    taskBacklog = darkTaskBacklog,
+    taskInProgress = darkTaskInProgress,
+    taskRevision = darkTaskRevision,
+    taskRework = darkTaskRework,
+    taskReview = darkTaskReview,
+    taskHasSolution = darkTaskHasSolution,
+    taskFailed = darkTaskFailed,
+    taskEvaluated = darkTaskEvaluated,
     gradeExcellent = gradeExcellent,
     gradeGood = gradeGood,
     gradeSatisfactory = gradeSatisfactory,
@@ -126,14 +136,14 @@ val LightAppColors = AppColorScheme(
     error = Color(0xFFD32F2F),
     codeBlockBackground = Color(0xFFEEEEEE),
     blockquoteBackground = Color(0xFFE8EAF6),
-    taskBacklog = taskBacklog,
-    taskInProgress = taskInProgress,
-    taskRevision = taskRevision,
-    taskRework = taskRework,
-    taskReview = taskReview,
-    taskHasSolution = taskHasSolution,
-    taskFailed = taskFailed,
-    taskEvaluated = taskEvaluated,
+    taskBacklog = lightTaskBacklog,
+    taskInProgress = lightTaskInProgress,
+    taskRevision = lightTaskRevision,
+    taskRework = lightTaskRework,
+    taskReview = lightTaskReview,
+    taskHasSolution = lightTaskHasSolution,
+    taskFailed = lightTaskFailed,
+    taskEvaluated = lightTaskEvaluated,
     gradeExcellent = gradeExcellent,
     gradeGood = gradeGood,
     gradeSatisfactory = gradeSatisfactory,

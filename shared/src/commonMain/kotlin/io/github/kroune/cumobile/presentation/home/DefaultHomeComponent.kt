@@ -109,9 +109,13 @@ class DefaultHomeComponent(
     private fun loadSchedule() {
         if (!_state.value.isCalendarConnected) return
         scope.launch {
-            val dateMillis = _state.value.selectedDateMillis
-            val classes = calendarRepository.getClassesForDate(dateMillis)
-            _state.value = _state.value.copy(classes = classes)
+            try {
+                val dateMillis = _state.value.selectedDateMillis
+                val classes = calendarRepository.getClassesForDate(dateMillis)
+                _state.value = _state.value.copy(classes = classes)
+            } catch (e: Exception) {
+                logger.error(e) { "Failed to load schedule" }
+            }
         }
     }
 

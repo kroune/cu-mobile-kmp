@@ -145,7 +145,7 @@ fun StatusBadge(
             text = label,
             color = color,
             fontSize = 11.sp,
-            fontWeight = FontWeight.Medium,
+            fontWeight = FontWeight.SemiBold,
         )
     }
 }

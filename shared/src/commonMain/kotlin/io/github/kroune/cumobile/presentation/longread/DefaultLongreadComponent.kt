@@ -11,9 +11,15 @@ import io.github.kroune.cumobile.data.model.UploadStatus
 import io.github.kroune.cumobile.domain.repository.ContentRepository
 import io.github.kroune.cumobile.domain.repository.FileRenameRepository
 import io.github.kroune.cumobile.domain.repository.TaskRepository
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+
+private val logger = KotlinLogging.logger {}
 
 /**
  * Default implementation of [LongreadComponent].
@@ -44,6 +50,9 @@ class DefaultLongreadComponent(
         ),
     )
     override val state: Value<LongreadComponent.State> = _state
+
+    private val _effects = Channel<LongreadComponent.Effect>(Channel.BUFFERED)
+    override val effects: Flow<LongreadComponent.Effect> = _effects.receiveAsFlow()
 
     override fun onIntent(intent: LongreadComponent.Intent) {
         when (intent) {
@@ -175,7 +184,14 @@ class DefaultLongreadComponent(
             _state.value = _state.value.copy(isSubmitting = true)
             val success = taskRepository.startTask(taskId)
             _state.value = _state.value.copy(isSubmitting = false)
-            if (success) refreshTaskDetails(taskId)
+            if (success) {
+                refreshTaskDetails(taskId)
+            } else {
+                logger.warn { "Failed to start task $taskId" }
+                _effects.trySend(
+                    LongreadComponent.Effect.ShowError("Не удалось начать задание"),
+                )
+            }
         }
     }
 
@@ -194,6 +210,11 @@ class DefaultLongreadComponent(
                     pendingSolutionAttachments = emptyList(),
                 )
                 refreshTaskDetails(taskId)
+            } else {
+                logger.warn { "Failed to submit solution for task $taskId" }
+                _effects.trySend(
+                    LongreadComponent.Effect.ShowError("Не удалось отправить решение"),
+                )
             }
         }
     }
@@ -206,16 +227,24 @@ class DefaultLongreadComponent(
             .mapNotNull { it.uploadedAttachment }
         scope.launch {
             _state.value = _state.value.copy(isSubmitting = true)
-            taskRepository.createComment(taskId, text, attachments)
-            _state.value = _state.value.copy(
-                isSubmitting = false,
-                commentText = "",
-                pendingCommentAttachments = emptyList(),
-            )
-            val comments = taskRepository.fetchTaskComments(taskId)
-            _state.value = _state.value.copy(
-                taskComments = comments.orEmpty(),
-            )
+            val commentId = taskRepository.createComment(taskId, text, attachments)
+            if (commentId != null) {
+                _state.value = _state.value.copy(
+                    isSubmitting = false,
+                    commentText = "",
+                    pendingCommentAttachments = emptyList(),
+                )
+                val comments = taskRepository.fetchTaskComments(taskId)
+                _state.value = _state.value.copy(
+                    taskComments = comments.orEmpty(),
+                )
+            } else {
+                logger.warn { "Failed to create comment for task $taskId" }
+                _state.value = _state.value.copy(isSubmitting = false)
+                _effects.trySend(
+                    LongreadComponent.Effect.ShowError("Не удалось отправить комментарий"),
+                )
+            }
         }
     }
 
@@ -223,9 +252,16 @@ class DefaultLongreadComponent(
         val taskId = _state.value.activeTaskId ?: return
         scope.launch {
             _state.value = _state.value.copy(isSubmitting = true)
-            taskRepository.prolongLateDays(taskId, days)
+            val success = taskRepository.prolongLateDays(taskId, days)
             _state.value = _state.value.copy(isSubmitting = false)
-            refreshTaskDetails(taskId)
+            if (success) {
+                refreshTaskDetails(taskId)
+            } else {
+                logger.warn { "Failed to prolong late days for task $taskId" }
+                _effects.trySend(
+                    LongreadComponent.Effect.ShowError("Не удалось продлить дедлайн"),
+                )
+            }
         }
     }
 
@@ -233,9 +269,16 @@ class DefaultLongreadComponent(
         val taskId = _state.value.activeTaskId ?: return
         scope.launch {
             _state.value = _state.value.copy(isSubmitting = true)
-            taskRepository.cancelLateDays(taskId)
+            val success = taskRepository.cancelLateDays(taskId)
             _state.value = _state.value.copy(isSubmitting = false)
-            refreshTaskDetails(taskId)
+            if (success) {
+                refreshTaskDetails(taskId)
+            } else {
+                logger.warn { "Failed to cancel late days for task $taskId" }
+                _effects.trySend(
+                    LongreadComponent.Effect.ShowError("Не удалось отменить продление"),
+                )
+            }
         }
     }
 
@@ -338,6 +381,13 @@ class DefaultLongreadComponent(
             if (url != null) {
                 val localFilename = buildLocalFilename(material)
                 onDownloadReady(url, localFilename)
+            } else {
+                logger.warn { "Failed to get download link for $filename" }
+                _effects.trySend(
+                    LongreadComponent.Effect.ShowError(
+                        "Не удалось получить ссылку для скачивания",
+                    ),
+                )
             }
         }
     }

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -22,9 +23,15 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ChevronLeft
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -194,7 +201,7 @@ private fun CoursesSection(
             val rowCount = (courses.size + 1) / 2
             val itemHeight = 120.dp
             val spacing = 12.dp
-            val gridHeight = (itemHeight * rowCount) + (spacing * (rowCount - 1))
+            val gridHeight = (itemHeight * rowCount) + (spacing * rowCount)
 
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
@@ -268,8 +275,12 @@ private fun DateNavigationRow(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        TextButton(onClick = { onIntent(HomeComponent.Intent.PreviousDay) }) {
-            Text("<", color = AppTheme.colors.accent, fontWeight = FontWeight.Bold)
+        IconButton(onClick = { onIntent(HomeComponent.Intent.PreviousDay) }) {
+            Icon(
+                imageVector = Icons.Default.ChevronLeft,
+                contentDescription = "Предыдущий день",
+                tint = AppTheme.colors.accent,
+            )
         }
 
         Text(
@@ -280,8 +291,12 @@ private fun DateNavigationRow(
             modifier = Modifier.clickable { onIntent(HomeComponent.Intent.Today) }
         )
 
-        TextButton(onClick = { onIntent(HomeComponent.Intent.NextDay) }) {
-            Text(">", color = AppTheme.colors.accent, fontWeight = FontWeight.Bold)
+        IconButton(onClick = { onIntent(HomeComponent.Intent.NextDay) }) {
+            Icon(
+                imageVector = Icons.Default.ChevronRight,
+                contentDescription = "Следующий день",
+                tint = AppTheme.colors.accent,
+            )
         }
     }
 }
@@ -398,10 +413,9 @@ private fun SectionHeader(
         if (count > 0) {
             Box(
                 modifier = Modifier
-                    .background(
-                        AppTheme.colors.accent,
-                        RoundedCornerShape(12.dp),
-                    ).padding(horizontal = 8.dp, vertical = 2.dp),
+                    .defaultMinSize(minWidth = 24.dp, minHeight = 24.dp)
+                    .background(AppTheme.colors.accent, CircleShape)
+                    .padding(4.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
@@ -437,10 +451,12 @@ private fun EmptySection(
     }
 }
 
+@Suppress("MagicNumber")
 private val previewHomeState = HomeComponent.State(
     isLoading = false,
     profileInitials = "ИП",
     lateDaysBalance = 5,
+    selectedDateMillis = 1774051200000L,
     tasks = listOf(
         StudentTask(
             id = 1,
@@ -475,5 +491,45 @@ private fun PreviewHomeScreenDark() {
 private fun PreviewHomeScreenLight() {
     CuMobileTheme(darkTheme = false) {
         HomeContent(state = previewHomeState, onIntent = {}, onTaskClick = {}, onCourseClick = {})
+    }
+}
+
+@Suppress("MagicNumber")
+private val previewHomeErrorState = HomeComponent.State(
+    isLoading = false,
+    error = "Не удалось загрузить данные",
+)
+
+@Preview
+@Composable
+private fun PreviewHomeScreenErrorDark() {
+    CuMobileTheme(darkTheme = true) {
+        Box(
+            Modifier
+                .fillMaxSize()
+                .background(AppTheme.colors.background),
+        ) {
+            io.github.kroune.cumobile.presentation.common.ErrorContent(
+                error = previewHomeErrorState.error.orEmpty(),
+                onRetry = {},
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewHomeScreenErrorLight() {
+    CuMobileTheme(darkTheme = false) {
+        Box(
+            Modifier
+                .fillMaxSize()
+                .background(AppTheme.colors.background),
+        ) {
+            io.github.kroune.cumobile.presentation.common.ErrorContent(
+                error = previewHomeErrorState.error.orEmpty(),
+                onRetry = {},
+            )
+        }
     }
 }

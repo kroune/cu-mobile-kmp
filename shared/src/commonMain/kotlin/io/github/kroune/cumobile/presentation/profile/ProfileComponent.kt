@@ -2,6 +2,7 @@ package io.github.kroune.cumobile.presentation.profile
 
 import com.arkivanov.decompose.value.Value
 import io.github.kroune.cumobile.data.model.PickedFile
+import kotlinx.coroutines.flow.Flow
 import io.github.kroune.cumobile.data.model.StudentLmsProfile
 import io.github.kroune.cumobile.data.model.StudentProfile
 
@@ -13,8 +14,13 @@ import io.github.kroune.cumobile.data.model.StudentProfile
  */
 interface ProfileComponent {
     val state: Value<State>
+    val effects: Flow<Effect>
 
     fun onIntent(intent: Intent)
+
+    sealed interface Effect {
+        data class ShowError(val message: String) : Effect
+    }
 
     data class State(
         val profile: StudentProfile? = null,

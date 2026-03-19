@@ -81,9 +81,17 @@ CuMobile/
 
 ### MVI (Model-View-Intent)
 Every screen has:
-- `XxxComponent.kt` — interface with `State`, `Intent`, and `stateFlow`
+- `XxxComponent.kt` — interface with `State`, `Intent`, `Effect`, and `stateFlow`/`effects`
 - `DefaultXxxComponent.kt` — implementation
-- `XxxScreen.kt` — Compose UI consuming state + dispatching intents
+- `XxxScreen.kt` — Compose UI consuming state + dispatching intents + collecting effects
+
+### One-shot Effects
+- Components that perform mutations expose `val effects: Flow<Effect>` for one-shot events (error messages, toasts)
+- Implemented via `Channel<Effect>(Channel.BUFFERED)` + `receiveAsFlow()` in Default components
+- UI collects effects in `LaunchedEffect(Unit)` into local `mutableStateOf` for display
+- `ActionErrorBar` composable (in `CommonStates.kt`) shows transient error messages with dismiss button
+- Currently used in: `LongreadComponent`, `FilesComponent`, `ProfileComponent`
+- Pattern: `_effects.trySend(Effect.ShowError("message"))` in component, collected in screen composable
 
 ### Navigation (Decompose)
 - **ChildPages** — bottom nav tabs (preserves state on tab switch)
@@ -106,7 +114,9 @@ Every screen has:
 ### Logging
 - Use `kotlin-logging`: `private val logger = KotlinLogging.logger {}`
 - **Always** log errors in catch blocks: `logger.error(e) { "description" }`
+- Log mutation failures at `warn` level: `logger.warn { "Failed to ..." }`
 - Never silently swallow exceptions
+- Components with loggers: `DefaultHomeComponent`, `DefaultFilesComponent`, `DefaultLongreadComponent`, `DefaultProfileComponent`
 
 ### Coroutine Scopes
 - Use `coroutineScope()` from `essenty-lifecycle-coroutines` in all components

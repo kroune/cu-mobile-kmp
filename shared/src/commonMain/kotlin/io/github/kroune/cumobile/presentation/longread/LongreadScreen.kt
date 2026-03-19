@@ -20,7 +20,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,10 +38,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import io.github.kroune.cumobile.data.model.LongreadMaterial
+import io.github.kroune.cumobile.presentation.common.ActionErrorBar
 import io.github.kroune.cumobile.presentation.common.AppTheme
+import io.github.kroune.cumobile.presentation.common.CuMobileTheme
 import io.github.kroune.cumobile.presentation.common.DetailTopBar
 import io.github.kroune.cumobile.presentation.common.ErrorContent
 import io.github.kroune.cumobile.presentation.common.LoadingContent
+import androidx.compose.ui.tooling.preview.Preview
 import io.github.kroune.cumobile.presentation.common.formatSizeBytes
 
 /**
@@ -49,17 +56,45 @@ import io.github.kroune.cumobile.presentation.common.formatSizeBytes
  * - coding: task management card (delegated to [CodingMaterialCard])
  * - questions: unsupported placeholder
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LongreadScreen(
     component: LongreadComponent,
     modifier: Modifier = Modifier,
 ) {
     val state by component.state.subscribeAsState()
+    var actionError by remember { mutableStateOf<String?>(null) }
 
+    LaunchedEffect(Unit) {
+        component.effects.collect { effect ->
+            when (effect) {
+                is LongreadComponent.Effect.ShowError -> {
+                    actionError = effect.message
+                }
+            }
+        }
+    }
+
+    LongreadScreenContent(
+        state = state,
+        actionError = actionError,
+        onIntent = component::onIntent,
+        onDismissError = { actionError = null },
+        modifier = modifier,
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun LongreadScreenContent(
+    state: LongreadComponent.State,
+    actionError: String?,
+    onIntent: (LongreadComponent.Intent) -> Unit,
+    onDismissError: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     PullToRefreshBox(
         isRefreshing = state.isLoading,
-        onRefresh = { component.onIntent(LongreadComponent.Intent.Refresh) },
+        onRefresh = { onIntent(LongreadComponent.Intent.Refresh) },
         modifier = modifier
             .fillMaxSize()
             .background(AppTheme.colors.background),
@@ -69,11 +104,11 @@ fun LongreadScreen(
         ) {
             DetailTopBar(
                 title = state.title,
-                onBack = { component.onIntent(LongreadComponent.Intent.Back) },
+                onBack = { onIntent(LongreadComponent.Intent.Back) },
                 trailingContent = {
                     TextButton(
                         onClick = {
-                            component.onIntent(LongreadComponent.Intent.ToggleSearch)
+                            onIntent(LongreadComponent.Intent.ToggleSearch)
                         },
                     ) {
                         Text(
@@ -84,10 +119,12 @@ fun LongreadScreen(
                 },
             )
 
+            ActionErrorBar(error = actionError, onDismiss = onDismissError)
+
             if (state.isSearchVisible) {
                 SearchBar(
                     state = state,
-                    onIntent = component::onIntent,
+                    onIntent = onIntent,
                 )
             }
 
@@ -95,11 +132,11 @@ fun LongreadScreen(
                 state.isLoading && state.materials.isEmpty() -> LoadingContent()
                 state.error != null && state.materials.isEmpty() -> ErrorContent(
                     error = state.error.orEmpty(),
-                    onRetry = { component.onIntent(LongreadComponent.Intent.Refresh) },
+                    onRetry = { onIntent(LongreadComponent.Intent.Refresh) },
                 )
                 else -> MaterialList(
                     state = state,
-                    onIntent = component::onIntent,
+                    onIntent = onIntent,
                 )
             }
         }
@@ -406,3 +443,75 @@ internal fun stripHtmlTags(html: String): String =
         .replace("&gt;", ">")
         .replace("&quot;", "\"")
         .trim()
+
+@Preview
+@Composable
+private fun PreviewLongreadLoadErrorDark() {
+    CuMobileTheme(darkTheme = true) {
+        LongreadScreenContent(
+            state = LongreadComponent.State(
+                error = "Не удалось загрузить материалы",
+            ),
+            actionError = null,
+            onIntent = {},
+            onDismissError = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewLongreadLoadErrorLight() {
+    CuMobileTheme(darkTheme = false) {
+        LongreadScreenContent(
+            state = LongreadComponent.State(
+                error = "Не удалось загрузить материалы",
+            ),
+            actionError = null,
+            onIntent = {},
+            onDismissError = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewLongreadActionErrorDark() {
+    CuMobileTheme(darkTheme = true) {
+        LongreadScreenContent(
+            state = LongreadComponent.State(
+                materials = listOf(
+                    LongreadMaterial(
+                        id = 1,
+                        name = "Тестовый материал",
+                        discriminator = "markdown",
+                    ),
+                ),
+            ),
+            actionError = "Не удалось отправить решение",
+            onIntent = {},
+            onDismissError = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewLongreadActionErrorLight() {
+    CuMobileTheme(darkTheme = false) {
+        LongreadScreenContent(
+            state = LongreadComponent.State(
+                materials = listOf(
+                    LongreadMaterial(
+                        id = 1,
+                        name = "Тестовый материал",
+                        discriminator = "markdown",
+                    ),
+                ),
+            ),
+            actionError = "Не удалось отправить решение",
+            onIntent = {},
+            onDismissError = {},
+        )
+    }
+}

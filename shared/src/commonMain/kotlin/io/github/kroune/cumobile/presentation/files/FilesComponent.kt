@@ -2,6 +2,7 @@ package io.github.kroune.cumobile.presentation.files
 
 import com.arkivanov.decompose.value.Value
 import io.github.kroune.cumobile.data.local.DownloadedFileInfo
+import kotlinx.coroutines.flow.Flow
 
 /**
  * MVI component for the Files tab ("Файлы").
@@ -11,8 +12,13 @@ import io.github.kroune.cumobile.data.local.DownloadedFileInfo
  */
 interface FilesComponent {
     val state: Value<State>
+    val effects: Flow<Effect>
 
     fun onIntent(intent: Intent)
+
+    sealed interface Effect {
+        data class ShowError(val message: String) : Effect
+    }
 
     data class State(
         val files: List<DownloadedFileInfo> = emptyList(),

@@ -27,6 +27,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.AlertDialog
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,9 +42,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import io.github.kroune.cumobile.data.local.DownloadedFileInfo
+import io.github.kroune.cumobile.presentation.common.ActionErrorBar
 import io.github.kroune.cumobile.presentation.common.AppTheme
+import io.github.kroune.cumobile.presentation.common.CuMobileTheme
 import io.github.kroune.cumobile.presentation.common.ErrorContent
 import io.github.kroune.cumobile.presentation.common.LoadingContent
+import androidx.compose.ui.tooling.preview.Preview
 import io.github.kroune.cumobile.presentation.common.formatEpochDate
 import io.github.kroune.cumobile.presentation.common.formatSizeBytes
 
@@ -54,13 +58,42 @@ import io.github.kroune.cumobile.presentation.common.formatSizeBytes
  * and modification date. Supports tap-to-open, long-press-to-select,
  * and batch/single delete actions.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FilesScreen(
     component: FilesComponent,
     modifier: Modifier = Modifier,
 ) {
     val state by component.state.subscribeAsState()
+    var actionError by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(Unit) {
+        component.effects.collect { effect ->
+            when (effect) {
+                is FilesComponent.Effect.ShowError -> {
+                    actionError = effect.message
+                }
+            }
+        }
+    }
+
+    FilesScreenContent(
+        state = state,
+        actionError = actionError,
+        onIntent = component::onIntent,
+        onDismissError = { actionError = null },
+        modifier = modifier,
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun FilesScreenContent(
+    state: FilesComponent.State,
+    actionError: String?,
+    onIntent: (FilesComponent.Intent) -> Unit,
+    onDismissError: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     var showDeleteAllDialog by remember { mutableStateOf(false) }
 
     if (showDeleteAllDialog) {
@@ -69,7 +102,7 @@ fun FilesScreen(
             text = "Это действие удалит все ${state.files.size} загруженных файлов.",
             onConfirm = {
                 showDeleteAllDialog = false
-                component.onIntent(FilesComponent.Intent.DeleteAll)
+                onIntent(FilesComponent.Intent.DeleteAll)
             },
             onDismiss = { showDeleteAllDialog = false },
         )
@@ -77,7 +110,7 @@ fun FilesScreen(
 
     PullToRefreshBox(
         isRefreshing = state.isLoading,
-        onRefresh = { component.onIntent(FilesComponent.Intent.Refresh) },
+        onRefresh = { onIntent(FilesComponent.Intent.Refresh) },
         modifier = modifier
             .fillMaxSize()
             .background(AppTheme.colors.background),
@@ -89,38 +122,40 @@ fun FilesScreen(
                 state = state,
                 onDeleteAll = { showDeleteAllDialog = true },
                 onDeleteSelected = {
-                    component.onIntent(FilesComponent.Intent.DeleteSelected)
+                    onIntent(FilesComponent.Intent.DeleteSelected)
                 },
                 onClearSelection = {
-                    component.onIntent(FilesComponent.Intent.ClearSelection)
+                    onIntent(FilesComponent.Intent.ClearSelection)
                 },
                 onOpenRenameSettings = {
-                    component.onIntent(FilesComponent.Intent.OpenRenameSettings)
+                    onIntent(FilesComponent.Intent.OpenRenameSettings)
                 },
             )
+
+            ActionErrorBar(error = actionError, onDismiss = onDismissError)
 
             when {
                 state.isLoading && state.files.isEmpty() -> LoadingContent()
                 state.error != null && state.files.isEmpty() -> ErrorContent(
                     error = state.error.orEmpty(),
-                    onRetry = { component.onIntent(FilesComponent.Intent.Refresh) },
+                    onRetry = { onIntent(FilesComponent.Intent.Refresh) },
                 )
                 state.files.isEmpty() -> EmptyState(
                     onOpenRenameSettings = {
-                        component.onIntent(FilesComponent.Intent.OpenRenameSettings)
+                        onIntent(FilesComponent.Intent.OpenRenameSettings)
                     },
                 )
                 else -> FileList(
                     files = state.files,
                     selectedFiles = state.selectedFiles,
                     onOpen = { path ->
-                        component.onIntent(FilesComponent.Intent.OpenFile(path))
+                        onIntent(FilesComponent.Intent.OpenFile(path))
                     },
                     onToggleSelect = { name ->
-                        component.onIntent(FilesComponent.Intent.ToggleSelect(name))
+                        onIntent(FilesComponent.Intent.ToggleSelect(name))
                     },
                     onDelete = { name ->
-                        component.onIntent(FilesComponent.Intent.DeleteFile(name))
+                        onIntent(FilesComponent.Intent.DeleteFile(name))
                     },
                 )
             }
@@ -403,3 +438,67 @@ private fun extensionColor(ext: String) =
         "MP4", "MOV", "AVI" -> AppTheme.colors.categoryBusiness
         else -> AppTheme.colors.textSecondary
     }
+
+@Suppress("MagicNumber")
+private val previewFilesState = FilesComponent.State(
+    files = listOf(
+        DownloadedFileInfo(
+            name = "homework_1.pdf",
+            path = "/files/homework_1.pdf",
+            sizeBytes = 1_200_000,
+            lastModifiedMillis = 1710806400000L,
+        ),
+    ),
+)
+
+@Preview
+@Composable
+private fun PreviewFilesLoadErrorDark() {
+    CuMobileTheme(darkTheme = true) {
+        FilesScreenContent(
+            state = FilesComponent.State(error = "Не удалось загрузить список файлов"),
+            actionError = null,
+            onIntent = {},
+            onDismissError = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewFilesLoadErrorLight() {
+    CuMobileTheme(darkTheme = false) {
+        FilesScreenContent(
+            state = FilesComponent.State(error = "Не удалось загрузить список файлов"),
+            actionError = null,
+            onIntent = {},
+            onDismissError = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewFilesActionErrorDark() {
+    CuMobileTheme(darkTheme = true) {
+        FilesScreenContent(
+            state = previewFilesState,
+            actionError = "Не удалось удалить файл",
+            onIntent = {},
+            onDismissError = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewFilesActionErrorLight() {
+    CuMobileTheme(darkTheme = false) {
+        FilesScreenContent(
+            state = previewFilesState,
+            actionError = "Не удалось удалить файл",
+            onIntent = {},
+            onDismissError = {},
+        )
+    }
+}

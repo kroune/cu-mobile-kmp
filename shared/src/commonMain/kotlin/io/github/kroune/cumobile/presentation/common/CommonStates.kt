@@ -4,9 +4,18 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.ErrorOutline
+import androidx.compose.material.icons.outlined.Inbox
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -46,6 +55,13 @@ internal fun ErrorContent(
         contentAlignment = Alignment.Center,
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Icon(
+                imageVector = Icons.Outlined.ErrorOutline,
+                contentDescription = null,
+                tint = AppTheme.colors.error,
+                modifier = Modifier.size(48.dp),
+            )
+            Spacer(modifier = Modifier.height(12.dp))
             Text(
                 text = error,
                 color = AppTheme.colors.error,
@@ -75,11 +91,63 @@ internal fun EmptyContent(
         modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center,
     ) {
-        Text(
-            text = text,
-            color = AppTheme.colors.textSecondary,
-            fontSize = 14.sp,
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Icon(
+                imageVector = Icons.Outlined.Inbox,
+                contentDescription = null,
+                tint = AppTheme.colors.textSecondary,
+                modifier = Modifier.size(48.dp),
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = text,
+                color = AppTheme.colors.textSecondary,
+                fontSize = 16.sp,
+            )
+        }
+    }
+}
+
+/**
+ * Inline error bar for transient action errors (e.g. mutation failures).
+ *
+ * @param error Error message to display; when `null` the bar is hidden.
+ * @param onDismiss Callback to clear the error.
+ */
+@Composable
+internal fun ActionErrorBar(
+    error: String?,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    if (error == null) return
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(AppTheme.colors.error.copy(alpha = 0.15f))
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.ErrorOutline,
+            contentDescription = null,
+            tint = AppTheme.colors.error,
+            modifier = Modifier.size(20.dp),
         )
+        Text(
+            text = error,
+            color = AppTheme.colors.error,
+            fontSize = 13.sp,
+            modifier = Modifier.weight(1f),
+        )
+        TextButton(onClick = onDismiss) {
+            Text(
+                text = "\u2715",
+                color = AppTheme.colors.error,
+                fontSize = 14.sp,
+            )
+        }
     }
 }
 
@@ -139,6 +207,32 @@ private fun PreviewEmptyLight() {
     CuMobileTheme(darkTheme = false) {
         Box(Modifier.background(AppTheme.colors.background)) {
             EmptyContent(text = "Нет данных")
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewActionErrorBarDark() {
+    CuMobileTheme(darkTheme = true) {
+        Box(Modifier.background(AppTheme.colors.background)) {
+            ActionErrorBar(
+                error = "Не удалось выполнить действие",
+                onDismiss = {},
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewActionErrorBarLight() {
+    CuMobileTheme(darkTheme = false) {
+        Box(Modifier.background(AppTheme.colors.background)) {
+            ActionErrorBar(
+                error = "Не удалось выполнить действие",
+                onDismiss = {},
+            )
         }
     }
 }

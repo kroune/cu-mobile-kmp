@@ -28,15 +28,21 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import io.github.kroune.cumobile.data.model.StudentProfile
+import io.github.kroune.cumobile.presentation.common.ActionErrorBar
 import io.github.kroune.cumobile.presentation.common.AppTheme
 import io.github.kroune.cumobile.presentation.common.CuMobileTheme
 import androidx.compose.ui.tooling.preview.Preview
@@ -61,11 +67,24 @@ fun ProfileScreen(
     modifier: Modifier = Modifier,
 ) {
     val state by component.state.subscribeAsState()
+    var actionError by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(Unit) {
+        component.effects.collect { effect ->
+            when (effect) {
+                is ProfileComponent.Effect.ShowError -> {
+                    actionError = effect.message
+                }
+            }
+        }
+    }
 
     ProfileScreenContent(
         state = state,
+        actionError = actionError,
         onIntent = component::onIntent,
         onBack = onBack,
+        onDismissError = { actionError = null },
         modifier = modifier,
     )
 }
@@ -73,8 +92,10 @@ fun ProfileScreen(
 @Composable
 internal fun ProfileScreenContent(
     state: ProfileComponent.State,
+    actionError: String? = null,
     onIntent: (ProfileComponent.Intent) -> Unit,
     onBack: () -> Unit,
+    onDismissError: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -97,6 +118,8 @@ internal fun ProfileScreenContent(
                 }
             },
         )
+
+        ActionErrorBar(error = actionError, onDismiss = onDismissError)
 
         when {
             state.isLoading -> LoadingContent()
@@ -426,10 +449,13 @@ private fun CalendarSection(
                 modifier = Modifier.weight(1f),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = AppTheme.colors.accent,
+                    contentColor = Color.White,
+                    disabledContainerColor = AppTheme.colors.textSecondary.copy(alpha = 0.3f),
+                    disabledContentColor = AppTheme.colors.textSecondary,
                 ),
                 shape = RoundedCornerShape(8.dp),
             ) {
-                Text(text = "Сохранить", color = AppTheme.colors.background)
+                Text(text = "Сохранить")
             }
 
             if (state.isCalendarConnected) {
@@ -496,5 +522,59 @@ private fun PreviewProfileScreenDark() {
 private fun PreviewProfileScreenLight() {
     CuMobileTheme(darkTheme = false) {
         ProfileScreenContent(state = previewProfileState, onIntent = {}, onBack = {})
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewProfileLoadErrorDark() {
+    CuMobileTheme(darkTheme = true) {
+        ProfileScreenContent(
+            state = ProfileComponent.State(
+                error = "Не удалось загрузить профиль",
+            ),
+            onIntent = {},
+            onBack = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewProfileLoadErrorLight() {
+    CuMobileTheme(darkTheme = false) {
+        ProfileScreenContent(
+            state = ProfileComponent.State(
+                error = "Не удалось загрузить профиль",
+            ),
+            onIntent = {},
+            onBack = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewProfileActionErrorDark() {
+    CuMobileTheme(darkTheme = true) {
+        ProfileScreenContent(
+            state = previewProfileState,
+            actionError = "Не удалось загрузить аватар",
+            onIntent = {},
+            onBack = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewProfileActionErrorLight() {
+    CuMobileTheme(darkTheme = false) {
+        ProfileScreenContent(
+            state = previewProfileState,
+            actionError = "Не удалось загрузить аватар",
+            onIntent = {},
+            onBack = {},
+        )
     }
 }
