@@ -76,6 +76,9 @@ interface HomeComponent {
 
         /** Disconnect the current calendar. */
         data object DisconnectCalendar : Intent
+
+        /** Navigate to profile screen (for calendar setup). */
+        data object OpenProfile : Intent
     }
 
     companion object {

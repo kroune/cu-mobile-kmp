@@ -114,8 +114,8 @@ private fun TasksContentArea(
     modifier: Modifier = Modifier,
 ) {
     when {
-        state.isLoading -> LoadingContent(modifier)
-        state.error != null -> ErrorContent(
+        state.isLoading && tasks.isEmpty() -> LoadingContent(modifier)
+        state.error != null && tasks.isEmpty() -> ErrorContent(
             error = state.error,
             onRetry = { onIntent(TasksComponent.Intent.Refresh) },
             modifier = modifier,

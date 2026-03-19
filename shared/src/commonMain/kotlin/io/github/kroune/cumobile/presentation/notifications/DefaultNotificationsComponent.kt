@@ -21,7 +21,7 @@ class DefaultNotificationsComponent(
     componentContext: ComponentContext,
     private val notificationRepository: NotificationRepository,
     private val onBack: () -> Unit,
-    private val onOpenLongread: ((longreadId: Int) -> Unit)? = null,
+    private val onOpenLongread: ((longreadId: Int, courseId: Int, themeId: Int) -> Unit)? = null,
 ) : NotificationsComponent,
     ComponentContext by componentContext {
     private val scope = coroutineScope(Dispatchers.Main.immediate + SupervisorJob())
@@ -40,7 +40,15 @@ class DefaultNotificationsComponent(
             is NotificationsComponent.Intent.SelectTab -> {
                 _state.value = _state.value.copy(selectedTab = intent.index)
             }
-            is NotificationsComponent.Intent.OpenLink -> handleOpenLink(intent.uri)
+            is NotificationsComponent.Intent.OpenLink -> {
+                val handledInApp = handleOpenLink(intent.uri)
+                if (!handledInApp) {
+                    _state.value = _state.value.copy(externalLinkToOpen = intent.uri)
+                }
+            }
+            NotificationsComponent.Intent.ExternalLinkOpened -> {
+                _state.value = _state.value.copy(externalLinkToOpen = null)
+            }
         }
     }
 
@@ -69,19 +77,24 @@ class DefaultNotificationsComponent(
      *
      * If the URI matches the longread pattern, navigates in-app.
      * Otherwise the link should be opened externally (deferred to UI layer).
+     *
+     * @return `true` if the link was handled in-app, `false` for external handling.
      */
-    private fun handleOpenLink(uri: String) {
+    internal fun handleOpenLink(uri: String): Boolean {
         val longreadRegex = Regex(
-            """my\.centraluniversity\.ru/learn/courses/view/actual/\d+/themes/\d+/longreads/(\d+)""",
+            """my\.centraluniversity\.ru/learn/courses/view/actual/(\d+)/themes/(\d+)/longreads/(\d+)""",
         )
         val match = longreadRegex.find(uri)
         if (match != null) {
-            val longreadId = match.groupValues[1].toIntOrNull()
-            if (longreadId != null) {
-                onOpenLongread?.invoke(longreadId)
+            val (courseId, themeId, longreadId) = match.destructured.let { (c, t, l) ->
+                Triple(c.toIntOrNull(), t.toIntOrNull(), l.toIntOrNull())
+            }
+            if (longreadId != null && courseId != null && themeId != null) {
+                onOpenLongread?.invoke(longreadId, courseId, themeId)
+                return true
             }
         }
-        // External links are handled by the UI layer via platform URL launcher
+        return false
     }
 
     private fun sortByDate(items: List<NotificationItem>) = items.sortedByDescending { it.createdAt }

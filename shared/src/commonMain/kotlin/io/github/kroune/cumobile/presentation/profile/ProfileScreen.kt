@@ -5,6 +5,7 @@ package io.github.kroune.cumobile.presentation.profile
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,7 +20,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -83,6 +88,7 @@ fun ProfileScreen(
             state.profile != null -> ProfileContent(
                 state = state,
                 onDeleteAvatar = { component.onIntent(ProfileComponent.Intent.DeleteAvatar) },
+                onCalendarIntent = { component.onIntent(it) },
             )
         }
     }
@@ -92,6 +98,7 @@ fun ProfileScreen(
 private fun ProfileContent(
     state: ProfileComponent.State,
     onDeleteAvatar: () -> Unit,
+    onCalendarIntent: (ProfileComponent.Intent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val profile = state.profile ?: return
@@ -145,6 +152,20 @@ private fun ProfileContent(
 
         // Info card
         InfoCard(state)
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Calendar section
+        CalendarSection(
+            state = state,
+            onUpdateUrl = { url ->
+                onCalendarIntent(ProfileComponent.Intent.UpdateCalendarUrl(url))
+            },
+            onSave = { onCalendarIntent(ProfileComponent.Intent.SaveCalendarUrl) },
+            onDisconnect = {
+                onCalendarIntent(ProfileComponent.Intent.DisconnectCalendar)
+            },
+        )
 
         Spacer(modifier = Modifier.height(24.dp))
     }
@@ -303,6 +324,85 @@ private fun InfoRowWithBadge(
                         .background(AppColors.Background, RoundedCornerShape(4.dp))
                         .padding(horizontal = 6.dp, vertical = 2.dp),
                 )
+            }
+        }
+    }
+}
+
+@Composable
+private fun CalendarSection(
+    state: ProfileComponent.State,
+    onUpdateUrl: (String) -> Unit,
+    onSave: () -> Unit,
+    onDisconnect: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(AppColors.Surface, RoundedCornerShape(12.dp))
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(
+            text = "Расписание (Яндекс Календарь)",
+            color = AppColors.TextPrimary,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.SemiBold,
+        )
+
+        if (state.isCalendarConnected) {
+            Text(
+                text = "Подключено",
+                color = AppColors.Accent,
+                fontSize = 12.sp,
+            )
+        }
+
+        OutlinedTextField(
+            value = state.calendarUrlInput,
+            onValueChange = onUpdateUrl,
+            label = { Text("ICS URL календаря") },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = AppColors.TextPrimary,
+                unfocusedTextColor = AppColors.TextPrimary,
+                focusedBorderColor = AppColors.Accent,
+                unfocusedBorderColor = AppColors.TextSecondary,
+                focusedLabelColor = AppColors.Accent,
+                unfocusedLabelColor = AppColors.TextSecondary,
+                cursorColor = AppColors.Accent,
+            ),
+        )
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Button(
+                onClick = onSave,
+                enabled = state.calendarUrlInput.isNotBlank(),
+                modifier = Modifier.weight(1f),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = AppColors.Accent,
+                ),
+                shape = RoundedCornerShape(8.dp),
+            ) {
+                Text(text = "Сохранить", color = AppColors.Background)
+            }
+
+            if (state.isCalendarConnected) {
+                Button(
+                    onClick = onDisconnect,
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = AppColors.Error,
+                    ),
+                    shape = RoundedCornerShape(8.dp),
+                ) {
+                    Text(text = "Отключить", color = AppColors.TextPrimary)
+                }
             }
         }
     }

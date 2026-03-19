@@ -125,7 +125,7 @@ Every screen has:
 2. Valid → `MainChild`; Invalid → `LoginChild` → user taps login → `WebViewLoginChild`
 3. WebView loads `https://my.centraluniversity.ru`
 4. On each page load, check cookies for `bff.cookie`
-5. Captured → save via `AuthRepository` → validate via `GET /hub/students/me` → `MainChild`
+5. Captured → save via `AuthRepository` → validate via `GET /student-hub/students/me` → `MainChild`
 6. Logout → clear cookie → back to `LoginChild`
 
 ---
@@ -238,6 +238,20 @@ All phases complete:
 - Phase 12: kotlinx-datetime migration
 - Content search in longreads: `LongreadComponent.State` has `isSearchVisible`, `searchQuery`, `searchMatchCount`, `currentMatchIndex`; `handleSearchIntent()` in DefaultLongreadComponent; `SearchBar`/`SearchInput`/`SearchNavigation`/`highlightMatches()` in LongreadScreen
 - In-app update checker: `UpdateChecker` (data/network/) checks GitHub releases API; `UpdateInfo`/`GithubRelease` (data/model/ReleaseInfo.kt); `MainComponent.updateInfo` + `dismissUpdate()`; `UpdateDialog` in MainScreen; `UpdateCheckerTest` unit tests
+- API endpoint centralization: all endpoint paths in `ApiEndpoints.kt` (data/network/); `hub/` → `student-hub/` migration
+- Edge-to-edge: `WindowInsets.statusBars` on main Column, `WindowInsets.navigationBars` on BottomNavBar, statusBars on DetailOverlay
+- MaterialTheme: `App()` wraps `RootScreen` in `MaterialTheme` with `isSystemInDarkTheme()` (dark/light color schemes in `Main.kt`)
+- Notification links: in-app longread navigation + external URLs via `LaunchedEffect` / `uriHandler`; `DefaultNotificationsComponent.onOpenLongread(longreadId, courseId, themeId)` wired from `DefaultMainComponent`; regex extracts all 3 IDs; `externalLinkToOpen` state field for external links
+- Debug logging: auth flow (cookie capture, validation, API response) logged via kotlin-logging
+- Bug fixes (2026-03-19):
+  - `isOverdue()` implemented with kotlinx-datetime (was always returning false)
+  - CoursePerformanceScreen uses `DetailTopBar` instead of wrong `TopBar`
+  - TasksScreen preserves existing data during pull-to-refresh
+  - CoursesScreen shows `EmptyContent` when no courses
+  - Files tab: `ConfirmDeleteDialog` for "Delete All" action
+  - Profile screen: calendar URL configuration section (`CalendarSection` composable, `CalendarRepository` injected into `DefaultProfileComponent`)
+  - Home screen: "Подключить в настройках профиля" is now a clickable link navigating to Profile (via `OpenProfile` intent)
+  - CoursesListContent refactored into smaller functions (`EditModeToggle`, `ActiveCourseItem`, `swapIds`)
 
 ---
 

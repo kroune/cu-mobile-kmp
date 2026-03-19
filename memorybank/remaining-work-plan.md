@@ -1,6 +1,6 @@
 # Remaining Work — CuMobile KMP
 
-> Last updated: 2026-03-18
+> Last updated: 2026-03-19
 
 ## Pending Features (by priority)
 
@@ -17,6 +17,11 @@
 - [ ] **Document scanner** — camera/gallery capture (expect/actual); multi-page with reorder; rotation/cropping; PDF generation (high complexity, deferred)
 - [ ] **Model package restructuring** — move `data/model/` to standalone `model/` package; rename `*Response` types
 
+### Known Remaining Issues
+- [ ] **Files tab: `onOpenFile` is a no-op** — needs expect/actual platform implementation (Android: `Intent.ACTION_VIEW` with FileProvider; iOS: UIDocumentInteractionController). Currently tapping a file does nothing.
+- [ ] **Light theme** — `AppColors` is hardcoded dark. `MaterialTheme` wrapper exists but all composables use `AppColors` directly. Needs migration to `MaterialTheme.colorScheme`.
+- [ ] **`@Preview` functions missing** — no screens have `@Preview` composables (required by CLAUDE.md)
+
 ## Already Done (for reference)
 - ✅ Pull-to-refresh on all screens (Phase 11)
 - ✅ Dark theme refinement (Phase 11)
@@ -25,3 +30,4 @@
 - ✅ File rename templates (DataStore + settings UI)
 - ✅ Schedule/Calendar integration (ICS parser + day view on Home)
 - ✅ kotlinx-datetime migration
+- ✅ Bug fix audit (2026-03-19): isOverdue, notification links, calendar entry point, performance TopBar, pull-to-refresh data loss, empty states, delete confirmations

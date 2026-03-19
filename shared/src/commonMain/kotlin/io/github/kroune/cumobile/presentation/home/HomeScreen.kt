@@ -352,18 +352,21 @@ private fun ConnectCalendarSection(
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Text(
             text = "Календарь не подключен",
             color = AppColors.TextSecondary,
             fontSize = 14.sp,
         )
-        TextButton(onClick = {
-            // For now, hardcode a prompt or simple connect logic
-            // In real app, this might open a dialog
-            onIntent(HomeComponent.Intent.ConnectCalendar("https://example.com/calendar.ics"))
-        }) {
-            Text("Подключить Yandex.Календарь", color = AppColors.Accent)
+        TextButton(
+            onClick = { onIntent(HomeComponent.Intent.OpenProfile) },
+        ) {
+            Text(
+                text = "Подключить в настройках профиля",
+                color = AppColors.Accent,
+                fontSize = 13.sp,
+            )
         }
     }
 }

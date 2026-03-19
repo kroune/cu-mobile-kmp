@@ -4,9 +4,12 @@ import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
+import io.github.kroune.cumobile.domain.repository.CalendarRepository
 import io.github.kroune.cumobile.domain.repository.ProfileRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 /**
@@ -18,6 +21,7 @@ import kotlinx.coroutines.launch
 class DefaultProfileComponent(
     componentContext: ComponentContext,
     private val profileRepository: ProfileRepository,
+    private val calendarRepository: CalendarRepository? = null,
     private val onBack: () -> Unit,
     private val onLogout: () -> Unit,
 ) : ProfileComponent,
@@ -29,6 +33,7 @@ class DefaultProfileComponent(
 
     init {
         loadProfile()
+        observeCalendarUrl()
     }
 
     override fun onIntent(intent: ProfileComponent.Intent) {
@@ -37,6 +42,37 @@ class DefaultProfileComponent(
             ProfileComponent.Intent.Refresh -> loadProfile()
             ProfileComponent.Intent.DeleteAvatar -> deleteAvatar()
             ProfileComponent.Intent.Logout -> onLogout()
+            is ProfileComponent.Intent.UpdateCalendarUrl -> {
+                _state.value = _state.value.copy(calendarUrlInput = intent.url)
+            }
+            ProfileComponent.Intent.SaveCalendarUrl -> saveCalendarUrl()
+            ProfileComponent.Intent.DisconnectCalendar -> disconnectCalendar()
+        }
+    }
+
+    private fun observeCalendarUrl() {
+        calendarRepository?.calendarUrlFlow
+            ?.onEach { url ->
+                _state.value = _state.value.copy(
+                    calendarUrl = url,
+                    calendarUrlInput = url.orEmpty(),
+                )
+            }
+            ?.launchIn(scope)
+    }
+
+    private fun saveCalendarUrl() {
+        val url = _state.value.calendarUrlInput.trim()
+        if (url.isBlank()) return
+        scope.launch {
+            calendarRepository?.saveCalendarUrl(url)
+        }
+    }
+
+    private fun disconnectCalendar() {
+        scope.launch {
+            calendarRepository?.saveCalendarUrl(null)
+            _state.value = _state.value.copy(calendarUrlInput = "")
         }
     }
 

@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import io.github.kroune.cumobile.data.model.Course
 import io.github.kroune.cumobile.presentation.common.AppColors
+import io.github.kroune.cumobile.presentation.common.EmptyContent
 import io.github.kroune.cumobile.presentation.common.ErrorContent
 import io.github.kroune.cumobile.presentation.common.LoadingContent
 import io.github.kroune.cumobile.presentation.common.SegmentedControl
@@ -106,57 +107,33 @@ private fun CoursesListContent(
     val active = activeCourses(state.courses, state.courseOrder)
     val archived = archivedCourses(state.courses, state.courseOrder)
 
+    if (active.isEmpty() && archived.isEmpty()) {
+        EmptyContent(text = "Нет курсов")
+        return
+    }
+
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(vertical = 4.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
-            ) {
-                TextButton(
+        if (active.isNotEmpty()) {
+            item {
+                EditModeToggle(
+                    isEditMode = state.isEditMode,
                     onClick = {
                         component.onIntent(CoursesComponent.Intent.ToggleEditMode)
                     },
-                ) {
-                    Text(
-                        text = if (state.isEditMode) "Готово" else "Изменить",
-                        color = AppColors.Accent,
-                        fontSize = 14.sp,
-                    )
-                }
+                )
             }
         }
 
         items(items = active, key = { it.id }) { course ->
-            CourseListTile(
+            ActiveCourseItem(
                 course = course,
-                isEditMode = state.isEditMode,
-                onMoveUp = {
-                    val index = active.indexOf(course)
-                    if (index > 0) {
-                        val newOrder = active.map { it.id }.toMutableList()
-                        val temp = newOrder[index]
-                        newOrder[index] = newOrder[index - 1]
-                        newOrder[index - 1] = temp
-                        component.onIntent(CoursesComponent.Intent.ReorderCourses(newOrder))
-                    }
-                },
-                onMoveDown = {
-                    val index = active.indexOf(course)
-                    if (index < active.size - 1) {
-                        val newOrder = active.map { it.id }.toMutableList()
-                        val temp = newOrder[index]
-                        newOrder[index] = newOrder[index + 1]
-                        newOrder[index + 1] = temp
-                        component.onIntent(CoursesComponent.Intent.ReorderCourses(newOrder))
-                    }
-                },
-                onClick = {
-                    component.onIntent(CoursesComponent.Intent.OpenCourse(course.id))
-                },
+                active = active,
+                state = state,
+                component = component,
             )
         }
 
@@ -185,6 +162,63 @@ private fun CoursesListContent(
             }
         }
     }
+}
+
+@Composable
+private fun EditModeToggle(
+    isEditMode: Boolean,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.End,
+    ) {
+        TextButton(onClick = onClick) {
+            Text(
+                text = if (isEditMode) "Готово" else "Изменить",
+                color = AppColors.Accent,
+                fontSize = 14.sp,
+            )
+        }
+    }
+}
+
+@Composable
+private fun ActiveCourseItem(
+    course: Course,
+    active: List<Course>,
+    state: CoursesComponent.State,
+    component: CoursesComponent,
+) {
+    CourseListTile(
+        course = course,
+        isEditMode = state.isEditMode,
+        onMoveUp = {
+            val index = active.indexOf(course)
+            if (index > 0) {
+                val newOrder = swapIds(active, index, index - 1)
+                component.onIntent(CoursesComponent.Intent.ReorderCourses(newOrder))
+            }
+        },
+        onMoveDown = {
+            val index = active.indexOf(course)
+            if (index < active.size - 1) {
+                val newOrder = swapIds(active, index, index + 1)
+                component.onIntent(CoursesComponent.Intent.ReorderCourses(newOrder))
+            }
+        },
+        onClick = {
+            component.onIntent(CoursesComponent.Intent.OpenCourse(course.id))
+        },
+    )
+}
+
+private fun swapIds(courses: List<Course>, from: Int, to: Int): List<Int> {
+    val ids = courses.map { it.id }.toMutableList()
+    val temp = ids[from]
+    ids[from] = ids[to]
+    ids[to] = temp
+    return ids
 }
 
 /**

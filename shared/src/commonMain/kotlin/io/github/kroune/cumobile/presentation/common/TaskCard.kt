@@ -25,6 +25,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.kroune.cumobile.data.model.StudentTask
 import io.github.kroune.cumobile.data.model.TaskState
+import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toInstant
+
+private val logger = KotlinLogging.logger {}
 
 /**
  * Compact task card for the deadlines section on the Home screen.
@@ -158,10 +164,28 @@ private fun taskStateBadgeLabel(
 /**
  * Checks if an ISO 8601 deadline string is in the past.
  *
- * Uses simple string comparison which works for ISO 8601 format
- * since it sorts lexicographically.
+ * Parses the deadline and compares it with the current time
+ * using kotlinx-datetime for cross-platform compatibility.
  */
 internal fun isOverdue(deadline: String?): Boolean {
     if (deadline == null) return false
-    return false
+    return try {
+        val normalized = if (deadline.endsWith("Z")) {
+            deadline.removeSuffix("Z")
+        } else {
+            deadline
+        }
+        val isoString = if (!normalized.contains("T")) {
+            "${normalized}T23:59:59"
+        } else {
+            normalized
+        }
+        val deadlineDateTime = LocalDateTime.parse(isoString)
+        val deadlineInstant = deadlineDateTime.toInstant(TimeZone.currentSystemDefault())
+        val now = kotlin.time.Clock.System.now()
+        deadlineInstant < now
+    } catch (e: Exception) {
+        logger.error(e) { "Failed to parse deadline for overdue check: $deadline" }
+        false
+    }
 }

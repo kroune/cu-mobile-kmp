@@ -22,6 +22,10 @@ interface ProfileComponent {
         val isLoading: Boolean = false,
         val error: String? = null,
         val isDeletingAvatar: Boolean = false,
+        /** Current calendar ICS URL (null if not connected). */
+        val calendarUrl: String? = null,
+        /** Input text for calendar URL editing. */
+        val calendarUrlInput: String = "",
     ) {
         /** User initials for avatar placeholder (first char of first + last name). */
         val initials: String
@@ -58,6 +62,10 @@ interface ProfileComponent {
                 return p.emails.filter { it.value != uni }
             }
 
+        /** Whether a calendar URL is currently saved. */
+        val isCalendarConnected: Boolean
+            get() = !calendarUrl.isNullOrBlank()
+
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (other !is State) return false
@@ -66,7 +74,9 @@ interface ProfileComponent {
                 avatarBytes.contentEquals(other.avatarBytes) &&
                 isLoading == other.isLoading &&
                 error == other.error &&
-                isDeletingAvatar == other.isDeletingAvatar
+                isDeletingAvatar == other.isDeletingAvatar &&
+                calendarUrl == other.calendarUrl &&
+                calendarUrlInput == other.calendarUrlInput
         }
 
         override fun hashCode(): Int {
@@ -76,6 +86,8 @@ interface ProfileComponent {
             result = 31 * result + isLoading.hashCode()
             result = 31 * result + error.hashCode()
             result = 31 * result + isDeletingAvatar.hashCode()
+            result = 31 * result + calendarUrl.hashCode()
+            result = 31 * result + calendarUrlInput.hashCode()
             return result
         }
     }
@@ -88,5 +100,16 @@ interface ProfileComponent {
         data object DeleteAvatar : Intent
 
         data object Logout : Intent
+
+        /** Update the calendar URL input field. */
+        data class UpdateCalendarUrl(
+            val url: String,
+        ) : Intent
+
+        /** Save the current calendar URL input. */
+        data object SaveCalendarUrl : Intent
+
+        /** Disconnect (clear) the calendar. */
+        data object DisconnectCalendar : Intent
     }
 }

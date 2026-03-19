@@ -23,6 +23,8 @@ interface NotificationsComponent {
         val error: String? = null,
         /** Currently selected tab index: 0 = Education, 1 = Other. */
         val selectedTab: Int = 0,
+        /** URI that should be opened externally (set by OpenLink, consumed by UI). */
+        val externalLinkToOpen: String? = null,
     ) {
         /** Notifications for the currently selected tab. */
         val currentNotifications: List<NotificationItem>
@@ -41,5 +43,8 @@ interface NotificationsComponent {
         data class OpenLink(
             val uri: String,
         ) : Intent
+
+        /** Acknowledge that the external link has been opened. */
+        data object ExternalLinkOpened : Intent
     }
 }

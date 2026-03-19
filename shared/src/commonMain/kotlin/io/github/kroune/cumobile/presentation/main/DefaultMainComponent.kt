@@ -115,6 +115,7 @@ class DefaultMainComponent(
                     calendarRepository = mainDependencies.calendarRepository,
                     onOpenTask = ::handleOpenTask,
                     onOpenCourse = ::navigateToCourseDetail,
+                    onOpenProfile = ::navigateToProfile,
                 ),
             )
             TabConfig.Tasks -> MainComponent.TabChild.TasksChild(
@@ -255,6 +256,7 @@ class DefaultMainComponent(
                     DefaultProfileComponent(
                         componentContext = childContext,
                         profileRepository = mainDependencies.profileRepository,
+                        calendarRepository = mainDependencies.calendarRepository,
                         onBack = ::navigateDetailBack,
                         onLogout = onLogout,
                     ),
@@ -265,6 +267,9 @@ class DefaultMainComponent(
                         componentContext = childContext,
                         notificationRepository = mainDependencies.notificationRepository,
                         onBack = ::navigateDetailBack,
+                        onOpenLongread = { longreadId, courseId, themeId ->
+                            navigateToLongread(longreadId, courseId, themeId)
+                        },
                     ),
                 )
             DetailConfig.FileRenameSettings ->

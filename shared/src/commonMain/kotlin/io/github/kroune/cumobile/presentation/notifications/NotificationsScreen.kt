@@ -23,10 +23,12 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
@@ -58,6 +60,23 @@ fun NotificationsScreen(
     modifier: Modifier = Modifier,
 ) {
     val state by component.state.subscribeAsState()
+    val uriHandler = LocalUriHandler.current
+
+    // Open external links when the component signals one
+    val externalLink = state.externalLinkToOpen
+    LaunchedEffect(externalLink) {
+        if (externalLink != null) {
+            val fullUrl = when {
+                externalLink.startsWith("http://") || externalLink.startsWith("https://") ->
+                    externalLink
+                externalLink.startsWith("/") ->
+                    "https://my.centraluniversity.ru$externalLink"
+                else -> "https://my.centraluniversity.ru/$externalLink"
+            }
+            uriHandler.openUri(fullUrl)
+            component.onIntent(NotificationsComponent.Intent.ExternalLinkOpened)
+        }
+    }
 
     PullToRefreshBox(
         isRefreshing = state.isLoading,
@@ -94,8 +113,8 @@ fun NotificationsScreen(
                 )
                 else -> NotificationsList(
                     notifications = state.currentNotifications,
-                    onLinkClick = {
-                        component.onIntent(NotificationsComponent.Intent.OpenLink(it))
+                    onLinkClick = { uri ->
+                        component.onIntent(NotificationsComponent.Intent.OpenLink(uri))
                     },
                 )
             }

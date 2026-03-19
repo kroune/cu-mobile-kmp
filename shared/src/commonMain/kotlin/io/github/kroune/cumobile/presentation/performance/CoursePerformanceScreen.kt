@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -29,10 +28,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import io.github.kroune.cumobile.presentation.common.AppColors
+import io.github.kroune.cumobile.presentation.common.DetailTopBar
 import io.github.kroune.cumobile.presentation.common.ErrorContent
 import io.github.kroune.cumobile.presentation.common.LoadingContent
 import io.github.kroune.cumobile.presentation.common.SegmentedControl
-import io.github.kroune.cumobile.presentation.common.TopBar
 import io.github.kroune.cumobile.presentation.common.gradeColor
 import io.github.kroune.cumobile.presentation.common.gradeDescription
 
@@ -59,16 +58,10 @@ fun CoursePerformanceScreen(
         Column(
             modifier = Modifier.fillMaxSize(),
         ) {
-            TopBar(
+            DetailTopBar(
                 title = "Успеваемость",
-                profileInitials = "",
-                lateDaysBalance = null,
-                onNotificationsClick = {},
-                onProfileClick = {},
+                onBack = onBack,
             )
-            TextButton(onClick = onBack) {
-                Text("← Назад", color = AppColors.Accent)
-            }
 
             when {
                 state.isLoading && state.exercises.isEmpty() -> LoadingContent()

@@ -34,6 +34,7 @@ class DefaultHomeComponent(
     private val calendarRepository: CalendarRepository,
     private val onOpenTask: (StudentTask) -> Unit,
     private val onOpenCourse: (Int) -> Unit,
+    private val onOpenProfile: () -> Unit = {},
 ) : HomeComponent,
     ComponentContext by componentContext {
     private val scope = coroutineScope(
@@ -63,6 +64,7 @@ class DefaultHomeComponent(
             HomeComponent.Intent.Today -> setToday()
             is HomeComponent.Intent.ConnectCalendar -> connectCalendar(intent.url)
             HomeComponent.Intent.DisconnectCalendar -> disconnectCalendar()
+            HomeComponent.Intent.OpenProfile -> onOpenProfile()
         }
     }
 
