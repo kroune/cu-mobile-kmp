@@ -1,6 +1,8 @@
 package io.github.kroune.cumobile.di
 
+import io.github.kroune.cumobile.data.local.FileOpener
 import io.github.kroune.cumobile.data.local.FileStorage
+import io.github.kroune.cumobile.data.local.IosFileOpener
 import io.github.kroune.cumobile.data.local.IosFileStorage
 import io.github.kroune.cumobile.data.local.createDataStore
 import io.github.kroune.cumobile.data.local.dataStorePath
@@ -15,4 +17,5 @@ fun iosKoinModule(): Module =
     module {
         single { createDataStore { dataStorePath() } }
         single<FileStorage> { IosFileStorage() }
+        single<FileOpener> { IosFileOpener() }
     }

@@ -252,6 +252,8 @@ All phases complete:
   - Profile screen: calendar URL configuration section (`CalendarSection` composable, `CalendarRepository` injected into `DefaultProfileComponent`)
   - Home screen: "Подключить в настройках профиля" is now a clickable link navigating to Profile (via `OpenProfile` intent)
   - CoursesListContent refactored into smaller functions (`EditModeToggle`, `ActiveCourseItem`, `swapIds`)
+  - File opening: `FileOpener` interface in commonMain; `AndroidFileOpener` (FileProvider + Intent.ACTION_VIEW) in androidMain; `IosFileOpener` stub in iosMain; registered in Koin platform modules; wired through `MainDependencies.fileOpener`; FileProvider configured in AndroidManifest.xml with `file_paths.xml`
+  - Notification links: relative paths (e.g. `/schedule`) now expanded with `https://my.centraluniversity.ru` base URL
 
 ---
 

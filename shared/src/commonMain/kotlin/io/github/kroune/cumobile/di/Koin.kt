@@ -3,6 +3,7 @@ package io.github.kroune.cumobile.di
 import com.arkivanov.decompose.ComponentContext
 import io.github.kroune.cumobile.data.local.AuthLocalDataSource
 import io.github.kroune.cumobile.data.local.CalendarLocalDataSource
+import io.github.kroune.cumobile.data.local.FileOpener
 import io.github.kroune.cumobile.data.local.CourseLocalDataSource
 import io.github.kroune.cumobile.data.local.FileRenameLocalDataSource
 import io.github.kroune.cumobile.data.network.ContentApiService
@@ -111,6 +112,7 @@ fun createRootComponent(componentContext: ComponentContext): DefaultRootComponen
         fileRepository = koin.get<FileRepository>(),
         fileRenameRepository = koin.get<FileRenameRepository>(),
         calendarRepository = koin.get<CalendarRepository>(),
+        fileOpener = koin.get<FileOpener>(),
         updateChecker = koin.get<UpdateChecker>(),
     )
     return DefaultRootComponent(

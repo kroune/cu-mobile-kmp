@@ -1,5 +1,6 @@
 package io.github.kroune.cumobile.presentation.main
 
+import io.github.kroune.cumobile.data.local.FileOpener
 import io.github.kroune.cumobile.data.network.UpdateChecker
 import io.github.kroune.cumobile.domain.repository.CalendarRepository
 import io.github.kroune.cumobile.domain.repository.ContentRepository
@@ -27,5 +28,6 @@ data class MainDependencies(
     val fileRepository: FileRepository,
     val fileRenameRepository: FileRenameRepository,
     val calendarRepository: CalendarRepository,
+    val fileOpener: FileOpener,
     val updateChecker: UpdateChecker,
 )

@@ -138,6 +138,9 @@ class DefaultMainComponent(
                 DefaultFilesComponent(
                     componentContext = childContext,
                     fileRepository = mainDependencies.fileRepository,
+                    onOpenFile = { path ->
+                        mainDependencies.fileOpener.openFile(path)
+                    },
                     onOpenRenameSettings = ::navigateToFileRenameSettings,
                 ),
             )

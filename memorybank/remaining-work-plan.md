@@ -18,9 +18,9 @@
 - [ ] **Model package restructuring** — move `data/model/` to standalone `model/` package; rename `*Response` types
 
 ### Known Remaining Issues
-- [ ] **Files tab: `onOpenFile` is a no-op** — needs expect/actual platform implementation (Android: `Intent.ACTION_VIEW` with FileProvider; iOS: UIDocumentInteractionController). Currently tapping a file does nothing.
-- [ ] **Light theme** — `AppColors` is hardcoded dark. `MaterialTheme` wrapper exists but all composables use `AppColors` directly. Needs migration to `MaterialTheme.colorScheme`.
-- [ ] **`@Preview` functions missing** — no screens have `@Preview` composables (required by CLAUDE.md)
+- [x] **Files tab: `onOpenFile`** — DONE: `FileOpener` interface + `AndroidFileOpener` (FileProvider + Intent.ACTION_VIEW); iOS stub (`IosFileOpener`). FileProvider configured in AndroidManifest with `file_paths.xml`.
+- [ ] **Light theme** — `AppColors` is hardcoded dark. All 15+ screen files use `AppColors` directly. Migration to `CompositionLocal`-based dynamic colors requires touching every screen. **Start in new session (large feature, >15 files).**
+- [ ] **`@Preview` functions missing** — 10+ screens need preview composables with mock component implementations. **Start in new session (large feature, >10 files).**
 
 ## Already Done (for reference)
 - ✅ Pull-to-refresh on all screens (Phase 11)
