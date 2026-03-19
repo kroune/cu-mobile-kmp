@@ -35,7 +35,7 @@ internal class CourseApiService(
      */
     suspend fun fetchCourses(cookie: String): List<Course>? =
         try {
-            val response = httpClient.get("micro-lms/courses/student?limit=$MaxListLimit") {
+            val response = httpClient.get("${ApiEndpoints.COURSES_STUDENT}?limit=$MaxListLimit") {
                 header("Cookie", cookieHeader(cookie))
             }
             if (response.status != HttpStatusCode.OK) {
@@ -66,7 +66,7 @@ internal class CourseApiService(
         courseId: Int,
     ): CourseOverview? =
         safeApiCall(logger, "fetch course overview for courseId=$courseId") {
-            httpClient.get("micro-lms/courses/$courseId/overview") {
+            httpClient.get(ApiEndpoints.courseOverview(courseId.toString())) {
                 header("Cookie", cookieHeader(cookie))
             }
         }

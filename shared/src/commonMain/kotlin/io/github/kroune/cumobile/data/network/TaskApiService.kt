@@ -39,7 +39,7 @@ internal class TaskApiService(
     ): List<StudentTask>? =
         safeApiCall(logger, "fetch tasks") {
             val queryString = states.joinToString("&") { "state=$it" }
-            httpClient.get("micro-lms/tasks/student?$queryString") {
+            httpClient.get("${ApiEndpoints.TASKS_STUDENT}?$queryString") {
                 header("Cookie", cookieHeader(cookie))
             }
         }
@@ -50,7 +50,7 @@ internal class TaskApiService(
         taskId: Int,
     ): TaskDetails? =
         safeApiCall(logger, "fetch task details for taskId=$taskId") {
-            httpClient.get("micro-lms/tasks/$taskId") {
+            httpClient.get(ApiEndpoints.taskById(taskId.toString())) {
                 header("Cookie", cookieHeader(cookie))
             }
         }
@@ -61,7 +61,7 @@ internal class TaskApiService(
         taskId: Int,
     ): List<TaskEvent>? =
         safeApiCall(logger, "fetch task events for taskId=$taskId") {
-            httpClient.get("micro-lms/tasks/$taskId/events") {
+            httpClient.get(ApiEndpoints.taskEvents(taskId.toString())) {
                 header("Cookie", cookieHeader(cookie))
             }
         }
@@ -72,7 +72,7 @@ internal class TaskApiService(
         taskId: Int,
     ): List<TaskComment>? =
         safeApiCall(logger, "fetch task comments for taskId=$taskId") {
-            httpClient.get("micro-lms/tasks/$taskId/comments") {
+            httpClient.get(ApiEndpoints.taskComments(taskId.toString())) {
                 header("Cookie", cookieHeader(cookie))
             }
         }
@@ -83,7 +83,7 @@ internal class TaskApiService(
         taskId: Int,
     ): Boolean =
         safeApiAction(logger, "start task taskId=$taskId") {
-            httpClient.put("micro-lms/tasks/$taskId/start") {
+            httpClient.put(ApiEndpoints.taskStart(taskId.toString())) {
                 header("Cookie", cookieHeader(cookie))
                 contentType(ContentType.Application.Json)
             }
@@ -102,7 +102,7 @@ internal class TaskApiService(
         attachments: List<MaterialAttachment> = emptyList(),
     ): Boolean =
         safeApiAction(logger, "submit task taskId=$taskId") {
-            httpClient.put("micro-lms/tasks/$taskId/submit") {
+            httpClient.put(ApiEndpoints.taskSubmit(taskId.toString())) {
                 header("Cookie", cookieHeader(cookie))
                 contentType(ContentType.Application.Json)
                 setBody(
@@ -125,7 +125,7 @@ internal class TaskApiService(
         lateDays: Int,
     ): Boolean =
         safeApiAction(logger, "prolong late days for taskId=$taskId") {
-            httpClient.put("micro-lms/tasks/$taskId/late-days-prolong") {
+            httpClient.put(ApiEndpoints.taskLateDaysProlong(taskId.toString())) {
                 header("Cookie", cookieHeader(cookie))
                 contentType(ContentType.Application.Json)
                 setBody(mapOf("lateDays" to lateDays))
@@ -138,7 +138,7 @@ internal class TaskApiService(
         taskId: Int,
     ): Boolean =
         safeApiAction(logger, "cancel late days for taskId=$taskId") {
-            httpClient.put("micro-lms/tasks/$taskId/late-days-cancel") {
+            httpClient.put(ApiEndpoints.taskLateDaysCancel(taskId.toString())) {
                 header("Cookie", cookieHeader(cookie))
                 contentType(ContentType.Application.Json)
             }
@@ -156,7 +156,7 @@ internal class TaskApiService(
         attachments: List<MaterialAttachment> = emptyList(),
     ): Int? =
         try {
-            val response = httpClient.post("micro-lms/comments") {
+            val response = httpClient.post(ApiEndpoints.COMMENTS) {
                 header("Cookie", cookieHeader(cookie))
                 contentType(ContentType.Application.Json)
                 setBody(

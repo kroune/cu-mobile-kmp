@@ -5,9 +5,12 @@ import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.domain.repository.AuthRepository
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+
+private val logger = KotlinLogging.logger {}
 
 class DefaultWebViewLoginComponent(
     componentContext: ComponentContext,
@@ -30,10 +33,14 @@ class DefaultWebViewLoginComponent(
 
     private fun handleCookieCaptured(cookie: String) {
         if (_state.value.isLoading) return
+        logger.info { "Cookie captured, length=${cookie.length}" }
         _state.value = _state.value.copy(isLoading = true, error = null)
         scope.launch {
+            logger.debug { "Saving cookie..." }
             authRepository.saveCookie(cookie)
+            logger.debug { "Cookie saved, validating..." }
             val isValid = authRepository.validateCookie()
+            logger.info { "Cookie validation result: $isValid" }
             if (isValid) {
                 onLoginSuccess()
             } else {

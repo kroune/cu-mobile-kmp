@@ -11,6 +11,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 import io.github.kroune.cumobile.data.network.BaseDomain
 import io.github.kroune.cumobile.data.network.TargetCookieName
+import io.github.oshai.kotlinlogging.KotlinLogging
+
+private val logger = KotlinLogging.logger {}
 
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
@@ -68,7 +71,14 @@ private fun tryCaptureCookie(
     captureState: CookieCaptureState,
 ) {
     if (captureState.isCaptured) return
-    val cookie = extractBffCookie() ?: return
+    val allCookies = CookieManager.getInstance().getCookie(BaseDomain)
+    logger.debug { "All cookies for $BaseDomain: $allCookies" }
+    val cookie = extractBffCookie()
+    if (cookie == null) {
+        logger.debug { "bff.cookie not found yet" }
+        return
+    }
+    logger.info { "bff.cookie captured, length=${cookie.length}, prefix=${cookie.take(20)}..." }
     captureState.isCaptured = true
     onCookieCaptured(cookie)
 }

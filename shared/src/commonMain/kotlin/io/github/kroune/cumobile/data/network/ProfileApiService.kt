@@ -19,18 +19,18 @@ private val logger = KotlinLogging.logger {}
 internal class ProfileApiService(
     private val httpClient: HttpClient,
 ) {
-    /** GET /hub/students/me → [StudentProfile] */
+    /** GET /student-hub/students/me → [StudentProfile] */
     suspend fun fetchProfile(cookie: String): StudentProfile? =
         safeApiCall(logger, "fetch profile") {
-            httpClient.get("hub/students/me") {
+            httpClient.get(ApiEndpoints.PROFILE_ME) {
                 header("Cookie", cookieHeader(cookie))
             }
         }
 
-    /** GET /hub/avatars/me → avatar image bytes. */
+    /** GET /student-hub/avatars/me → avatar image bytes. */
     suspend fun fetchAvatar(cookie: String): ByteArray? =
         try {
-            val response = httpClient.get("hub/avatars/me") {
+            val response = httpClient.get(ApiEndpoints.AVATAR_ME) {
                 header("Cookie", cookieHeader(cookie))
             }
             if (response.status == HttpStatusCode.OK) {
@@ -46,10 +46,10 @@ internal class ProfileApiService(
             null
         }
 
-    /** DELETE /hub/avatars/me */
+    /** DELETE /student-hub/avatars/me */
     suspend fun deleteAvatar(cookie: String): Boolean =
         safeApiAction(logger, "delete avatar") {
-            httpClient.delete("hub/avatars/me") {
+            httpClient.delete(ApiEndpoints.AVATAR_ME) {
                 header("Cookie", cookieHeader(cookie))
             }
         }
@@ -57,7 +57,7 @@ internal class ProfileApiService(
     /** GET /micro-lms/students/me → [StudentLmsProfile] */
     suspend fun fetchLmsProfile(cookie: String): StudentLmsProfile? =
         safeApiCall(logger, "fetch LMS profile") {
-            httpClient.get("micro-lms/students/me") {
+            httpClient.get(ApiEndpoints.LMS_PROFILE_ME) {
                 header("Cookie", cookieHeader(cookie))
             }
         }

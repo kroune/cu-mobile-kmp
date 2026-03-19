@@ -20,7 +20,7 @@ internal class PerformanceApiService(
     /** GET /micro-lms/performance/student */
     suspend fun fetchPerformance(cookie: String): StudentPerformanceResponse? =
         safeApiCall(logger, "fetch performance") {
-            httpClient.get("micro-lms/performance/student") {
+            httpClient.get(ApiEndpoints.PERFORMANCE_STUDENT) {
                 header("Cookie", cookieHeader(cookie))
             }
         }
@@ -31,7 +31,7 @@ internal class PerformanceApiService(
         courseId: Int,
     ): CourseExercisesResponse? =
         safeApiCall(logger, "fetch course exercises for courseId=$courseId") {
-            httpClient.get("micro-lms/courses/$courseId/exercises") {
+            httpClient.get(ApiEndpoints.courseExercises(courseId.toString())) {
                 header("Cookie", cookieHeader(cookie))
             }
         }
@@ -42,7 +42,7 @@ internal class PerformanceApiService(
         courseId: Int,
     ): CourseStudentPerformanceResponse? =
         safeApiCall(logger, "fetch course performance for courseId=$courseId") {
-            httpClient.get("micro-lms/courses/$courseId/student-performance") {
+            httpClient.get(ApiEndpoints.coursePerformance(courseId.toString())) {
                 header("Cookie", cookieHeader(cookie))
             }
         }
@@ -50,7 +50,7 @@ internal class PerformanceApiService(
     /** GET /micro-lms/gradebook */
     suspend fun fetchGradebook(cookie: String): GradebookResponse? =
         safeApiCall(logger, "fetch gradebook") {
-            httpClient.get("micro-lms/gradebook") {
+            httpClient.get(ApiEndpoints.GRADEBOOK) {
                 header("Cookie", cookieHeader(cookie))
             }
         }

@@ -29,7 +29,7 @@ internal class ContentApiService(
         longreadId: Int,
     ): List<LongreadMaterial>? =
         safeApiCall(logger, "fetch longread materials for longreadId=$longreadId") {
-            val url = "micro-lms/longreads/$longreadId/materials?limit=$MaxListLimit"
+            val url = "${ApiEndpoints.longreadMaterials(longreadId.toString())}?limit=$MaxListLimit"
             httpClient.get(url) {
                 header("Cookie", cookieHeader(cookie))
             }
@@ -41,7 +41,7 @@ internal class ContentApiService(
         materialId: Int,
     ): LongreadMaterial? =
         safeApiCall(logger, "fetch material materialId=$materialId") {
-            httpClient.get("micro-lms/materials/$materialId") {
+            httpClient.get(ApiEndpoints.material(materialId.toString())) {
                 header("Cookie", cookieHeader(cookie))
             }
         }
@@ -56,7 +56,7 @@ internal class ContentApiService(
         version: String,
     ): String? =
         try {
-            val url = "micro-lms/content/download-link" +
+            val url = ApiEndpoints.CONTENT_DOWNLOAD_LINK +
                 "?filename=${filename.encodeUrlParam()}&version=$version"
             val response = httpClient.get(url) {
                 header("Cookie", cookieHeader(cookie))
@@ -86,7 +86,7 @@ internal class ContentApiService(
         contentType: String,
     ): UploadLinkData? =
         safeApiCall(logger, "get upload link for filename=$filename") {
-            val url = "micro-lms/content/upload-link" +
+            val url = ApiEndpoints.CONTENT_UPLOAD_LINK +
                 "?directory=${directory.encodeUrlParam()}" +
                 "&filename=${filename.encodeUrlParam()}" +
                 "&contentType=${contentType.encodeUrlParam()}"

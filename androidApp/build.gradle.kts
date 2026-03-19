@@ -102,6 +102,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.kotlin.logging)
     implementation(projects.shared)
     implementation(libs.androidx.activity.compose)
     implementation(libs.compose.ui)

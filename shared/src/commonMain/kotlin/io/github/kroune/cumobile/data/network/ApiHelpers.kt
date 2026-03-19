@@ -3,6 +3,7 @@ package io.github.kroune.cumobile.data.network
 import io.github.oshai.kotlinlogging.KLogger
 import io.ktor.client.call.body
 import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.encodeURLQueryComponent
 import kotlin.coroutines.cancellation.CancellationException
@@ -42,7 +43,12 @@ internal suspend inline fun <reified T> safeApiCall(
         if (response.status == HttpStatusCode.OK) {
             response.body<T>()
         } else {
-            logger.warn { "$description returned ${response.status}" }
+            val body = try {
+                response.bodyAsText().take(500)
+            } catch (_: Exception) {
+                "<unable to read body>"
+            }
+            logger.warn { "$description returned ${response.status}, body: $body" }
             null
         }
     } catch (e: CancellationException) {
