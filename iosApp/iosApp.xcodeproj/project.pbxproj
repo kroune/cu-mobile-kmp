@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		5A1E0F0F68067A7F46BE5BF4 /* kmp-template.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = kmp-template.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		5A1E0F0F68067A7F46BE5BF4 /* ЦУ.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ЦУ.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -59,7 +59,7 @@
 		7BAAE6E0C5C9FC8A40848001 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				5A1E0F0F68067A7F46BE5BF4 /* kmp-template.app */,
+				5A1E0F0F68067A7F46BE5BF4 /* ЦУ.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -87,7 +87,7 @@
 			packageProductDependencies = (
 			);
 			productName = iosApp;
-			productReference = 5A1E0F0F68067A7F46BE5BF4 /* kmp-template.app */;
+			productReference = 5A1E0F0F68067A7F46BE5BF4 /* ЦУ.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */

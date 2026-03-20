@@ -12,14 +12,14 @@ val jdkVersion =
         .toInt()
 
 android {
-    namespace = "io.github.kroune.cumobile"
+    namespace = "com.thirdparty.cumobile"
     compileSdk =
         libs.versions.android.max.sdk
             .get()
             .toInt()
 
     defaultConfig {
-        applicationId = "io.github.kroune.cumobile"
+        applicationId = "com.thirdparty.cumobile"
         minSdk =
             libs.versions.android.min.sdk
                 .get()

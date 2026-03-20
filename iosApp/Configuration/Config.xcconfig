@@ -1,7 +1,7 @@
 TEAM_ID=
 
-PRODUCT_NAME=kmp-template
-PRODUCT_BUNDLE_IDENTIFIER=com.kmptemplate.app.kmp-template$(TEAM_ID)
+PRODUCT_NAME=ЦУ
+PRODUCT_BUNDLE_IDENTIFIER=ru.spacedreamer.centraluniversity
 
 CURRENT_PROJECT_VERSION=1
 MARKETING_VERSION=1.0

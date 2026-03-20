@@ -4,5 +4,11 @@
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+	<key>CFBundleDisplayName</key>
+	<string>ЦУ</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Камера нужна, чтобы сканировать бумажные работы.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Доступ к галерее используется для выбора и сохранения снимков сканов.</string>
 </dict>
 </plist>

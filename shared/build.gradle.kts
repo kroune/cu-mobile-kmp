@@ -63,7 +63,7 @@ kotlin {
 
     // Android
     androidLibrary {
-        namespace = "io.github.kroune.cumobile.shared"
+        namespace = "com.thirdparty.cumobile.shared"
         compileSdk = libs.versions.android.max.sdk
             .get()
             .toInt()

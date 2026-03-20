@@ -12,7 +12,9 @@ KMP (Kotlin Multiplatform) rewrite of Flutter LMS app for Central University (Ц
 - Target platforms: Android + iOS (test on Android emulator, Linux host)
 - Goal: maximum shared code in `shared/` module
 
-**Package**: `io.github.kroune.cumobile`
+**Android applicationId**: `com.thirdparty.cumobile` (matches Flutter app for seamless update)
+**iOS bundleId**: `ru.spacedreamer.centraluniversity` (matches Flutter app)
+**Kotlin package**: `io.github.kroune.cumobile` (internal source code package, unchanged)
 **Base URL**: `https://my.centraluniversity.ru/api/`
 **Compose Multiplatform**: 1.11.0-alpha02
 **Kotlin**: 2.3.10
