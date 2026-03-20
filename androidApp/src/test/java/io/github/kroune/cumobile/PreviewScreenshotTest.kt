@@ -23,7 +23,7 @@ class PreviewScreenshotTest(
     private val preview: ComposablePreview<AndroidPreviewInfo>,
 ) {
     companion object {
-        private const val SCREENSHOT_DIR = "build/outputs/roborazzi"
+        private const val SCREENSHOT_DIR = "screenshots"
 
         @JvmStatic
         @ParameterizedRobolectricTestRunner.Parameters(name = "{0}")
