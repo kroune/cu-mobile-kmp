@@ -31,6 +31,7 @@ class DefaultScannerComponent(
     private val pdfGenerator: PdfGenerator,
     private val fileStorage: FileStorage,
     private val onBack: () -> Unit,
+    private val onFileSaved: () -> Unit = {},
 ) : ScannerComponent,
     ComponentContext by componentContext {
     private val scope = coroutineScope(
@@ -190,6 +191,7 @@ class DefaultScannerComponent(
 
                 if (saved) {
                     _effects.trySend(ScannerComponent.Effect.SaveSuccess)
+                    onFileSaved()
                     onBack()
                 } else {
                     _effects.trySend(

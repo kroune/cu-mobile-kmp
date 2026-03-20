@@ -19,6 +19,7 @@ import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.data.model.UpdateInfo
 import io.github.kroune.cumobile.presentation.courses.DefaultCoursesComponent
 import io.github.kroune.cumobile.presentation.files.DefaultFilesComponent
+import io.github.kroune.cumobile.presentation.files.FilesComponent
 import io.github.kroune.cumobile.presentation.home.DefaultHomeComponent
 import io.github.kroune.cumobile.presentation.home.HomeDependencies
 import io.github.kroune.cumobile.presentation.tasks.DefaultTasksComponent
@@ -156,6 +157,7 @@ class DefaultMainComponent(
         navigateToLongread = ::navigateToLongread,
         onLogout = onLogout,
         scope = scope,
+        refreshFiles = ::refreshFiles,
     )
 
     override val detailStack: Value<ChildStack<*, MainComponent.DetailChild>> =
@@ -212,6 +214,14 @@ class DefaultMainComponent(
         detailNavigation.pop()
     }
 
+    private fun refreshFiles() {
+        val filesItem = tabPages.value.items.getOrNull(FILES_TAB_INDEX)
+        val filesChild = filesItem?.instance
+        if (filesChild is MainComponent.TabChild.FilesChild) {
+            filesChild.component.onIntent(FilesComponent.Intent.Refresh)
+        }
+    }
+
     // endregion
 
     // region Logout
@@ -223,6 +233,10 @@ class DefaultMainComponent(
     }
 
     // endregion
+
+    companion object {
+        private const val FILES_TAB_INDEX = 3
+    }
 
     // region Serializable configs
 

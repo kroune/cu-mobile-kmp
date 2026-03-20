@@ -23,6 +23,7 @@ internal class DetailChildFactory(
     private val navigateToLongread: (Int, Int, Int) -> Unit,
     private val onLogout: () -> Unit,
     private val scope: CoroutineScope,
+    private val refreshFiles: () -> Unit,
 ) {
     fun create(
         config: DefaultMainComponent.DetailConfig,
@@ -82,6 +83,7 @@ internal class DetailChildFactory(
                 onDownloadReady = { url, filename ->
                     scope.launch {
                         deps.fileRepository.downloadAndSave(url, filename)
+                        refreshFiles()
                     }
                 },
             ),
@@ -140,6 +142,7 @@ internal class DetailChildFactory(
                 pdfGenerator = deps.pdfGenerator,
                 fileStorage = deps.fileStorage,
                 onBack = navigateBack,
+                onFileSaved = refreshFiles,
             ),
         )
 }
