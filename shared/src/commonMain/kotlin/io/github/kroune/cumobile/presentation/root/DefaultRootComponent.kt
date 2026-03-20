@@ -25,7 +25,8 @@ import kotlinx.serialization.Serializable
  *
  * Uses Decompose [ChildStack] to manage auth routing between login and main flows.
  * On startup, checks for a saved auth cookie and navigates to [Config.Main] if valid.
- * Otherwise starts at [Config.Login] → [Config.WebViewLogin] → [Config.Main].
+ * Native login flow: [Config.Login] → [Config.Main].
+ * WebView fallback: [Config.Login] → [Config.WebViewLogin] → [Config.Main].
  */
 @OptIn(DelicateDecomposeApi::class)
 class DefaultRootComponent(
@@ -50,10 +51,6 @@ class DefaultRootComponent(
         checkSavedAuth()
     }
 
-    /**
-     * Checks if a previously saved cookie is still valid.
-     * If valid, navigates directly to the main screen.
-     */
     private fun checkSavedAuth() {
         scope.launch {
             val isValid = authRepository.validateCookie()
@@ -71,6 +68,8 @@ class DefaultRootComponent(
             is Config.Login -> RootComponent.Child.LoginChild(
                 DefaultLoginComponent(
                     componentContext = childContext,
+                    authRepository = authRepository,
+                    onLoginSuccess = ::navigateToMain,
                     onNavigateToWebView = ::navigateToWebView,
                 ),
             )
