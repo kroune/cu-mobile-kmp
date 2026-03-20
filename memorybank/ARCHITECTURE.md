@@ -69,6 +69,7 @@ CuMobile/
         │       ├── performance/   # CoursePerformanceComponent (2 tabs)
         │       ├── profile/       # ProfileComponent
         │       ├── root/          # RootComponent, RootScreen
+│       ├── splash/        # SplashScreen (startup logo)
         │       ├── scanner/       # ScannerComponent (document scanner + PDF generation)
         │       └── tasks/         # TasksComponent (full MVI with filtering)
         ├── androidMain/           # AndroidKoin, DataStorePath, PlatformWebView.android.kt, AndroidFileStorage
@@ -144,12 +145,17 @@ Every screen has:
 
 ## Authentication Flow
 
-1. App starts → `DefaultRootComponent.checkSavedAuth()` validates saved cookie
-2. Valid → `MainChild`; Invalid → `LoginChild` → user taps login → `WebViewLoginChild`
-3. WebView loads `https://my.centraluniversity.ru`
-4. On each page load, check cookies for `bff.cookie`
-5. Captured → save via `AuthRepository` → validate via `GET /student-hub/students/me` → `MainChild`
-6. Logout → clear cookie → back to `LoginChild`
+1. App starts → `SplashChild` (centered "ЦУ" logo, no interaction)
+2. `DefaultRootComponent.checkSavedAuth()` does fast local cookie check (`hasCookie()`)
+3. Cookie exists → navigate to `MainChild` immediately, validate cookie in background
+4. No cookie → navigate to `LoginChild`
+5. Background validation fails → redirect to `LoginChild`
+6. User taps login → `WebViewLoginChild` (or native auth flow)
+7. WebView loads `https://my.centraluniversity.ru`
+8. On each page load, check cookies for `bff.cookie`
+9. Captured → save via `AuthRepository` → validate via `GET /student-hub/students/me` → `MainChild`
+10. Logout → clear cookie → back to `LoginChild`
+11. Android has native splash screen (androidx.core:core-splashscreen) for cold-start coverage
 
 ---
 

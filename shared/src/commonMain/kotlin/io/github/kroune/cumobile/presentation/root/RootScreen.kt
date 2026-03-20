@@ -7,6 +7,7 @@ import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import io.github.kroune.cumobile.presentation.auth.LoginScreen
 import io.github.kroune.cumobile.presentation.auth.webview.WebViewLoginScreen
 import io.github.kroune.cumobile.presentation.main.MainScreen
+import io.github.kroune.cumobile.presentation.splash.SplashScreen
 
 /**
  * Root composable that renders the current child of [RootComponent].
@@ -19,6 +20,7 @@ fun RootScreen(component: RootComponent) {
         animation = stackAnimation(fade()),
     ) { child ->
         when (val instance = child.instance) {
+            is RootComponent.Child.SplashChild -> SplashScreen()
             is RootComponent.Child.LoginChild -> LoginScreen(instance.component)
             is RootComponent.Child.WebViewLoginChild -> WebViewLoginScreen(instance.component)
             is RootComponent.Child.MainChild -> MainScreen(instance.component)

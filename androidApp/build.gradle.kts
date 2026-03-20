@@ -107,6 +107,7 @@ dependencies {
     implementation(libs.kotlin.logging)
     implementation(projects.shared)
     implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.core.splashscreen)
     implementation(libs.compose.ui)
     implementation(libs.compose.uiTooling)
     implementation(libs.compose.uiToolingPreview)

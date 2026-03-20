@@ -14,6 +14,8 @@ interface RootComponent {
     val childStack: Value<ChildStack<*, Child>>
 
     sealed class Child {
+        data object SplashChild : Child()
+
         class LoginChild(
             val component: LoginComponent,
         ) : Child()

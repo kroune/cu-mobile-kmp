@@ -15,10 +15,13 @@ import io.github.kroune.cumobile.presentation.auth.DefaultLoginComponent
 import io.github.kroune.cumobile.presentation.auth.webview.DefaultWebViewLoginComponent
 import io.github.kroune.cumobile.presentation.main.DefaultMainComponent
 import io.github.kroune.cumobile.presentation.main.MainDependencies
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
+
+private val logger = KotlinLogging.logger {}
 
 /**
  * Default implementation of [RootComponent].
@@ -42,7 +45,7 @@ class DefaultRootComponent(
         childStack(
             source = navigation,
             serializer = Config.serializer(),
-            initialConfiguration = Config.Login,
+            initialConfiguration = Config.Splash,
             handleBackButton = true,
             childFactory = ::createChild,
         )
@@ -53,9 +56,22 @@ class DefaultRootComponent(
 
     private fun checkSavedAuth() {
         scope.launch {
-            val isValid = authRepository.validateCookie()
-            if (isValid) {
+            if (authRepository.hasCookie()) {
+                logger.info { "checkSavedAuth: cookie found locally, navigating to Main" }
                 navigateToMain()
+                validateCookieInBackground()
+            } else {
+                logger.info { "checkSavedAuth: no cookie, navigating to Login" }
+                navigation.replaceAll(Config.Login)
+            }
+        }
+    }
+
+    private fun validateCookieInBackground() {
+        scope.launch {
+            if (!authRepository.validateCookie()) {
+                logger.warn { "validateCookieInBackground: cookie invalid, redirecting to Login" }
+                navigation.replaceAll(Config.Login)
             }
         }
     }
@@ -65,6 +81,7 @@ class DefaultRootComponent(
         childContext: ComponentContext,
     ): RootComponent.Child =
         when (config) {
+            is Config.Splash -> RootComponent.Child.SplashChild
             is Config.Login -> RootComponent.Child.LoginChild(
                 DefaultLoginComponent(
                     componentContext = childContext,
@@ -111,6 +128,9 @@ class DefaultRootComponent(
 
     @Serializable
     private sealed interface Config {
+        @Serializable
+        data object Splash : Config
+
         @Serializable
         data object Login : Config
 

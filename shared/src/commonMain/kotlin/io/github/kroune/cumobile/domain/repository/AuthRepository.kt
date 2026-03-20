@@ -19,6 +19,9 @@ interface AuthRepository {
     /** Clears the stored cookie and marks the user as unauthenticated. */
     suspend fun clearCookie()
 
+    /** Checks whether a cookie is stored locally (no network request). */
+    suspend fun hasCookie(): Boolean
+
     /** Validates the current cookie against the API. */
     suspend fun validateCookie(): Boolean
 }
