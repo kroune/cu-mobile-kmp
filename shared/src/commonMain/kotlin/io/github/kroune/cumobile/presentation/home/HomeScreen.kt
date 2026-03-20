@@ -11,7 +11,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -412,9 +412,8 @@ private fun SectionHeader(
         if (count > 0) {
             Box(
                 modifier = Modifier
-                    .defaultMinSize(minWidth = 24.dp, minHeight = 24.dp)
-                    .background(AppTheme.colors.accent, CircleShape)
-                    .padding(4.dp),
+                    .size(24.dp)
+                    .background(AppTheme.colors.accent, CircleShape),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(

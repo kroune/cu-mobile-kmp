@@ -118,6 +118,7 @@ private fun PerformanceContent(
             onSelect = {
                 onIntent(CoursePerformanceComponent.Intent.SelectTab(it))
             },
+            modifier = Modifier.padding(horizontal = 16.dp),
         )
         when (state.selectedTab) {
             0 -> ScoresTab(

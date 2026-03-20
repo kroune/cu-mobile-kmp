@@ -3,10 +3,13 @@
 package io.github.kroune.cumobile.presentation.longread
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -209,13 +212,17 @@ private fun SearchBar(
                 onIntent = onIntent,
             )
         }
-        TextButton(
-            onClick = { onIntent(LongreadComponent.Intent.ToggleSearch) },
+        Box(
+            modifier = Modifier
+                .size(32.dp)
+                .clip(RoundedCornerShape(4.dp))
+                .clickable { onIntent(LongreadComponent.Intent.ToggleSearch) },
+            contentAlignment = Alignment.Center,
         ) {
             Text(
                 text = "\u2715",
                 fontSize = 16.sp,
-                color = AppTheme.colors.textPrimary,
+                color = AppTheme.colors.textSecondary,
             )
         }
     }
@@ -263,23 +270,42 @@ private fun SearchNavigation(
     onIntent: (LongreadComponent.Intent) -> Unit,
 ) {
     val hasMatches = matchCount > 0
-    val arrowColor = if (hasMatches) AppTheme.colors.textPrimary else AppTheme.colors.textSecondary
+    val enabledColor = AppTheme.colors.accent
+    val disabledColor = AppTheme.colors.textSecondary
     Text(
         text = if (hasMatches) "${currentIndex + 1}/$matchCount" else "0/0",
         color = AppTheme.colors.textSecondary,
         fontSize = 12.sp,
     )
-    TextButton(
-        onClick = { onIntent(LongreadComponent.Intent.PreviousMatch) },
-        enabled = hasMatches,
+    Box(
+        modifier = Modifier
+            .size(32.dp)
+            .clip(RoundedCornerShape(4.dp))
+            .clickable(enabled = hasMatches) {
+                onIntent(LongreadComponent.Intent.PreviousMatch)
+            },
+        contentAlignment = Alignment.Center,
     ) {
-        Text(text = "\u25B2", fontSize = 14.sp, color = arrowColor)
+        Text(
+            text = "\u25B2",
+            fontSize = 14.sp,
+            color = if (hasMatches) enabledColor else disabledColor,
+        )
     }
-    TextButton(
-        onClick = { onIntent(LongreadComponent.Intent.NextMatch) },
-        enabled = hasMatches,
+    Box(
+        modifier = Modifier
+            .size(32.dp)
+            .clip(RoundedCornerShape(4.dp))
+            .clickable(enabled = hasMatches) {
+                onIntent(LongreadComponent.Intent.NextMatch)
+            },
+        contentAlignment = Alignment.Center,
     ) {
-        Text(text = "\u25BC", fontSize = 14.sp, color = arrowColor)
+        Text(
+            text = "\u25BC",
+            fontSize = 14.sp,
+            color = if (hasMatches) enabledColor else disabledColor,
+        )
     }
 }
 
