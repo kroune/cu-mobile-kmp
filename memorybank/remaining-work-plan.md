@@ -14,7 +14,7 @@
 
 ### Low Priority
 - [x] **In-app update checker** — DONE: `UpdateChecker` fetches GitHub releases API; `isNewerVersion()` semantic version compare; update dialog in `MainScreen`; `UpdateInfo`/`GithubRelease` data models; unit tests for version comparison
-- [ ] **Document scanner** — camera/gallery capture (expect/actual); multi-page with reorder; rotation/cropping; PDF generation (high complexity, deferred)
+- [x] **Document scanner** — DONE: `ScannerComponent` (MVI with nested sealed `Intent.Page`/`Intent.Editor`/`Intent.Settings`); `ImagePicker` expect/actual (Android: `TakePicture`+`GetMultipleContents`, iOS: `UIImagePickerController`); `ImageDecoder` expect/actual (Android: `BitmapFactory`, iOS: Skia); `PdfGenerator` interface + `AndroidPdfGenerator` (`android.graphics.pdf.PdfDocument`) + `IosPdfGenerator` (UIKit PDF context); rotation slider + quick buttons; multi-page reorder (Up/Down); compression toggle; unique filename generation; FAB in Files tab; detail screen via Decompose navigation
 - [ ] **Model package restructuring** — move `data/model/` to standalone `model/` package; rename `*Response` types
 
 ### Known Remaining Issues

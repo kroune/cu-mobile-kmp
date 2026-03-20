@@ -70,6 +70,7 @@ CuMobile/
         │       ├── performance/   # CoursePerformanceComponent (2 tabs)
         │       ├── profile/       # ProfileComponent
         │       ├── root/          # RootComponent, RootScreen
+        │       ├── scanner/       # ScannerComponent (document scanner + PDF generation)
         │       └── tasks/         # TasksComponent (full MVI with filtering)
         ├── androidMain/           # AndroidKoin, DataStorePath, PlatformWebView.android.kt, AndroidFileStorage
         └── iosMain/               # IosKoin, DataStorePath, PlatformWebView.ios.kt, IosFileStorage, MainViewController
@@ -292,6 +293,20 @@ All phases complete:
   - `AvatarSection` has green "+" button (bottom-right); reuses `FilePicker` expect/actual
   - After successful upload, fetches updated avatar bytes to refresh UI
 
+- Document scanner (2026-03-20):
+  - `ScannerComponent` interface with nested sealed intents: `Intent.Page` (Add/Remove/MoveUp/MoveDown), `Intent.Editor` (Open/UpdateRotation/Close), `Intent.Settings` (UpdateFileName/SetCompression), `Intent.SavePdf`
+  - `DefaultScannerComponent`: page management, rotation editing, PDF generation + save via `FileStorage`
+  - `ScannerScreen`: hero card, filename field, page list with thumbnails + reorder buttons, image editor overlay with rotation slider + quick buttons (-90°/0°/+90°), compression toggle, save button
+  - `ImagePicker` expect/actual composable: Android `TakePicture` + `GetMultipleContents`; iOS `UIImagePickerController`
+  - `ImageDecoder` expect/actual: Android `BitmapFactory.decodeByteArray().asImageBitmap()`; iOS `org.jetbrains.skia.Image.makeFromEncoded().toComposeImageBitmap()`
+  - `PdfGenerator` interface (`data/local/`): `generatePdf(pages, compress): ByteArray?`
+  - `AndroidPdfGenerator`: `android.graphics.pdf.PdfDocument`, rotation via `Matrix.postRotate()`, compression via `Bitmap.createScaledBitmap()` (max 1920px)
+  - `IosPdfGenerator`: UIKit PDF context (`UIGraphicsBeginPDFContextToData`), rotation via `CGContextRotateCTM`
+  - Navigation: `DetailConfig.Scanner` in `DefaultMainComponent`; `ScannerChild` in `MainComponent.DetailChild`; FAB in `FilesScreen`
+  - DI: `PdfGenerator` + `FileStorage` added to `MainDependencies`; platform impls registered in `AndroidKoin`/`IosKoin`
+  - FileProvider `cache-path` added to `file_paths.xml` for camera temp files
+  - Unique filenames: `normalizeFileName()` strips invalid chars; `buildUniqueFilename()` appends `__dup{n}` if file exists
+
 ---
 
 ## Remaining Work
@@ -303,7 +318,7 @@ All phases complete:
 | Content search in longreads | **Done** | Search bar + highlighting in MarkdownCard; prev/next match nav; `SearchBar`/`SearchInput`/`SearchNavigation` composables |
 | Avatar upload | **Done** | `ProfileApiService.uploadAvatar()` multipart POST; reuses `FilePicker`; green "+" on avatar |
 | In-app update checker | **Done** | `UpdateChecker` in `data/network/`, `UpdateInfo`/`GithubRelease` in `data/model/ReleaseInfo.kt`, dialog in `MainScreen` |
-| Document scanner | Low | High complexity, platform-specific (camera, PDF gen) |
+| Document scanner | **Done** | `ScannerComponent` MVI with nested `Intent.Page`/`Editor`/`Settings`; `ImagePicker`/`ImageDecoder` expect/actual; `PdfGenerator` interface + Android/iOS impls |
 | Model package restructuring | Low | Move `data/model/` → `model/`, rename `*Response` types |
 
 ---

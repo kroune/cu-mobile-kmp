@@ -13,6 +13,7 @@ import io.github.kroune.cumobile.presentation.longread.LongreadComponent
 import io.github.kroune.cumobile.presentation.notifications.NotificationsComponent
 import io.github.kroune.cumobile.presentation.performance.CoursePerformanceComponent
 import io.github.kroune.cumobile.presentation.profile.ProfileComponent
+import io.github.kroune.cumobile.presentation.scanner.ScannerComponent
 import io.github.kroune.cumobile.presentation.tasks.TasksComponent
 
 /**
@@ -77,6 +78,9 @@ interface MainComponent {
     /** Navigate to file rename settings. */
     fun navigateToFileRenameSettings()
 
+    /** Navigate to document scanner. */
+    fun navigateToScanner()
+
     /** Navigate back from detail screen. */
     fun navigateDetailBack()
 
@@ -134,6 +138,10 @@ interface MainComponent {
 
         data class FileRenameSettingsChild(
             val component: FileRenameSettingsComponent,
+        ) : DetailChild()
+
+        data class ScannerChild(
+            val component: ScannerComponent,
         ) : DetailChild()
     }
 }

@@ -68,5 +68,8 @@ interface FilesComponent {
 
         /** Open file rename settings. */
         data object OpenRenameSettings : Intent
+
+        /** Open document scanner. */
+        data object OpenScanner : Intent
     }
 }

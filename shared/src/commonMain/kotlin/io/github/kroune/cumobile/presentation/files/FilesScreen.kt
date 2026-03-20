@@ -19,10 +19,14 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DocumentScanner
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -108,28 +112,44 @@ internal fun FilesScreenContent(
         )
     }
 
+    Box(
+        modifier = modifier.fillMaxSize().background(AppTheme.colors.background),
+    ) {
+        FilesContentBody(state, actionError, onIntent, onDismissError) {
+            showDeleteAllDialog = true
+        }
+
+        FloatingActionButton(
+            onClick = { onIntent(FilesComponent.Intent.OpenScanner) },
+            containerColor = AppTheme.colors.accent,
+            modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp),
+        ) {
+            Icon(Icons.Default.DocumentScanner, "Сканер", tint = AppTheme.colors.background)
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun FilesContentBody(
+    state: FilesComponent.State,
+    actionError: String?,
+    onIntent: (FilesComponent.Intent) -> Unit,
+    onDismissError: () -> Unit,
+    onDeleteAll: () -> Unit,
+) {
     PullToRefreshBox(
         isRefreshing = state.isLoading,
         onRefresh = { onIntent(FilesComponent.Intent.Refresh) },
-        modifier = modifier
-            .fillMaxSize()
-            .background(AppTheme.colors.background),
+        modifier = Modifier.fillMaxSize(),
     ) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-        ) {
+        Column(modifier = Modifier.fillMaxSize()) {
             FilesHeader(
                 state = state,
-                onDeleteAll = { showDeleteAllDialog = true },
-                onDeleteSelected = {
-                    onIntent(FilesComponent.Intent.DeleteSelected)
-                },
-                onClearSelection = {
-                    onIntent(FilesComponent.Intent.ClearSelection)
-                },
-                onOpenRenameSettings = {
-                    onIntent(FilesComponent.Intent.OpenRenameSettings)
-                },
+                onDeleteAll = onDeleteAll,
+                onDeleteSelected = { onIntent(FilesComponent.Intent.DeleteSelected) },
+                onClearSelection = { onIntent(FilesComponent.Intent.ClearSelection) },
+                onOpenRenameSettings = { onIntent(FilesComponent.Intent.OpenRenameSettings) },
             )
 
             ActionErrorBar(error = actionError, onDismiss = onDismissError)
@@ -141,22 +161,14 @@ internal fun FilesScreenContent(
                     onRetry = { onIntent(FilesComponent.Intent.Refresh) },
                 )
                 state.files.isEmpty() -> EmptyState(
-                    onOpenRenameSettings = {
-                        onIntent(FilesComponent.Intent.OpenRenameSettings)
-                    },
+                    onOpenRenameSettings = { onIntent(FilesComponent.Intent.OpenRenameSettings) },
                 )
                 else -> FileList(
                     files = state.files,
                     selectedFiles = state.selectedFiles,
-                    onOpen = { path ->
-                        onIntent(FilesComponent.Intent.OpenFile(path))
-                    },
-                    onToggleSelect = { name ->
-                        onIntent(FilesComponent.Intent.ToggleSelect(name))
-                    },
-                    onDelete = { name ->
-                        onIntent(FilesComponent.Intent.DeleteFile(name))
-                    },
+                    onOpen = { onIntent(FilesComponent.Intent.OpenFile(it)) },
+                    onToggleSelect = { onIntent(FilesComponent.Intent.ToggleSelect(it)) },
+                    onDelete = { onIntent(FilesComponent.Intent.DeleteFile(it)) },
                 )
             }
         }

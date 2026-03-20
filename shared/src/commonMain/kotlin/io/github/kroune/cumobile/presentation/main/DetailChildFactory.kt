@@ -9,6 +9,7 @@ import io.github.kroune.cumobile.presentation.longread.LongreadParams
 import io.github.kroune.cumobile.presentation.notifications.DefaultNotificationsComponent
 import io.github.kroune.cumobile.presentation.performance.DefaultCoursePerformanceComponent
 import io.github.kroune.cumobile.presentation.profile.DefaultProfileComponent
+import io.github.kroune.cumobile.presentation.scanner.DefaultScannerComponent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -42,6 +43,8 @@ internal class DetailChildFactory(
                 createNotifications(childContext)
             DefaultMainComponent.DetailConfig.FileRenameSettings ->
                 createFileRenameSettings(childContext)
+            DefaultMainComponent.DetailConfig.Scanner ->
+                createScanner(childContext)
         }
 
     private fun createCourseDetail(
@@ -126,6 +129,16 @@ internal class DetailChildFactory(
                 componentContext = childContext,
                 renameRepository = deps.fileRenameRepository,
                 courseRepository = deps.courseRepository,
+                onBack = navigateBack,
+            ),
+        )
+
+    private fun createScanner(childContext: ComponentContext) =
+        MainComponent.DetailChild.ScannerChild(
+            DefaultScannerComponent(
+                componentContext = childContext,
+                pdfGenerator = deps.pdfGenerator,
+                fileStorage = deps.fileStorage,
                 onBack = navigateBack,
             ),
         )

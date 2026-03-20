@@ -34,6 +34,7 @@ import kotlinx.serialization.Serializable
  * via [ChildStack]. Tab components are created lazily and their state
  * is preserved when switching tabs.
  */
+@Suppress("TooManyFunctions")
 @OptIn(DelicateDecomposeApi::class)
 class DefaultMainComponent(
     componentContext: ComponentContext,
@@ -138,6 +139,7 @@ class DefaultMainComponent(
                         mainDependencies.fileOpener.openFile(path)
                     },
                     onOpenRenameSettings = ::navigateToFileRenameSettings,
+                    onOpenScanner = ::navigateToScanner,
                 ),
             )
         }
@@ -200,6 +202,10 @@ class DefaultMainComponent(
 
     override fun navigateToFileRenameSettings() {
         detailNavigation.push(DetailConfig.FileRenameSettings)
+    }
+
+    override fun navigateToScanner() {
+        detailNavigation.push(DetailConfig.Scanner)
     }
 
     override fun navigateDetailBack() {
@@ -267,6 +273,9 @@ class DefaultMainComponent(
 
         @Serializable
         data object FileRenameSettings : DetailConfig
+
+        @Serializable
+        data object Scanner : DetailConfig
     }
 
     // endregion

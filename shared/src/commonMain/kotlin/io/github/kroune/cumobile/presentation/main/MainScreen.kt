@@ -42,6 +42,7 @@ import io.github.kroune.cumobile.presentation.longread.LongreadScreen
 import io.github.kroune.cumobile.presentation.notifications.NotificationsScreen
 import io.github.kroune.cumobile.presentation.performance.CoursePerformanceScreen
 import io.github.kroune.cumobile.presentation.profile.ProfileScreen
+import io.github.kroune.cumobile.presentation.scanner.ScannerScreen
 import io.github.kroune.cumobile.presentation.tasks.TasksScreen
 import com.arkivanov.decompose.router.pages.ChildPages as PagesState
 
@@ -214,6 +215,12 @@ private fun DetailOverlay(
             }
             is MainComponent.DetailChild.FileRenameSettingsChild -> {
                 io.github.kroune.cumobile.presentation.files.rename.FileRenameSettingsScreen(
+                    component = instance.component,
+                    onBack = { component.navigateDetailBack() },
+                )
+            }
+            is MainComponent.DetailChild.ScannerChild -> {
+                ScannerScreen(
                     component = instance.component,
                     onBack = { component.navigateDetailBack() },
                 )

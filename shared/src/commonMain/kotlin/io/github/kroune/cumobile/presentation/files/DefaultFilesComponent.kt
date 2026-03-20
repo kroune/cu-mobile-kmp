@@ -28,6 +28,7 @@ class DefaultFilesComponent(
     private val fileRepository: FileRepository,
     private val onOpenFile: (path: String) -> Unit = {},
     private val onOpenRenameSettings: () -> Unit = {},
+    private val onOpenScanner: () -> Unit = {},
 ) : FilesComponent,
     ComponentContext by componentContext {
     private val scope = coroutineScope(
@@ -50,6 +51,7 @@ class DefaultFilesComponent(
             FilesComponent.Intent.ClearSelection -> clearSelection()
             is FilesComponent.Intent.OpenFile -> onOpenFile(intent.path)
             FilesComponent.Intent.OpenRenameSettings -> onOpenRenameSettings()
+            FilesComponent.Intent.OpenScanner -> onOpenScanner()
         }
     }
 

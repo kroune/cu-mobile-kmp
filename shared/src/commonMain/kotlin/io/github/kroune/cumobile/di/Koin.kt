@@ -6,6 +6,8 @@ import io.github.kroune.cumobile.data.local.CalendarLocalDataSource
 import io.github.kroune.cumobile.data.local.CourseLocalDataSource
 import io.github.kroune.cumobile.data.local.FileOpener
 import io.github.kroune.cumobile.data.local.FileRenameLocalDataSource
+import io.github.kroune.cumobile.data.local.FileStorage
+import io.github.kroune.cumobile.data.local.PdfGenerator
 import io.github.kroune.cumobile.data.network.ContentApiService
 import io.github.kroune.cumobile.data.network.CourseApiService
 import io.github.kroune.cumobile.data.network.IcalApiService
@@ -114,6 +116,8 @@ fun createRootComponent(componentContext: ComponentContext): DefaultRootComponen
         calendarRepository = koin.get<CalendarRepository>(),
         fileOpener = koin.get<FileOpener>(),
         updateChecker = koin.get<UpdateChecker>(),
+        pdfGenerator = koin.get<PdfGenerator>(),
+        fileStorage = koin.get<FileStorage>(),
     )
     return DefaultRootComponent(
         componentContext = componentContext,

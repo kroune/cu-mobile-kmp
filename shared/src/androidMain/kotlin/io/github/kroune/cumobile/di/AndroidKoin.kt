@@ -3,8 +3,10 @@ package io.github.kroune.cumobile.di
 import android.content.Context
 import io.github.kroune.cumobile.data.local.AndroidFileOpener
 import io.github.kroune.cumobile.data.local.AndroidFileStorage
+import io.github.kroune.cumobile.data.local.AndroidPdfGenerator
 import io.github.kroune.cumobile.data.local.FileOpener
 import io.github.kroune.cumobile.data.local.FileStorage
+import io.github.kroune.cumobile.data.local.PdfGenerator
 import io.github.kroune.cumobile.data.local.createDataStore
 import io.github.kroune.cumobile.data.local.dataStorePath
 import org.koin.dsl.module
@@ -18,6 +20,7 @@ fun initKoinAndroid(context: Context) {
         single { createDataStore { dataStorePath(context) } }
         single<FileStorage> { AndroidFileStorage(context) }
         single<FileOpener> { AndroidFileOpener(context) }
+        single<PdfGenerator> { AndroidPdfGenerator() }
     }
     initKoin(platformModule)
 }
