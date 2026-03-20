@@ -21,9 +21,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DocumentScanner
+import androidx.compose.animation.core.Animatable
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -160,12 +162,14 @@ private fun FilesContentBody(
                     error = state.error,
                     onRetry = { onIntent(FilesComponent.Intent.Refresh) },
                 )
-                state.files.isEmpty() -> EmptyState(
+                state.files.isEmpty() && state.downloadingFiles.isEmpty() -> EmptyState(
                     onOpenRenameSettings = { onIntent(FilesComponent.Intent.OpenRenameSettings) },
                 )
                 else -> FileList(
                     files = state.files,
                     selectedFiles = state.selectedFiles,
+                    downloadingFiles = state.downloadingFiles,
+                    highlightedFile = state.highlightedFile,
                     onOpen = { onIntent(FilesComponent.Intent.OpenFile(it)) },
                     onToggleSelect = { onIntent(FilesComponent.Intent.ToggleSelect(it)) },
                     onDelete = { onIntent(FilesComponent.Intent.DeleteFile(it)) },
@@ -250,18 +254,27 @@ private fun FilesHeader(
 private fun FileList(
     files: List<DownloadedFileInfo>,
     selectedFiles: Set<String>,
+    downloadingFiles: Set<String> = emptySet(),
+    highlightedFile: String? = null,
     onOpen: (path: String) -> Unit,
     onToggleSelect: (name: String) -> Unit,
     onDelete: (name: String) -> Unit,
 ) {
+    val downloadingOnly = downloadingFiles - files.map { it.name }.toSet()
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
     ) {
+        items(downloadingOnly.toList(), key = { "dl_$it" }) { name ->
+            DownloadingRow(name)
+        }
         items(files, key = { it.name }) { file ->
+            val isDownloading = file.name in downloadingFiles
             FileRow(
                 file = file,
                 isSelected = file.name in selectedFiles,
                 isSelecting = selectedFiles.isNotEmpty(),
+                isHighlighted = file.name == highlightedFile,
+                isDownloading = isDownloading,
                 onTap = { onOpen(file.path) },
                 onLongPress = { onToggleSelect(file.name) },
                 onDelete = { onDelete(file.name) },
@@ -276,12 +289,26 @@ private fun FileRow(
     file: DownloadedFileInfo,
     isSelected: Boolean,
     isSelecting: Boolean,
+    isHighlighted: Boolean = false,
+    isDownloading: Boolean = false,
     onTap: () -> Unit,
     onLongPress: () -> Unit,
     onDelete: () -> Unit,
 ) {
+    val highlightAlpha = remember { Animatable(0f) }
+    LaunchedEffect(isHighlighted) {
+        if (isHighlighted) {
+            highlightAlpha.snapTo(0.25f)
+            highlightAlpha.animateTo(0f, androidx.compose.animation.core.tween(2000))
+        } else {
+            highlightAlpha.snapTo(0f)
+        }
+    }
+
     val backgroundColor = when {
         isSelected -> AppTheme.colors.accent.copy(alpha = 0.15f)
+        highlightAlpha.value > 0f ->
+            AppTheme.colors.accent.copy(alpha = highlightAlpha.value)
         else -> AppTheme.colors.surface
     }
 
@@ -319,7 +346,9 @@ private fun FileRow(
                 fontSize = 12.sp,
             )
         }
-        if (!isSelecting) {
+        if (isDownloading) {
+            TrailingSpinner()
+        } else if (!isSelecting) {
             TextButton(onClick = onDelete) {
                 Text(
                     text = "×",
@@ -329,6 +358,56 @@ private fun FileRow(
                 )
             }
         }
+    }
+}
+
+/** Spinner that matches the trailing [TextButton] size for alignment. */
+@Composable
+private fun TrailingSpinner() {
+    Box(
+        modifier = Modifier.size(48.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        CircularProgressIndicator(
+            modifier = Modifier.size(24.dp),
+            color = AppTheme.colors.accent,
+            strokeWidth = 2.dp,
+        )
+    }
+}
+
+/** Row shown for files currently being downloaded (not yet in file list). */
+@Composable
+private fun DownloadingRow(name: String) {
+    val ext = name.substringAfterLast('.', "").uppercase()
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 4.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(AppTheme.colors.surface)
+            .padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        ExtensionBadge(extension = ext)
+        Spacer(modifier = Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = name,
+                color = AppTheme.colors.textPrimary,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = "Загрузка...",
+                color = AppTheme.colors.accent,
+                fontSize = 12.sp,
+            )
+        }
+        TrailingSpinner()
     }
 }
 
@@ -636,6 +715,66 @@ private fun PreviewFilesSelectingLight() {
         FilesScreenContent(
             state = previewFilesSuccessState.copy(
                 selectedFiles = setOf("homework_1.pdf", "data_analysis.xlsx"),
+            ),
+            actionError = null,
+            onIntent = {},
+            onDismissError = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewFilesDownloadingDark() {
+    CuMobileTheme(darkTheme = true) {
+        FilesScreenContent(
+            state = previewFilesSuccessState.copy(
+                downloadingFiles = setOf("new_material.pdf"),
+            ),
+            actionError = null,
+            onIntent = {},
+            onDismissError = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewFilesDownloadingLight() {
+    CuMobileTheme(darkTheme = false) {
+        FilesScreenContent(
+            state = previewFilesSuccessState.copy(
+                downloadingFiles = setOf("new_material.pdf"),
+            ),
+            actionError = null,
+            onIntent = {},
+            onDismissError = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewFilesHighlightedDark() {
+    CuMobileTheme(darkTheme = true) {
+        FilesScreenContent(
+            state = previewFilesSuccessState.copy(
+                highlightedFile = "homework_1.pdf",
+            ),
+            actionError = null,
+            onIntent = {},
+            onDismissError = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewFilesHighlightedLight() {
+    CuMobileTheme(darkTheme = false) {
+        FilesScreenContent(
+            state = previewFilesSuccessState.copy(
+                highlightedFile = "homework_1.pdf",
             ),
             actionError = null,
             onIntent = {},

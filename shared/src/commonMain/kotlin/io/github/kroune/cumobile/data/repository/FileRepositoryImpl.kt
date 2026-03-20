@@ -54,6 +54,7 @@ internal class FileRepositoryImpl(
                     fileStorage.saveFile(bytes, filename)
                 }
             } else {
+                logger.warn { "downloadAndSave: unexpected status ${response.status}" }
                 false
             }
         } catch (e: CancellationException) {

@@ -30,7 +30,8 @@ class DefaultLongreadComponent(
     params: LongreadParams,
     deps: LongreadDependencies,
     private val onBack: () -> Unit,
-    private val onDownloadReady: (url: String, filename: String) -> Unit,
+    private val onDownloadReady: suspend (url: String, filename: String) -> Boolean,
+    private val onNavigateToFiles: () -> Unit,
 ) : LongreadComponent,
     ComponentContext by componentContext {
     private val contentRepository = deps.contentRepository
@@ -81,6 +82,7 @@ class DefaultLongreadComponent(
             is LongreadComponent.Intent.NextMatch,
             is LongreadComponent.Intent.PreviousMatch,
             -> handleSearchIntent(intent)
+            LongreadComponent.Intent.NavigateToFiles -> onNavigateToFiles()
         }
     }
 
@@ -375,10 +377,26 @@ class DefaultLongreadComponent(
         val filename = material.filename ?: return
         val version = material.version ?: "1"
         scope.launch {
+            _effects.trySend(
+                LongreadComponent.Effect.ShowSuccess("Скачивание..."),
+            )
             val url = contentRepository.getDownloadLink(filename, version)
             if (url != null) {
                 val localFilename = buildLocalFilename(material)
-                onDownloadReady(url, localFilename)
+                val saved = onDownloadReady(url, localFilename)
+                if (saved) {
+                    _effects.trySend(
+                        LongreadComponent.Effect.ShowSuccess(
+                            "Файл сохранён в «Файлы»",
+                        ),
+                    )
+                } else {
+                    _effects.trySend(
+                        LongreadComponent.Effect.ShowError(
+                            "Не удалось сохранить файл",
+                        ),
+                    )
+                }
             } else {
                 logger.warn { "Failed to get download link for $filename" }
                 _effects.trySend(

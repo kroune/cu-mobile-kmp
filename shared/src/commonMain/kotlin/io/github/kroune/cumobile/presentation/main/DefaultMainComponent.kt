@@ -11,6 +11,7 @@ import com.arkivanov.decompose.router.pages.select
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
+import com.arkivanov.decompose.router.stack.navigate
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.value.MutableValue
@@ -156,8 +157,12 @@ class DefaultMainComponent(
         navigateBack = ::navigateDetailBack,
         navigateToLongread = ::navigateToLongread,
         onLogout = onLogout,
-        scope = scope,
-        refreshFiles = ::refreshFiles,
+        downloadCallbacks = DownloadCallbacks(
+            refreshFiles = ::refreshFiles,
+            navigateToFiles = ::navigateToFilesWithHighlight,
+            notifyStart = ::notifyDownloadStart,
+            notifyComplete = ::notifyDownloadComplete,
+        ),
     )
 
     override val detailStack: Value<ChildStack<*, MainComponent.DetailChild>> =
@@ -214,11 +219,43 @@ class DefaultMainComponent(
         detailNavigation.pop()
     }
 
+    private fun clearDetailStack() {
+        detailNavigation.navigate { listOf(it.first()) }
+    }
+
     private fun refreshFiles() {
+        sendToFilesComponent(FilesComponent.Intent.Refresh)
+    }
+
+    /** Filename to highlight when navigating to the Files tab. */
+    private var pendingHighlightFile: String? = null
+
+    private fun notifyDownloadStart(filename: String) {
+        sendToFilesComponent(FilesComponent.Intent.AddDownloading(filename))
+    }
+
+    private fun notifyDownloadComplete(filename: String) {
+        pendingHighlightFile = filename
+        sendToFilesComponent(FilesComponent.Intent.RemoveDownloading(filename))
+    }
+
+    private fun navigateToFilesWithHighlight() {
+        clearDetailStack()
+        selectTab(FILES_TAB_INDEX)
+        val filename = pendingHighlightFile ?: return
+        pendingHighlightFile = null
+        scope.launch {
+            // Yield to let Decompose instantiate the Files tab component
+            kotlinx.coroutines.yield()
+            sendToFilesComponent(FilesComponent.Intent.HighlightFile(filename))
+        }
+    }
+
+    private fun sendToFilesComponent(intent: FilesComponent.Intent) {
         val filesItem = tabPages.value.items.getOrNull(FILES_TAB_INDEX)
         val filesChild = filesItem?.instance
         if (filesChild is MainComponent.TabChild.FilesChild) {
-            filesChild.component.onIntent(FilesComponent.Intent.Refresh)
+            filesChild.component.onIntent(intent)
         }
     }
 

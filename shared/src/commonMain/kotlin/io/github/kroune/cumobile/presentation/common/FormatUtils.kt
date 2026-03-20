@@ -125,12 +125,19 @@ fun formatDeadlinePlusDays(
     }
 }
 
+private val timezoneOffsetRegex = Regex("[+-]\\d{2}:\\d{2}$")
+
 private fun parseIsoDateTime(iso: String): LocalDateTime {
-    // kotlinx-datetime parser is strict, handle common variants
-    val normalized = if (iso.endsWith("Z")) {
-        iso.removeSuffix("Z")
-    } else {
-        iso
+    // kotlinx-datetime LocalDateTime parser is strict, strip timezone info
+    var normalized = iso.trim()
+    // Strip timezone offset (+HH:MM / -HH:MM)
+    val offsetMatch = timezoneOffsetRegex.find(normalized)
+    if (offsetMatch != null) {
+        normalized = normalized.substring(0, offsetMatch.range.first)
+    }
+    // Strip Z suffix
+    if (normalized.endsWith("Z")) {
+        normalized = normalized.removeSuffix("Z")
     }
     // If it's just a date, append T00:00
     return if (!normalized.contains("T")) {

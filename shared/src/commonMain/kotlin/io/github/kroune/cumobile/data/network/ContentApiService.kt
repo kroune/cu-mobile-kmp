@@ -1,6 +1,7 @@
 package io.github.kroune.cumobile.data.network
 
 import io.github.kroune.cumobile.data.model.LongreadMaterial
+import io.github.kroune.cumobile.data.model.LongreadMaterialsResponse
 import io.github.kroune.cumobile.data.model.UploadLinkData
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
@@ -32,12 +33,15 @@ internal class ContentApiService(
         cookie: String,
         longreadId: Int,
     ): List<LongreadMaterial>? =
-        safeApiCall(logger, "fetch longread materials for longreadId=$longreadId") {
+        safeApiCall<LongreadMaterialsResponse>(
+            logger,
+            "fetch longread materials for longreadId=$longreadId",
+        ) {
             val url = "${ApiEndpoints.longreadMaterials(longreadId.toString())}?limit=$MaxListLimit"
             httpClient.get(url) {
                 header("Cookie", cookieHeader(cookie))
             }
-        }
+        }?.items
 
     /** Fetches a single material by ID. */
     suspend fun fetchMaterial(

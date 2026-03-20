@@ -8,10 +8,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -19,6 +22,11 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -27,6 +35,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,6 +53,7 @@ import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import io.github.kroune.cumobile.data.model.LongreadMaterial
 import io.github.kroune.cumobile.data.model.LongreadMaterialContent
 import io.github.kroune.cumobile.presentation.common.ActionErrorBar
+import kotlinx.coroutines.launch
 import io.github.kroune.cumobile.presentation.common.AppTheme
 import io.github.kroune.cumobile.presentation.common.CuMobileTheme
 import io.github.kroune.cumobile.presentation.common.DetailTopBar
@@ -67,12 +77,28 @@ fun LongreadScreen(
 ) {
     val state by component.state.subscribeAsState()
     var actionError by remember { mutableStateOf<String?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         component.effects.collect { effect ->
             when (effect) {
                 is LongreadComponent.Effect.ShowError -> {
                     actionError = effect.message
+                }
+                is LongreadComponent.Effect.ShowSuccess -> {
+                    coroutineScope.launch {
+                        val result = snackbarHostState.showSnackbar(
+                            message = effect.message,
+                            actionLabel = "Показать",
+                            duration = SnackbarDuration.Short,
+                        )
+                        if (result == SnackbarResult.ActionPerformed) {
+                            component.onIntent(
+                                LongreadComponent.Intent.NavigateToFiles,
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -81,6 +107,7 @@ fun LongreadScreen(
     LongreadScreenContent(
         state = state,
         actionError = actionError,
+        snackbarHostState = snackbarHostState,
         onIntent = component::onIntent,
         onDismissError = { actionError = null },
         modifier = modifier,
@@ -92,38 +119,42 @@ fun LongreadScreen(
 internal fun LongreadScreenContent(
     state: LongreadComponent.State,
     actionError: String?,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     onIntent: (LongreadComponent.Intent) -> Unit,
     onDismissError: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    PullToRefreshBox(
-        isRefreshing = state.isLoading,
-        onRefresh = { onIntent(LongreadComponent.Intent.Refresh) },
+    Box(
         modifier = modifier
             .fillMaxSize()
             .background(AppTheme.colors.background),
     ) {
-        Column(
+        PullToRefreshBox(
+            isRefreshing = state.isLoading,
+            onRefresh = { onIntent(LongreadComponent.Intent.Refresh) },
             modifier = Modifier.fillMaxSize(),
         ) {
-            DetailTopBar(
-                title = state.title,
-                onBack = { onIntent(LongreadComponent.Intent.Back) },
-                trailingContent = {
-                    TextButton(
-                        onClick = {
-                            onIntent(LongreadComponent.Intent.ToggleSearch)
-                        },
-                    ) {
-                        Text(
-                            text = "\uD83D\uDD0D",
-                            fontSize = 18.sp,
-                        )
-                    }
-                },
-            )
+            Column(
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                DetailTopBar(
+                    title = state.title,
+                    onBack = { onIntent(LongreadComponent.Intent.Back) },
+                    trailingContent = {
+                        TextButton(
+                            onClick = {
+                                onIntent(LongreadComponent.Intent.ToggleSearch)
+                            },
+                        ) {
+                            Text(
+                                text = "\uD83D\uDD0D",
+                                fontSize = 18.sp,
+                            )
+                        }
+                    },
+                )
 
-            ActionErrorBar(error = actionError, onDismiss = onDismissError)
+                ActionErrorBar(error = actionError, onDismiss = onDismissError)
 
             if (state.isSearchVisible) {
                 SearchBar(
@@ -143,6 +174,20 @@ internal fun LongreadScreenContent(
                     onIntent = onIntent,
                 )
             }
+        }
+    }
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .windowInsetsPadding(WindowInsets.navigationBars),
+        ) { data ->
+            Snackbar(
+                snackbarData = data,
+                containerColor = AppTheme.colors.surface,
+                contentColor = AppTheme.colors.textPrimary,
+                actionColor = AppTheme.colors.accent,
+            )
         }
     }
 }
@@ -457,19 +502,26 @@ private fun QuestionsCard(
 }
 
 /**
- * Strips HTML tags from a string, returning plain text.
- *
- * Basic implementation for Phase 7. Richer rendering
- * will be evaluated in Phase 11.
+ * Converts HTML to readable plain text, preserving paragraph
+ * breaks, list items, and line breaks.
  */
 internal fun stripHtmlTags(html: String): String =
     html
+        .replace(Regex("<br\\s*/?>", RegexOption.IGNORE_CASE), "\n")
+        .replace(Regex("</p>", RegexOption.IGNORE_CASE), "\n\n")
+        .replace(Regex("</div>", RegexOption.IGNORE_CASE), "\n\n")
+        .replace(Regex("</h[1-6]>", RegexOption.IGNORE_CASE), "\n\n")
+        .replace(Regex("<li[^>]*>", RegexOption.IGNORE_CASE), "\n\u2022 ")
         .replace(Regex("<[^>]*>"), "")
         .replace("&nbsp;", " ")
         .replace("&amp;", "&")
         .replace("&lt;", "<")
         .replace("&gt;", ">")
         .replace("&quot;", "\"")
+        .replace("&#39;", "'")
+        .replace(Regex(" +"), " ")
+        .replace(Regex("\\n +"), "\n")
+        .replace(Regex("\\n{3,}"), "\n\n")
         .trim()
 
 @Preview

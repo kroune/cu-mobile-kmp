@@ -26,6 +26,10 @@ interface LongreadComponent {
         data class ShowError(
             val message: String,
         ) : Effect
+
+        data class ShowSuccess(
+            val message: String,
+        ) : Effect
     }
 
     data class State(
@@ -137,5 +141,7 @@ interface LongreadComponent {
         data object NextMatch : Intent
 
         data object PreviousMatch : Intent
+
+        data object NavigateToFiles : Intent
     }
 }

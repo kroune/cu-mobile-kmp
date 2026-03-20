@@ -8,6 +8,8 @@ import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.domain.repository.FileRepository
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlin.time.TimeSource
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -52,6 +54,9 @@ class DefaultFilesComponent(
             is FilesComponent.Intent.OpenFile -> onOpenFile(intent.path)
             FilesComponent.Intent.OpenRenameSettings -> onOpenRenameSettings()
             FilesComponent.Intent.OpenScanner -> onOpenScanner()
+            is FilesComponent.Intent.AddDownloading -> addDownloading(intent.name)
+            is FilesComponent.Intent.RemoveDownloading -> removeDownloading(intent.name)
+            is FilesComponent.Intent.HighlightFile -> highlightFile(intent.name)
         }
     }
 
@@ -69,7 +74,9 @@ class DefaultFilesComponent(
         scope.launch {
             _state.value = _state.value.copy(isLoading = true, error = null)
             try {
+                val start = TimeSource.Monotonic.markNow()
                 val files = fileRepository.listDownloadedFiles()
+                ensureMinLoadingDuration(start)
                 _state.value = _state.value.copy(
                     files = files,
                     isLoading = false,
@@ -157,5 +164,44 @@ class DefaultFilesComponent(
             files = _state.value.files.filter { it.name != name },
             selectedFiles = _state.value.selectedFiles - name,
         )
+    }
+
+    private fun addDownloading(name: String) {
+        _state.value = _state.value.copy(
+            downloadingFiles = _state.value.downloadingFiles + name,
+        )
+    }
+
+    private fun removeDownloading(name: String) {
+        _state.value = _state.value.copy(
+            downloadingFiles = _state.value.downloadingFiles - name,
+        )
+    }
+
+    private fun highlightFile(name: String) {
+        _state.value = _state.value.copy(highlightedFile = name)
+        scope.launch {
+            delay(HIGHLIGHT_DURATION_MS)
+            if (_state.value.highlightedFile == name) {
+                _state.value = _state.value.copy(highlightedFile = null)
+            }
+        }
+    }
+
+    /**
+     * Ensures at least [MIN_LOADING_DURATION_MS] has passed since [start],
+     * so the P2R animation has time to play.
+     */
+    private suspend fun ensureMinLoadingDuration(start: TimeSource.Monotonic.ValueTimeMark) {
+        val elapsed = start.elapsedNow().inWholeMilliseconds
+        val remaining = MIN_LOADING_DURATION_MS - elapsed
+        if (remaining > 0) {
+            delay(remaining)
+        }
+    }
+
+    companion object {
+        private const val HIGHLIGHT_DURATION_MS = 2_000L
+        private const val MIN_LOADING_DURATION_MS = 400L
     }
 }

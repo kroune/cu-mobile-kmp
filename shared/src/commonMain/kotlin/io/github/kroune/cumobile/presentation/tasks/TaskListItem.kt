@@ -141,6 +141,15 @@ private val previewTask = StudentTask(
     course = TaskCourse(name = "Алгоритмы и структуры данных"),
 )
 
+private val previewTaskWithOffset = StudentTask(
+    state = TaskState.Backlog,
+    exercise = TaskExercise(
+        name = "Аудиторная работа",
+        deadline = "2026-03-16T12:20:00+00:00",
+    ),
+    course = TaskCourse(name = "Введение в искусственный интеллект"),
+)
+
 @Preview
 @Composable
 private fun PreviewTaskListItemDark() {
@@ -165,6 +174,34 @@ private fun PreviewTaskListItemLight() {
                 .padding(16.dp),
         ) {
             TaskListItem(task = previewTask, onClick = {})
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewTaskListItemWithOffsetDark() {
+    CuMobileTheme(darkTheme = true) {
+        Box(
+            Modifier
+                .background(AppTheme.colors.background)
+                .padding(16.dp),
+        ) {
+            TaskListItem(task = previewTaskWithOffset, onClick = {})
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewTaskListItemWithOffsetLight() {
+    CuMobileTheme(darkTheme = false) {
+        Box(
+            Modifier
+                .background(AppTheme.colors.background)
+                .padding(16.dp),
+        ) {
+            TaskListItem(task = previewTaskWithOffset, onClick = {})
         }
     }
 }

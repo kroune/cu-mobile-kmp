@@ -28,6 +28,10 @@ interface FilesComponent {
         val error: String? = null,
         /** Names of currently selected files (for batch delete). */
         val selectedFiles: Set<String> = emptySet(),
+        /** Filenames currently being downloaded (shown as loading rows). */
+        val downloadingFiles: Set<String> = emptySet(),
+        /** Filename to highlight briefly after navigation (auto-clears). */
+        val highlightedFile: String? = null,
     ) {
         /** Whether selection mode is active. */
         val isSelecting: Boolean
@@ -71,5 +75,14 @@ interface FilesComponent {
 
         /** Open document scanner. */
         data object OpenScanner : Intent
+
+        /** Mark a file as being downloaded (shows loading indicator). */
+        data class AddDownloading(val name: String) : Intent
+
+        /** Remove a file from downloading set. */
+        data class RemoveDownloading(val name: String) : Intent
+
+        /** Briefly highlight a file after navigation. */
+        data class HighlightFile(val name: String) : Intent
     }
 }

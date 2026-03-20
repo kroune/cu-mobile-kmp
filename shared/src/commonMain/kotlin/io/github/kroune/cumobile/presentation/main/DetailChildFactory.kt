@@ -10,8 +10,15 @@ import io.github.kroune.cumobile.presentation.notifications.DefaultNotifications
 import io.github.kroune.cumobile.presentation.performance.DefaultCoursePerformanceComponent
 import io.github.kroune.cumobile.presentation.profile.DefaultProfileComponent
 import io.github.kroune.cumobile.presentation.scanner.DefaultScannerComponent
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
+/**
+ * Callbacks for file download tracking within detail screens.
+ */
+internal class DownloadCallbacks(
+    val refreshFiles: () -> Unit,
+    val navigateToFiles: () -> Unit,
+    val notifyStart: (filename: String) -> Unit,
+    val notifyComplete: (filename: String) -> Unit,
+)
 
 /**
  * Factory that creates [MainComponent.DetailChild] instances
@@ -22,8 +29,7 @@ internal class DetailChildFactory(
     private val navigateBack: () -> Unit,
     private val navigateToLongread: (Int, Int, Int) -> Unit,
     private val onLogout: () -> Unit,
-    private val scope: CoroutineScope,
-    private val refreshFiles: () -> Unit,
+    private val downloadCallbacks: DownloadCallbacks,
 ) {
     fun create(
         config: DefaultMainComponent.DetailConfig,
@@ -81,11 +87,13 @@ internal class DetailChildFactory(
                 ),
                 onBack = navigateBack,
                 onDownloadReady = { url, filename ->
-                    scope.launch {
-                        deps.fileRepository.downloadAndSave(url, filename)
-                        refreshFiles()
-                    }
+                    downloadCallbacks.notifyStart(filename)
+                    val saved = deps.fileRepository.downloadAndSave(url, filename)
+                    downloadCallbacks.notifyComplete(filename)
+                    if (saved) downloadCallbacks.refreshFiles()
+                    saved
                 },
+                onNavigateToFiles = downloadCallbacks.navigateToFiles,
             ),
         )
 
@@ -142,7 +150,7 @@ internal class DetailChildFactory(
                 pdfGenerator = deps.pdfGenerator,
                 fileStorage = deps.fileStorage,
                 onBack = navigateBack,
-                onFileSaved = refreshFiles,
+                onFileSaved = downloadCallbacks.refreshFiles,
             ),
         )
 }

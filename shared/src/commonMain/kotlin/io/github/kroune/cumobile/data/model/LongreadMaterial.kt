@@ -1,5 +1,6 @@
 package io.github.kroune.cumobile.data.model
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
@@ -7,6 +8,14 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
+
+private val logger = KotlinLogging.logger {}
+
+/** Wrapper for the paginated longread materials API response. */
+@Serializable
+data class LongreadMaterialsResponse(
+    val items: List<LongreadMaterial> = emptyList(),
+)
 
 /**
  * Material within a longread.
@@ -111,15 +120,41 @@ data class MaterialEstimationActivity(
 
 /**
  * Extracts a display-ready string from a polymorphic `viewContent` JSON element.
+ *
+ * Handles three shapes:
+ * 1. JSON object → extracts `"value"` or `"description"` field
+ * 2. String that is a JSON-encoded object → parses it, then extracts as above
+ * 3. Plain string → returned as-is
  */
 private fun extractViewContent(element: JsonElement?): String? {
     if (element == null) return null
     return when (element) {
-        is JsonPrimitive -> element.contentOrNull
-        is JsonObject -> {
-            element["value"]?.jsonPrimitive?.contentOrNull
-                ?: element["description"]?.jsonPrimitive?.contentOrNull
+        is JsonPrimitive -> {
+            val content = element.contentOrNull ?: return null
+            tryExtractFromJsonString(content) ?: content
         }
+        is JsonObject -> extractFromObject(element)
         else -> element.toString()
+    }
+}
+
+/** Extracts `"value"` or `"description"` from a [JsonObject]. */
+private fun extractFromObject(obj: JsonObject): String? =
+    obj["value"]?.jsonPrimitive?.contentOrNull
+        ?: obj["description"]?.jsonPrimitive?.contentOrNull
+
+/**
+ * Attempts to parse [content] as a JSON object and extract
+ * `"value"` or `"description"`. Returns null if [content] is
+ * not a JSON-encoded object.
+ */
+private fun tryExtractFromJsonString(content: String): String? {
+    if (!content.trimStart().startsWith("{")) return null
+    return try {
+        val parsed = kotlinx.serialization.json.Json.parseToJsonElement(content)
+        if (parsed is JsonObject) extractFromObject(parsed) else null
+    } catch (e: Exception) {
+        logger.warn(e) { "Failed to parse viewContent as JSON object" }
+        null
     }
 }

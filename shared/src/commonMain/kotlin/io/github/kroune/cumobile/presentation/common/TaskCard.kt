@@ -170,13 +170,20 @@ private fun taskStateBadgeLabel(
  * Parses the deadline and compares it with the current time
  * using kotlinx-datetime for cross-platform compatibility.
  */
+private val timezoneOffsetRegex = Regex("[+-]\\d{2}:\\d{2}$")
+
 internal fun isOverdue(deadline: String?): Boolean {
     if (deadline == null) return false
     return try {
-        val normalized = if (deadline.endsWith("Z")) {
-            deadline.removeSuffix("Z")
-        } else {
-            deadline
+        var normalized = deadline.trim()
+        // Strip timezone offset (+HH:MM / -HH:MM)
+        val offsetMatch = timezoneOffsetRegex.find(normalized)
+        if (offsetMatch != null) {
+            normalized = normalized.substring(0, offsetMatch.range.first)
+        }
+        // Strip Z suffix
+        if (normalized.endsWith("Z")) {
+            normalized = normalized.removeSuffix("Z")
         }
         val isoString = if (!normalized.contains("T")) {
             "${normalized}T23:59:59"
@@ -185,8 +192,7 @@ internal fun isOverdue(deadline: String?): Boolean {
         }
         val deadlineDateTime = LocalDateTime.parse(isoString)
         val deadlineInstant = deadlineDateTime.toInstant(TimeZone.currentSystemDefault())
-        val now = kotlin.time.Clock.System
-            .now()
+        val now = kotlin.time.Clock.System.now()
         deadlineInstant < now
     } catch (e: Exception) {
         logger.error(e) { "Failed to parse deadline for overdue check: $deadline" }
@@ -198,6 +204,15 @@ private val previewTask = StudentTask(
     state = TaskState.InProgress,
     exercise = TaskExercise(name = "ДЗ: Линейные отображения", deadline = "2026-04-01T23:59:00"),
     course = TaskCourse(name = "Линейная алгебра"),
+)
+
+private val previewTaskWithOffset = StudentTask(
+    state = TaskState.Backlog,
+    exercise = TaskExercise(
+        name = "Аудиторная работа",
+        deadline = "2026-03-16T12:20:00+00:00",
+    ),
+    course = TaskCourse(name = "Введение в искусственный интеллект"),
 )
 
 @Preview
@@ -216,6 +231,26 @@ private fun PreviewDeadlineTaskCardLight() {
     CuMobileTheme(darkTheme = false) {
         Box(Modifier.background(AppTheme.colors.background).padding(16.dp)) {
             DeadlineTaskCard(task = previewTask, onClick = {})
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewDeadlineTaskCardWithOffsetDark() {
+    CuMobileTheme(darkTheme = true) {
+        Box(Modifier.background(AppTheme.colors.background).padding(16.dp)) {
+            DeadlineTaskCard(task = previewTaskWithOffset, onClick = {})
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewDeadlineTaskCardWithOffsetLight() {
+    CuMobileTheme(darkTheme = false) {
+        Box(Modifier.background(AppTheme.colors.background).padding(16.dp)) {
+            DeadlineTaskCard(task = previewTaskWithOffset, onClick = {})
         }
     }
 }
