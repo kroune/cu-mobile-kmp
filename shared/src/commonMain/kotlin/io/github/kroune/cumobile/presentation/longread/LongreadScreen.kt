@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import io.github.kroune.cumobile.data.model.LongreadMaterial
+import io.github.kroune.cumobile.data.model.LongreadMaterialContent
 import io.github.kroune.cumobile.presentation.common.ActionErrorBar
 import io.github.kroune.cumobile.presentation.common.AppTheme
 import io.github.kroune.cumobile.presentation.common.CuMobileTheme
@@ -511,6 +512,114 @@ private fun PreviewLongreadActionErrorLight() {
                 ),
             ),
             actionError = "Не удалось отправить решение",
+            onIntent = {},
+            onDismissError = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewLongreadLoadingDark() {
+    CuMobileTheme(darkTheme = true) {
+        LongreadScreenContent(
+            state = LongreadComponent.State(isLoading = true),
+            actionError = null,
+            onIntent = {},
+            onDismissError = {},
+        )
+    }
+}
+
+@Suppress("MagicNumber")
+private val previewLongreadSuccessState = LongreadComponent.State(
+    materials = listOf(
+        LongreadMaterial(
+            id = 1,
+            discriminator = "markdown",
+            content = LongreadMaterialContent(name = "Введение в алгоритмы"),
+            viewContentRaw = kotlinx.serialization.json.JsonPrimitive(
+                "Алгоритм — это конечная последовательность точно определённых " +
+                    "действий для решения некоторого класса задач. Сложность алгоритма " +
+                    "определяется количеством элементарных операций.",
+            ),
+        ),
+        LongreadMaterial(
+            id = 2,
+            discriminator = "file",
+            filename = "lecture_slides.pdf",
+            length = 2_500_000,
+            version = "v1",
+        ),
+        LongreadMaterial(
+            id = 3,
+            discriminator = "coding",
+            content = LongreadMaterialContent(name = "ДЗ: Быстрая сортировка"),
+            taskId = 42,
+        ),
+        LongreadMaterial(
+            id = 4,
+            discriminator = "questions",
+            content = LongreadMaterialContent(name = "Тест по теме"),
+        ),
+    ),
+)
+
+@Preview
+@Composable
+private fun PreviewLongreadSuccessDark() {
+    CuMobileTheme(darkTheme = true) {
+        LongreadScreenContent(
+            state = previewLongreadSuccessState,
+            actionError = null,
+            onIntent = {},
+            onDismissError = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewLongreadSuccessLight() {
+    CuMobileTheme(darkTheme = false) {
+        LongreadScreenContent(
+            state = previewLongreadSuccessState,
+            actionError = null,
+            onIntent = {},
+            onDismissError = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewLongreadSearchDark() {
+    CuMobileTheme(darkTheme = true) {
+        LongreadScreenContent(
+            state = previewLongreadSuccessState.copy(
+                isSearchVisible = true,
+                searchQuery = "алгоритм",
+                searchMatchCount = 2,
+                currentMatchIndex = 0,
+            ),
+            actionError = null,
+            onIntent = {},
+            onDismissError = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewLongreadSearchNoMatchesDark() {
+    CuMobileTheme(darkTheme = true) {
+        LongreadScreenContent(
+            state = previewLongreadSuccessState.copy(
+                isSearchVisible = true,
+                searchQuery = "несуществующий",
+                searchMatchCount = 0,
+            ),
+            actionError = null,
             onIntent = {},
             onDismissError = {},
         )

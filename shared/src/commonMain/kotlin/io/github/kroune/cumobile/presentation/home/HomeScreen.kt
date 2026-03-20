@@ -532,3 +532,104 @@ private fun PreviewHomeScreenErrorLight() {
         }
     }
 }
+
+@Preview
+@Composable
+private fun PreviewHomeScreenLoadingDark() {
+    CuMobileTheme(darkTheme = true) {
+        Box(
+            Modifier
+                .fillMaxSize()
+                .background(AppTheme.colors.background),
+        ) {
+            io.github.kroune.cumobile.presentation.common.LoadingContent()
+        }
+    }
+}
+
+@Suppress("MagicNumber")
+private val previewHomeEmptyState = HomeComponent.State(
+    isLoading = false,
+    profileInitials = "ИП",
+    selectedDateMillis = 1774051200000L,
+)
+
+@Preview
+@Composable
+private fun PreviewHomeScreenEmptyDark() {
+    CuMobileTheme(darkTheme = true) {
+        HomeContent(
+            state = previewHomeEmptyState,
+            onIntent = {},
+            onTaskClick = {},
+            onCourseClick = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewHomeScreenEmptyLight() {
+    CuMobileTheme(darkTheme = false) {
+        HomeContent(
+            state = previewHomeEmptyState,
+            onIntent = {},
+            onTaskClick = {},
+            onCourseClick = {},
+        )
+    }
+}
+
+@Suppress("MagicNumber")
+private val previewHomeWithScheduleState = previewHomeState.copy(
+    isCalendarConnected = true,
+    classes = listOf(
+        ClassData(
+            startTime = "09:00",
+            endTime = "10:30",
+            title = "Математический анализ",
+            room = "А-301",
+            type = "Лекция",
+        ),
+        ClassData(
+            startTime = "11:00",
+            endTime = "12:30",
+            title = "Программирование",
+            room = "Б-204",
+            type = "Семинар",
+        ),
+        ClassData(
+            startTime = "14:00",
+            endTime = "15:30",
+            title = "Физика",
+            room = "",
+            type = "Лабораторная",
+        ),
+    ),
+)
+
+@Preview
+@Composable
+private fun PreviewHomeWithScheduleDark() {
+    CuMobileTheme(darkTheme = true) {
+        HomeContent(
+            state = previewHomeWithScheduleState,
+            onIntent = {},
+            onTaskClick = {},
+            onCourseClick = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewHomeWithScheduleLight() {
+    CuMobileTheme(darkTheme = false) {
+        HomeContent(
+            state = previewHomeWithScheduleState,
+            onIntent = {},
+            onTaskClick = {},
+            onCourseClick = {},
+        )
+    }
+}

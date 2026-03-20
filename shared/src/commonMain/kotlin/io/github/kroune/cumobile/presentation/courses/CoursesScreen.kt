@@ -35,6 +35,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import io.github.kroune.cumobile.data.model.Course
+import io.github.kroune.cumobile.data.model.GradebookGrade
+import io.github.kroune.cumobile.data.model.GradebookResponse
+import io.github.kroune.cumobile.data.model.GradebookSemester
+import io.github.kroune.cumobile.data.model.StudentPerformanceCourse
 import io.github.kroune.cumobile.presentation.common.AppTheme
 import io.github.kroune.cumobile.presentation.common.CuMobileTheme
 import io.github.kroune.cumobile.presentation.common.EmptyContent
@@ -374,5 +378,154 @@ private fun PreviewCoursesScreenDark() {
 private fun PreviewCoursesScreenLight() {
     CuMobileTheme(darkTheme = false) {
         CoursesScreenContent(state = previewCoursesState, onIntent = {})
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewCoursesLoadingDark() {
+    CuMobileTheme(darkTheme = true) {
+        CoursesScreenContent(
+            state = CoursesComponent.State(isLoading = true),
+            onIntent = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewCoursesErrorDark() {
+    CuMobileTheme(darkTheme = true) {
+        CoursesScreenContent(
+            state = CoursesComponent.State(error = "Не удалось загрузить курсы"),
+            onIntent = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewCoursesErrorLight() {
+    CuMobileTheme(darkTheme = false) {
+        CoursesScreenContent(
+            state = CoursesComponent.State(error = "Не удалось загрузить курсы"),
+            onIntent = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewCoursesEmptyDark() {
+    CuMobileTheme(darkTheme = true) {
+        CoursesScreenContent(
+            state = CoursesComponent.State(),
+            onIntent = {},
+        )
+    }
+}
+
+@Suppress("MagicNumber")
+@Preview
+@Composable
+private fun PreviewCoursesEditModeDark() {
+    CuMobileTheme(darkTheme = true) {
+        CoursesScreenContent(
+            state = previewCoursesState.copy(isEditMode = true),
+            onIntent = {},
+        )
+    }
+}
+
+@Suppress("MagicNumber")
+private val previewCoursesWithArchived = previewCoursesState.copy(
+    courses = previewCoursesState.courses + listOf(
+        Course(id = 5, name = "Введение в ИИ", category = "development", isArchived = true),
+        Course(id = 6, name = "Философия", category = "general", isArchived = true),
+    ),
+    showArchived = true,
+)
+
+@Preview
+@Composable
+private fun PreviewCoursesArchivedDark() {
+    CuMobileTheme(darkTheme = true) {
+        CoursesScreenContent(state = previewCoursesWithArchived, onIntent = {})
+    }
+}
+
+@Suppress("MagicNumber")
+private val previewGradeSheetState = CoursesComponent.State(
+    segment = 1,
+    courses = previewCoursesState.courses,
+    performanceCourses = listOf(
+        StudentPerformanceCourse(id = 1, name = "Алгоритмы и структуры данных", total = 8),
+        StudentPerformanceCourse(id = 2, name = "Линейная алгебра", total = 6),
+        StudentPerformanceCourse(id = 3, name = "Управление проектами", total = 4),
+    ),
+)
+
+@Preview
+@Composable
+private fun PreviewGradeSheetDark() {
+    CuMobileTheme(darkTheme = true) {
+        CoursesScreenContent(state = previewGradeSheetState, onIntent = {})
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewGradeSheetLight() {
+    CuMobileTheme(darkTheme = false) {
+        CoursesScreenContent(state = previewGradeSheetState, onIntent = {})
+    }
+}
+
+@Suppress("MagicNumber")
+private val previewGradebookState = CoursesComponent.State(
+    segment = 2,
+    gradebook = GradebookResponse(
+        semesters = listOf(
+            GradebookSemester(
+                year = 2025,
+                semesterNumber = 1,
+                grades = listOf(
+                    GradebookGrade(
+                        subject = "Математический анализ",
+                        grade = 5.0,
+                        normalizedGrade = "excellent",
+                        assessmentType = "exam",
+                    ),
+                    GradebookGrade(
+                        subject = "Физическая культура",
+                        normalizedGrade = "passed",
+                        assessmentType = "credit",
+                    ),
+                    GradebookGrade(
+                        subject = "Основы программирования",
+                        grade = 4.0,
+                        normalizedGrade = "good",
+                        assessmentType = "difCredit",
+                        subjectType = "elective",
+                    ),
+                ),
+            ),
+        ),
+    ),
+)
+
+@Preview
+@Composable
+private fun PreviewGradebookDark() {
+    CuMobileTheme(darkTheme = true) {
+        CoursesScreenContent(state = previewGradebookState, onIntent = {})
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewGradebookLight() {
+    CuMobileTheme(darkTheme = false) {
+        CoursesScreenContent(state = previewGradebookState, onIntent = {})
     }
 }

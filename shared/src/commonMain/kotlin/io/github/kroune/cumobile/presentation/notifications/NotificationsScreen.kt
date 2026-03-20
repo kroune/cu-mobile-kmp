@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import io.github.kroune.cumobile.data.model.NotificationItem
+import io.github.kroune.cumobile.data.model.NotificationLink
 import io.github.kroune.cumobile.presentation.common.AppTheme
 import io.github.kroune.cumobile.presentation.common.CuMobileTheme
 import io.github.kroune.cumobile.presentation.common.DetailTopBar
@@ -301,6 +302,123 @@ private fun PreviewNotificationsScreenLight() {
     CuMobileTheme(darkTheme = false) {
         NotificationsScreenContent(
             state = previewNotificationsState,
+            onIntent = {},
+            onBack = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewNotificationsLoadingDark() {
+    CuMobileTheme(darkTheme = true) {
+        NotificationsScreenContent(
+            state = NotificationsComponent.State(isLoading = true),
+            onIntent = {},
+            onBack = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewNotificationsErrorDark() {
+    CuMobileTheme(darkTheme = true) {
+        NotificationsScreenContent(
+            state = NotificationsComponent.State(
+                error = "Не удалось загрузить уведомления",
+            ),
+            onIntent = {},
+            onBack = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewNotificationsErrorLight() {
+    CuMobileTheme(darkTheme = false) {
+        NotificationsScreenContent(
+            state = NotificationsComponent.State(
+                error = "Не удалось загрузить уведомления",
+            ),
+            onIntent = {},
+            onBack = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewNotificationsEmptyDark() {
+    CuMobileTheme(darkTheme = true) {
+        NotificationsScreenContent(
+            state = NotificationsComponent.State(),
+            onIntent = {},
+            onBack = {},
+        )
+    }
+}
+
+@Suppress("MagicNumber")
+private val previewOtherTabState = NotificationsComponent.State(
+    selectedTab = 1,
+    otherNotifications = listOf(
+        NotificationItem(
+            id = 10,
+            title = "Обновление системы",
+            description = "Плановое техническое обслуживание 25 марта с 02:00 до 06:00",
+            icon = "news",
+            category = "2",
+            createdAt = "2026-03-20T09:00:00",
+        ),
+        NotificationItem(
+            id = 11,
+            title = "Новый опрос",
+            description = "Пожалуйста, заполните опрос удовлетворённости обучением",
+            icon = "servicedesk",
+            category = "2",
+            createdAt = "2026-03-19T16:00:00",
+            link = NotificationLink(
+                uri = "https://example.com/survey",
+                label = "Пройти опрос",
+            ),
+        ),
+    ),
+)
+
+@Preview
+@Composable
+private fun PreviewNotificationsOtherTabDark() {
+    CuMobileTheme(darkTheme = true) {
+        NotificationsScreenContent(
+            state = previewOtherTabState,
+            onIntent = {},
+            onBack = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewNotificationsWithLinkDark() {
+    CuMobileTheme(darkTheme = true) {
+        NotificationsScreenContent(
+            state = previewNotificationsState.copy(
+                educationNotifications = previewNotificationsState.educationNotifications +
+                    NotificationItem(
+                        id = 3,
+                        title = "Новый лонгрид по Алгоритмам",
+                        description = "Добавлен материал «Динамическое программирование»",
+                        icon = "education",
+                        category = "1",
+                        createdAt = "2026-03-16T08:00:00",
+                        link = NotificationLink(
+                            uri = "/longread/123",
+                            label = "Открыть лонгрид",
+                        ),
+                    ),
+            ),
             onIntent = {},
             onBack = {},
         )

@@ -388,3 +388,92 @@ private fun PreviewTasksScreenLight() {
         TasksScreenContent(state = previewTasksState, onIntent = {})
     }
 }
+
+@Preview
+@Composable
+private fun PreviewTasksLoadingDark() {
+    CuMobileTheme(darkTheme = true) {
+        TasksScreenContent(
+            state = TasksComponent.State(isLoading = true),
+            onIntent = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewTasksErrorDark() {
+    CuMobileTheme(darkTheme = true) {
+        TasksScreenContent(
+            state = TasksComponent.State(error = "Не удалось загрузить задания"),
+            onIntent = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewTasksErrorLight() {
+    CuMobileTheme(darkTheme = false) {
+        TasksScreenContent(
+            state = TasksComponent.State(error = "Не удалось загрузить задания"),
+            onIntent = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewTasksEmptyFiltersDark() {
+    CuMobileTheme(darkTheme = true) {
+        TasksScreenContent(
+            state = previewTasksState.copy(
+                searchQuery = "несуществующий запрос",
+            ),
+            onIntent = {},
+        )
+    }
+}
+
+@Suppress("MagicNumber")
+private val previewTasksArchiveState = TasksComponent.State(
+    segment = 1,
+    allTasks = listOf(
+        StudentTask(
+            id = 10,
+            state = TaskState.Evaluated,
+            score = 8.0,
+            exercise = TaskExercise(name = "ДЗ: Сортировки"),
+            course = TaskCourse(id = 1, name = "Алгоритмы"),
+        ),
+        StudentTask(
+            id = 11,
+            state = TaskState.Failed,
+            score = 2.0,
+            exercise = TaskExercise(name = "Контрольная: Матрицы"),
+            course = TaskCourse(id = 2, name = "Линейная алгебра"),
+        ),
+    ),
+)
+
+@Preview
+@Composable
+private fun PreviewTasksArchiveDark() {
+    CuMobileTheme(darkTheme = true) {
+        TasksScreenContent(state = previewTasksArchiveState, onIntent = {})
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewTasksWithFiltersDark() {
+    CuMobileTheme(darkTheme = true) {
+        TasksScreenContent(
+            state = previewTasksState.copy(
+                statusFilter = TaskState.InProgress,
+                courseFilter = 1,
+            ),
+            onIntent = {},
+        )
+    }
+}

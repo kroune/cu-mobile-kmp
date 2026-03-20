@@ -42,6 +42,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
+import io.github.kroune.cumobile.data.model.EmailInfo
+import io.github.kroune.cumobile.data.model.PhoneInfo
 import io.github.kroune.cumobile.data.model.StudentProfile
 import io.github.kroune.cumobile.presentation.common.ActionErrorBar
 import io.github.kroune.cumobile.presentation.common.AppTheme
@@ -573,6 +575,134 @@ private fun PreviewProfileActionErrorLight() {
         ProfileScreenContent(
             state = previewProfileState,
             actionError = "Не удалось загрузить аватар",
+            onIntent = {},
+            onBack = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewProfileLoadingDark() {
+    CuMobileTheme(darkTheme = true) {
+        ProfileScreenContent(
+            state = ProfileComponent.State(isLoading = true),
+            onIntent = {},
+            onBack = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewProfileLoadingLight() {
+    CuMobileTheme(darkTheme = false) {
+        ProfileScreenContent(
+            state = ProfileComponent.State(isLoading = true),
+            onIntent = {},
+            onBack = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewProfileWithCalendarDark() {
+    CuMobileTheme(darkTheme = true) {
+        ProfileScreenContent(
+            state = previewProfileState.copy(
+                calendarUrl = "https://calendar.yandex.ru/export/ics.xml?id=12345",
+                calendarUrlInput = "https://calendar.yandex.ru/export/ics.xml?id=12345",
+            ),
+            onIntent = {},
+            onBack = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewProfileWithCalendarLight() {
+    CuMobileTheme(darkTheme = false) {
+        ProfileScreenContent(
+            state = previewProfileState.copy(
+                calendarUrl = "https://calendar.yandex.ru/export/ics.xml?id=12345",
+                calendarUrlInput = "https://calendar.yandex.ru/export/ics.xml?id=12345",
+            ),
+            onIntent = {},
+            onBack = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewProfileUploadingAvatarDark() {
+    CuMobileTheme(darkTheme = true) {
+        ProfileScreenContent(
+            state = previewProfileState.copy(isUploadingAvatar = true),
+            onIntent = {},
+            onBack = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewProfileDeletingAvatarDark() {
+    CuMobileTheme(darkTheme = true) {
+        ProfileScreenContent(
+            state = previewProfileState.copy(
+                avatarBytes = ByteArray(0),
+                isDeletingAvatar = true,
+            ),
+            onIntent = {},
+            onBack = {},
+        )
+    }
+}
+
+@Suppress("MagicNumber")
+private val previewProfileFullState = ProfileComponent.State(
+    profile = StudentProfile(
+        firstName = "Иван",
+        lastName = "Петров",
+        middleName = "Сергеевич",
+        educationLevel = "bachelor",
+        course = 2,
+        telegram = "@ipetrov",
+        timeLogin = "ipetrov",
+        emails = listOf(
+            EmailInfo(
+                value = "ipetrov@edu.centraluniversity.ru",
+                type = "university",
+            ),
+            EmailInfo(value = "ivan.petrov@gmail.com", type = "personal"),
+        ),
+        phones = listOf(
+            PhoneInfo(value = "+79001234567", type = "mobile"),
+        ),
+    ),
+)
+
+@Preview
+@Composable
+private fun PreviewProfileFullDataDark() {
+    CuMobileTheme(darkTheme = true) {
+        ProfileScreenContent(
+            state = previewProfileFullState,
+            onIntent = {},
+            onBack = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewProfileFullDataLight() {
+    CuMobileTheme(darkTheme = false) {
+        ProfileScreenContent(
+            state = previewProfileFullState,
             onIntent = {},
             onBack = {},
         )

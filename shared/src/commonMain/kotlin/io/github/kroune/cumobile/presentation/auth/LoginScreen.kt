@@ -219,3 +219,51 @@ private fun PreviewLoginScreenLight() {
         LoginScreenContent(state = LoginComponent.State(), onLoginClick = {})
     }
 }
+
+@Preview
+@Composable
+private fun PreviewLoginScreenLoadingDark() {
+    CuMobileTheme(darkTheme = true) {
+        LoginScreenContent(
+            state = LoginComponent.State(isLoading = true),
+            onLoginClick = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewLoginScreenLoadingLight() {
+    CuMobileTheme(darkTheme = false) {
+        LoginScreenContent(
+            state = LoginComponent.State(isLoading = true),
+            onLoginClick = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewLoginScreenErrorDark() {
+    CuMobileTheme(darkTheme = true) {
+        LoginScreenContent(
+            state = LoginComponent.State(
+                error = "Не удалось авторизоваться. Проверьте подключение к сети.",
+            ),
+            onLoginClick = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewLoginScreenErrorLight() {
+    CuMobileTheme(darkTheme = false) {
+        LoginScreenContent(
+            state = LoginComponent.State(
+                error = "Не удалось авторизоваться. Проверьте подключение к сети.",
+            ),
+            onLoginClick = {},
+        )
+    }
+}

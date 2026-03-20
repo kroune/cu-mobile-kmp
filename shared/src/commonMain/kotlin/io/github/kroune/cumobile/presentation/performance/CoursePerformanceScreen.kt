@@ -25,9 +25,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
+import io.github.kroune.cumobile.data.model.CourseExercise
+import io.github.kroune.cumobile.data.model.CourseExerciseActivity
+import io.github.kroune.cumobile.data.model.CourseExerciseTheme
+import io.github.kroune.cumobile.data.model.TaskScore
+import io.github.kroune.cumobile.data.model.TaskScoreActivity
 import io.github.kroune.cumobile.presentation.common.AppTheme
+import io.github.kroune.cumobile.presentation.common.CuMobileTheme
 import io.github.kroune.cumobile.presentation.common.DetailTopBar
 import io.github.kroune.cumobile.presentation.common.ErrorContent
 import io.github.kroune.cumobile.presentation.common.LoadingContent
@@ -48,9 +55,25 @@ fun CoursePerformanceScreen(
 ) {
     val state by component.state.subscribeAsState()
 
+    CoursePerformanceScreenContent(
+        state = state,
+        onIntent = component::onIntent,
+        onBack = onBack,
+        modifier = modifier,
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun CoursePerformanceScreenContent(
+    state: CoursePerformanceComponent.State,
+    onIntent: (CoursePerformanceComponent.Intent) -> Unit,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     PullToRefreshBox(
         isRefreshing = state.isLoading,
-        onRefresh = { component.onIntent(CoursePerformanceComponent.Intent.Refresh) },
+        onRefresh = { onIntent(CoursePerformanceComponent.Intent.Refresh) },
         modifier = modifier
             .fillMaxSize()
             .background(AppTheme.colors.background),
@@ -66,12 +89,12 @@ fun CoursePerformanceScreen(
             when {
                 state.isLoading && state.exercises.isEmpty() -> LoadingContent()
                 state.error != null && state.exercises.isEmpty() -> ErrorContent(
-                    error = state.error.orEmpty(),
+                    error = state.error,
                     onRetry = {
-                        component.onIntent(CoursePerformanceComponent.Intent.Refresh)
+                        onIntent(CoursePerformanceComponent.Intent.Refresh)
                     },
                 )
-                else -> PerformanceContent(state = state, component = component)
+                else -> PerformanceContent(state = state, onIntent = onIntent)
             }
         }
     }
@@ -80,7 +103,7 @@ fun CoursePerformanceScreen(
 @Composable
 private fun PerformanceContent(
     state: CoursePerformanceComponent.State,
-    component: CoursePerformanceComponent,
+    onIntent: (CoursePerformanceComponent.Intent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val tabLabels = listOf("Набранные баллы", "Успеваемость")
@@ -93,7 +116,7 @@ private fun PerformanceContent(
             labels = tabLabels,
             selectedIndex = state.selectedTab,
             onSelect = {
-                component.onIntent(CoursePerformanceComponent.Intent.SelectTab(it))
+                onIntent(CoursePerformanceComponent.Intent.SelectTab(it))
             },
         )
         when (state.selectedTab) {
@@ -102,7 +125,7 @@ private fun PerformanceContent(
                 activityNames = state.activityNames,
                 activeFilter = state.activityFilter,
                 onFilterActivity = {
-                    component.onIntent(
+                    onIntent(
                         CoursePerformanceComponent.Intent.FilterByActivity(it),
                     )
                 },
@@ -194,5 +217,166 @@ internal fun scoreRatioColor(ratio: Double): Color =
         ratio >= 0.4 -> Color(0xFFFFA726)
         else -> Color(0xFFEF5350)
     }
+
+// endregion
+
+// region Previews
+
+@Suppress("MagicNumber")
+private val previewPerformanceExercises =
+    listOf(
+        ExerciseWithScore(
+            exercise = CourseExercise(
+                id = 1,
+                name = "ДЗ: Быстрая сортировка",
+                activity = CourseExerciseActivity(id = 1, name = "Домашнее задание"),
+                theme = CourseExerciseTheme(id = 1, name = "Сортировки"),
+            ),
+            score = TaskScore(
+                id = 1,
+                score = 8.0,
+                maxScore = 10,
+                exerciseId = 1,
+                state = "evaluated",
+                activity = TaskScoreActivity(
+                    id = 1,
+                    name = "Домашнее задание",
+                    weight = 0.4,
+                ),
+            ),
+        ),
+        ExerciseWithScore(
+            exercise = CourseExercise(
+                id = 2,
+                name = "Лабораторная: Хеш-таблицы",
+                activity = CourseExerciseActivity(id = 2, name = "Лабораторная"),
+                theme = CourseExerciseTheme(id = 2, name = "Хеширование"),
+            ),
+            score = TaskScore(
+                id = 2,
+                score = 5.0,
+                maxScore = 10,
+                exerciseId = 2,
+                state = "evaluated",
+                activity = TaskScoreActivity(
+                    id = 2,
+                    name = "Лабораторная",
+                    weight = 0.3,
+                ),
+            ),
+        ),
+        ExerciseWithScore(
+            exercise = CourseExercise(
+                id = 3,
+                name = "Контрольная: Графы",
+                activity = CourseExerciseActivity(id = 1, name = "Домашнее задание"),
+                theme = CourseExerciseTheme(id = 3, name = "Графы"),
+            ),
+            score = null,
+        ),
+    )
+
+@Suppress("MagicNumber")
+private val previewPerformanceState =
+    CoursePerformanceComponent.State(
+        courseId = 1,
+        courseName = "Алгоритмы и структуры данных",
+        totalGrade = 7,
+        exercises = previewPerformanceExercises,
+        activitySummaries = listOf(
+            ActivitySummary(
+                activityId = 1,
+                activityName = "Домашнее задание",
+                count = 5,
+                averageScore = 8.0,
+                weight = 0.4,
+            ),
+            ActivitySummary(
+                activityId = 2,
+                activityName = "Лабораторная",
+                count = 3,
+                averageScore = 5.0,
+                weight = 0.3,
+            ),
+        ),
+    )
+
+@Preview
+@Composable
+private fun PreviewPerformanceScoresDark() {
+    CuMobileTheme(darkTheme = true) {
+        CoursePerformanceScreenContent(
+            state = previewPerformanceState,
+            onIntent = {},
+            onBack = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewPerformanceScoresLight() {
+    CuMobileTheme(darkTheme = false) {
+        CoursePerformanceScreenContent(
+            state = previewPerformanceState,
+            onIntent = {},
+            onBack = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewPerformanceTabDark() {
+    CuMobileTheme(darkTheme = true) {
+        CoursePerformanceScreenContent(
+            state = previewPerformanceState.copy(selectedTab = 1),
+            onIntent = {},
+            onBack = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewPerformanceLoadingDark() {
+    CuMobileTheme(darkTheme = true) {
+        CoursePerformanceScreenContent(
+            state = CoursePerformanceComponent.State(courseId = 1, isLoading = true),
+            onIntent = {},
+            onBack = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewPerformanceErrorDark() {
+    CuMobileTheme(darkTheme = true) {
+        CoursePerformanceScreenContent(
+            state = CoursePerformanceComponent.State(
+                courseId = 1,
+                error = "Не удалось загрузить успеваемость",
+            ),
+            onIntent = {},
+            onBack = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewPerformanceErrorLight() {
+    CuMobileTheme(darkTheme = false) {
+        CoursePerformanceScreenContent(
+            state = CoursePerformanceComponent.State(
+                courseId = 1,
+                error = "Не удалось загрузить успеваемость",
+            ),
+            onIntent = {},
+            onBack = {},
+        )
+    }
+}
 
 // endregion
