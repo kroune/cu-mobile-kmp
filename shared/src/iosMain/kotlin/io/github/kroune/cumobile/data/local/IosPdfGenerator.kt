@@ -6,20 +6,30 @@ package io.github.kroune.cumobile.data.local
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.addressOf
+import kotlinx.cinterop.useContents
 import kotlinx.cinterop.usePinned
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import platform.CoreGraphics.CGContextRotateCTM
+import platform.CoreGraphics.CGContextTranslateCTM
 import platform.CoreGraphics.CGRectMake
 import platform.CoreGraphics.CGSizeMake
-import platform.Foundation.NSData
 import platform.Foundation.NSMutableData
-import platform.Foundation.create
+import platform.Foundation.appendBytes
+import platform.UIKit.UIGraphicsBeginImageContext
 import platform.UIKit.UIGraphicsBeginPDFContextToData
 import platform.UIKit.UIGraphicsBeginPDFPageWithInfo
+import platform.UIKit.UIGraphicsEndImageContext
 import platform.UIKit.UIGraphicsEndPDFContext
+import platform.UIKit.UIGraphicsGetCurrentContext
+import platform.UIKit.UIGraphicsGetImageFromCurrentImageContext
 import platform.UIKit.UIImage
 import platform.posix.memcpy
+import kotlin.math.PI
+import kotlin.math.abs
+import kotlin.math.cos
+import kotlin.math.sin
 
 private val logger = KotlinLogging.logger {}
 
@@ -39,17 +49,23 @@ class IosPdfGenerator(
             try {
                 val pdfData = NSMutableData()
                 UIGraphicsBeginPDFContextToData(pdfData, CGRectMake(0.0, 0.0, 0.0, 0.0), null)
-
-                val processedImages = pages.mapNotNull { page -> processPage(page) }
-                for (image in processedImages) {
-                    val pageRect = CGRectMake(0.0, 0.0, image.size.width, image.size.height)
-                    UIGraphicsBeginPDFPageWithInfo(pageRect, null)
-                    image.drawInRect(pageRect)
+                try {
+                    val processedImages = pages.mapNotNull { page -> processPage(page) }
+                    for (image in processedImages) {
+                        val imgWidth = image.size.useContents { width }
+                        val imgHeight = image.size.useContents { height }
+                        val pageRect = CGRectMake(0.0, 0.0, imgWidth, imgHeight)
+                        UIGraphicsBeginPDFPageWithInfo(pageRect, null)
+                        image.drawInRect(pageRect)
+                    }
+                } finally {
+                    UIGraphicsEndPDFContext()
                 }
 
-                UIGraphicsEndPDFContext()
+                val length = pdfData.length.toInt()
+                if (length == 0) return@withContext null
 
-                val bytes = ByteArray(pdfData.length.toInt())
+                val bytes = ByteArray(length)
                 bytes.usePinned { pinned ->
                     memcpy(pinned.addressOf(0), pdfData.bytes, pdfData.length)
                 }
@@ -61,11 +77,12 @@ class IosPdfGenerator(
         }
 
     private fun processPage(page: PdfPageInput): UIImage? {
-        val nsData = page.imageBytes.usePinned { pinned ->
-            NSData.create(
-                bytes = pinned.addressOf(0),
-                length = page.imageBytes.size.toULong(),
-            )
+        val nsData = NSMutableData().apply {
+            if (page.imageBytes.isNotEmpty()) {
+                page.imageBytes.usePinned { pinned ->
+                    appendBytes(pinned.addressOf(0), page.imageBytes.size.toULong())
+                }
+            }
         }
         val image = UIImage(data = nsData) ?: return null
         if (page.rotationDegrees == 0f) return image
@@ -76,35 +93,31 @@ class IosPdfGenerator(
         image: UIImage,
         degrees: Float,
     ): UIImage? {
-        val radians = degrees * kotlin.math.PI / 180.0
-        val size = image.size
+        val radians = degrees * PI / 180.0
+        val imgWidth = image.size.useContents { width }
+        val imgHeight = image.size.useContents { height }
         val rotatedSize = CGSizeMake(
-            kotlin.math.abs(size.width * kotlin.math.cos(radians)) +
-                kotlin.math.abs(size.height * kotlin.math.sin(radians)),
-            kotlin.math.abs(size.width * kotlin.math.sin(radians)) +
-                kotlin.math.abs(size.height * kotlin.math.cos(radians)),
+            abs(imgWidth * cos(radians)) + abs(imgHeight * sin(radians)),
+            abs(imgWidth * sin(radians)) + abs(imgHeight * cos(radians)),
         )
 
-        platform.UIKit.UIGraphicsBeginImageContext(rotatedSize)
-        val context = platform.UIKit.UIGraphicsGetCurrentContext() ?: return null
+        UIGraphicsBeginImageContext(rotatedSize)
+        val context = UIGraphicsGetCurrentContext()
+        if (context == null) {
+            UIGraphicsEndImageContext()
+            return null
+        }
 
-        platform.CoreGraphics.CGContextTranslateCTM(
-            context,
-            rotatedSize.width / 2.0,
-            rotatedSize.height / 2.0,
-        )
-        platform.CoreGraphics.CGContextRotateCTM(context, radians)
+        val rotW = rotatedSize.useContents { width }
+        val rotH = rotatedSize.useContents { height }
+        CGContextTranslateCTM(context, rotW / 2.0, rotH / 2.0)
+        CGContextRotateCTM(context, radians)
         image.drawInRect(
-            CGRectMake(
-                -size.width / 2.0,
-                -size.height / 2.0,
-                size.width,
-                size.height,
-            ),
+            CGRectMake(-imgWidth / 2.0, -imgHeight / 2.0, imgWidth, imgHeight),
         )
 
-        val rotatedImage = platform.UIKit.UIGraphicsGetImageFromCurrentImageContext()
-        platform.UIKit.UIGraphicsEndImageContext()
+        val rotatedImage = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
         return rotatedImage
     }
 }
