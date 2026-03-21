@@ -34,7 +34,8 @@ internal class AuthRepositoryImpl(
         localDataSource.clearCookie()
     }
 
-    override suspend fun hasCookie(): Boolean = localDataSource.cookieFlow.first() != null
+    override suspend fun hasCookie(): Boolean =
+        localDataSource.cookieFlow.first() != null
 
     override suspend fun validateCookie(): Boolean {
         val cookie = localDataSource.cookieFlow.first()
