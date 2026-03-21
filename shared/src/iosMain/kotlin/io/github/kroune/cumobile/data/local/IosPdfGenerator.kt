@@ -11,15 +11,25 @@ import kotlinx.cinterop.usePinned
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import platform.CoreGraphics.CGContextRotateCTM
+import platform.CoreGraphics.CGContextTranslateCTM
 import platform.CoreGraphics.CGRectMake
 import platform.CoreGraphics.CGSizeMake
 import platform.Foundation.NSMutableData
 import platform.Foundation.appendBytes
+import platform.UIKit.UIGraphicsBeginImageContext
 import platform.UIKit.UIGraphicsBeginPDFContextToData
 import platform.UIKit.UIGraphicsBeginPDFPageWithInfo
+import platform.UIKit.UIGraphicsEndImageContext
 import platform.UIKit.UIGraphicsEndPDFContext
+import platform.UIKit.UIGraphicsGetCurrentContext
+import platform.UIKit.UIGraphicsGetImageFromCurrentImageContext
 import platform.UIKit.UIImage
 import platform.posix.memcpy
+import kotlin.math.PI
+import kotlin.math.abs
+import kotlin.math.cos
+import kotlin.math.sin
 
 private val logger = KotlinLogging.logger {}
 
@@ -79,29 +89,31 @@ class IosPdfGenerator(
         image: UIImage,
         degrees: Float,
     ): UIImage? {
-        val radians = degrees * kotlin.math.PI / 180.0
+        val radians = degrees * PI / 180.0
         val imgWidth = image.size.useContents { width }
         val imgHeight = image.size.useContents { height }
         val rotatedSize = CGSizeMake(
-            kotlin.math.abs(imgWidth * kotlin.math.cos(radians)) +
-                kotlin.math.abs(imgHeight * kotlin.math.sin(radians)),
-            kotlin.math.abs(imgWidth * kotlin.math.sin(radians)) +
-                kotlin.math.abs(imgHeight * kotlin.math.cos(radians)),
+            abs(imgWidth * cos(radians)) + abs(imgHeight * sin(radians)),
+            abs(imgWidth * sin(radians)) + abs(imgHeight * cos(radians)),
         )
 
-        platform.UIKit.UIGraphicsBeginImageContext(rotatedSize)
-        val context = platform.UIKit.UIGraphicsGetCurrentContext() ?: return null
+        UIGraphicsBeginImageContext(rotatedSize)
+        val context = UIGraphicsGetCurrentContext()
+        if (context == null) {
+            UIGraphicsEndImageContext()
+            return null
+        }
 
         val rotW = rotatedSize.useContents { width }
         val rotH = rotatedSize.useContents { height }
-        platform.CoreGraphics.CGContextTranslateCTM(context, rotW / 2.0, rotH / 2.0)
-        platform.CoreGraphics.CGContextRotateCTM(context, radians)
+        CGContextTranslateCTM(context, rotW / 2.0, rotH / 2.0)
+        CGContextRotateCTM(context, radians)
         image.drawInRect(
             CGRectMake(-imgWidth / 2.0, -imgHeight / 2.0, imgWidth, imgHeight),
         )
 
-        val rotatedImage = platform.UIKit.UIGraphicsGetImageFromCurrentImageContext()
-        platform.UIKit.UIGraphicsEndImageContext()
+        val rotatedImage = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
         return rotatedImage
     }
 }

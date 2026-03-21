@@ -9,6 +9,7 @@ import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.ptr
 import kotlinx.cinterop.usePinned
 import kotlinx.cinterop.value
+import platform.Foundation.NSData
 import platform.Foundation.NSDate
 import platform.Foundation.NSDocumentDirectory
 import platform.Foundation.NSError
@@ -16,10 +17,8 @@ import platform.Foundation.NSFileManager
 import platform.Foundation.NSFileModificationDate
 import platform.Foundation.NSFileSize
 import platform.Foundation.NSMutableData
-import platform.Foundation.NSString
 import platform.Foundation.NSUserDomainMask
 import platform.Foundation.appendBytes
-import platform.Foundation.stringByAppendingPathComponent
 import platform.Foundation.timeIntervalSince1970
 import platform.Foundation.writeToFile
 
@@ -93,8 +92,7 @@ internal class IosFileStorage : FileStorage {
     }
 
     private fun buildFileInfo(filename: String): DownloadedFileInfo? {
-        val fullPath = nsString(downloadsDir)
-            .stringByAppendingPathComponent(filename)
+        val fullPath = "$downloadsDir/$filename"
         val attributes = memScoped {
             val errorPtr = alloc<ObjCObjectVar<NSError?>>()
             val attrs = fileManager.attributesOfItemAtPath(
@@ -152,8 +150,7 @@ internal class IosFileStorage : FileStorage {
 
         var count = 0
         for (item in contents.filterIsInstance<String>()) {
-            val path = nsString(downloadsDir)
-                .stringByAppendingPathComponent(item)
+            val path = "$downloadsDir/$item"
             val deleted = memScoped {
                 val errorPtr = alloc<ObjCObjectVar<NSError?>>()
                 fileManager.removeItemAtPath(path, error = errorPtr.ptr)
@@ -165,7 +162,6 @@ internal class IosFileStorage : FileStorage {
         return count
     }
 
-    @Suppress("CAST_NEVER_SUCCEEDS")
     override fun saveFile(
         bytes: ByteArray,
         filename: String,
@@ -185,33 +181,25 @@ internal class IosFileStorage : FileStorage {
     }
 
     /**
-     * Resolves [name] inside [downloadsDir] using Foundation path
-     * APIs and validates that the result does not escape the directory
-     * (path traversal guard).
+     * Resolves [name] inside [downloadsDir], rejecting names that
+     * contain path separators or special entries (path traversal guard).
      *
      * @return the resolved path, or `null` if the name is invalid.
      */
     private fun resolveSecure(name: String): String? {
-        val resolved = nsString(downloadsDir)
-            .stringByAppendingPathComponent(name)
-        if (!resolved.startsWith(downloadsDir)) {
-            logger.warn { "Rejected path-traversal file name: $name" }
+        if ('/' in name || name == ".." || name == ".") {
+            logger.warn { "Rejected invalid file name: $name" }
             return null
         }
-        return resolved
+        return "$downloadsDir/$name"
     }
-
-    // String↔NSString are bridged in Kotlin/Native, so this cast is safe at runtime
-    @Suppress("CAST_NEVER_SUCCEEDS")
-    private fun nsString(value: String): NSString =
-        value as NSString
 }
 
 /**
  * Converts a Kotlin [ByteArray] to [platform.Foundation.NSData].
  */
 @OptIn(ExperimentalForeignApi::class)
-private fun ByteArray.toNSData(): platform.Foundation.NSData {
+private fun ByteArray.toNSData(): NSData {
     val data = NSMutableData()
     if (isEmpty()) return data
     usePinned { pinned ->
