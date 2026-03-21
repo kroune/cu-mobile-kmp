@@ -13,7 +13,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import platform.CoreGraphics.CGRectMake
 import platform.CoreGraphics.CGSizeMake
-import platform.Foundation.NSData
 import platform.Foundation.NSMutableData
 import platform.UIKit.UIGraphicsBeginPDFContextToData
 import platform.UIKit.UIGraphicsBeginPDFPageWithInfo
@@ -63,11 +62,10 @@ class IosPdfGenerator(
         }
 
     private fun processPage(page: PdfPageInput): UIImage? {
-        val nsData = page.imageBytes.usePinned { pinned ->
-            NSData(
-                bytes = pinned.addressOf(0),
-                length = page.imageBytes.size.toULong(),
-            )
+        val nsData = NSMutableData().apply {
+            page.imageBytes.usePinned { pinned ->
+                appendBytes(pinned.addressOf(0), page.imageBytes.size.toULong())
+            }
         }
         val image = UIImage(data = nsData) ?: return null
         if (page.rotationDegrees == 0f) return image

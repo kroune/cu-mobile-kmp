@@ -9,8 +9,8 @@ import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.ptr
 import kotlinx.cinterop.usePinned
 import kotlinx.cinterop.value
-import platform.Foundation.NSData
 import platform.Foundation.NSDate
+import platform.Foundation.NSMutableData
 import platform.Foundation.NSDocumentDirectory
 import platform.Foundation.NSError
 import platform.Foundation.NSFileManager
@@ -209,9 +209,11 @@ internal class IosFileStorage : FileStorage {
  * Converts a Kotlin [ByteArray] to [platform.Foundation.NSData].
  */
 @OptIn(ExperimentalForeignApi::class)
-private fun ByteArray.toNSData(): NSData {
-    if (isEmpty()) return NSData()
-    return usePinned { pinned ->
-        NSData(bytes = pinned.addressOf(0), length = size.toULong())
+private fun ByteArray.toNSData(): platform.Foundation.NSData {
+    val data = NSMutableData()
+    if (isEmpty()) return data
+    usePinned { pinned ->
+        data.appendBytes(pinned.addressOf(0), size.toULong())
     }
+    return data
 }
