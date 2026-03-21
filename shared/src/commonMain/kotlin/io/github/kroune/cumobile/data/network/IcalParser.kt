@@ -25,7 +25,7 @@ internal class IcalParser {
                     currentExDates.clear()
                 }
                 trimmed == "END:VEVENT" -> {
-                    if (inEvent) events.add(buildEvent(currentProps, currentExDates))
+                    if (inEvent) events.add(buildEvent(currentProps, currentExDates.toList()))
                     inEvent = false
                 }
                 inEvent -> parseProperty(trimmed, currentProps, currentExDates)
