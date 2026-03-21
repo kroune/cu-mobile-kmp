@@ -7,9 +7,13 @@ on:
   pull_request:
     types: [ opened, labeled, unlabeled, synchronize ]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 env:
   GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx8g -XX:+UseG1GC"
-  JAVA_VERSION: "25"
+  JAVA_VERSION: "21"
 
 jobs:
   ktlint:
@@ -165,6 +169,7 @@ jobs:
         with:
           name: debug-apk
           path: androidApp/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
 
   ios:
     name: iOS Build
