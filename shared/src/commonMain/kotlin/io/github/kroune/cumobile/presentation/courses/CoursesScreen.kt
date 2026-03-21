@@ -425,7 +425,6 @@ private fun PreviewCoursesEmptyDark() {
     }
 }
 
-@Suppress("MagicNumber")
 @Preview
 @Composable
 private fun PreviewCoursesEditModeDark() {
@@ -437,7 +436,6 @@ private fun PreviewCoursesEditModeDark() {
     }
 }
 
-@Suppress("MagicNumber")
 private val previewCoursesWithArchived = previewCoursesState.copy(
     courses = previewCoursesState.courses + listOf(
         Course(id = 5, name = "Введение в ИИ", category = "development", isArchived = true),
@@ -454,7 +452,6 @@ private fun PreviewCoursesArchivedDark() {
     }
 }
 
-@Suppress("MagicNumber")
 private val previewGradeSheetState = CoursesComponent.State(
     segment = 1,
     courses = previewCoursesState.courses,
@@ -481,7 +478,6 @@ private fun PreviewGradeSheetLight() {
     }
 }
 
-@Suppress("MagicNumber")
 private val previewGradebookState = CoursesComponent.State(
     segment = 2,
     gradebook = GradebookResponse(

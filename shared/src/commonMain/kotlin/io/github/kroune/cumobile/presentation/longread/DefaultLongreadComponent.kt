@@ -5,9 +5,6 @@ import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.data.model.LongreadMaterial
-import io.github.kroune.cumobile.data.model.PendingAttachment
-import io.github.kroune.cumobile.data.model.PickedFile
-import io.github.kroune.cumobile.data.model.UploadStatus
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -24,7 +21,6 @@ private val logger = KotlinLogging.logger {}
  * Loads materials for a longread and manages task actions
  * (start, submit, comments, late days) for coding materials.
  */
-@Suppress("TooManyFunctions")
 class DefaultLongreadComponent(
     componentContext: ComponentContext,
     params: LongreadParams,
@@ -53,6 +49,22 @@ class DefaultLongreadComponent(
     private val _effects = Channel<LongreadComponent.Effect>(Channel.BUFFERED)
     override val effects: Flow<LongreadComponent.Effect> = _effects.receiveAsFlow()
 
+    private val taskActions = LongreadTaskActions(
+        state = _state,
+        effects = _effects,
+        taskRepository = taskRepository,
+        scope = scope,
+        loadTaskEventsAndComments = ::loadTaskEventsAndComments,
+    )
+
+    private val attachmentManager = LongreadAttachmentManager(
+        state = _state,
+        contentRepository = contentRepository,
+        scope = scope,
+    )
+
+    private val searchHandler = LongreadSearchHandler(state = _state)
+
     override fun onIntent(intent: LongreadComponent.Intent) {
         when (intent) {
             LongreadComponent.Intent.Back -> onBack()
@@ -77,10 +89,10 @@ class DefaultLongreadComponent(
             is LongreadComponent.Intent.PickCommentAttachment,
             is LongreadComponent.Intent.RemoveCommentAttachment,
             -> handleAttachmentIntent(intent)
-            is LongreadComponent.Intent.ToggleSearch,
+            LongreadComponent.Intent.ToggleSearch,
             is LongreadComponent.Intent.UpdateSearchQuery,
-            is LongreadComponent.Intent.NextMatch,
-            is LongreadComponent.Intent.PreviousMatch,
+            LongreadComponent.Intent.NextMatch,
+            LongreadComponent.Intent.PreviousMatch,
             -> handleSearchIntent(intent)
             LongreadComponent.Intent.NavigateToFiles -> onNavigateToFiles()
         }
@@ -88,11 +100,12 @@ class DefaultLongreadComponent(
 
     private fun handleTaskActionIntent(intent: LongreadComponent.Intent) {
         when (intent) {
-            LongreadComponent.Intent.StartTask -> startTask()
-            LongreadComponent.Intent.SubmitSolution -> submitSolution()
-            LongreadComponent.Intent.CreateComment -> createComment()
-            is LongreadComponent.Intent.ProlongLateDays -> prolongLateDays(intent.days)
-            LongreadComponent.Intent.CancelLateDays -> cancelLateDays()
+            LongreadComponent.Intent.StartTask -> taskActions.startTask()
+            LongreadComponent.Intent.SubmitSolution -> taskActions.submitSolution()
+            LongreadComponent.Intent.CreateComment -> taskActions.createComment()
+            is LongreadComponent.Intent.ProlongLateDays ->
+                taskActions.prolongLateDays(intent.days)
+            LongreadComponent.Intent.CancelLateDays -> taskActions.cancelLateDays()
             else -> Unit
         }
     }
@@ -100,13 +113,26 @@ class DefaultLongreadComponent(
     private fun handleAttachmentIntent(intent: LongreadComponent.Intent) {
         when (intent) {
             is LongreadComponent.Intent.PickSolutionAttachment ->
-                uploadAttachment(intent.file, isSolution = true)
+                attachmentManager.uploadAttachment(intent.file, isSolution = true)
             is LongreadComponent.Intent.RemoveSolutionAttachment ->
-                removeSolutionAttachment(intent.index)
+                attachmentManager.removeSolutionAttachment(intent.index)
             is LongreadComponent.Intent.PickCommentAttachment ->
-                uploadAttachment(intent.file, isSolution = false)
+                attachmentManager.uploadAttachment(intent.file, isSolution = false)
             is LongreadComponent.Intent.RemoveCommentAttachment ->
-                removeCommentAttachment(intent.index)
+                attachmentManager.removeCommentAttachment(intent.index)
+            else -> Unit
+        }
+    }
+
+    private fun handleSearchIntent(intent: LongreadComponent.Intent) {
+        when (intent) {
+            LongreadComponent.Intent.ToggleSearch -> searchHandler.toggleSearch()
+            is LongreadComponent.Intent.UpdateSearchQuery ->
+                searchHandler.updateSearchQuery(intent.query)
+            LongreadComponent.Intent.NextMatch ->
+                searchHandler.navigateMatch(forward = true)
+            LongreadComponent.Intent.PreviousMatch ->
+                searchHandler.navigateMatch(forward = false)
             else -> Unit
         }
     }
@@ -178,201 +204,6 @@ class DefaultLongreadComponent(
         }
     }
 
-    private fun startTask() {
-        val taskId = _state.value.activeTaskId ?: return
-        scope.launch {
-            _state.value = _state.value.copy(isSubmitting = true)
-            val success = taskRepository.startTask(taskId)
-            _state.value = _state.value.copy(isSubmitting = false)
-            if (success) {
-                refreshTaskDetails(taskId)
-            } else {
-                logger.warn { "Failed to start task $taskId" }
-                _effects.trySend(
-                    LongreadComponent.Effect.ShowError("Не удалось начать задание"),
-                )
-            }
-        }
-    }
-
-    private fun submitSolution() {
-        val taskId = _state.value.activeTaskId ?: return
-        val url = _state.value.solutionUrl.takeIf { it.isNotBlank() }
-        val attachments = _state.value.pendingSolutionAttachments
-            .mapNotNull { it.uploadedAttachment }
-        scope.launch {
-            _state.value = _state.value.copy(isSubmitting = true)
-            val success = taskRepository.submitTask(taskId, url, attachments)
-            _state.value = _state.value.copy(isSubmitting = false)
-            if (success) {
-                _state.value = _state.value.copy(
-                    solutionUrl = "",
-                    pendingSolutionAttachments = emptyList(),
-                )
-                refreshTaskDetails(taskId)
-            } else {
-                logger.warn { "Failed to submit solution for task $taskId" }
-                _effects.trySend(
-                    LongreadComponent.Effect.ShowError("Не удалось отправить решение"),
-                )
-            }
-        }
-    }
-
-    private fun createComment() {
-        val taskId = _state.value.activeTaskId ?: return
-        val text = _state.value.commentText.trim()
-        if (text.isEmpty()) return
-        val attachments = _state.value.pendingCommentAttachments
-            .mapNotNull { it.uploadedAttachment }
-        scope.launch {
-            _state.value = _state.value.copy(isSubmitting = true)
-            val commentId = taskRepository.createComment(taskId, text, attachments)
-            if (commentId != null) {
-                _state.value = _state.value.copy(
-                    isSubmitting = false,
-                    commentText = "",
-                    pendingCommentAttachments = emptyList(),
-                )
-                val comments = taskRepository.fetchTaskComments(taskId)
-                _state.value = _state.value.copy(
-                    taskComments = comments.orEmpty(),
-                )
-            } else {
-                logger.warn { "Failed to create comment for task $taskId" }
-                _state.value = _state.value.copy(isSubmitting = false)
-                _effects.trySend(
-                    LongreadComponent.Effect.ShowError("Не удалось отправить комментарий"),
-                )
-            }
-        }
-    }
-
-    private fun prolongLateDays(days: Int) {
-        val taskId = _state.value.activeTaskId ?: return
-        scope.launch {
-            _state.value = _state.value.copy(isSubmitting = true)
-            val success = taskRepository.prolongLateDays(taskId, days)
-            _state.value = _state.value.copy(isSubmitting = false)
-            if (success) {
-                refreshTaskDetails(taskId)
-            } else {
-                logger.warn { "Failed to prolong late days for task $taskId" }
-                _effects.trySend(
-                    LongreadComponent.Effect.ShowError("Не удалось продлить дедлайн"),
-                )
-            }
-        }
-    }
-
-    private fun cancelLateDays() {
-        val taskId = _state.value.activeTaskId ?: return
-        scope.launch {
-            _state.value = _state.value.copy(isSubmitting = true)
-            val success = taskRepository.cancelLateDays(taskId)
-            _state.value = _state.value.copy(isSubmitting = false)
-            if (success) {
-                refreshTaskDetails(taskId)
-            } else {
-                logger.warn { "Failed to cancel late days for task $taskId" }
-                _effects.trySend(
-                    LongreadComponent.Effect.ShowError("Не удалось отменить продление"),
-                )
-            }
-        }
-    }
-
-    private fun uploadAttachment(
-        file: PickedFile,
-        isSolution: Boolean,
-    ) {
-        val taskId = _state.value.activeTaskId ?: return
-        val pending = PendingAttachment(
-            name = file.name,
-            size = file.size,
-            status = UploadStatus.Uploading,
-        )
-        if (isSolution) {
-            _state.value = _state.value.copy(
-                pendingSolutionAttachments =
-                    _state.value.pendingSolutionAttachments + pending,
-            )
-        } else {
-            _state.value = _state.value.copy(
-                pendingCommentAttachments =
-                    _state.value.pendingCommentAttachments + pending,
-            )
-        }
-        val directory = if (isSolution) {
-            "tasks/$taskId/solutions"
-        } else {
-            "tasks/$taskId/comments"
-        }
-        scope.launch {
-            val attachment = contentRepository.uploadFile(
-                directory = directory,
-                filename = file.name,
-                contentType = file.contentType,
-                bytes = file.bytes,
-            )
-            if (isSolution) {
-                updateSolutionAttachment(file.name, attachment)
-            } else {
-                updateCommentAttachment(file.name, attachment)
-            }
-        }
-    }
-
-    private fun updateSolutionAttachment(
-        fileName: String,
-        attachment: io.github.kroune.cumobile.data.model.MaterialAttachment?,
-    ) {
-        val list = _state.value.pendingSolutionAttachments.toMutableList()
-        val idx = list.indexOfFirst {
-            it.name == fileName && it.status == UploadStatus.Uploading
-        }
-        if (idx >= 0) {
-            list[idx] = list[idx].copy(
-                status = if (attachment != null) UploadStatus.Uploaded else UploadStatus.Failed,
-                uploadedAttachment = attachment,
-            )
-            _state.value = _state.value.copy(pendingSolutionAttachments = list)
-        }
-    }
-
-    private fun updateCommentAttachment(
-        fileName: String,
-        attachment: io.github.kroune.cumobile.data.model.MaterialAttachment?,
-    ) {
-        val list = _state.value.pendingCommentAttachments.toMutableList()
-        val idx = list.indexOfFirst {
-            it.name == fileName && it.status == UploadStatus.Uploading
-        }
-        if (idx >= 0) {
-            list[idx] = list[idx].copy(
-                status = if (attachment != null) UploadStatus.Uploaded else UploadStatus.Failed,
-                uploadedAttachment = attachment,
-            )
-            _state.value = _state.value.copy(pendingCommentAttachments = list)
-        }
-    }
-
-    private fun removeSolutionAttachment(index: Int) {
-        val list = _state.value.pendingSolutionAttachments.toMutableList()
-        if (index in list.indices) {
-            list.removeAt(index)
-            _state.value = _state.value.copy(pendingSolutionAttachments = list)
-        }
-    }
-
-    private fun removeCommentAttachment(index: Int) {
-        val list = _state.value.pendingCommentAttachments.toMutableList()
-        if (index in list.indices) {
-            list.removeAt(index)
-            _state.value = _state.value.copy(pendingCommentAttachments = list)
-        }
-    }
-
     private fun downloadFile(material: LongreadMaterial) {
         val filename = material.filename ?: return
         val version = material.version ?: "1"
@@ -441,85 +272,7 @@ class DefaultLongreadComponent(
         return "${safeName}_$version$extPart"
     }
 
-    private fun handleSearchIntent(intent: LongreadComponent.Intent) {
-        when (intent) {
-            LongreadComponent.Intent.ToggleSearch -> toggleSearch()
-            is LongreadComponent.Intent.UpdateSearchQuery ->
-                updateSearchQuery(intent.query)
-            LongreadComponent.Intent.NextMatch -> navigateMatch(forward = true)
-            LongreadComponent.Intent.PreviousMatch -> navigateMatch(forward = false)
-            else -> Unit
-        }
-    }
-
-    private fun toggleSearch() {
-        val current = _state.value
-        if (current.isSearchVisible) {
-            _state.value = current.copy(
-                isSearchVisible = false,
-                searchQuery = "",
-                searchMatchCount = 0,
-                currentMatchIndex = 0,
-            )
-        } else {
-            _state.value = current.copy(isSearchVisible = true)
-        }
-    }
-
-    private fun updateSearchQuery(query: String) {
-        val matchCount = if (query.isBlank()) {
-            0
-        } else {
-            countMatches(query)
-        }
-        _state.value = _state.value.copy(
-            searchQuery = query,
-            searchMatchCount = matchCount,
-            currentMatchIndex = if (matchCount > 0) 0 else 0,
-        )
-    }
-
-    private fun countMatches(query: String): Int {
-        val lowerQuery = query.lowercase()
-        return _state.value.materials.sumOf { material ->
-            val text = material.viewContent?.let { stripHtmlTags(it) }.orEmpty()
-            if (text.isBlank()) return@sumOf 0
-            var count = 0
-            var startIndex = 0
-            val lowerText = text.lowercase()
-            while (true) {
-                val index = lowerText.indexOf(lowerQuery, startIndex)
-                if (index < 0) break
-                count++
-                startIndex = index + 1
-            }
-            count
-        }
-    }
-
-    private fun navigateMatch(forward: Boolean) {
-        val current = _state.value
-        if (current.searchMatchCount <= 0) return
-        val newIndex = if (forward) {
-            (current.currentMatchIndex + 1) % current.searchMatchCount
-        } else {
-            (current.currentMatchIndex - 1 + current.searchMatchCount) %
-                current.searchMatchCount
-        }
-        _state.value = current.copy(currentMatchIndex = newIndex)
-    }
-
     companion object {
         private val UNSAFE_CHARS_REGEX = Regex("[^a-zA-Z0-9._-]")
-    }
-
-    private suspend fun refreshTaskDetails(taskId: Int) {
-        val details = taskRepository.fetchTaskDetails(taskId)
-        if (details != null) {
-            val updated = _state.value.taskDetails.toMutableMap()
-            updated[taskId] = details
-            _state.value = _state.value.copy(taskDetails = updated)
-        }
-        loadTaskEventsAndComments(taskId)
     }
 }

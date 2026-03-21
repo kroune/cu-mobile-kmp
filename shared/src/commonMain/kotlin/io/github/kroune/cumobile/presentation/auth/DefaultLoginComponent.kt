@@ -29,7 +29,6 @@ class DefaultLoginComponent(
     private val onNavigateToWebView: () -> Unit,
 ) : LoginComponent,
     ComponentContext by componentContext {
-
     private val scope = coroutineScope(Dispatchers.Main.immediate + SupervisorJob())
     private val _state = MutableValue(LoginComponent.State())
     override val state: Value<LoginComponent.State> = _state
@@ -233,7 +232,10 @@ class DefaultLoginComponent(
             }
         }
 
-    private fun inferErrorForSameStep(current: AuthStep, next: AuthStep): String? =
+    private fun inferErrorForSameStep(
+        current: AuthStep,
+        next: AuthStep,
+    ): String? =
         if (current == next) {
             when (current) {
                 AuthStep.Email -> "Неверный email"

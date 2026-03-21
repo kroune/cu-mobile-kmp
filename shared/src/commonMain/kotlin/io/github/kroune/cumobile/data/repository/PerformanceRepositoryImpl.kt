@@ -1,5 +1,3 @@
-@file:Suppress("MaxLineLength")
-
 package io.github.kroune.cumobile.data.repository
 
 import io.github.kroune.cumobile.data.local.AuthLocalDataSource

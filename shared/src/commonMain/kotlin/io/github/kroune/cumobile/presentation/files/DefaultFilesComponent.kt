@@ -8,13 +8,13 @@ import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.domain.repository.FileRepository
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlin.time.TimeSource
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import kotlin.time.TimeSource
 
 private val logger = KotlinLogging.logger {}
 
@@ -76,7 +76,8 @@ class DefaultFilesComponent(
             try {
                 val start = TimeSource.Monotonic.markNow()
                 val files = fileRepository.listDownloadedFiles()
-                ensureMinLoadingDuration(start)
+                val remaining = MIN_LOADING_DURATION_MS - start.elapsedNow().inWholeMilliseconds
+                if (remaining > 0) delay(remaining)
                 _state.value = _state.value.copy(
                     files = files,
                     isLoading = false,
@@ -185,18 +186,6 @@ class DefaultFilesComponent(
             if (_state.value.highlightedFile == name) {
                 _state.value = _state.value.copy(highlightedFile = null)
             }
-        }
-    }
-
-    /**
-     * Ensures at least [MIN_LOADING_DURATION_MS] has passed since [start],
-     * so the P2R animation has time to play.
-     */
-    private suspend fun ensureMinLoadingDuration(start: TimeSource.Monotonic.ValueTimeMark) {
-        val elapsed = start.elapsedNow().inWholeMilliseconds
-        val remaining = MIN_LOADING_DURATION_MS - elapsed
-        if (remaining > 0) {
-            delay(remaining)
         }
     }
 

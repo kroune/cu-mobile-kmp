@@ -1,4 +1,4 @@
-@file:Suppress("TooManyFunctions", "MagicNumber")
+@file:Suppress("MagicNumber")
 
 package io.github.kroune.cumobile.presentation.courses.detail
 
@@ -414,7 +414,6 @@ private fun exerciseCountLabel(count: Int): String {
 
 // region Previews
 
-@Suppress("MagicNumber")
 private val previewCourseDetailState =
     CourseDetailComponent.State(
         courseId = 1,

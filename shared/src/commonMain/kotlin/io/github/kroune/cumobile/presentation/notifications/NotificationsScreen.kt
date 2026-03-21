@@ -1,5 +1,3 @@
-@file:Suppress("TooManyFunctions", "MagicNumber")
-
 package io.github.kroune.cumobile.presentation.notifications
 
 import androidx.compose.foundation.background
@@ -360,7 +358,6 @@ private fun PreviewNotificationsEmptyDark() {
     }
 }
 
-@Suppress("MagicNumber")
 private val previewOtherTabState = NotificationsComponent.State(
     selectedTab = 1,
     otherNotifications = listOf(

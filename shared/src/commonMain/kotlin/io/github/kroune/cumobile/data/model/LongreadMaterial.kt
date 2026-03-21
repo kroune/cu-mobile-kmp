@@ -151,7 +151,8 @@ private fun extractFromObject(obj: JsonObject): String? =
 private fun tryExtractFromJsonString(content: String): String? {
     if (!content.trimStart().startsWith("{")) return null
     return try {
-        val parsed = kotlinx.serialization.json.Json.parseToJsonElement(content)
+        val parsed = kotlinx.serialization.json.Json
+            .parseToJsonElement(content)
         if (parsed is JsonObject) extractFromObject(parsed) else null
     } catch (e: Exception) {
         logger.warn(e) { "Failed to parse viewContent as JSON object" }

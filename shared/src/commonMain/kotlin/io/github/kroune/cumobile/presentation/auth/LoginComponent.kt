@@ -38,9 +38,17 @@ interface LoginComponent {
     )
 
     sealed interface Intent {
-        data class UpdateEmail(val value: String) : Intent
-        data class UpdatePassword(val value: String) : Intent
-        data class UpdateOtpCode(val value: String) : Intent
+        data class UpdateEmail(
+            val value: String,
+        ) : Intent
+
+        data class UpdatePassword(
+            val value: String,
+        ) : Intent
+
+        data class UpdateOtpCode(
+            val value: String,
+        ) : Intent
 
         /** Submit the current step (email, password, or OTP). */
         data object Submit : Intent

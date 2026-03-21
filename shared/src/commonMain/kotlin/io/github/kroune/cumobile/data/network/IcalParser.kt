@@ -13,7 +13,8 @@ internal class IcalParser {
         val unfoldedLines = unfold(ics)
         val events = mutableListOf<CalendarEvent>()
         var inEvent = false
-        val currentProps = mutableMapOf<String, Any>()
+        val currentProps = mutableMapOf<String, String>()
+        val currentExDates = mutableListOf<String>()
 
         for (line in unfoldedLines) {
             val trimmed = line.trim()
@@ -21,35 +22,38 @@ internal class IcalParser {
                 trimmed == "BEGIN:VEVENT" -> {
                     inEvent = true
                     currentProps.clear()
+                    currentExDates.clear()
                 }
                 trimmed == "END:VEVENT" -> {
-                    if (inEvent) events.add(buildEvent(currentProps))
+                    if (inEvent) events.add(buildEvent(currentProps, currentExDates))
                     inEvent = false
                 }
-                inEvent -> parseProperty(trimmed, currentProps)
+                inEvent -> parseProperty(trimmed, currentProps, currentExDates)
             }
         }
         return events
     }
 
-    private fun buildEvent(map: Map<String, Any>): CalendarEvent =
+    private fun buildEvent(
+        map: Map<String, String>,
+        exDates: List<String>,
+    ): CalendarEvent =
         CalendarEvent(
-            uid = (map["UID"] as? String).orEmpty(),
-            summary = (map["SUMMARY"] as? String).orEmpty(),
-            description = map["DESCRIPTION"] as? String,
-            location = map["LOCATION"] as? String,
-            dtStart = (map["DTSTART"] as? String).orEmpty(),
-            dtEnd = (map["DTEND"] as? String).orEmpty(),
-            url = map["URL"] as? String,
-            rRule = map["RRULE"] as? String,
-            exDates = (map["EXDATE"] as? List<*>)
-                ?.filterIsInstance<String>()
-                .orEmpty(),
+            uid = map["UID"].orEmpty(),
+            summary = map["SUMMARY"].orEmpty(),
+            description = map["DESCRIPTION"],
+            location = map["LOCATION"],
+            dtStart = map["DTSTART"].orEmpty(),
+            dtEnd = map["DTEND"].orEmpty(),
+            url = map["URL"],
+            rRule = map["RRULE"],
+            exDates = exDates,
         )
 
     private fun parseProperty(
         trimmed: String,
-        currentMap: MutableMap<String, Any>,
+        currentMap: MutableMap<String, String>,
+        exDates: MutableList<String>,
     ) {
         val colonIndex = trimmed.indexOf(':')
         if (colonIndex <= 0) return
@@ -58,14 +62,7 @@ internal class IcalParser {
         val key = keyPart.substringBefore(';')
 
         when (key) {
-            "EXDATE" -> {
-                @Suppress("UNCHECKED_CAST")
-                val list = currentMap["EXDATE"] as? MutableList<String>
-                    ?: mutableListOf<String>().also {
-                        currentMap["EXDATE"] = it
-                    }
-                list.addAll(value.split(','))
-            }
+            "EXDATE" -> exDates.addAll(value.split(','))
             else -> currentMap[key] = value
         }
     }

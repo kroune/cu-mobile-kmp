@@ -435,7 +435,6 @@ private fun PreviewTasksEmptyFiltersDark() {
     }
 }
 
-@Suppress("MagicNumber")
 private val previewTasksArchiveState = TasksComponent.State(
     segment = 1,
     allTasks = listOf(

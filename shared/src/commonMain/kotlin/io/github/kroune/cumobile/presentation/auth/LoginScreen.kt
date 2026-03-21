@@ -187,7 +187,10 @@ private fun OtpStepContent(
 }
 
 @Composable
-private fun StepHeader(title: String, subtitle: String) {
+private fun StepHeader(
+    title: String,
+    subtitle: String,
+) {
     Text(
         text = title,
         color = AppTheme.colors.textPrimary,
@@ -229,8 +232,11 @@ private fun AuthTextField(
         label = { Text(label) },
         singleLine = true,
         modifier = Modifier.fillMaxWidth(),
-        visualTransformation = if (isPassword) PasswordVisualTransformation()
-        else VisualTransformation.None,
+        visualTransformation = if (isPassword) {
+            PasswordVisualTransformation()
+        } else {
+            VisualTransformation.None
+        },
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = ImeAction.Done),
         keyboardActions = KeyboardActions(onDone = { onDone() }),
         shape = RoundedCornerShape(12.dp),
@@ -247,7 +253,11 @@ private fun AuthTextField(
 }
 
 @Composable
-private fun SubmitButton(text: String, isLoading: Boolean, onClick: () -> Unit) {
+private fun SubmitButton(
+    text: String,
+    isLoading: Boolean,
+    onClick: () -> Unit,
+) {
     if (isLoading) {
         CircularProgressIndicator(color = AppTheme.colors.accent, modifier = Modifier.size(40.dp))
     } else {

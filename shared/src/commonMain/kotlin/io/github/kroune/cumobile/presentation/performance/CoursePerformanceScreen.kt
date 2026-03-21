@@ -223,7 +223,6 @@ internal fun scoreRatioColor(ratio: Double): Color =
 
 // region Previews
 
-@Suppress("MagicNumber")
 private val previewPerformanceExercises =
     listOf(
         ExerciseWithScore(
@@ -277,7 +276,6 @@ private val previewPerformanceExercises =
         ),
     )
 
-@Suppress("MagicNumber")
 private val previewPerformanceState =
     CoursePerformanceComponent.State(
         courseId = 1,
