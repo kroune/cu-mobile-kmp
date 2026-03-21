@@ -20,6 +20,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
+import kotlin.coroutines.cancellation.CancellationException
 
 private val logger = KotlinLogging.logger {}
 
@@ -67,6 +68,8 @@ class DefaultRootComponent(
                     logger.info { "checkSavedAuth: no cookie, navigating to Login" }
                     navigation.replaceAll(Config.Login)
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 logger.error(e) { "checkSavedAuth: failed to read saved auth, navigating to Login" }
                 navigation.replaceAll(Config.Login)
@@ -81,6 +84,8 @@ class DefaultRootComponent(
                     logger.warn { "validateCookieInBackground: cookie invalid, redirecting to Login" }
                     navigation.replaceAll(Config.Login)
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 logger.error(e) { "validateCookieInBackground: failed to validate cookie" }
             }
