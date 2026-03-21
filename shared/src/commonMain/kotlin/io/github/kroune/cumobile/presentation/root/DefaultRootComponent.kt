@@ -27,7 +27,9 @@ private val logger = KotlinLogging.logger {}
  * Default implementation of [RootComponent].
  *
  * Uses Decompose [ChildStack] to manage auth routing between login and main flows.
- * On startup, checks for a saved auth cookie and navigates to [Config.Main] if valid.
+ * On startup, does a fast local cookie presence check: if a cookie exists, navigates
+ * to [Config.Main] immediately and validates the cookie in the background (redirecting
+ * to [Config.Login] if invalid). If no cookie, navigates directly to [Config.Login].
  * Native login flow: [Config.Login] → [Config.Main].
  * WebView fallback: [Config.Login] → [Config.WebViewLogin] → [Config.Main].
  */
@@ -56,12 +58,17 @@ class DefaultRootComponent(
 
     private fun checkSavedAuth() {
         scope.launch {
-            if (authRepository.hasCookie()) {
-                logger.info { "checkSavedAuth: cookie found locally, navigating to Main" }
-                navigateToMain()
-                validateCookieInBackground()
-            } else {
-                logger.info { "checkSavedAuth: no cookie, navigating to Login" }
+            try {
+                if (authRepository.hasCookie()) {
+                    logger.info { "checkSavedAuth: cookie found locally, navigating to Main" }
+                    navigateToMain()
+                    validateCookieInBackground()
+                } else {
+                    logger.info { "checkSavedAuth: no cookie, navigating to Login" }
+                    navigation.replaceAll(Config.Login)
+                }
+            } catch (e: Exception) {
+                logger.error(e) { "checkSavedAuth: failed to read saved auth, navigating to Login" }
                 navigation.replaceAll(Config.Login)
             }
         }
@@ -69,9 +76,13 @@ class DefaultRootComponent(
 
     private fun validateCookieInBackground() {
         scope.launch {
-            if (!authRepository.validateCookie()) {
-                logger.warn { "validateCookieInBackground: cookie invalid, redirecting to Login" }
-                navigation.replaceAll(Config.Login)
+            try {
+                if (!authRepository.validateCookie()) {
+                    logger.warn { "validateCookieInBackground: cookie invalid, redirecting to Login" }
+                    navigation.replaceAll(Config.Login)
+                }
+            } catch (e: Exception) {
+                logger.error(e) { "validateCookieInBackground: failed to validate cookie" }
             }
         }
     }

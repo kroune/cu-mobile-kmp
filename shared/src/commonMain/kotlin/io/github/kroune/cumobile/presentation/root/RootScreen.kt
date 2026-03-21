@@ -12,7 +12,8 @@ import io.github.kroune.cumobile.presentation.splash.SplashScreen
 
 /**
  * Root composable that renders the current child of [RootComponent].
- * Uses Decompose's [Children] with fade animation for transitions.
+ * Uses Decompose's [Children] with fade animation for transitions between non-splash screens,
+ * and disables animations when a transition involves the splash screen.
  */
 @OptIn(FaultyDecomposeApi::class)
 @Composable
