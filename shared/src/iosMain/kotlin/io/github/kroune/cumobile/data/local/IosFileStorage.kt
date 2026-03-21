@@ -18,6 +18,7 @@ import platform.Foundation.NSFileSize
 import platform.Foundation.NSMutableData
 import platform.Foundation.NSString
 import platform.Foundation.NSUserDomainMask
+import platform.Foundation.appendBytes
 import platform.Foundation.stringByAppendingPathComponent
 import platform.Foundation.timeIntervalSince1970
 import platform.Foundation.writeToFile
