@@ -1,6 +1,7 @@
 package io.github.kroune.cumobile.presentation.root
 
 import androidx.compose.runtime.Composable
+import com.arkivanov.decompose.FaultyDecomposeApi
 import com.arkivanov.decompose.extensions.compose.stack.Children
 import com.arkivanov.decompose.extensions.compose.stack.animation.fade
 import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
@@ -13,11 +14,16 @@ import io.github.kroune.cumobile.presentation.splash.SplashScreen
  * Root composable that renders the current child of [RootComponent].
  * Uses Decompose's [Children] with fade animation for transitions.
  */
+@OptIn(FaultyDecomposeApi::class)
 @Composable
 fun RootScreen(component: RootComponent) {
     Children(
         stack = component.childStack,
-        animation = stackAnimation(fade()),
+        animation = stackAnimation { child, otherChild, _ ->
+            val splashInvolved = child.instance is RootComponent.Child.SplashChild ||
+                otherChild.instance is RootComponent.Child.SplashChild
+            if (splashInvolved) null else fade()
+        },
     ) { child ->
         when (val instance = child.instance) {
             is RootComponent.Child.SplashChild -> SplashScreen()
