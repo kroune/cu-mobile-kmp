@@ -6,6 +6,7 @@ package io.github.kroune.cumobile.data.local
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.addressOf
+import kotlinx.cinterop.useContents
 import kotlinx.cinterop.usePinned
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -14,7 +15,6 @@ import platform.CoreGraphics.CGRectMake
 import platform.CoreGraphics.CGSizeMake
 import platform.Foundation.NSData
 import platform.Foundation.NSMutableData
-import platform.Foundation.create
 import platform.UIKit.UIGraphicsBeginPDFContextToData
 import platform.UIKit.UIGraphicsBeginPDFPageWithInfo
 import platform.UIKit.UIGraphicsEndPDFContext
@@ -42,7 +42,9 @@ class IosPdfGenerator(
 
                 val processedImages = pages.mapNotNull { page -> processPage(page) }
                 for (image in processedImages) {
-                    val pageRect = CGRectMake(0.0, 0.0, image.size.width, image.size.height)
+                    val imgWidth = image.size.useContents { width }
+                    val imgHeight = image.size.useContents { height }
+                    val pageRect = CGRectMake(0.0, 0.0, imgWidth, imgHeight)
                     UIGraphicsBeginPDFPageWithInfo(pageRect, null)
                     image.drawInRect(pageRect)
                 }
@@ -62,7 +64,7 @@ class IosPdfGenerator(
 
     private fun processPage(page: PdfPageInput): UIImage? {
         val nsData = page.imageBytes.usePinned { pinned ->
-            NSData.create(
+            NSData(
                 bytes = pinned.addressOf(0),
                 length = page.imageBytes.size.toULong(),
             )
@@ -77,30 +79,24 @@ class IosPdfGenerator(
         degrees: Float,
     ): UIImage? {
         val radians = degrees * kotlin.math.PI / 180.0
-        val size = image.size
+        val imgWidth = image.size.useContents { width }
+        val imgHeight = image.size.useContents { height }
         val rotatedSize = CGSizeMake(
-            kotlin.math.abs(size.width * kotlin.math.cos(radians)) +
-                kotlin.math.abs(size.height * kotlin.math.sin(radians)),
-            kotlin.math.abs(size.width * kotlin.math.sin(radians)) +
-                kotlin.math.abs(size.height * kotlin.math.cos(radians)),
+            kotlin.math.abs(imgWidth * kotlin.math.cos(radians)) +
+                kotlin.math.abs(imgHeight * kotlin.math.sin(radians)),
+            kotlin.math.abs(imgWidth * kotlin.math.sin(radians)) +
+                kotlin.math.abs(imgHeight * kotlin.math.cos(radians)),
         )
 
         platform.UIKit.UIGraphicsBeginImageContext(rotatedSize)
         val context = platform.UIKit.UIGraphicsGetCurrentContext() ?: return null
 
-        platform.CoreGraphics.CGContextTranslateCTM(
-            context,
-            rotatedSize.width / 2.0,
-            rotatedSize.height / 2.0,
-        )
+        val rotW = rotatedSize.useContents { width }
+        val rotH = rotatedSize.useContents { height }
+        platform.CoreGraphics.CGContextTranslateCTM(context, rotW / 2.0, rotH / 2.0)
         platform.CoreGraphics.CGContextRotateCTM(context, radians)
         image.drawInRect(
-            CGRectMake(
-                -size.width / 2.0,
-                -size.height / 2.0,
-                size.width,
-                size.height,
-            ),
+            CGRectMake(-imgWidth / 2.0, -imgHeight / 2.0, imgWidth, imgHeight),
         )
 
         val rotatedImage = platform.UIKit.UIGraphicsGetImageFromCurrentImageContext()

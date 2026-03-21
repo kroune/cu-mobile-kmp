@@ -3,10 +3,14 @@ package io.github.kroune.cumobile.data.local
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.ObjCObjectVar
+import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.alloc
 import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.ptr
+import kotlinx.cinterop.usePinned
 import kotlinx.cinterop.value
+import platform.Foundation.NSData
+import platform.Foundation.NSDate
 import platform.Foundation.NSDocumentDirectory
 import platform.Foundation.NSError
 import platform.Foundation.NSFileManager
@@ -15,6 +19,7 @@ import platform.Foundation.NSFileSize
 import platform.Foundation.NSString
 import platform.Foundation.NSUserDomainMask
 import platform.Foundation.stringByAppendingPathComponent
+import platform.Foundation.timeIntervalSince1970
 import platform.Foundation.writeToFile
 
 private val logger = KotlinLogging.logger {}
@@ -102,8 +107,8 @@ internal class IosFileStorage : FileStorage {
         } ?: return null
 
         val size = (attributes[NSFileSize] as? Number)?.toLong() ?: 0L
-        val modDate = attributes[NSFileModificationDate]
-        val modMillis = if (modDate is platform.Foundation.NSDate) {
+        val modDate = attributes[NSFileModificationDate] as? NSDate
+        val modMillis = if (modDate != null) {
             (modDate.timeIntervalSince1970 * MillisPerSecond).toLong()
         } else {
             0L
@@ -195,21 +200,18 @@ internal class IosFileStorage : FileStorage {
         return resolved
     }
 
+    @Suppress("CAST_NEVER_SUCCEEDS")
     private fun nsString(value: String): NSString =
-        NSString.create(string = value)
+        value as NSString
 }
 
 /**
  * Converts a Kotlin [ByteArray] to [platform.Foundation.NSData].
  */
 @OptIn(ExperimentalForeignApi::class)
-private fun ByteArray.toNSData(): platform.Foundation.NSData {
-    if (isEmpty()) return platform.Foundation.NSData()
-    return kotlinx.cinterop.memScoped {
-        val pinned = this@toNSData
-        platform.Foundation.NSData.create(
-            bytes = kotlinx.cinterop.allocArrayOf(pinned),
-            length = pinned.size.toULong(),
-        )
+private fun ByteArray.toNSData(): NSData {
+    if (isEmpty()) return NSData()
+    return usePinned { pinned ->
+        NSData(bytes = pinned.addressOf(0), length = size.toULong())
     }
 }
