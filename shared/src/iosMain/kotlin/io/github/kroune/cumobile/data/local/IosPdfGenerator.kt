@@ -49,19 +49,23 @@ class IosPdfGenerator(
             try {
                 val pdfData = NSMutableData()
                 UIGraphicsBeginPDFContextToData(pdfData, CGRectMake(0.0, 0.0, 0.0, 0.0), null)
-
-                val processedImages = pages.mapNotNull { page -> processPage(page) }
-                for (image in processedImages) {
-                    val imgWidth = image.size.useContents { width }
-                    val imgHeight = image.size.useContents { height }
-                    val pageRect = CGRectMake(0.0, 0.0, imgWidth, imgHeight)
-                    UIGraphicsBeginPDFPageWithInfo(pageRect, null)
-                    image.drawInRect(pageRect)
+                try {
+                    val processedImages = pages.mapNotNull { page -> processPage(page) }
+                    for (image in processedImages) {
+                        val imgWidth = image.size.useContents { width }
+                        val imgHeight = image.size.useContents { height }
+                        val pageRect = CGRectMake(0.0, 0.0, imgWidth, imgHeight)
+                        UIGraphicsBeginPDFPageWithInfo(pageRect, null)
+                        image.drawInRect(pageRect)
+                    }
+                } finally {
+                    UIGraphicsEndPDFContext()
                 }
 
-                UIGraphicsEndPDFContext()
+                val length = pdfData.length.toInt()
+                if (length == 0) return@withContext null
 
-                val bytes = ByteArray(pdfData.length.toInt())
+                val bytes = ByteArray(length)
                 bytes.usePinned { pinned ->
                     memcpy(pinned.addressOf(0), pdfData.bytes, pdfData.length)
                 }
