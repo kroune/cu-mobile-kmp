@@ -13,6 +13,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import cumobile.shared.generated.resources.Res
 import cumobile.shared.generated.resources.app_logo
+import io.github.kroune.cumobile.presentation.common.CuMobileTheme
 import org.jetbrains.compose.resources.painterResource
 
 private val SplashBackground = Color(0xFF121212)
@@ -37,5 +38,7 @@ fun SplashScreen() {
 @Preview
 @Composable
 private fun PreviewSplashDark() {
-    SplashScreen()
+    CuMobileTheme(darkTheme = true) {
+        SplashScreen()
+    }
 }
