@@ -64,8 +64,10 @@ class IosPdfGenerator(
 
     private fun processPage(page: PdfPageInput): UIImage? {
         val nsData = NSMutableData().apply {
-            page.imageBytes.usePinned { pinned ->
-                appendBytes(pinned.addressOf(0), page.imageBytes.size.toULong())
+            if (page.imageBytes.isNotEmpty()) {
+                page.imageBytes.usePinned { pinned ->
+                    appendBytes(pinned.addressOf(0), page.imageBytes.size.toULong())
+                }
             }
         }
         val image = UIImage(data = nsData) ?: return null

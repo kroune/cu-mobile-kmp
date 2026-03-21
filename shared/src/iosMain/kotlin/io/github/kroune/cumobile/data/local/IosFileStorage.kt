@@ -201,6 +201,7 @@ internal class IosFileStorage : FileStorage {
         return resolved
     }
 
+    // String↔NSString are bridged in Kotlin/Native, so this cast is safe at runtime
     @Suppress("CAST_NEVER_SUCCEEDS")
     private fun nsString(value: String): NSString =
         value as NSString
