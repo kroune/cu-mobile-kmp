@@ -144,12 +144,17 @@ Every screen has:
 
 ## Authentication Flow
 
-1. App starts → `DefaultRootComponent.checkSavedAuth()` validates saved cookie
-2. Valid → `MainChild`; Invalid → `LoginChild` → user taps login → `WebViewLoginChild`
-3. WebView loads `https://my.centraluniversity.ru`
-4. On each page load, check cookies for `bff.cookie`
-5. Captured → save via `AuthRepository` → validate via `GET /student-hub/students/me` → `MainChild`
-6. Logout → clear cookie → back to `LoginChild`
+1. App starts → Android native splash screen is shown by `androidx.core:core-splashscreen`
+2. Root navigation starts in `SplashChild` while `DefaultRootComponent.checkSavedAuth()` does a fast local cookie check (`hasCookie()`)
+3. Cookie exists → navigate from `SplashChild` to `MainChild`, validate in background
+4. No cookie → navigate from `SplashChild` to `LoginChild`
+5. Background validation fails → redirect to `LoginChild`
+6. User taps login → `WebViewLoginChild` (or native auth flow)
+7. WebView loads `https://my.centraluniversity.ru`
+8. On each page load, check cookies for `bff.cookie`
+9. Captured → save via `AuthRepository` → validate via `GET /student-hub/students/me` → `MainChild`
+10. Logout → clear cookie → back to `LoginChild`
+11. Android native splash: removed via `setKeepOnScreenCondition` — stays visible while active child is `SplashChild`
 
 ---
 
