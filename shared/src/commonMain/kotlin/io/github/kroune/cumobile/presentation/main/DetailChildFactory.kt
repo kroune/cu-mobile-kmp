@@ -10,6 +10,7 @@ import io.github.kroune.cumobile.presentation.notifications.DefaultNotifications
 import io.github.kroune.cumobile.presentation.performance.DefaultCoursePerformanceComponent
 import io.github.kroune.cumobile.presentation.profile.DefaultProfileComponent
 import io.github.kroune.cumobile.presentation.scanner.DefaultScannerComponent
+
 /**
  * Callbacks for file download tracking within detail screens.
  */

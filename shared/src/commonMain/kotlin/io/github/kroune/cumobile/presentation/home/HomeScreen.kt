@@ -449,7 +449,6 @@ private fun EmptySection(
     }
 }
 
-@Suppress("MagicNumber")
 private val previewHomeState = HomeComponent.State(
     isLoading = false,
     profileInitials = "ИП",
@@ -492,7 +491,6 @@ private fun PreviewHomeScreenLight() {
     }
 }
 
-@Suppress("MagicNumber")
 private val previewHomeErrorState = HomeComponent.State(
     isLoading = false,
     error = "Не удалось загрузить данные",
@@ -547,7 +545,6 @@ private fun PreviewHomeScreenLoadingDark() {
     }
 }
 
-@Suppress("MagicNumber")
 private val previewHomeEmptyState = HomeComponent.State(
     isLoading = false,
     profileInitials = "ИП",
@@ -580,7 +577,6 @@ private fun PreviewHomeScreenEmptyLight() {
     }
 }
 
-@Suppress("MagicNumber")
 private val previewHomeWithScheduleState = previewHomeState.copy(
     isCalendarConnected = true,
     classes = listOf(

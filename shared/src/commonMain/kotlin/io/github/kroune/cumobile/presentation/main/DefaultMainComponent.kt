@@ -11,19 +11,12 @@ import com.arkivanov.decompose.router.pages.select
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
-import com.arkivanov.decompose.router.stack.navigate
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.data.model.UpdateInfo
-import io.github.kroune.cumobile.presentation.courses.DefaultCoursesComponent
-import io.github.kroune.cumobile.presentation.files.DefaultFilesComponent
-import io.github.kroune.cumobile.presentation.files.FilesComponent
-import io.github.kroune.cumobile.presentation.home.DefaultHomeComponent
-import io.github.kroune.cumobile.presentation.home.HomeDependencies
-import io.github.kroune.cumobile.presentation.tasks.DefaultTasksComponent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
@@ -36,7 +29,6 @@ import kotlinx.serialization.Serializable
  * via [ChildStack]. Tab components are created lazily and their state
  * is preserved when switching tabs.
  */
-@Suppress("TooManyFunctions")
 @OptIn(DelicateDecomposeApi::class)
 class DefaultMainComponent(
     componentContext: ComponentContext,
@@ -73,6 +65,15 @@ class DefaultMainComponent(
 
     private val tabNavigation = PagesNavigation<TabConfig>()
 
+    private val tabChildFactory = TabChildFactory(
+        deps = mainDependencies,
+        navigateToCourseDetail = ::navigateToCourseDetail,
+        navigateToProfile = ::navigateToProfile,
+        navigateToCoursePerformance = ::navigateToCoursePerformance,
+        navigateToFileRenameSettings = ::navigateToFileRenameSettings,
+        navigateToScanner = ::navigateToScanner,
+    )
+
     override val tabPages: Value<ChildPages<*, MainComponent.TabChild>> =
         childPages(
             source = tabNavigation,
@@ -91,60 +92,12 @@ class DefaultMainComponent(
             pageStatus = { index, pages ->
                 if (index == pages.selectedIndex) Status.RESUMED else Status.CREATED
             },
-            childFactory = ::createTabChild,
+            childFactory = tabChildFactory::create,
         )
 
     override fun selectTab(index: Int) {
         tabNavigation.select(index)
     }
-
-    private fun createTabChild(
-        config: TabConfig,
-        childContext: ComponentContext,
-    ): MainComponent.TabChild =
-        when (config) {
-            TabConfig.Home -> MainComponent.TabChild.HomeChild(
-                DefaultHomeComponent(
-                    componentContext = childContext,
-                    deps = HomeDependencies(
-                        taskRepository = mainDependencies.taskRepository,
-                        courseRepository = mainDependencies.courseRepository,
-                        profileRepository = mainDependencies.profileRepository,
-                        calendarRepository = mainDependencies.calendarRepository,
-                    ),
-                    onOpenTask = { navigateToCourseDetail(it.course.id) },
-                    onOpenCourse = ::navigateToCourseDetail,
-                    onOpenProfile = ::navigateToProfile,
-                ),
-            )
-            TabConfig.Tasks -> MainComponent.TabChild.TasksChild(
-                DefaultTasksComponent(
-                    componentContext = childContext,
-                    taskRepository = mainDependencies.taskRepository,
-                    onOpenTask = { navigateToCourseDetail(it.course.id) },
-                ),
-            )
-            TabConfig.Courses -> MainComponent.TabChild.CoursesChild(
-                DefaultCoursesComponent(
-                    componentContext = childContext,
-                    courseRepository = mainDependencies.courseRepository,
-                    performanceRepository = mainDependencies.performanceRepository,
-                    onOpenCourse = ::navigateToCourseDetail,
-                    onOpenCoursePerformance = ::navigateToCoursePerformance,
-                ),
-            )
-            TabConfig.Files -> MainComponent.TabChild.FilesChild(
-                DefaultFilesComponent(
-                    componentContext = childContext,
-                    fileRepository = mainDependencies.fileRepository,
-                    onOpenFile = { path ->
-                        mainDependencies.fileOpener.openFile(path)
-                    },
-                    onOpenRenameSettings = ::navigateToFileRenameSettings,
-                    onOpenScanner = ::navigateToScanner,
-                ),
-            )
-        }
 
     // endregion
 
@@ -152,16 +105,23 @@ class DefaultMainComponent(
 
     private val detailNavigation = StackNavigation<DetailConfig>()
 
+    private val filesCoordinator = FilesCoordinator(
+        tabPages = tabPages,
+        selectTab = ::selectTab,
+        detailNavigation = detailNavigation,
+        scope = scope,
+    )
+
     private val detailChildFactory = DetailChildFactory(
         deps = mainDependencies,
         navigateBack = ::navigateDetailBack,
         navigateToLongread = ::navigateToLongread,
         onLogout = onLogout,
         downloadCallbacks = DownloadCallbacks(
-            refreshFiles = ::refreshFiles,
-            navigateToFiles = ::navigateToFilesWithHighlight,
-            notifyStart = ::notifyDownloadStart,
-            notifyComplete = ::notifyDownloadComplete,
+            refreshFiles = filesCoordinator::refreshFiles,
+            navigateToFiles = filesCoordinator::navigateToFilesWithHighlight,
+            notifyStart = filesCoordinator::notifyDownloadStart,
+            notifyComplete = filesCoordinator::notifyDownloadComplete,
         ),
     )
 
@@ -219,46 +179,6 @@ class DefaultMainComponent(
         detailNavigation.pop()
     }
 
-    private fun clearDetailStack() {
-        detailNavigation.navigate { listOf(it.first()) }
-    }
-
-    private fun refreshFiles() {
-        sendToFilesComponent(FilesComponent.Intent.Refresh)
-    }
-
-    /** Filename to highlight when navigating to the Files tab. */
-    private var pendingHighlightFile: String? = null
-
-    private fun notifyDownloadStart(filename: String) {
-        sendToFilesComponent(FilesComponent.Intent.AddDownloading(filename))
-    }
-
-    private fun notifyDownloadComplete(filename: String) {
-        pendingHighlightFile = filename
-        sendToFilesComponent(FilesComponent.Intent.RemoveDownloading(filename))
-    }
-
-    private fun navigateToFilesWithHighlight() {
-        clearDetailStack()
-        selectTab(FILES_TAB_INDEX)
-        val filename = pendingHighlightFile ?: return
-        pendingHighlightFile = null
-        scope.launch {
-            // Yield to let Decompose instantiate the Files tab component
-            kotlinx.coroutines.yield()
-            sendToFilesComponent(FilesComponent.Intent.HighlightFile(filename))
-        }
-    }
-
-    private fun sendToFilesComponent(intent: FilesComponent.Intent) {
-        val filesItem = tabPages.value.items.getOrNull(FILES_TAB_INDEX)
-        val filesChild = filesItem?.instance
-        if (filesChild is MainComponent.TabChild.FilesChild) {
-            filesChild.component.onIntent(intent)
-        }
-    }
-
     // endregion
 
     // region Logout
@@ -271,14 +191,10 @@ class DefaultMainComponent(
 
     // endregion
 
-    companion object {
-        private const val FILES_TAB_INDEX = 3
-    }
-
     // region Serializable configs
 
     @Serializable
-    private sealed interface TabConfig {
+    internal sealed interface TabConfig {
         @Serializable
         data object Home : TabConfig
 

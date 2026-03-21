@@ -192,7 +192,8 @@ internal fun isOverdue(deadline: String?): Boolean {
         }
         val deadlineDateTime = LocalDateTime.parse(isoString)
         val deadlineInstant = deadlineDateTime.toInstant(TimeZone.currentSystemDefault())
-        val now = kotlin.time.Clock.System.now()
+        val now = kotlin.time.Clock.System
+            .now()
         deadlineInstant < now
     } catch (e: Exception) {
         logger.error(e) { "Failed to parse deadline for overdue check: $deadline" }

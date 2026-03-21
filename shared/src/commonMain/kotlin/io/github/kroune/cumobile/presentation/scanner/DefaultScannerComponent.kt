@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.number
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock.System
 
@@ -155,7 +156,6 @@ class DefaultScannerComponent(
 
     // region Save PDF
 
-    @Suppress("MagicNumber")
     private fun savePdf() {
         val currentState = _state.value
         if (currentState.pages.isEmpty() || currentState.isSaving) return
@@ -231,22 +231,18 @@ class DefaultScannerComponent(
             return cleaned.ifEmpty { generateDefaultFileName() }
         }
 
-        @Suppress("MagicNumber")
         fun generateDefaultFileName(): String {
             val now = System
                 .now()
                 .toLocalDateTime(TimeZone.currentSystemDefault())
-            val d = now.date
-            val t = now.time
-
-            @Suppress("DEPRECATION")
-            val day = d.dayOfMonth.toString().padStart(2, '0')
-
-            @Suppress("DEPRECATION")
-            val month = d.monthNumber.toString().padStart(2, '0')
-            val hour = t.hour.toString().padStart(2, '0')
-            val minute = t.minute.toString().padStart(2, '0')
-            return "Скан_$day.$month.${d.year}_$hour-$minute"
+            val day = now.day.toString().padStart(2, '0')
+            val month = now.month
+                .number
+                .toString()
+                .padStart(2, '0')
+            val hour = now.hour.toString().padStart(2, '0')
+            val minute = now.minute.toString().padStart(2, '0')
+            return "Скан_$day.$month.${now.year}_$hour-$minute"
         }
     }
 }

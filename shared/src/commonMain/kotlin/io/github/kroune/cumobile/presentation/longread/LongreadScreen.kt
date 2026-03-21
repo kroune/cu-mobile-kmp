@@ -53,13 +53,13 @@ import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import io.github.kroune.cumobile.data.model.LongreadMaterial
 import io.github.kroune.cumobile.data.model.LongreadMaterialContent
 import io.github.kroune.cumobile.presentation.common.ActionErrorBar
-import kotlinx.coroutines.launch
 import io.github.kroune.cumobile.presentation.common.AppTheme
 import io.github.kroune.cumobile.presentation.common.CuMobileTheme
 import io.github.kroune.cumobile.presentation.common.DetailTopBar
 import io.github.kroune.cumobile.presentation.common.ErrorContent
 import io.github.kroune.cumobile.presentation.common.LoadingContent
 import io.github.kroune.cumobile.presentation.common.formatSizeBytes
+import kotlinx.coroutines.launch
 
 /**
  * Main longread screen displaying materials within a longread.
@@ -156,26 +156,26 @@ internal fun LongreadScreenContent(
 
                 ActionErrorBar(error = actionError, onDismiss = onDismissError)
 
-            if (state.isSearchVisible) {
-                SearchBar(
-                    state = state,
-                    onIntent = onIntent,
-                )
-            }
+                if (state.isSearchVisible) {
+                    SearchBar(
+                        state = state,
+                        onIntent = onIntent,
+                    )
+                }
 
-            when {
-                state.isLoading && state.materials.isEmpty() -> LoadingContent()
-                state.error != null && state.materials.isEmpty() -> ErrorContent(
-                    error = state.error,
-                    onRetry = { onIntent(LongreadComponent.Intent.Refresh) },
-                )
-                else -> MaterialList(
-                    state = state,
-                    onIntent = onIntent,
-                )
+                when {
+                    state.isLoading && state.materials.isEmpty() -> LoadingContent()
+                    state.error != null && state.materials.isEmpty() -> ErrorContent(
+                        error = state.error,
+                        onRetry = { onIntent(LongreadComponent.Intent.Refresh) },
+                    )
+                    else -> MaterialList(
+                        state = state,
+                        onIntent = onIntent,
+                    )
+                }
             }
         }
-    }
         SnackbarHost(
             hostState = snackbarHostState,
             modifier = Modifier
@@ -609,7 +609,6 @@ private fun PreviewLongreadLoadingDark() {
     }
 }
 
-@Suppress("MagicNumber")
 private val previewLongreadSuccessState = LongreadComponent.State(
     materials = listOf(
         LongreadMaterial(

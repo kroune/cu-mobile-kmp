@@ -10,9 +10,7 @@ private val logger = KotlinLogging.logger {}
 actual fun decodeImageBitmap(bytes: ByteArray): ImageBitmap? =
     try {
         Image.makeFromEncoded(bytes).toComposeImageBitmap()
-    } catch (
-        @Suppress("TooGenericExceptionCaught") e: Exception,
-    ) {
+    } catch (e: Exception) {
         logger.warn(e) { "Failed to decode image bitmap" }
         null
     }

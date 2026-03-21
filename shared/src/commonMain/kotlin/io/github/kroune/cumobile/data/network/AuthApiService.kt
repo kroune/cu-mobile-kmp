@@ -262,7 +262,10 @@ private const val HtmlSnippetLen = 500
  * `window.authConfiguration.urls.loginAction = "https://...";`
  * Returns the last occurrence (later script overrides take precedence).
  */
-private fun extractJsStringValue(html: String, key: String): String? {
+private fun extractJsStringValue(
+    html: String,
+    key: String,
+): String? {
     var result: String? = null
     var searchFrom = 0
     while (true) {

@@ -662,7 +662,6 @@ private fun PreviewProfileDeletingAvatarDark() {
     }
 }
 
-@Suppress("MagicNumber")
 private val previewProfileFullState = ProfileComponent.State(
     profile = StudentProfile(
         firstName = "Иван",

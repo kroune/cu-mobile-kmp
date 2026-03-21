@@ -77,12 +77,18 @@ interface FilesComponent {
         data object OpenScanner : Intent
 
         /** Mark a file as being downloaded (shows loading indicator). */
-        data class AddDownloading(val name: String) : Intent
+        data class AddDownloading(
+            val name: String,
+        ) : Intent
 
         /** Remove a file from downloading set. */
-        data class RemoveDownloading(val name: String) : Intent
+        data class RemoveDownloading(
+            val name: String,
+        ) : Intent
 
         /** Briefly highlight a file after navigation. */
-        data class HighlightFile(val name: String) : Intent
+        data class HighlightFile(
+            val name: String,
+        ) : Intent
     }
 }

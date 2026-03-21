@@ -1,4 +1,4 @@
-@file:Suppress("TooManyFunctions", "MagicNumber")
+@file:Suppress("TooManyFunctions")
 
 package io.github.kroune.cumobile.presentation.scanner
 
@@ -565,9 +565,17 @@ private fun RotationControls(
 @Composable
 private fun QuickRotationButtons(onUpdateRotation: (Float) -> Unit) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-        QuickRotateButton(Icons.AutoMirrored.Filled.RotateLeft, "-90°") { onUpdateRotation(-90f) }
-        TextButton(onClick = { onUpdateRotation(0f) }) { Text("Сброс", color = Color.White, fontSize = 14.sp) }
-        QuickRotateButton(Icons.AutoMirrored.Filled.RotateRight, "+90°") { onUpdateRotation(90f) }
+        QuickRotateButton(
+            Icons.AutoMirrored.Filled.RotateLeft,
+            "-90°",
+        ) { onUpdateRotation(-RotationStep) }
+        TextButton(onClick = { onUpdateRotation(0f) }) {
+            Text("Сброс", color = Color.White, fontSize = 14.sp)
+        }
+        QuickRotateButton(
+            Icons.AutoMirrored.Filled.RotateRight,
+            "+90°",
+        ) { onUpdateRotation(RotationStep) }
     }
 }
 
@@ -580,7 +588,8 @@ private fun QuickRotateButton(
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         IconButton(
             onClick = onClick,
-            modifier = Modifier.size(44.dp)
+            modifier = Modifier
+                .size(44.dp)
                 .clip(CircleShape)
                 .background(Color.White.copy(alpha = 0.1f)),
         ) {
@@ -667,3 +676,5 @@ private fun PreviewScannerErrorDark() {
 }
 
 // endregion
+
+private const val RotationStep = 90f

@@ -2,6 +2,7 @@
 
 package io.github.kroune.cumobile.presentation.files
 
+import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -21,7 +22,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DocumentScanner
-import androidx.compose.animation.core.Animatable
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -299,7 +299,12 @@ private fun FileRow(
     LaunchedEffect(isHighlighted) {
         if (isHighlighted) {
             highlightAlpha.snapTo(0.25f)
-            highlightAlpha.animateTo(0f, androidx.compose.animation.core.tween(2000))
+            highlightAlpha
+                .animateTo(
+                    0f,
+                    androidx.compose.animation.core
+                        .tween(2000),
+                )
         } else {
             highlightAlpha.snapTo(0f)
         }
@@ -528,7 +533,6 @@ private fun extensionColor(ext: String) =
         else -> AppTheme.colors.textSecondary
     }
 
-@Suppress("MagicNumber")
 private val previewFilesState = FilesComponent.State(
     files = listOf(
         DownloadedFileInfo(
@@ -592,7 +596,6 @@ private fun PreviewFilesActionErrorLight() {
     }
 }
 
-@Suppress("MagicNumber")
 private val previewFilesSuccessState = FilesComponent.State(
     files = listOf(
         DownloadedFileInfo(
