@@ -15,12 +15,12 @@ import io.github.kroune.cumobile.presentation.auth.DefaultLoginComponent
 import io.github.kroune.cumobile.presentation.auth.webview.DefaultWebViewLoginComponent
 import io.github.kroune.cumobile.presentation.main.DefaultMainComponent
 import io.github.kroune.cumobile.presentation.main.MainDependencies
+import io.github.kroune.cumobile.util.runCatchingCancellable
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
-import kotlin.coroutines.cancellation.CancellationException
 
 private val logger = KotlinLogging.logger {}
 
@@ -59,7 +59,7 @@ class DefaultRootComponent(
 
     private fun checkSavedAuth() {
         scope.launch {
-            try {
+            runCatchingCancellable {
                 if (authRepository.hasCookie()) {
                     logger.info { "checkSavedAuth: cookie found locally, navigating to Main" }
                     navigateToMain()
@@ -68,9 +68,7 @@ class DefaultRootComponent(
                     logger.info { "checkSavedAuth: no cookie, navigating to Login" }
                     navigation.replaceAll(Config.Login)
                 }
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
+            }.onFailure { e ->
                 logger.error(e) { "checkSavedAuth: failed to read saved auth, navigating to Login" }
                 navigation.replaceAll(Config.Login)
             }
@@ -79,14 +77,12 @@ class DefaultRootComponent(
 
     private fun validateCookieInBackground() {
         scope.launch {
-            try {
+            runCatchingCancellable {
                 if (!authRepository.validateCookie()) {
                     logger.warn { "validateCookieInBackground: cookie invalid, redirecting to Login" }
                     navigation.replaceAll(Config.Login)
                 }
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
+            }.onFailure { e ->
                 logger.error(e) { "validateCookieInBackground: failed to validate cookie" }
             }
         }
