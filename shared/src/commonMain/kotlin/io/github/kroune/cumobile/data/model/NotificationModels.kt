@@ -7,14 +7,21 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class NotificationItem(
-    val id: Int = 0,
+    val id: String = "",
+    val notificationId: String = "",
     /** ISO 8601 datetime string. */
     val createdAt: String = "",
     val category: String = "",
+    val groupingKey: String = "",
     val icon: String = "",
     val title: String = "",
     val description: String = "",
     val link: NotificationLink? = null,
+    /** ISO 8601 datetime string. */
+    val startDate: String? = null,
+    /** ISO 8601 datetime string. */
+    val endDate: String? = null,
+    val previewImageUri: String? = null,
 )
 
 /** Deep-link associated with a [NotificationItem]. */

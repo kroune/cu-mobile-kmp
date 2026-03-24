@@ -21,7 +21,7 @@ class DefaultNotificationsComponent(
     componentContext: ComponentContext,
     private val notificationRepository: NotificationRepository,
     private val onBack: () -> Unit,
-    private val onOpenLongread: ((longreadId: Int, courseId: Int, themeId: Int) -> Unit)? = null,
+    private val onOpenLongread: ((longreadId: String, courseId: String, themeId: String) -> Unit)? = null,
 ) : NotificationsComponent,
     ComponentContext by componentContext {
     private val scope = coroutineScope(Dispatchers.Main.immediate + SupervisorJob())
@@ -86,10 +86,8 @@ class DefaultNotificationsComponent(
         )
         val match = longreadRegex.find(uri)
         if (match != null) {
-            val (courseId, themeId, longreadId) = match.destructured.let { (c, t, l) ->
-                Triple(c.toIntOrNull(), t.toIntOrNull(), l.toIntOrNull())
-            }
-            if (longreadId != null && courseId != null && themeId != null) {
+            val (courseId, themeId, longreadId) = match.destructured
+            if (courseId.isNotEmpty() && themeId.isNotEmpty() && longreadId.isNotEmpty()) {
                 onOpenLongread?.invoke(longreadId, courseId, themeId)
                 return true
             }

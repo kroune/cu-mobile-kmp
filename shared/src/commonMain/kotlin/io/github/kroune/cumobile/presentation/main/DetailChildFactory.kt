@@ -28,7 +28,7 @@ internal class DownloadCallbacks(
 internal class DetailChildFactory(
     private val deps: MainDependencies,
     private val navigateBack: () -> Unit,
-    private val navigateToLongread: (Int, Int, Int) -> Unit,
+    private val navigateToLongread: (String, String, String) -> Unit,
     private val onLogout: () -> Unit,
     private val downloadCallbacks: DownloadCallbacks,
 ) {

@@ -252,7 +252,7 @@ private fun StatusFilterChips(
 @Composable
 private fun CourseFilterChips(
     allTasks: List<io.github.kroune.cumobile.data.model.StudentTask>,
-    courseFilter: Int?,
+    courseFilter: String?,
     onIntent: (TasksComponent.Intent) -> Unit,
 ) {
     val courses = availableCourses(allTasks)
@@ -353,22 +353,22 @@ private fun countBySegment(
 private val previewTasksState = TasksComponent.State(
     allTasks = listOf(
         StudentTask(
-            id = 1,
+            id = "1",
             state = TaskState.InProgress,
             exercise = TaskExercise(name = "ДЗ: Деревья и графы", deadline = "2026-04-01T23:59:00"),
-            course = TaskCourse(id = 1, name = "Алгоритмы"),
+            course = TaskCourse(id = "1", name = "Алгоритмы"),
         ),
         StudentTask(
-            id = 2,
+            id = "2",
             state = TaskState.Backlog,
             exercise = TaskExercise(name = "Лабораторная 3", deadline = "2026-04-05T23:59:00"),
-            course = TaskCourse(id = 2, name = "Линейная алгебра"),
+            course = TaskCourse(id = "2", name = "Линейная алгебра"),
         ),
         StudentTask(
-            id = 3,
+            id = "3",
             state = TaskState.Review,
             exercise = TaskExercise(name = "Эссе по менеджменту"),
-            course = TaskCourse(id = 3, name = "Менеджмент"),
+            course = TaskCourse(id = "3", name = "Менеджмент"),
         ),
     ),
 )
@@ -439,18 +439,18 @@ private val previewTasksArchiveState = TasksComponent.State(
     segment = 1,
     allTasks = listOf(
         StudentTask(
-            id = 10,
+            id = "10",
             state = TaskState.Evaluated,
             score = 8.0,
             exercise = TaskExercise(name = "ДЗ: Сортировки"),
-            course = TaskCourse(id = 1, name = "Алгоритмы"),
+            course = TaskCourse(id = "1", name = "Алгоритмы"),
         ),
         StudentTask(
-            id = 11,
+            id = "11",
             state = TaskState.Failed,
             score = 2.0,
             exercise = TaskExercise(name = "Контрольная: Матрицы"),
-            course = TaskCourse(id = 2, name = "Линейная алгебра"),
+            course = TaskCourse(id = "2", name = "Линейная алгебра"),
         ),
     ),
 )
@@ -470,7 +470,7 @@ private fun PreviewTasksWithFiltersDark() {
         TasksScreenContent(
             state = previewTasksState.copy(
                 statusFilter = TaskState.InProgress,
-                courseFilter = 1,
+                courseFilter = "1",
             ),
             onIntent = {},
         )

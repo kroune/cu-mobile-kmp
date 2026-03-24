@@ -21,10 +21,10 @@ internal class ContentRepositoryImpl(
     private val contentApi: ContentApiService,
 ) : CookieAwareRepository(authLocal),
     ContentRepository {
-    override suspend fun fetchLongreadMaterials(longreadId: Int): List<LongreadMaterial>? =
+    override suspend fun fetchLongreadMaterials(longreadId: String): List<LongreadMaterial>? =
         withCookie { contentApi.fetchLongreadMaterials(it, longreadId) }
 
-    override suspend fun fetchMaterial(materialId: Int): LongreadMaterial? =
+    override suspend fun fetchMaterial(materialId: String): LongreadMaterial? =
         withCookie { contentApi.fetchMaterial(it, materialId) }
 
     override suspend fun getDownloadLink(

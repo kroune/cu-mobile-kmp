@@ -17,7 +17,7 @@ interface CoursePerformanceComponent {
     fun onIntent(intent: Intent)
 
     data class State(
-        val courseId: Int,
+        val courseId: String,
         val courseName: String = "",
         val totalGrade: Int = 0,
         val exercises: List<ExerciseWithScore> = emptyList(),
@@ -93,7 +93,7 @@ data class ExerciseWithScore(
  * Computed locally from [TaskScore] data, not deserialized from API.
  */
 data class ActivitySummary(
-    val activityId: Int,
+    val activityId: String,
     val activityName: String,
     val count: Int,
     val averageScore: Double,

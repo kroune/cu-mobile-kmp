@@ -14,7 +14,7 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class TaskDetails(
-    val id: Int = 0,
+    val id: String = "",
     val score: Double? = null,
     val extraScore: Double? = null,
     val scoreSkillLevel: String? = null,
@@ -25,6 +25,10 @@ data class TaskDetails(
     val lateDays: Int? = null,
     /** ISO 8601 datetime string. */
     val deadline: String? = null,
+    /** ISO 8601 datetime string — when the task was started. */
+    val startedAt: String? = null,
+    val quizSessionId: String? = null,
+    val currentAttemptId: String? = null,
     val exercise: TaskDetailsExercise? = null,
     val solution: TaskDetailsSolution? = null,
     val student: TaskDetailsStudent? = null,
@@ -53,6 +57,9 @@ data class TaskDetails(
 /** Nested exercise info within [TaskDetails] JSON. */
 @Serializable
 data class TaskDetailsExercise(
+    val name: String? = null,
+    val type: String? = null,
+    val timer: String? = null,
     val maxScore: Int? = null,
 )
 

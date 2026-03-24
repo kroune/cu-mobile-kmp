@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class FileRenameRule(
-    val courseId: Int,
+    val courseId: String,
     val activityName: String, // e.g., "Домашнее задание"
     val extension: String, // e.g., "pdf"
     val template: String, // e.g., "HW_{course}_{student}_{date}.pdf"

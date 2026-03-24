@@ -33,20 +33,20 @@ interface LongreadComponent {
     }
 
     data class State(
-        val longreadId: Int = 0,
-        val courseId: Int = 0,
-        val themeId: Int = 0,
+        val longreadId: String = "",
+        val courseId: String = "",
+        val themeId: String = "",
         val materials: List<LongreadMaterial> = emptyList(),
         val isLoading: Boolean = false,
         val error: String? = null,
         /** Task details keyed by taskId for coding materials. */
-        val taskDetails: Map<Int, TaskDetails> = emptyMap(),
+        val taskDetails: Map<String, TaskDetails> = emptyMap(),
         /** Events for the currently selected task. */
         val taskEvents: List<TaskEvent> = emptyList(),
         /** Comments for the currently selected task. */
         val taskComments: List<TaskComment> = emptyList(),
         /** Currently selected task ID (for expanded coding material). */
-        val activeTaskId: Int? = null,
+        val activeTaskId: String? = null,
         /** Selected tab within the active task: "solution", "comments", "info". */
         val selectedTaskTab: String = "solution",
         /** Solution URL input for the active task. */
@@ -85,7 +85,7 @@ interface LongreadComponent {
         data object Refresh : Intent
 
         data class SelectTask(
-            val taskId: Int,
+            val taskId: String,
         ) : Intent
 
         data class SelectTaskTab(

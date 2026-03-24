@@ -7,12 +7,14 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class TaskComment(
-    val id: Int = 0,
+    val id: String = "",
     val content: String = "",
     val sender: CommentSender = CommentSender(),
     /** ISO 8601 datetime string. */
     val createdAt: String? = null,
     val attachments: List<MaterialAttachment> = emptyList(),
+    val isEditable: Boolean = false,
+    val isDeletable: Boolean = false,
 )
 
 /** Author of a [TaskComment]. */

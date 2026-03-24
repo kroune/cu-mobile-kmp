@@ -174,7 +174,7 @@ private fun AddRuleDialog(
     onConfirm: (FileRenameRule) -> Unit,
 ) {
     // Simple inline dialog using Column
-    val selectedCourseId by remember { mutableStateOf(courses.firstOrNull()?.id ?: 0) }
+    val selectedCourseId by remember { mutableStateOf(courses.firstOrNull()?.id.orEmpty()) }
     var activityName by remember { mutableStateOf("") }
     var extension by remember { mutableStateOf("pdf") }
     var template by remember { mutableStateOf("") }

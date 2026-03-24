@@ -23,7 +23,7 @@ interface FileRenameRepository {
      * Returns a rule that matches the given criteria, or null if none found.
      */
     suspend fun getMatchingRule(
-        courseId: Int,
+        courseId: String,
         activityName: String,
         extension: String,
     ): FileRenameRule?

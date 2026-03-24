@@ -28,7 +28,7 @@ class DefaultHomeComponent(
     componentContext: ComponentContext,
     deps: HomeDependencies,
     private val onOpenTask: (StudentTask) -> Unit,
-    private val onOpenCourse: (Int) -> Unit,
+    private val onOpenCourse: (String) -> Unit,
     private val onOpenProfile: () -> Unit = {},
 ) : HomeComponent,
     ComponentContext by componentContext {

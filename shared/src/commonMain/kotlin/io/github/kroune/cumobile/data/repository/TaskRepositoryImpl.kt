@@ -2,6 +2,7 @@ package io.github.kroune.cumobile.data.repository
 
 import io.github.kroune.cumobile.data.local.AuthLocalDataSource
 import io.github.kroune.cumobile.data.model.MaterialAttachment
+import io.github.kroune.cumobile.data.model.StartTaskResponse
 import io.github.kroune.cumobile.data.model.StudentTask
 import io.github.kroune.cumobile.data.model.TaskComment
 import io.github.kroune.cumobile.data.model.TaskDetails
@@ -23,38 +24,38 @@ internal class TaskRepositoryImpl(
     override suspend fun fetchTasks(states: List<String>): List<StudentTask>? =
         withCookie { taskApi.fetchTasks(it, states) }
 
-    override suspend fun fetchTaskDetails(taskId: Int): TaskDetails? =
+    override suspend fun fetchTaskDetails(taskId: String): TaskDetails? =
         withCookie { taskApi.fetchTaskDetails(it, taskId) }
 
-    override suspend fun fetchTaskEvents(taskId: Int): List<TaskEvent>? =
+    override suspend fun fetchTaskEvents(taskId: String): List<TaskEvent>? =
         withCookie { taskApi.fetchTaskEvents(it, taskId) }
 
-    override suspend fun fetchTaskComments(taskId: Int): List<TaskComment>? =
+    override suspend fun fetchTaskComments(taskId: String): List<TaskComment>? =
         withCookie { taskApi.fetchTaskComments(it, taskId) }
 
-    override suspend fun startTask(taskId: Int): Boolean =
-        withCookieOrFalse { taskApi.startTask(it, taskId) }
+    override suspend fun startTask(taskId: String): StartTaskResponse? =
+        withCookie { taskApi.startTask(it, taskId) }
 
     override suspend fun submitTask(
-        taskId: Int,
+        taskId: String,
         solutionUrl: String?,
         attachments: List<MaterialAttachment>,
     ): Boolean =
         withCookieOrFalse { taskApi.submitTask(it, taskId, solutionUrl, attachments) }
 
     override suspend fun prolongLateDays(
-        taskId: Int,
+        taskId: String,
         lateDays: Int,
     ): Boolean =
         withCookieOrFalse { taskApi.prolongLateDays(it, taskId, lateDays) }
 
-    override suspend fun cancelLateDays(taskId: Int): Boolean =
+    override suspend fun cancelLateDays(taskId: String): Boolean =
         withCookieOrFalse { taskApi.cancelLateDays(it, taskId) }
 
     override suspend fun createComment(
-        taskId: Int,
+        taskId: String,
         content: String,
         attachments: List<MaterialAttachment>,
-    ): Int? =
+    ): String? =
         withCookie { taskApi.createComment(it, taskId, content, attachments) }
 }

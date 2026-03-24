@@ -22,7 +22,7 @@ interface CoursesComponent {
         /** All courses loaded from the API. */
         val courses: List<Course> = emptyList(),
         /** Manual course order (list of IDs). */
-        val courseOrder: List<Int> = emptyList(),
+        val courseOrder: List<String> = emptyList(),
         /** Performance data for grade sheet segment. */
         val performanceCourses: List<StudentPerformanceCourse> = emptyList(),
         /** Gradebook data for record book segment. */
@@ -51,12 +51,12 @@ interface CoursesComponent {
 
         /** Open course detail. */
         data class OpenCourse(
-            val courseId: Int,
+            val courseId: String,
         ) : Intent
 
         /** Open course performance page. */
         data class OpenCoursePerformance(
-            val courseId: Int,
+            val courseId: String,
             val courseName: String,
             val totalGrade: Int,
         ) : Intent
@@ -66,7 +66,7 @@ interface CoursesComponent {
 
         /** Reorder courses. */
         data class ReorderCourses(
-            val ids: List<Int>,
+            val ids: List<String>,
         ) : Intent
     }
 }
@@ -74,7 +74,7 @@ interface CoursesComponent {
 /** Returns active (non-archived) courses, using manual order if available. */
 internal fun activeCourses(
     courses: List<Course>,
-    order: List<Int>,
+    order: List<String>,
 ): List<Course> {
     val active = courses.filter { !it.isArchived }
     if (order.isEmpty()) return active.sortedBy { it.name }
@@ -94,7 +94,7 @@ internal fun activeCourses(
 /** Returns archived courses, using manual order if available. */
 internal fun archivedCourses(
     courses: List<Course>,
-    order: List<Int>,
+    order: List<String>,
 ): List<Course> {
     val archived = courses.filter { it.isArchived }
     if (order.isEmpty()) return archived.sortedBy { it.name }

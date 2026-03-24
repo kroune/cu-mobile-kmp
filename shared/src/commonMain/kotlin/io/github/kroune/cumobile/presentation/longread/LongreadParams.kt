@@ -6,7 +6,7 @@ package io.github.kroune.cumobile.presentation.longread
  * Reduces constructor parameter count in [DefaultLongreadComponent].
  */
 data class LongreadParams(
-    val longreadId: Int,
-    val courseId: Int,
-    val themeId: Int,
+    val longreadId: String,
+    val courseId: String,
+    val themeId: String,
 )

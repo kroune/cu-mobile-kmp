@@ -15,7 +15,7 @@ data class StudentPerformanceResponse(
 /** Per-course total score in [StudentPerformanceResponse]. */
 @Serializable
 data class StudentPerformanceCourse(
-    val id: Int,
+    val id: String,
     val name: String,
     val description: String? = null,
     val total: Int = 0,
@@ -28,7 +28,7 @@ data class StudentPerformanceCourse(
  */
 @Serializable
 data class CourseExercisesResponse(
-    val id: Int,
+    val id: String,
     val name: String,
     val isArchived: Boolean = false,
     val exercises: List<CourseExercise> = emptyList(),
@@ -37,7 +37,7 @@ data class CourseExercisesResponse(
 /** Single exercise within a course. */
 @Serializable
 data class CourseExercise(
-    val id: Int,
+    val id: String,
     val name: String,
     val type: String = "",
     val activity: CourseExerciseActivity? = null,
@@ -47,14 +47,14 @@ data class CourseExercise(
 /** Activity descriptor for a [CourseExercise]. */
 @Serializable
 data class CourseExerciseActivity(
-    val id: Int,
+    val id: String,
     val name: String,
 )
 
 /** Theme descriptor for a [CourseExercise]. */
 @Serializable
 data class CourseExerciseTheme(
-    val id: Int,
+    val id: String,
     val name: String,
 )
 
@@ -76,12 +76,12 @@ data class CourseStudentPerformanceResponse(
  */
 @Serializable
 data class TaskScore(
-    val id: Int,
+    val id: String,
     val state: String = "",
     val score: Double = 0.0,
     val scoreSkillLevel: String? = null,
     val extraScore: Double? = null,
-    val exerciseId: Int,
+    val exerciseId: String,
     val maxScore: Int = 10,
     val activity: TaskScoreActivity,
 )
@@ -89,7 +89,7 @@ data class TaskScore(
 /** Activity descriptor for a [TaskScore]. */
 @Serializable
 data class TaskScoreActivity(
-    val id: Int,
+    val id: String,
     val name: String,
     val weight: Double = 0.0,
     val averageScoreThreshold: Double? = null,

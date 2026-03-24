@@ -18,18 +18,14 @@ internal class CourseLocalDataSource(
      * Flow emitting the list of course IDs in the preferred order.
      * Empty if no custom order is set.
      */
-    val courseIdOrderFlow: Flow<List<Int>> = dataStore.data.map { preferences ->
+    val courseIdOrderFlow: Flow<List<String>> = dataStore.data.map { preferences ->
         val orderString = preferences[COURSE_ORDER_KEY] ?: ""
         if (orderString.isBlank()) return@map emptyList()
-        try {
-            orderString.split(",").map { it.trim().toInt() }
-        } catch (e: NumberFormatException) {
-            emptyList()
-        }
+        orderString.split(",").map { it.trim() }
     }
 
     /** Saves a new course ID list to represent the manual order. */
-    suspend fun saveCourseIdOrder(ids: List<Int>) {
+    suspend fun saveCourseIdOrder(ids: List<String>) {
         dataStore.edit { preferences ->
             preferences[COURSE_ORDER_KEY] = ids.joinToString(",")
         }

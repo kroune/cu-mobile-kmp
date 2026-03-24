@@ -64,10 +64,10 @@ internal class CourseApiService(
     /** Fetches the overview for a specific course. */
     suspend fun fetchCourseOverview(
         cookie: String,
-        courseId: Int,
+        courseId: String,
     ): CourseOverview? =
         safeApiCall(logger, "fetch course overview for courseId=$courseId") {
-            httpClient.get(ApiEndpoints.courseOverview(courseId.toString())) {
+            httpClient.get(ApiEndpoints.courseOverview(courseId)) {
                 header("Cookie", cookieHeader(cookie))
             }
         }

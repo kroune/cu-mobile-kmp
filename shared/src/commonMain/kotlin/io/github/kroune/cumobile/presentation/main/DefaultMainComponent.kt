@@ -143,12 +143,12 @@ class DefaultMainComponent(
         detailNavigation.push(DetailConfig.Notifications)
     }
 
-    override fun navigateToCourseDetail(courseId: Int) {
+    override fun navigateToCourseDetail(courseId: String) {
         detailNavigation.push(DetailConfig.CourseDetail(courseId))
     }
 
     override fun navigateToCoursePerformance(
-        courseId: Int,
+        courseId: String,
         courseName: String,
         totalGrade: Int,
     ) {
@@ -158,9 +158,9 @@ class DefaultMainComponent(
     }
 
     override fun navigateToLongread(
-        longreadId: Int,
-        courseId: Int,
-        themeId: Int,
+        longreadId: String,
+        courseId: String,
+        themeId: String,
     ) {
         detailNavigation.push(
             DetailConfig.Longread(longreadId, courseId, themeId),
@@ -215,19 +215,19 @@ class DefaultMainComponent(
 
         @Serializable
         data class CourseDetail(
-            val courseId: Int,
+            val courseId: String,
         ) : DetailConfig
 
         @Serializable
         data class Longread(
-            val longreadId: Int,
-            val courseId: Int,
-            val themeId: Int,
+            val longreadId: String,
+            val courseId: String,
+            val themeId: String,
         ) : DetailConfig
 
         @Serializable
         data class CoursePerformance(
-            val courseId: Int,
+            val courseId: String,
             val courseName: String,
             val totalGrade: Int,
         ) : DetailConfig

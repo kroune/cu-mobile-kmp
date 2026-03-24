@@ -28,10 +28,10 @@ internal class PerformanceApiService(
     /** Fetches exercises for a specific course. */
     suspend fun fetchCourseExercises(
         cookie: String,
-        courseId: Int,
+        courseId: String,
     ): CourseExercisesResponse? =
         safeApiCall(logger, "fetch course exercises for courseId=$courseId") {
-            httpClient.get(ApiEndpoints.courseExercises(courseId.toString())) {
+            httpClient.get(ApiEndpoints.courseExercises(courseId)) {
                 header("Cookie", cookieHeader(cookie))
             }
         }
@@ -39,10 +39,10 @@ internal class PerformanceApiService(
     /** Fetches per-student performance for a course. */
     suspend fun fetchCoursePerformance(
         cookie: String,
-        courseId: Int,
+        courseId: String,
     ): CourseStudentPerformanceResponse? =
         safeApiCall(logger, "fetch course performance for courseId=$courseId") {
-            httpClient.get(ApiEndpoints.coursePerformance(courseId.toString())) {
+            httpClient.get(ApiEndpoints.coursePerformance(courseId)) {
                 header("Cookie", cookieHeader(cookie))
             }
         }

@@ -176,7 +176,7 @@ class DefaultLongreadComponent(
         _state.value = _state.value.copy(taskDetails = detailsMap)
     }
 
-    private fun selectTask(taskId: Int) {
+    private fun selectTask(taskId: String) {
         val isToggleOff = _state.value.activeTaskId == taskId
         _state.value = _state.value.copy(
             activeTaskId = if (isToggleOff) null else taskId,
@@ -193,7 +193,7 @@ class DefaultLongreadComponent(
         }
     }
 
-    private fun loadTaskEventsAndComments(taskId: Int) {
+    private fun loadTaskEventsAndComments(taskId: String) {
         scope.launch {
             val events = taskRepository.fetchTaskEvents(taskId)
             val comments = taskRepository.fetchTaskComments(taskId)

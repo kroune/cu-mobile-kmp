@@ -20,7 +20,7 @@ import kotlinx.coroutines.launch
  */
 class DefaultCoursePerformanceComponent(
     componentContext: ComponentContext,
-    private val courseId: Int,
+    private val courseId: String,
     private val courseName: String,
     private val totalGrade: Int,
     private val performanceRepository: PerformanceRepository,

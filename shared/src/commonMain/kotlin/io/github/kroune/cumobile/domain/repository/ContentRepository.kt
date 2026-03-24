@@ -7,10 +7,10 @@ import io.github.kroune.cumobile.data.model.UploadLinkData
 /** Repository for longread/material content and file links. */
 interface ContentRepository {
     /** Fetches all materials for a longread. */
-    suspend fun fetchLongreadMaterials(longreadId: Int): List<LongreadMaterial>?
+    suspend fun fetchLongreadMaterials(longreadId: String): List<LongreadMaterial>?
 
     /** Fetches a single material by ID. */
-    suspend fun fetchMaterial(materialId: Int): LongreadMaterial?
+    suspend fun fetchMaterial(materialId: String): LongreadMaterial?
 
     /**
      * Gets a pre-signed download URL for a file.
