@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "ce1e503714ba2ddf1950fe30ab5f73cc",
+    "identityHash": "cce5a0eac6b3425cc2d0ee5b859802fa",
     "entities": [
       {
         "tableName": "file_rename_rules",
@@ -44,12 +44,25 @@
           "columnNames": [
             "id"
           ]
-        }
+        },
+        "indices": [
+          {
+            "name": "index_file_rename_rules_courseId_activityName_extension",
+            "unique": true,
+            "columnNames": [
+              "courseId",
+              "activityName",
+              "extension"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_file_rename_rules_courseId_activityName_extension` ON `${TABLE_NAME}` (`courseId`, `activityName`, `extension`)"
+          }
+        ]
       }
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'ce1e503714ba2ddf1950fe30ab5f73cc')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'cce5a0eac6b3425cc2d0ee5b859802fa')"
     ]
   }
 }

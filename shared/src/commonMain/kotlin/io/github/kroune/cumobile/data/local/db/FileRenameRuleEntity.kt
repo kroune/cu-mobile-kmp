@@ -1,10 +1,14 @@
 package io.github.kroune.cumobile.data.local.db
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import io.github.kroune.cumobile.data.local.FileRenameRule
 
-@Entity(tableName = "file_rename_rules")
+@Entity(
+    tableName = "file_rename_rules",
+    indices = [Index(value = ["courseId", "activityName", "extension"], unique = true)],
+)
 data class FileRenameRuleEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,

@@ -3,8 +3,11 @@ package io.github.kroune.cumobile.data.local
 import io.github.kroune.cumobile.data.local.db.FileRenameRuleDao
 import io.github.kroune.cumobile.data.local.db.toDomain
 import io.github.kroune.cumobile.data.local.db.toEntity
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+
+private val logger = KotlinLogging.logger {}
 
 /**
  * Local data source for persisting file renaming templates.
@@ -37,6 +40,11 @@ internal class FileRenameLocalDataSource(
         )
         if (entity != null) {
             dao.deleteRule(entity)
+        } else {
+            logger.warn {
+                "No matching rule to delete: courseId=${rule.courseId}, " +
+                    "activity=${rule.activityName}, ext=${rule.extension}"
+            }
         }
     }
 
