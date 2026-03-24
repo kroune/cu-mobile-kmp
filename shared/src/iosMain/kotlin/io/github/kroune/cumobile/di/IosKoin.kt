@@ -8,6 +8,8 @@ import io.github.kroune.cumobile.data.local.IosPdfGenerator
 import io.github.kroune.cumobile.data.local.PdfGenerator
 import io.github.kroune.cumobile.data.local.createDataStore
 import io.github.kroune.cumobile.data.local.dataStorePath
+import io.github.kroune.cumobile.data.local.db.buildAppDatabase
+import io.github.kroune.cumobile.data.local.db.getDatabaseBuilder
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
@@ -18,6 +20,7 @@ import org.koin.dsl.module
 fun iosKoinModule(): Module =
     module {
         single { createDataStore { dataStorePath() } }
+        single { buildAppDatabase(getDatabaseBuilder()) }
         single<FileStorage> { IosFileStorage() }
         single<FileOpener> { IosFileOpener() }
         single<PdfGenerator> { IosPdfGenerator() }

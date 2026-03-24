@@ -27,7 +27,8 @@ KMP (Kotlin Multiplatform) rewrite of Flutter LMS app for Central University (Ц
 | Koin                             | —              | DI                                   |
 | Ktor                             | —              | HTTP client                          |
 | kotlinx-serialization            | —              | JSON                                 |
-| DataStore Preferences            | —              | Local persistence                    |
+| DataStore Preferences            | —              | Key-value local persistence          |
+| Room                             | 2.8.4          | Structured local persistence (SQLite)|
 | essenty-lifecycle-coroutines     | 2.5.0          | Auto-cancelling coroutine scopes     |
 | kotlin-logging (io.github.oshai) | 8.0.01         | Structured logging in catch blocks   |
 | kotlinx-datetime                 | —              | Date/time formatting and parsing     |
@@ -50,6 +51,7 @@ CuMobile/
         ├── commonMain/kotlin/io/github/kroune/cumobile/
         │   ├── data/
         │   │   ├── local/         # DataStore, AuthLocalDataSource, FileStorage, DownloadedFileInfo
+        │   │   │   └── db/        # Room: AppDatabase, Entity, DAO, platform builders, migration
         │   │   ├── model/         # 13 files, ~37 @Serializable DTOs
         │   │   ├── network/       # HttpClientFactory, ApiService (25 endpoints)
         │   │   └── repository/    # 8 impls + CookieAwareRepository base class
