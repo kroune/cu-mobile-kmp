@@ -12,7 +12,7 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class Course(
-    val id: Int = 0,
+    val id: String = "",
     val name: String = "",
     val state: String = "",
     val category: String = "general",

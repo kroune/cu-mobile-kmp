@@ -29,7 +29,7 @@ internal class FileRenameRepositoryImpl(
     }
 
     override suspend fun getMatchingRule(
-        courseId: Int,
+        courseId: String,
         activityName: String,
         extension: String,
     ): FileRenameRule? {

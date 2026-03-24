@@ -19,6 +19,7 @@ private const val SocketTimeoutMs = 30_000L
  */
 internal fun createHttpClient(): HttpClient =
     HttpClient {
+        followRedirects = true
         install(ContentNegotiation) {
             json(
                 Json {

@@ -227,19 +227,19 @@ private val previewPerformanceExercises =
     listOf(
         ExerciseWithScore(
             exercise = CourseExercise(
-                id = 1,
+                id = "1",
                 name = "ДЗ: Быстрая сортировка",
-                activity = CourseExerciseActivity(id = 1, name = "Домашнее задание"),
-                theme = CourseExerciseTheme(id = 1, name = "Сортировки"),
+                activity = CourseExerciseActivity(id = "1", name = "Домашнее задание"),
+                theme = CourseExerciseTheme(id = "1", name = "Сортировки"),
             ),
             score = TaskScore(
-                id = 1,
+                id = "1",
                 score = 8.0,
                 maxScore = 10,
-                exerciseId = 1,
+                exerciseId = "1",
                 state = "evaluated",
                 activity = TaskScoreActivity(
-                    id = 1,
+                    id = "1",
                     name = "Домашнее задание",
                     weight = 0.4,
                 ),
@@ -247,19 +247,19 @@ private val previewPerformanceExercises =
         ),
         ExerciseWithScore(
             exercise = CourseExercise(
-                id = 2,
+                id = "2",
                 name = "Лабораторная: Хеш-таблицы",
-                activity = CourseExerciseActivity(id = 2, name = "Лабораторная"),
-                theme = CourseExerciseTheme(id = 2, name = "Хеширование"),
+                activity = CourseExerciseActivity(id = "2", name = "Лабораторная"),
+                theme = CourseExerciseTheme(id = "2", name = "Хеширование"),
             ),
             score = TaskScore(
-                id = 2,
+                id = "2",
                 score = 5.0,
                 maxScore = 10,
-                exerciseId = 2,
+                exerciseId = "2",
                 state = "evaluated",
                 activity = TaskScoreActivity(
-                    id = 2,
+                    id = "2",
                     name = "Лабораторная",
                     weight = 0.3,
                 ),
@@ -267,10 +267,10 @@ private val previewPerformanceExercises =
         ),
         ExerciseWithScore(
             exercise = CourseExercise(
-                id = 3,
+                id = "3",
                 name = "Контрольная: Графы",
-                activity = CourseExerciseActivity(id = 1, name = "Домашнее задание"),
-                theme = CourseExerciseTheme(id = 3, name = "Графы"),
+                activity = CourseExerciseActivity(id = "1", name = "Домашнее задание"),
+                theme = CourseExerciseTheme(id = "3", name = "Графы"),
             ),
             score = null,
         ),
@@ -278,20 +278,20 @@ private val previewPerformanceExercises =
 
 private val previewPerformanceState =
     CoursePerformanceComponent.State(
-        courseId = 1,
+        courseId = "1",
         courseName = "Алгоритмы и структуры данных",
         totalGrade = 7,
         exercises = previewPerformanceExercises,
         activitySummaries = listOf(
             ActivitySummary(
-                activityId = 1,
+                activityId = "1",
                 activityName = "Домашнее задание",
                 count = 5,
                 averageScore = 8.0,
                 weight = 0.4,
             ),
             ActivitySummary(
-                activityId = 2,
+                activityId = "2",
                 activityName = "Лабораторная",
                 count = 3,
                 averageScore = 5.0,
@@ -341,7 +341,7 @@ private fun PreviewPerformanceTabDark() {
 private fun PreviewPerformanceLoadingDark() {
     CuMobileTheme(darkTheme = true) {
         CoursePerformanceScreenContent(
-            state = CoursePerformanceComponent.State(courseId = 1, isLoading = true),
+            state = CoursePerformanceComponent.State(courseId = "1", isLoading = true),
             onIntent = {},
             onBack = {},
         )
@@ -354,7 +354,7 @@ private fun PreviewPerformanceErrorDark() {
     CuMobileTheme(darkTheme = true) {
         CoursePerformanceScreenContent(
             state = CoursePerformanceComponent.State(
-                courseId = 1,
+                courseId = "1",
                 error = "Не удалось загрузить успеваемость",
             ),
             onIntent = {},
@@ -369,7 +369,7 @@ private fun PreviewPerformanceErrorLight() {
     CuMobileTheme(darkTheme = false) {
         CoursePerformanceScreenContent(
             state = CoursePerformanceComponent.State(
-                courseId = 1,
+                courseId = "1",
                 error = "Не удалось загрузить успеваемость",
             ),
             onIntent = {},

@@ -209,7 +209,7 @@ private fun ThemeCard(
     index: Int,
     isExpanded: Boolean,
     onToggle: () -> Unit,
-    onOpenLongread: (longreadId: Int, themeId: Int) -> Unit,
+    onOpenLongread: (longreadId: String, themeId: String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -416,23 +416,23 @@ private fun exerciseCountLabel(count: Int): String {
 
 private val previewCourseDetailState =
     CourseDetailComponent.State(
-        courseId = 1,
+        courseId = "1",
         overview = CourseOverview(
-            id = 1,
+            id = "1",
             name = "Алгоритмы и структуры данных",
             themes = listOf(
                 CourseTheme(
-                    id = 1,
+                    id = "1",
                     name = "Введение в алгоритмы",
                     longreads = listOf(
-                        Longread(id = 1, name = "Теория сложности", type = "markdown"),
+                        Longread(id = "1", name = "Теория сложности", type = "markdown"),
                         Longread(
-                            id = 2,
+                            id = "2",
                             name = "Практика: сортировки",
                             type = "coding",
                             exercises = listOf(
                                 ThemeExercise(
-                                    id = 1,
+                                    id = "1",
                                     name = "ДЗ: Быстрая сортировка",
                                     deadline = "2026-04-01T23:59:00",
                                 ),
@@ -441,29 +441,29 @@ private val previewCourseDetailState =
                     ),
                 ),
                 CourseTheme(
-                    id = 2,
+                    id = "2",
                     name = "Графы и деревья",
                     longreads = listOf(
-                        Longread(id = 3, name = "BFS и DFS", type = "markdown"),
+                        Longread(id = "3", name = "BFS и DFS", type = "markdown"),
                         Longread(
-                            id = 4,
+                            id = "4",
                             name = "Задачи на графы",
                             type = "coding",
                             exercises = listOf(
                                 ThemeExercise(
-                                    id = 2,
+                                    id = "2",
                                     name = "ДЗ: Кратчайшие пути",
                                     deadline = "2026-04-10T23:59:00",
                                 ),
                                 ThemeExercise(
-                                    id = 3,
+                                    id = "3",
                                     name = "ДЗ: Минимальное остовное дерево",
                                 ),
                             ),
                         ),
                     ),
                 ),
-                CourseTheme(id = 3, name = "Динамическое программирование"),
+                CourseTheme(id = "3", name = "Динамическое программирование"),
             ),
         ),
     )
@@ -497,7 +497,7 @@ private fun PreviewCourseDetailLight() {
 private fun PreviewCourseDetailExpandedDark() {
     CuMobileTheme(darkTheme = true) {
         CourseDetailScreenContent(
-            state = previewCourseDetailState.copy(expandedThemeIds = setOf(1)),
+            state = previewCourseDetailState.copy(expandedThemeIds = setOf("1")),
             onIntent = {},
             onBack = {},
         )

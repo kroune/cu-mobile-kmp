@@ -11,10 +11,10 @@ interface PerformanceRepository {
     suspend fun fetchPerformance(): StudentPerformanceResponse?
 
     /** Fetches exercises for a specific course. */
-    suspend fun fetchCourseExercises(courseId: Int): CourseExercisesResponse?
+    suspend fun fetchCourseExercises(courseId: String): CourseExercisesResponse?
 
     /** Fetches per-task performance scores for a course. */
-    suspend fun fetchCoursePerformance(courseId: Int): CourseStudentPerformanceResponse?
+    suspend fun fetchCoursePerformance(courseId: String): CourseStudentPerformanceResponse?
 
     /** Fetches the student's gradebook. */
     suspend fun fetchGradebook(): GradebookResponse?

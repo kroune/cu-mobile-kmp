@@ -109,8 +109,8 @@ internal fun filteredTasks(state: TasksComponent.State): List<StudentTask> {
             val status = state.statusFilter ?: return@filter true
             normalizeTaskState(effectiveTaskState(task)) == status
         }.filter { task ->
-            val courseId = state.courseFilter ?: return@filter true
-            task.course.id == courseId
+            val cId = state.courseFilter ?: return@filter true
+            task.course.id == cId
         }.filter { task ->
             val query = state.searchQuery
             query.isEmpty() ||
@@ -151,7 +151,7 @@ private fun taskComparator(): Comparator<StudentTask> =
  * Returns the distinct course names available for the course filter
  * dropdown, sorted alphabetically.
  */
-internal fun availableCourses(tasks: List<StudentTask>): List<Pair<Int, String>> =
+internal fun availableCourses(tasks: List<StudentTask>): List<Pair<String, String>> =
     tasks
         .map { it.course.id to it.course.name }
         .distinctBy { it.first }

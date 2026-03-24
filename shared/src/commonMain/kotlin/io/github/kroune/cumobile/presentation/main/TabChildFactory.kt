@@ -13,9 +13,9 @@ import io.github.kroune.cumobile.presentation.tasks.DefaultTasksComponent
  */
 internal class TabChildFactory(
     private val deps: MainDependencies,
-    private val navigateToCourseDetail: (Int) -> Unit,
+    private val navigateToCourseDetail: (String) -> Unit,
     private val navigateToProfile: () -> Unit,
-    private val navigateToCoursePerformance: (Int, String, Int) -> Unit,
+    private val navigateToCoursePerformance: (String, String, Int) -> Unit,
     private val navigateToFileRenameSettings: () -> Unit,
     private val navigateToScanner: () -> Unit,
 ) {

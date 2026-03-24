@@ -22,10 +22,10 @@ internal class PerformanceRepositoryImpl(
     override suspend fun fetchPerformance(): StudentPerformanceResponse? =
         withCookie { performanceApi.fetchPerformance(it) }
 
-    override suspend fun fetchCourseExercises(courseId: Int): CourseExercisesResponse? =
+    override suspend fun fetchCourseExercises(courseId: String): CourseExercisesResponse? =
         withCookie { performanceApi.fetchCourseExercises(it, courseId) }
 
-    override suspend fun fetchCoursePerformance(courseId: Int): CourseStudentPerformanceResponse? =
+    override suspend fun fetchCoursePerformance(courseId: String): CourseStudentPerformanceResponse? =
         withCookie { performanceApi.fetchCoursePerformance(it, courseId) }
 
     override suspend fun fetchGradebook(): GradebookResponse? =

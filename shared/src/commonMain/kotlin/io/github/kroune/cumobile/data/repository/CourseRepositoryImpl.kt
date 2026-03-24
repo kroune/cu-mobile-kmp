@@ -23,11 +23,11 @@ internal class CourseRepositoryImpl(
     override suspend fun fetchCourses(): List<Course>? =
         withCookie { courseApi.fetchCourses(it) }
 
-    override suspend fun fetchCourseOverview(courseId: Int): CourseOverview? =
+    override suspend fun fetchCourseOverview(courseId: String): CourseOverview? =
         withCookie { courseApi.fetchCourseOverview(it, courseId) }
 
-    override val courseIdOrderFlow: Flow<List<Int>> = courseLocal.courseIdOrderFlow
+    override val courseIdOrderFlow: Flow<List<String>> = courseLocal.courseIdOrderFlow
 
-    override suspend fun saveCourseIdOrder(ids: List<Int>) =
+    override suspend fun saveCourseIdOrder(ids: List<String>) =
         courseLocal.saveCourseIdOrder(ids)
 }

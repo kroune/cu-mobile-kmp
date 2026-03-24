@@ -56,7 +56,7 @@ interface HomeComponent {
 
         /** Navigate to a course detail page. */
         data class OpenCourse(
-            val courseId: Int,
+            val courseId: String,
         ) : Intent
 
         /** Pull-to-refresh triggered. */

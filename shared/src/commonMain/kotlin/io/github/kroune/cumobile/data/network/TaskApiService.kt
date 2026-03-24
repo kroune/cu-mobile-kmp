@@ -1,6 +1,7 @@
 package io.github.kroune.cumobile.data.network
 
 import io.github.kroune.cumobile.data.model.MaterialAttachment
+import io.github.kroune.cumobile.data.model.StartTaskResponse
 import io.github.kroune.cumobile.data.model.StudentTask
 import io.github.kroune.cumobile.data.model.TaskComment
 import io.github.kroune.cumobile.data.model.TaskDetails
@@ -43,10 +44,10 @@ internal class TaskApiService(
     /** Fetches task details by [taskId]. */
     suspend fun fetchTaskDetails(
         cookie: String,
-        taskId: Int,
+        taskId: String,
     ): TaskDetails? =
         safeApiCall(logger, "fetch task details for taskId=$taskId") {
-            httpClient.get(ApiEndpoints.Tasks.byId(taskId.toString())) {
+            httpClient.get(ApiEndpoints.Tasks.byId(taskId)) {
                 header("Cookie", cookieHeader(cookie))
             }
         }
@@ -54,10 +55,10 @@ internal class TaskApiService(
     /** Fetches the event history for a task. */
     suspend fun fetchTaskEvents(
         cookie: String,
-        taskId: Int,
+        taskId: String,
     ): List<TaskEvent>? =
         safeApiCall(logger, "fetch task events for taskId=$taskId") {
-            httpClient.get(ApiEndpoints.Tasks.events(taskId.toString())) {
+            httpClient.get(ApiEndpoints.Tasks.events(taskId)) {
                 header("Cookie", cookieHeader(cookie))
             }
         }
@@ -65,21 +66,21 @@ internal class TaskApiService(
     /** Fetches comments for a task. */
     suspend fun fetchTaskComments(
         cookie: String,
-        taskId: Int,
+        taskId: String,
     ): List<TaskComment>? =
         safeApiCall(logger, "fetch task comments for taskId=$taskId") {
-            httpClient.get(ApiEndpoints.Tasks.comments(taskId.toString())) {
+            httpClient.get(ApiEndpoints.Tasks.comments(taskId)) {
                 header("Cookie", cookieHeader(cookie))
             }
         }
 
-    /** Starts a backlog task. */
+    /** Starts a backlog task. Returns the response containing quiz session ID if applicable. */
     suspend fun startTask(
         cookie: String,
-        taskId: Int,
-    ): Boolean =
-        safeApiAction(logger, "start task taskId=$taskId") {
-            httpClient.put(ApiEndpoints.Tasks.start(taskId.toString())) {
+        taskId: String,
+    ): StartTaskResponse? =
+        safeApiCall(logger, "start task taskId=$taskId") {
+            httpClient.put(ApiEndpoints.Tasks.start(taskId)) {
                 header("Cookie", cookieHeader(cookie))
                 contentType(ContentType.Application.Json)
             }
@@ -93,12 +94,12 @@ internal class TaskApiService(
      */
     suspend fun submitTask(
         cookie: String,
-        taskId: Int,
+        taskId: String,
         solutionUrl: String? = null,
         attachments: List<MaterialAttachment> = emptyList(),
     ): Boolean =
         safeApiAction(logger, "submit task taskId=$taskId") {
-            httpClient.put(ApiEndpoints.Tasks.submit(taskId.toString())) {
+            httpClient.put(ApiEndpoints.Tasks.submit(taskId)) {
                 header("Cookie", cookieHeader(cookie))
                 contentType(ContentType.Application.Json)
                 setBody(
@@ -113,11 +114,11 @@ internal class TaskApiService(
     /** @param lateDays number of late days to request. */
     suspend fun prolongLateDays(
         cookie: String,
-        taskId: Int,
+        taskId: String,
         lateDays: Int,
     ): Boolean =
         safeApiAction(logger, "prolong late days for taskId=$taskId") {
-            httpClient.put(ApiEndpoints.Tasks.lateDaysProlong(taskId.toString())) {
+            httpClient.put(ApiEndpoints.Tasks.lateDaysProlong(taskId)) {
                 header("Cookie", cookieHeader(cookie))
                 contentType(ContentType.Application.Json)
                 setBody(mapOf("lateDays" to lateDays))
@@ -127,10 +128,10 @@ internal class TaskApiService(
     /** Cancels late days for a task. */
     suspend fun cancelLateDays(
         cookie: String,
-        taskId: Int,
+        taskId: String,
     ): Boolean =
         safeApiAction(logger, "cancel late days for taskId=$taskId") {
-            httpClient.put(ApiEndpoints.Tasks.lateDaysCancel(taskId.toString())) {
+            httpClient.put(ApiEndpoints.Tasks.lateDaysCancel(taskId)) {
                 header("Cookie", cookieHeader(cookie))
                 contentType(ContentType.Application.Json)
             }
@@ -139,10 +140,10 @@ internal class TaskApiService(
     /** @return the created comment's ID, or null on failure. */
     suspend fun createComment(
         cookie: String,
-        taskId: Int,
+        taskId: String,
         content: String,
         attachments: List<MaterialAttachment> = emptyList(),
-    ): Int? =
+    ): String? =
         try {
             val response = httpClient.post(ApiEndpoints.COMMENTS) {
                 header("Cookie", cookieHeader(cookie))
@@ -161,7 +162,6 @@ internal class TaskApiService(
                 json.jsonObject["commentId"]
                     ?.jsonPrimitive
                     ?.content
-                    ?.toIntOrNull()
             } else {
                 logger.warn { "create comment for taskId=$taskId returned ${response.status}" }
                 null

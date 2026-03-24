@@ -17,9 +17,9 @@ import kotlinx.coroutines.launch
  */
 class DefaultCourseDetailComponent(
     componentContext: ComponentContext,
-    private val courseId: Int,
+    private val courseId: String,
     private val courseRepository: CourseRepository,
-    private val onOpenLongread: (longreadId: Int, courseId: Int, themeId: Int) -> Unit,
+    private val onOpenLongread: (longreadId: String, courseId: String, themeId: String) -> Unit,
     private val onBack: () -> Unit,
 ) : CourseDetailComponent,
     ComponentContext by componentContext {

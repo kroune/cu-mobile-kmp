@@ -229,7 +229,7 @@ private fun swapIds(
     courses: List<Course>,
     from: Int,
     to: Int,
-): List<Int> {
+): List<String> {
     val ids = courses.map { it.id }.toMutableList()
     val temp = ids[from]
     ids[from] = ids[to]
@@ -358,10 +358,10 @@ private fun ArchivedHeader(
 
 private val previewCoursesState = CoursesComponent.State(
     courses = listOf(
-        Course(id = 1, name = "Алгоритмы и структуры данных", category = "development"),
-        Course(id = 2, name = "Линейная алгебра", category = "mathematics"),
-        Course(id = 3, name = "Управление проектами", category = "business"),
-        Course(id = 4, name = "Физика", category = "stem"),
+        Course(id = "1", name = "Алгоритмы и структуры данных", category = "development"),
+        Course(id = "2", name = "Линейная алгебра", category = "mathematics"),
+        Course(id = "3", name = "Управление проектами", category = "business"),
+        Course(id = "4", name = "Физика", category = "stem"),
     ),
 )
 
@@ -438,8 +438,8 @@ private fun PreviewCoursesEditModeDark() {
 
 private val previewCoursesWithArchived = previewCoursesState.copy(
     courses = previewCoursesState.courses + listOf(
-        Course(id = 5, name = "Введение в ИИ", category = "development", isArchived = true),
-        Course(id = 6, name = "Философия", category = "general", isArchived = true),
+        Course(id = "5", name = "Введение в ИИ", category = "development", isArchived = true),
+        Course(id = "6", name = "Философия", category = "general", isArchived = true),
     ),
     showArchived = true,
 )
@@ -456,9 +456,9 @@ private val previewGradeSheetState = CoursesComponent.State(
     segment = 1,
     courses = previewCoursesState.courses,
     performanceCourses = listOf(
-        StudentPerformanceCourse(id = 1, name = "Алгоритмы и структуры данных", total = 8),
-        StudentPerformanceCourse(id = 2, name = "Линейная алгебра", total = 6),
-        StudentPerformanceCourse(id = 3, name = "Управление проектами", total = 4),
+        StudentPerformanceCourse(id = "1", name = "Алгоритмы и структуры данных", total = 8),
+        StudentPerformanceCourse(id = "2", name = "Линейная алгебра", total = 6),
+        StudentPerformanceCourse(id = "3", name = "Управление проектами", total = 4),
     ),
 )
 

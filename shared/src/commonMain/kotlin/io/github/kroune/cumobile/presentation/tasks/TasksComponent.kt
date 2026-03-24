@@ -29,7 +29,7 @@ interface TasksComponent {
         /** Status filter (null = all statuses in current segment). */
         val statusFilter: String? = null,
         /** Course filter (null = all courses). */
-        val courseFilter: Int? = null,
+        val courseFilter: String? = null,
         /** Search query (matches against exercise name). */
         val searchQuery: String = "",
     )
@@ -47,7 +47,7 @@ interface TasksComponent {
 
         /** Filter tasks by a specific course ID, or null for all. */
         data class FilterByCourse(
-            val courseId: Int?,
+            val courseId: String?,
         ) : Intent
 
         /** Update the search query. */

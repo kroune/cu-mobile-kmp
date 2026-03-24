@@ -107,7 +107,7 @@ internal fun HomeContent(
     state: HomeComponent.State,
     onIntent: (HomeComponent.Intent) -> Unit,
     onTaskClick: (StudentTask) -> Unit,
-    onCourseClick: (Int) -> Unit,
+    onCourseClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -185,7 +185,7 @@ private fun DeadlinesSection(
 @Composable
 private fun CoursesSection(
     courses: List<Course>,
-    onCourseClick: (Int) -> Unit,
+    onCourseClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
@@ -456,22 +456,22 @@ private val previewHomeState = HomeComponent.State(
     selectedDateMillis = 1774051200000L,
     tasks = listOf(
         StudentTask(
-            id = 1,
+            id = "1",
             state = TaskState.InProgress,
             exercise = TaskExercise(name = "ДЗ: Деревья", deadline = "2026-04-01T23:59:00"),
             course = TaskCourse(name = "Алгоритмы"),
         ),
         StudentTask(
-            id = 2,
+            id = "2",
             state = TaskState.Backlog,
             exercise = TaskExercise(name = "Лабораторная 3", deadline = "2026-04-05T23:59:00"),
             course = TaskCourse(name = "Линейная алгебра"),
         ),
     ),
     courses = listOf(
-        Course(id = 1, name = "Алгоритмы", category = "development"),
-        Course(id = 2, name = "Линейная алгебра", category = "mathematics"),
-        Course(id = 3, name = "Менеджмент", category = "business"),
+        Course(id = "1", name = "Алгоритмы", category = "development"),
+        Course(id = "2", name = "Линейная алгебра", category = "mathematics"),
+        Course(id = "3", name = "Менеджмент", category = "business"),
     ),
 )
 

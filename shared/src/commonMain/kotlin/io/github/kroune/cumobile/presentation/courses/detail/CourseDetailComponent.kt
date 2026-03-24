@@ -16,14 +16,14 @@ interface CourseDetailComponent {
     fun onIntent(intent: Intent)
 
     data class State(
-        val courseId: Int = 0,
+        val courseId: String = "",
         val overview: CourseOverview? = null,
         val isLoading: Boolean = false,
         val error: String? = null,
         /** Search query filtering themes and longreads by name. */
         val searchQuery: String = "",
         /** IDs of themes that are currently expanded. */
-        val expandedThemeIds: Set<Int> = emptySet(),
+        val expandedThemeIds: Set<String> = emptySet(),
     )
 
     sealed interface Intent {
@@ -34,14 +34,14 @@ interface CourseDetailComponent {
 
         /** Toggle expand/collapse for a theme. */
         data class ToggleTheme(
-            val themeId: Int,
+            val themeId: String,
         ) : Intent
 
         /** Navigate to a longread. */
         data class OpenLongread(
-            val longreadId: Int,
-            val courseId: Int,
-            val themeId: Int,
+            val longreadId: String,
+            val courseId: String,
+            val themeId: String,
         ) : Intent
 
         /** Navigate back. */

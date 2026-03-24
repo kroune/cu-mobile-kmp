@@ -264,7 +264,7 @@ private fun notificationIconEmoji(
 private val previewNotificationsState = NotificationsComponent.State(
     educationNotifications = listOf(
         NotificationItem(
-            id = 1,
+            id = "1",
             title = "Новое задание",
             description = "Преподаватель назначил задание по курсу Алгоритмы",
             icon = "education",
@@ -272,7 +272,7 @@ private val previewNotificationsState = NotificationsComponent.State(
             createdAt = "2026-03-18T10:00:00",
         ),
         NotificationItem(
-            id = 2,
+            id = "2",
             title = "Оценка выставлена",
             description = "Получена оценка 8 за ДЗ: Деревья",
             icon = "education",
@@ -362,7 +362,7 @@ private val previewOtherTabState = NotificationsComponent.State(
     selectedTab = 1,
     otherNotifications = listOf(
         NotificationItem(
-            id = 10,
+            id = "10",
             title = "Обновление системы",
             description = "Плановое техническое обслуживание 25 марта с 02:00 до 06:00",
             icon = "news",
@@ -370,7 +370,7 @@ private val previewOtherTabState = NotificationsComponent.State(
             createdAt = "2026-03-20T09:00:00",
         ),
         NotificationItem(
-            id = 11,
+            id = "11",
             title = "Новый опрос",
             description = "Пожалуйста, заполните опрос удовлетворённости обучением",
             icon = "servicedesk",
@@ -404,7 +404,7 @@ private fun PreviewNotificationsWithLinkDark() {
             state = previewNotificationsState.copy(
                 educationNotifications = previewNotificationsState.educationNotifications +
                     NotificationItem(
-                        id = 3,
+                        id = "3",
                         title = "Новый лонгрид по Алгоритмам",
                         description = "Добавлен материал «Динамическое программирование»",
                         icon = "education",

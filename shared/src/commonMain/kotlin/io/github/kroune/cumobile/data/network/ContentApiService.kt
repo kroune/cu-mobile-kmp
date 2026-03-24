@@ -31,13 +31,13 @@ internal class ContentApiService(
     /** Fetches all materials for a longread. */
     suspend fun fetchLongreadMaterials(
         cookie: String,
-        longreadId: Int,
+        longreadId: String,
     ): List<LongreadMaterial>? =
         safeApiCall<LongreadMaterialsResponse>(
             logger,
             "fetch longread materials for longreadId=$longreadId",
         ) {
-            val url = "${ApiEndpoints.longreadMaterials(longreadId.toString())}?limit=$MaxListLimit"
+            val url = "${ApiEndpoints.longreadMaterials(longreadId)}?limit=$MaxListLimit"
             httpClient.get(url) {
                 header("Cookie", cookieHeader(cookie))
             }
@@ -46,10 +46,10 @@ internal class ContentApiService(
     /** Fetches a single material by ID. */
     suspend fun fetchMaterial(
         cookie: String,
-        materialId: Int,
+        materialId: String,
     ): LongreadMaterial? =
         safeApiCall(logger, "fetch material materialId=$materialId") {
-            httpClient.get(ApiEndpoints.material(materialId.toString())) {
+            httpClient.get(ApiEndpoints.material(materialId)) {
                 header("Cookie", cookieHeader(cookie))
             }
         }

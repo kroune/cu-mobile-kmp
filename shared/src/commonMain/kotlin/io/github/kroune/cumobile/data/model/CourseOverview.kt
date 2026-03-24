@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class CourseOverview(
-    val id: Int = 0,
+    val id: String = "",
     val name: String = "",
     val isArchived: Boolean = false,
     val themes: List<CourseTheme> = emptyList(),
@@ -16,7 +16,7 @@ data class CourseOverview(
 /** Theme within a [CourseOverview]. */
 @Serializable
 data class CourseTheme(
-    val id: Int = 0,
+    val id: String = "",
     val name: String = "",
     val order: Int = 0,
     val state: String = "",
@@ -37,7 +37,7 @@ data class CourseTheme(
  */
 @Serializable
 data class Longread(
-    val id: Int = 0,
+    val id: String = "",
     val type: String = "",
     val name: String = "",
     val state: String = "",
@@ -47,7 +47,7 @@ data class Longread(
 /** Exercise entry within a [Longread]. */
 @Serializable
 data class ThemeExercise(
-    val id: Int = 0,
+    val id: String = "",
     val name: String = "",
     val maxScore: Int = 0,
     /** ISO 8601 datetime string, e.g. `"2025-06-01T23:59:00Z"`. */
@@ -58,7 +58,7 @@ data class ThemeExercise(
 /** Grading activity descriptor for a [ThemeExercise]. */
 @Serializable
 data class ExerciseActivity(
-    val id: Int = 0,
+    val id: String = "",
     val name: String = "",
     val weight: Double = 0.0,
 )

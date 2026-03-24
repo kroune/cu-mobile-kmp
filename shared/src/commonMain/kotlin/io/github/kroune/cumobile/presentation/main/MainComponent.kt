@@ -59,18 +59,18 @@ interface MainComponent {
     fun navigateToNotifications()
 
     /** Navigate to course detail. */
-    fun navigateToCourseDetail(courseId: Int)
+    fun navigateToCourseDetail(courseId: String)
 
     /** Navigate to longread/material viewer. */
     fun navigateToLongread(
-        longreadId: Int,
-        courseId: Int,
-        themeId: Int,
+        longreadId: String,
+        courseId: String,
+        themeId: String,
     )
 
     /** Navigate to course performance. */
     fun navigateToCoursePerformance(
-        courseId: Int,
+        courseId: String,
         courseName: String,
         totalGrade: Int,
     )

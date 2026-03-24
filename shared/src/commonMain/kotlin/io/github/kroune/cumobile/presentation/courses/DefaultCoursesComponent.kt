@@ -22,8 +22,8 @@ class DefaultCoursesComponent(
     componentContext: ComponentContext,
     private val courseRepository: CourseRepository,
     private val performanceRepository: PerformanceRepository,
-    private val onOpenCourse: (courseId: Int) -> Unit,
-    private val onOpenCoursePerformance: (courseId: Int, courseName: String, totalGrade: Int) -> Unit,
+    private val onOpenCourse: (courseId: String) -> Unit,
+    private val onOpenCoursePerformance: (courseId: String, courseName: String, totalGrade: Int) -> Unit,
 ) : CoursesComponent,
     ComponentContext by componentContext {
     private val scope = coroutineScope(
@@ -72,7 +72,7 @@ class DefaultCoursesComponent(
             }.launchIn(scope)
     }
 
-    private fun reorderCourses(ids: List<Int>) {
+    private fun reorderCourses(ids: List<String>) {
         scope.launch {
             courseRepository.saveCourseIdOrder(ids)
         }

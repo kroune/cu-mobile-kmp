@@ -18,15 +18,15 @@ internal class LongreadTaskActions(
     private val effects: Channel<LongreadComponent.Effect>,
     private val taskRepository: TaskRepository,
     private val scope: CoroutineScope,
-    private val loadTaskEventsAndComments: (Int) -> Unit,
+    private val loadTaskEventsAndComments: (String) -> Unit,
 ) {
     fun startTask() {
         val taskId = state.value.activeTaskId ?: return
         scope.launch {
             state.value = state.value.copy(isSubmitting = true)
-            val success = taskRepository.startTask(taskId)
+            val result = taskRepository.startTask(taskId)
             state.value = state.value.copy(isSubmitting = false)
-            if (success) {
+            if (result != null) {
                 refreshTaskDetails(taskId)
             } else {
                 logger.warn { "Failed to start task $taskId" }
@@ -124,7 +124,7 @@ internal class LongreadTaskActions(
         }
     }
 
-    private suspend fun refreshTaskDetails(taskId: Int) {
+    private suspend fun refreshTaskDetails(taskId: String) {
         val details = taskRepository.fetchTaskDetails(taskId)
         if (details != null) {
             val updated = state.value.taskDetails.toMutableMap()

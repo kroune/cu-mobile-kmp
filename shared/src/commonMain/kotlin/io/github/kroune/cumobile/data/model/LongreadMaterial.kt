@@ -30,7 +30,7 @@ data class LongreadMaterialsResponse(
  */
 @Serializable
 data class LongreadMaterial(
-    val id: Int = 0,
+    val id: String = "",
     val discriminator: String = "",
     /**
      * Polymorphic: may be a string, a JSON object, or null.
@@ -45,12 +45,16 @@ data class LongreadMaterial(
     val content: LongreadMaterialContent? = null,
     val attachments: List<MaterialAttachment> = emptyList(),
     val estimation: MaterialEstimation? = null,
-    val taskId: Int? = null,
+    val taskId: String? = null,
 ) {
     val isMarkdown: Boolean get() = discriminator == Discriminator.Markdown
     val isFile: Boolean get() = discriminator == Discriminator.File
     val isCoding: Boolean get() = discriminator == Discriminator.Coding
     val isQuestions: Boolean get() = discriminator == Discriminator.Questions
+    val isVideoPlatform: Boolean get() = discriminator == Discriminator.VideoPlatform
+    val isAudio: Boolean get() = discriminator == Discriminator.Audio
+    val isVideo: Boolean get() = discriminator == Discriminator.Video
+    val isImage: Boolean get() = discriminator == Discriminator.Image
 
     /** Known discriminator values for [LongreadMaterial.discriminator]. */
     object Discriminator {
@@ -58,6 +62,10 @@ data class LongreadMaterial(
         const val File = "file"
         const val Coding = "coding"
         const val Questions = "questions"
+        const val VideoPlatform = "videoPlatform"
+        const val Audio = "audio"
+        const val Video = "video"
+        const val Image = "image"
     }
 
     /** Content name from the nested [content] object. */

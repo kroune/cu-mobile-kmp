@@ -562,7 +562,7 @@ private fun PreviewLongreadActionErrorDark() {
             state = LongreadComponent.State(
                 materials = listOf(
                     LongreadMaterial(
-                        id = 1,
+                        id = "1",
                         name = "Тестовый материал",
                         discriminator = "markdown",
                     ),
@@ -583,7 +583,7 @@ private fun PreviewLongreadActionErrorLight() {
             state = LongreadComponent.State(
                 materials = listOf(
                     LongreadMaterial(
-                        id = 1,
+                        id = "1",
                         name = "Тестовый материал",
                         discriminator = "markdown",
                     ),
@@ -612,7 +612,7 @@ private fun PreviewLongreadLoadingDark() {
 private val previewLongreadSuccessState = LongreadComponent.State(
     materials = listOf(
         LongreadMaterial(
-            id = 1,
+            id = "1",
             discriminator = "markdown",
             content = LongreadMaterialContent(name = "Введение в алгоритмы"),
             viewContentRaw = kotlinx.serialization.json.JsonPrimitive(
@@ -622,20 +622,20 @@ private val previewLongreadSuccessState = LongreadComponent.State(
             ),
         ),
         LongreadMaterial(
-            id = 2,
+            id = "2",
             discriminator = "file",
             filename = "lecture_slides.pdf",
             length = 2_500_000,
             version = "v1",
         ),
         LongreadMaterial(
-            id = 3,
+            id = "3",
             discriminator = "coding",
             content = LongreadMaterialContent(name = "ДЗ: Быстрая сортировка"),
-            taskId = 42,
+            taskId = "42",
         ),
         LongreadMaterial(
-            id = 4,
+            id = "4",
             discriminator = "questions",
             content = LongreadMaterialContent(name = "Тест по теме"),
         ),
