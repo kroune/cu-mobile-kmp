@@ -38,6 +38,7 @@ import io.github.kroune.cumobile.domain.repository.NotificationRepository
 import io.github.kroune.cumobile.domain.repository.PerformanceRepository
 import io.github.kroune.cumobile.domain.repository.ProfileRepository
 import io.github.kroune.cumobile.domain.repository.TaskRepository
+import io.github.kroune.cumobile.domain.usecase.GetClassesForDateUseCase
 import io.github.kroune.cumobile.presentation.main.MainDependencies
 import io.github.kroune.cumobile.presentation.root.DefaultRootComponent
 import org.koin.core.context.startKoin
@@ -78,7 +79,8 @@ private val repositoryModule = module {
     single<FileRepository> { FileRepositoryImpl(get(), get()) }
     single<NotificationRepository> { NotificationRepositoryImpl(get(), get()) }
     single<PerformanceRepository> { PerformanceRepositoryImpl(get(), get()) }
-    single<CalendarRepository> { CalendarRepositoryImpl(get(), get()) }
+    single { GetClassesForDateUseCase() }
+    single<CalendarRepository> { CalendarRepositoryImpl(get(), get(), get()) }
     single<FileRenameRepository> { FileRenameRepositoryImpl(get()) }
 }
 

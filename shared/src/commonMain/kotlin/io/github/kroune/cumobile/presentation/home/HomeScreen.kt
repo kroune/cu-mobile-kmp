@@ -248,6 +248,10 @@ private fun ScheduleSection(
 
         if (!state.isCalendarConnected) {
             ConnectCalendarSection(onIntent)
+        } else if (state.isScheduleLoading) {
+            EmptySection(text = "Загрузка расписания…")
+        } else if (state.scheduleError != null) {
+            EmptySection(text = state.scheduleError)
         } else if (state.classes.isEmpty()) {
             EmptySection(text = "Нет занятий на этот день")
         } else {

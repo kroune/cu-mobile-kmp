@@ -208,8 +208,11 @@ Every screen has:
 
 - ICS parser (pure Kotlin, shared) fetches from user-configured Yandex Calendar URL
 - URL stored in DataStore (key: `ics_url`)
-- RRULE expansion + EXDATE handling
-- Home tab has daily view with date navigation
+- **RRULE expansion** handled by `RRuleExpander` (supports WEEKLY, DAILY, INTERVAL, UNTIL, COUNT, BYDAY, EXDATE)
+- **Date parsing** extracted to `IcalDateParser` (parses iCal date/datetime strings to `Instant`)
+- **Event→ClassData mapping** in `GetClassesForDateUseCase` (room extraction, type detection, date filtering with recurrence)
+- `CalendarRepositoryImpl` delegates to `GetClassesForDateUseCase` for filtering/mapping
+- Home tab has daily view with date navigation, loading/error states for schedule section
 - URL configuration in Profile screen
 
 ### Course Reordering

@@ -26,6 +26,8 @@ interface HomeComponent {
         val classes: List<ClassData> = emptyList(),
         val selectedDateMillis: Long = 0,
         val isCalendarConnected: Boolean = false,
+        val isScheduleLoading: Boolean = false,
+        val scheduleError: String? = null,
         val profileInitials: String = "",
         val lateDaysBalance: Int? = null,
         val isLoading: Boolean = true,

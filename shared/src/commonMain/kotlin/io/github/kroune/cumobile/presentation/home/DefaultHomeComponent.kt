@@ -106,13 +106,22 @@ class DefaultHomeComponent(
 
     private fun loadSchedule() {
         if (!_state.value.isCalendarConnected) return
+        _state.value = _state.value.copy(isScheduleLoading = true, scheduleError = null)
         scope.launch {
             try {
                 val dateMillis = _state.value.selectedDateMillis
                 val classes = calendarRepository.getClassesForDate(dateMillis)
-                _state.value = _state.value.copy(classes = classes)
+                _state.value = _state.value.copy(
+                    classes = classes,
+                    isScheduleLoading = false,
+                    scheduleError = null,
+                )
             } catch (e: Exception) {
                 logger.error(e) { "Failed to load schedule" }
+                _state.value = _state.value.copy(
+                    isScheduleLoading = false,
+                    scheduleError = "Не удалось загрузить расписание",
+                )
             }
         }
     }
