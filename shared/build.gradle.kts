@@ -1,4 +1,5 @@
 import dev.detekt.gradle.Detekt
+import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
 import org.jetbrains.kotlin.gradle.plugin.mpp.NativeBuildType
 
 plugins {
@@ -22,6 +23,16 @@ tasks.register("detektAll") {
 
 detekt {
     config.setFrom(file("config/detekt/detekt.yml"))
+}
+
+tasks.configureEach {
+    if (name == "compileKotlinIosArm64" || name == "compileKotlinIosSimulatorArm64") {
+        val isMac = DefaultNativePlatform.getCurrentOperatingSystem().isMacOsX
+        if (!isMac) {
+            logger.warn("⚠️ Unsupported Operating System\n$name is fully supported on MacOS machines only. This task will be skipped.")
+        }
+        onlyIf { isMac }
+    }
 }
 
 object AppInfo {
