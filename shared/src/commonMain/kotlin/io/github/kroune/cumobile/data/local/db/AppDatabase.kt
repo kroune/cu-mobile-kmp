@@ -15,8 +15,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun fileRenameRuleDao(): FileRenameRuleDao
 }
 
-// Room compiler generates the actual implementation
-@Suppress("KotlinNoActualForExpect")
+// Room compiler generates the actual implementation on Mac builds.
+// Manual actual stubs exist in androidMain/iosMain for Linux CI compatibility.
 expect object AppDatabaseConstructor : RoomDatabaseConstructor<AppDatabase> {
     override fun initialize(): AppDatabase
 }
