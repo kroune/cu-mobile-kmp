@@ -10,6 +10,8 @@ plugins {
     alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.kotlinCocoapods)
     alias(libs.plugins.detekt)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.androidx.room)
 }
 
 tasks.register("detektAll") {
@@ -24,6 +26,10 @@ detekt {
 
 object AppInfo {
     const val LICENSE_TYPE = "GPL-3.0"
+}
+
+room {
+    schemaDirectory("$projectDir/schemas")
 }
 
 dependencies {
@@ -118,6 +124,9 @@ kotlin {
 
             implementation(libs.androidx.datastore.preferences)
 
+            implementation(libs.androidx.room.runtime)
+            implementation(libs.androidx.sqlite.bundled)
+
             implementation(libs.kotlin.logging)
             implementation(libs.kotlinx.datetime)
         }
@@ -133,4 +142,10 @@ kotlin {
             implementation(libs.ktor.client.cio)
         }
     }
+}
+
+dependencies {
+    add("kspAndroid", libs.androidx.room.compiler)
+    add("kspIosArm64", libs.androidx.room.compiler)
+    add("kspIosSimulatorArm64", libs.androidx.room.compiler)
 }

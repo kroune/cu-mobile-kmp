@@ -8,6 +8,7 @@ import io.github.kroune.cumobile.data.local.FileOpener
 import io.github.kroune.cumobile.data.local.FileRenameLocalDataSource
 import io.github.kroune.cumobile.data.local.FileStorage
 import io.github.kroune.cumobile.data.local.PdfGenerator
+import io.github.kroune.cumobile.data.local.db.AppDatabase
 import io.github.kroune.cumobile.data.network.ContentApiService
 import io.github.kroune.cumobile.data.network.CourseApiService
 import io.github.kroune.cumobile.data.network.IcalApiService
@@ -66,6 +67,7 @@ private val dataModule = module {
     single { AuthLocalDataSource(get()) }
     single { CourseLocalDataSource(get()) }
     single { CalendarLocalDataSource(get()) }
+    single { get<AppDatabase>().fileRenameRuleDao() }
     single { FileRenameLocalDataSource(get()) }
 }
 
