@@ -15,8 +15,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun fileRenameRuleDao(): FileRenameRuleDao
 }
 
-// Room compiler generates the actual implementation on Mac builds.
-// Manual actual stubs exist in androidMain/iosMain for Linux CI compatibility.
+// Room KSP generates the actual implementation.
+// iOS stubs are checked into build/generated/ksp/ios*/; KSP overwrites them on macOS.
 expect object AppDatabaseConstructor : RoomDatabaseConstructor<AppDatabase> {
     override fun initialize(): AppDatabase
 }
