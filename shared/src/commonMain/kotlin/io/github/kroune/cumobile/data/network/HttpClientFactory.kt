@@ -28,6 +28,8 @@ internal fun createHttpClient(): HttpClient =
                     // occasionally returns unquoted or single-quoted JSON values
                     isLenient = true
                     encodeDefaults = true
+                    // API may return null for fields with defaults (e.g. maxScore)
+                    coerceInputValues = true
                 },
             )
         }

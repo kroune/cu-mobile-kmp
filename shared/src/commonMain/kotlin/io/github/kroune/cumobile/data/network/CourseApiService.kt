@@ -19,6 +19,7 @@ private val logger = KotlinLogging.logger {}
 private val json = Json {
     ignoreUnknownKeys = true
     isLenient = true
+    coerceInputValues = true
 }
 
 /**
