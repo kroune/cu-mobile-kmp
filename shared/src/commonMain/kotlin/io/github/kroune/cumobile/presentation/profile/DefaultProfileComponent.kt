@@ -6,6 +6,7 @@ import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.data.model.PickedFile
 import io.github.kroune.cumobile.domain.repository.ProfileRepository
+import io.github.kroune.cumobile.presentation.common.decodeImageBitmap
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -13,6 +14,8 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlin.coroutines.CoroutineContext
 
 private val logger = KotlinLogging.logger {}
 
@@ -25,6 +28,7 @@ private val logger = KotlinLogging.logger {}
 class DefaultProfileComponent(
     componentContext: ComponentContext,
     private val profileRepository: ProfileRepository,
+    private val defaultDispatcher: CoroutineContext = Dispatchers.Default,
     private val onBack: () -> Unit,
     private val onLogout: () -> Unit,
 ) : ProfileComponent,
@@ -57,11 +61,15 @@ class DefaultProfileComponent(
             val profile = profileRepository.fetchProfile()
             val lmsProfile = profileRepository.fetchLmsProfile()
             val avatar = profileRepository.fetchAvatar()
+            val bitmap = withContext(defaultDispatcher) {
+                avatar?.let { decodeImageBitmap(it) }
+            }
             if (profile != null) {
                 _state.value = _state.value.copy(
                     profile = profile,
                     lmsProfile = lmsProfile,
                     avatarBytes = avatar,
+                    avatarBitmap = bitmap,
                     isLoading = false,
                 )
             } else {
@@ -79,8 +87,12 @@ class DefaultProfileComponent(
             val success = profileRepository.uploadAvatar(file.bytes, file.contentType)
             if (success) {
                 val avatar = profileRepository.fetchAvatar()
+                val bitmap = withContext(defaultDispatcher) {
+                    avatar?.let { decodeImageBitmap(it) }
+                }
                 _state.value = _state.value.copy(
                     avatarBytes = avatar,
+                    avatarBitmap = bitmap,
                     isUploadingAvatar = false,
                 )
             } else {
@@ -100,6 +112,7 @@ class DefaultProfileComponent(
             if (success) {
                 _state.value = _state.value.copy(
                     avatarBytes = null,
+                    avatarBitmap = null,
                     isDeletingAvatar = false,
                 )
             } else {
