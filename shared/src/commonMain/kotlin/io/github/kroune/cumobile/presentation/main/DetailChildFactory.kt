@@ -118,7 +118,6 @@ internal class DetailChildFactory(
             DefaultProfileComponent(
                 componentContext = childContext,
                 profileRepository = deps.profileRepository,
-                calendarRepository = deps.calendarRepository,
                 onBack = navigateBack,
                 onLogout = onLogout,
             ),

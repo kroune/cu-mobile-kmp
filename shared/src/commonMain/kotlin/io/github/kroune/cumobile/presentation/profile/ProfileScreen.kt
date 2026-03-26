@@ -5,7 +5,6 @@ package io.github.kroune.cumobile.presentation.profile
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,11 +19,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -36,7 +31,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -199,20 +193,6 @@ private fun ProfileContent(
 
         // Info card
         InfoCard(state)
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Calendar section
-        CalendarSection(
-            state = state,
-            onUpdateUrl = { url ->
-                onIntent(ProfileComponent.Intent.UpdateCalendarUrl(url))
-            },
-            onSave = { onIntent(ProfileComponent.Intent.SaveCalendarUrl) },
-            onDisconnect = {
-                onIntent(ProfileComponent.Intent.DisconnectCalendar)
-            },
-        )
 
         Spacer(modifier = Modifier.height(24.dp))
     }
@@ -394,88 +374,6 @@ private fun InfoRowWithBadge(
     }
 }
 
-@Composable
-private fun CalendarSection(
-    state: ProfileComponent.State,
-    onUpdateUrl: (String) -> Unit,
-    onSave: () -> Unit,
-    onDisconnect: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(AppTheme.colors.surface, RoundedCornerShape(12.dp))
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        Text(
-            text = "Расписание (Яндекс Календарь)",
-            color = AppTheme.colors.textPrimary,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.SemiBold,
-        )
-
-        if (state.isCalendarConnected) {
-            Text(
-                text = "Подключено",
-                color = AppTheme.colors.accent,
-                fontSize = 12.sp,
-            )
-        }
-
-        OutlinedTextField(
-            value = state.calendarUrlInput,
-            onValueChange = onUpdateUrl,
-            label = { Text("ICS URL календаря") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedTextColor = AppTheme.colors.textPrimary,
-                unfocusedTextColor = AppTheme.colors.textPrimary,
-                focusedBorderColor = AppTheme.colors.accent,
-                unfocusedBorderColor = AppTheme.colors.textSecondary,
-                focusedLabelColor = AppTheme.colors.accent,
-                unfocusedLabelColor = AppTheme.colors.textSecondary,
-                cursorColor = AppTheme.colors.accent,
-            ),
-        )
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            Button(
-                onClick = onSave,
-                enabled = state.calendarUrlInput.isNotBlank(),
-                modifier = Modifier.weight(1f),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = AppTheme.colors.accent,
-                    contentColor = Color.White,
-                    disabledContainerColor = AppTheme.colors.textSecondary.copy(alpha = 0.3f),
-                    disabledContentColor = AppTheme.colors.textSecondary,
-                ),
-                shape = RoundedCornerShape(8.dp),
-            ) {
-                Text(text = "Сохранить")
-            }
-
-            if (state.isCalendarConnected) {
-                Button(
-                    onClick = onDisconnect,
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = AppTheme.colors.error,
-                    ),
-                    shape = RoundedCornerShape(8.dp),
-                ) {
-                    Text(text = "Отключить", color = AppTheme.colors.textPrimary)
-                }
-            }
-        }
-    }
-}
-
 /**
  * Masks an email address, showing the first 3 characters and domain.
  * Example: "john.doe@example.com" → "joh***@example.com"
@@ -610,10 +508,7 @@ private fun PreviewProfileLoadingLight() {
 private fun PreviewProfileWithCalendarDark() {
     CuMobileTheme(darkTheme = true) {
         ProfileScreenContent(
-            state = previewProfileState.copy(
-                calendarUrl = "https://calendar.yandex.ru/export/ics.xml?id=12345",
-                calendarUrlInput = "https://calendar.yandex.ru/export/ics.xml?id=12345",
-            ),
+            state = previewProfileState.copy(),
             onIntent = {},
             onBack = {},
         )
@@ -625,10 +520,7 @@ private fun PreviewProfileWithCalendarDark() {
 private fun PreviewProfileWithCalendarLight() {
     CuMobileTheme(darkTheme = false) {
         ProfileScreenContent(
-            state = previewProfileState.copy(
-                calendarUrl = "https://calendar.yandex.ru/export/ics.xml?id=12345",
-                calendarUrlInput = "https://calendar.yandex.ru/export/ics.xml?id=12345",
-            ),
+            state = previewProfileState.copy(),
             onIntent = {},
             onBack = {},
         )

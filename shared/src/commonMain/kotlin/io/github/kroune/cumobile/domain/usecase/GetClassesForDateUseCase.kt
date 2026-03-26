@@ -1,12 +1,9 @@
 package io.github.kroune.cumobile.domain.usecase
 
-import io.github.kroune.cumobile.data.model.CalendarEvent
 import io.github.kroune.cumobile.data.model.ClassData
 import io.github.kroune.cumobile.data.model.TimetableCourse
 import io.github.kroune.cumobile.data.model.TimetableEventRow
 import io.github.kroune.cumobile.data.model.TimetableSchedule
-import io.github.kroune.cumobile.data.network.IcalDateParser
-import io.github.kroune.cumobile.data.network.RRuleExpander
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
@@ -17,7 +14,7 @@ import kotlin.time.Instant
 private val logger = KotlinLogging.logger {}
 
 /**
- * Filters timetable or iCal events for a specific date and maps them to [ClassData].
+ * Filters LMS timetable events for a specific date and maps them to [ClassData].
  */
 internal class GetClassesForDateUseCase {
     /**
@@ -51,57 +48,6 @@ internal class GetClassesForDateUseCase {
             logger.warn(e) { "Failed to check timetable event on $targetDate" }
             false
         }
-    }
-
-    // --- iCal support (kept for fallback) ---
-
-    fun execute(
-        events: List<CalendarEvent>,
-        dateMillis: Long,
-    ): List<ClassData> {
-        val targetDate = Instant
-            .fromEpochMilliseconds(dateMillis)
-            .toLocalDateTime(TimeZone.currentSystemDefault())
-            .date
-
-        return events
-            .filter { event -> eventOccursOn(event, targetDate) }
-            .map { event -> mapToClassData(event) }
-            .sortedBy { it.startTime }
-    }
-
-    internal fun eventOccursOn(
-        event: CalendarEvent,
-        targetDate: LocalDate,
-    ): Boolean =
-        try {
-            RRuleExpander.eventOccursOn(event, targetDate)
-        } catch (e: Exception) {
-            logger.warn(e) { "Failed to check if event occurs on $targetDate" }
-            false
-        }
-
-    internal fun mapToClassData(event: CalendarEvent): ClassData {
-        val startDt = IcalDateParser
-            .parse(event.dtStart)
-            .toLocalDateTime(TimeZone.currentSystemDefault())
-        val endDt = try {
-            IcalDateParser
-                .parse(event.dtEnd)
-                .toLocalDateTime(TimeZone.currentSystemDefault())
-        } catch (e: Exception) {
-            logger.warn(e) { "Failed to parse dtEnd '${event.dtEnd}', falling back to startDt" }
-            startDt
-        }
-
-        return ClassData(
-            startTime = formatTime(startDt.hour, startDt.minute),
-            endTime = formatTime(endDt.hour, endDt.minute),
-            room = extractRoom(event.summary, event.location),
-            type = detectType(event.summary),
-            title = event.summary,
-            link = event.url,
-        )
     }
 
     companion object {
@@ -163,24 +109,5 @@ internal class GetClassesForDateUseCase {
                 "sunday" -> DayOfWeek.SUNDAY
                 else -> null
             }
-
-        internal fun extractRoom(
-            summary: String,
-            location: String?,
-        ): String {
-            val roomRegex = Regex("""(\d{3}[а-яА-Я]?)""")
-            return roomRegex.find(summary)?.value
-                ?: roomRegex.find(location.orEmpty())?.value
-                ?: location.orEmpty()
-        }
-
-        internal fun detectType(summary: String): String =
-            if (summary.contains("лекция", ignoreCase = true)) "Лекция" else "Практика"
-
-        internal fun formatTime(
-            hour: Int,
-            minute: Int,
-        ): String =
-            "${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}"
     }
 }
