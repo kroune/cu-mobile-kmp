@@ -26,6 +26,16 @@ idea {
     }
 }
 
+tasks.register<Exec>("installGitHooks") {
+    description = "Configures git to use .githooks directory for hook scripts"
+    group = "setup"
+    commandLine("git", "config", "core.hooksPath", ".githooks")
+}
+
+tasks.named("prepareKotlinBuildScriptModel") {
+    dependsOn("installGitHooks")
+}
+
 tasks.withType<Wrapper>().configureEach {
     distributionType = Wrapper.DistributionType.ALL
 }

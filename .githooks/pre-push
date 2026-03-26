@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+#
+# Pre-push hook: runs ktlint, detekt, and roborazzi verification.
+# Blocks the push if any check fails.
+
+set -euo pipefail
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+GRADLEW="$REPO_ROOT/gradlew"
+
+if [ ! -x "$GRADLEW" ]; then
+    echo "ERROR: gradlew not found or not executable at $GRADLEW"
+    exit 1
+fi
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+failed=0
+
+echo -e "${YELLOW}Running pre-push checks...${NC}"
+echo ""
+
+# --- ktlint ---
+echo -e "${YELLOW}[1/3] Running ktlintCheck...${NC}"
+if "$GRADLEW" ktlintCheck -q 2>&1; then
+    echo -e "${GREEN}  ✓ ktlintCheck passed${NC}"
+else
+    echo -e "${RED}  ✗ ktlintCheck failed${NC}"
+    failed=1
+fi
+
+echo ""
+
+# --- detekt ---
+echo -e "${YELLOW}[2/3] Running detektAll...${NC}"
+if "$GRADLEW" detektAll -q 2>&1; then
+    echo -e "${GREEN}  ✓ detektAll passed${NC}"
+else
+    echo -e "${RED}  ✗ detektAll failed${NC}"
+    failed=1
+fi
+
+echo ""
+
+# --- roborazzi ---
+echo -e "${YELLOW}[3/3] Running verifyRoborazziDebug...${NC}"
+if "$GRADLEW" :androidApp:verifyRoborazziDebug -q 2>&1; then
+    echo -e "${GREEN}  ✓ verifyRoborazziDebug passed${NC}"
+else
+    echo -e "${RED}  ✗ verifyRoborazziDebug failed${NC}"
+    failed=1
+fi
+
+echo ""
+
+if [ "$failed" -ne 0 ]; then
+    echo -e "${RED}Pre-push checks failed. Push aborted.${NC}"
+    echo "Fix the issues above and try again."
+    exit 1
+fi
+
+echo -e "${GREEN}All pre-push checks passed.${NC}"
