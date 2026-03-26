@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -191,9 +190,8 @@ private fun FiltersRow(
             cursorBrush = SolidColor(AppTheme.colors.accent),
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 40.dp)
                 .background(AppTheme.colors.surface)
-                .padding(horizontal = 12.dp, vertical = 10.dp),
+                .padding(horizontal = 12.dp, vertical = 6.dp),
             decorationBox = { innerTextField ->
                 if (state.searchQuery.isEmpty()) {
                     Text(
@@ -292,14 +290,18 @@ private fun CourseFilterChips(
     }
 }
 
-/**
- * Moves the selected item to the front, keeping relative order of the rest.
- * For simple lists where the item itself is the key (e.g., status strings).
- */
+/** Moves the selected string to the front, keeping relative order of the rest. */
+private fun selectedFirst(
+    items: List<String>,
+    selectedKey: String?,
+): List<String> =
+    selectedFirst(items, selectedKey) { it }
+
+/** Moves the selected item to the front, keeping relative order of the rest. */
 private fun <T> selectedFirst(
     items: List<T>,
     selectedKey: String?,
-    keySelector: (T) -> String = { it as String },
+    keySelector: (T) -> String,
 ): List<T> {
     if (selectedKey == null) return items
     val selected = items.find { keySelector(it) == selectedKey } ?: return items
@@ -331,7 +333,7 @@ private fun FilterChip(
                     AppTheme.colors.surface
                 },
             ).clickable(onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 3.dp),
+            .padding(horizontal = 10.dp, vertical = 1.dp),
     ) {
         Text(
             text = label,
