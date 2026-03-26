@@ -1,5 +1,6 @@
 package io.github.kroune.cumobile.presentation.profile
 
+import androidx.compose.ui.graphics.ImageBitmap
 import com.arkivanov.decompose.value.Value
 import io.github.kroune.cumobile.data.model.PickedFile
 import io.github.kroune.cumobile.data.model.StudentLmsProfile
@@ -28,6 +29,7 @@ interface ProfileComponent {
         val profile: StudentProfile? = null,
         val lmsProfile: StudentLmsProfile? = null,
         val avatarBytes: ByteArray? = null,
+        val avatarBitmap: ImageBitmap? = null,
         val isLoading: Boolean = false,
         val error: String? = null,
         val isDeletingAvatar: Boolean = false,
@@ -74,6 +76,7 @@ interface ProfileComponent {
             return profile == other.profile &&
                 lmsProfile == other.lmsProfile &&
                 avatarBytes.contentEquals(other.avatarBytes) &&
+                avatarBitmap === other.avatarBitmap &&
                 isLoading == other.isLoading &&
                 error == other.error &&
                 isDeletingAvatar == other.isDeletingAvatar &&
@@ -84,6 +87,7 @@ interface ProfileComponent {
             var result = profile.hashCode()
             result = 31 * result + lmsProfile.hashCode()
             result = 31 * result + (avatarBytes?.contentHashCode() ?: 0)
+            result = 31 * result + (avatarBitmap?.hashCode() ?: 0)
             result = 31 * result + isLoading.hashCode()
             result = 31 * result + error.hashCode()
             result = 31 * result + isDeletingAvatar.hashCode()

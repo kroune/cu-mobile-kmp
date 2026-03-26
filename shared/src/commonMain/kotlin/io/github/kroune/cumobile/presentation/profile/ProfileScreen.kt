@@ -2,13 +2,17 @@
 
 package io.github.kroune.cumobile.presentation.profile
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -20,21 +24,34 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import io.github.kroune.cumobile.data.model.EmailInfo
 import io.github.kroune.cumobile.data.model.PhoneInfo
@@ -46,6 +63,7 @@ import io.github.kroune.cumobile.presentation.common.DetailTopBar
 import io.github.kroune.cumobile.presentation.common.ErrorContent
 import io.github.kroune.cumobile.presentation.common.LoadingContent
 import io.github.kroune.cumobile.presentation.common.rememberFilePicker
+import kotlinx.coroutines.launch
 
 /**
  * Profile screen displaying student info, avatar, and logout button.
@@ -152,14 +170,22 @@ private fun ProfileContent(
         Spacer(modifier = Modifier.height(24.dp))
 
         // Avatar section
+        var showAvatarDialog by remember { mutableStateOf(false) }
         AvatarSection(
             initials = state.initials,
-            hasAvatar = state.avatarBytes != null,
-            isDeleting = state.isDeletingAvatar,
-            isUploading = state.isUploadingAvatar,
+            avatarBitmap = state.avatarBitmap,
+            isBusy = state.isDeletingAvatar || state.isUploadingAvatar,
             onDelete = { onIntent(ProfileComponent.Intent.DeleteAvatar) },
             onUpload = { avatarPicker.launch() },
+            onAvatarClick = { showAvatarDialog = true },
         )
+
+        if (showAvatarDialog && state.avatarBitmap != null) {
+            AvatarFullScreenDialog(
+                avatarBitmap = state.avatarBitmap,
+                onDismiss = { showAvatarDialog = false },
+            )
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -201,14 +227,14 @@ private fun ProfileContent(
 @Composable
 private fun AvatarSection(
     initials: String,
-    hasAvatar: Boolean,
-    isDeleting: Boolean,
-    isUploading: Boolean,
+    avatarBitmap: ImageBitmap?,
+    isBusy: Boolean,
     onDelete: () -> Unit,
     onUpload: () -> Unit,
+    onAvatarClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val isBusy = isDeleting || isUploading
+    val hasAvatar = avatarBitmap != null
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
         // Main avatar circle
         Box(
@@ -216,7 +242,8 @@ private fun AvatarSection(
                 .size(80.dp)
                 .clip(CircleShape)
                 .border(2.dp, AppTheme.colors.accent, CircleShape)
-                .background(AppTheme.colors.accent.copy(alpha = 0.2f), CircleShape),
+                .background(AppTheme.colors.accent.copy(alpha = 0.2f), CircleShape)
+                .clickable(enabled = avatarBitmap != null && !isBusy, onClick = onAvatarClick),
             contentAlignment = Alignment.Center,
         ) {
             if (isBusy) {
@@ -224,6 +251,13 @@ private fun AvatarSection(
                     modifier = Modifier.size(24.dp),
                     color = AppTheme.colors.accent,
                     strokeWidth = 2.dp,
+                )
+            } else if (avatarBitmap != null) {
+                Image(
+                    bitmap = avatarBitmap,
+                    contentDescription = "Аватар",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
                 )
             } else {
                 Text(
@@ -268,6 +302,33 @@ private fun AvatarSection(
 }
 
 @Composable
+private fun AvatarFullScreenDialog(
+    avatarBitmap: ImageBitmap?,
+    onDismiss: () -> Unit,
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(1f)
+                .clip(RoundedCornerShape(8.dp))
+                .background(Color.Black)
+                .clickable(onClick = onDismiss),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (avatarBitmap != null) {
+                Image(
+                    bitmap = avatarBitmap,
+                    contentDescription = "Аватар",
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+        }
+    }
+}
+
+@Composable
 private fun InfoCard(
     state: ProfileComponent.State,
     modifier: Modifier = Modifier,
@@ -298,77 +359,143 @@ private fun InfoCard(
 
         // Other emails
         state.otherEmails.forEach { email ->
-            Spacer(modifier = Modifier.height(12.dp))
-            InfoRowWithBadge(
-                label = "Email",
-                value = maskEmail(email.value),
-                badge = email.type.ifEmpty { null },
-            )
+            key(email.value) {
+                Spacer(modifier = Modifier.height(12.dp))
+                InfoRowWithBadge(
+                    label = "Email",
+                    value = maskEmail(email.value),
+                    copyValue = email.value,
+                    badge = email.type.ifEmpty { null },
+                )
+            }
         }
 
         // Phones
         profile.phones.forEach { phone ->
-            Spacer(modifier = Modifier.height(12.dp))
-            InfoRowWithBadge(
-                label = "Телефон",
-                value = maskPhone(phone.value),
-                badge = phone.type.ifEmpty { null },
-            )
+            key(phone.value) {
+                Spacer(modifier = Modifier.height(12.dp))
+                InfoRowWithBadge(
+                    label = "Телефон",
+                    value = maskPhone(phone.value),
+                    copyValue = phone.value,
+                    badge = phone.type.ifEmpty { null },
+                )
+            }
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun InfoRow(
     label: String,
     value: String,
+    copyValue: String = value,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier = modifier.fillMaxWidth()) {
-        Text(
-            text = label,
-            color = AppTheme.colors.textSecondary,
-            fontSize = 12.sp,
-        )
-        Spacer(modifier = Modifier.height(2.dp))
-        Text(
-            text = value,
-            color = AppTheme.colors.textPrimary,
-            fontSize = 14.sp,
-        )
-    }
-}
+    @Suppress("DEPRECATION")
+    val clipboardManager = LocalClipboardManager.current
+    val tooltipState = rememberTooltipState()
+    val scope = rememberCoroutineScope()
 
-@Composable
-private fun InfoRowWithBadge(
-    label: String,
-    value: String,
-    badge: String?,
-    modifier: Modifier = Modifier,
-) {
-    Column(modifier = modifier.fillMaxWidth()) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .combinedClickable(
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() },
+                onClick = {},
+                onLongClick = {
+                    clipboardManager.setText(AnnotatedString(copyValue))
+                    scope.launch { tooltipState.show() }
+                },
+            ),
+    ) {
         Text(
             text = label,
             color = AppTheme.colors.textSecondary,
             fontSize = 12.sp,
         )
         Spacer(modifier = Modifier.height(2.dp))
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        TooltipBox(
+            positionProvider = TooltipDefaults.rememberTooltipPositionProvider(),
+            tooltip = {
+                PlainTooltip(
+                    containerColor = AppTheme.colors.textSecondary,
+                    contentColor = AppTheme.colors.background,
+                ) { Text("Скопировано") }
+            },
+            state = tooltipState,
+        ) {
             Text(
                 text = value,
                 color = AppTheme.colors.textPrimary,
                 fontSize = 14.sp,
             )
-            if (badge != null) {
-                Spacer(modifier = Modifier.width(8.dp))
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun InfoRowWithBadge(
+    label: String,
+    value: String,
+    badge: String?,
+    copyValue: String = value,
+    modifier: Modifier = Modifier,
+) {
+    @Suppress("DEPRECATION")
+    val clipboardManager = LocalClipboardManager.current
+    val tooltipState = rememberTooltipState()
+    val scope = rememberCoroutineScope()
+
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .combinedClickable(
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() },
+                onClick = {},
+                onLongClick = {
+                    clipboardManager.setText(AnnotatedString(copyValue))
+                    scope.launch { tooltipState.show() }
+                },
+            ),
+    ) {
+        Text(
+            text = label,
+            color = AppTheme.colors.textSecondary,
+            fontSize = 12.sp,
+        )
+        Spacer(modifier = Modifier.height(2.dp))
+        TooltipBox(
+            positionProvider = TooltipDefaults.rememberTooltipPositionProvider(),
+            tooltip = {
+                PlainTooltip(
+                    containerColor = AppTheme.colors.textSecondary,
+                    contentColor = AppTheme.colors.background,
+                ) { Text("Скопировано") }
+            },
+            state = tooltipState,
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = badge,
-                    color = AppTheme.colors.textSecondary,
-                    fontSize = 11.sp,
-                    modifier = Modifier
-                        .background(AppTheme.colors.background, RoundedCornerShape(4.dp))
-                        .padding(horizontal = 6.dp, vertical = 2.dp),
+                    text = value,
+                    color = AppTheme.colors.textPrimary,
+                    fontSize = 14.sp,
                 )
+                if (badge != null) {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = badge,
+                        color = AppTheme.colors.textSecondary,
+                        fontSize = 11.sp,
+                        modifier = Modifier
+                            .background(AppTheme.colors.background, RoundedCornerShape(4.dp))
+                            .padding(horizontal = 6.dp, vertical = 2.dp),
+                    )
+                }
             }
         }
     }
@@ -376,7 +503,7 @@ private fun InfoRowWithBadge(
 
 /**
  * Masks an email address, showing the first 3 characters and domain.
- * Example: "john.doe@example.com" → "joh***@example.com"
+ * Example: "john.doe@example.com" -> "joh***@example.com"
  */
 internal fun maskEmail(email: String): String {
     val atIndex = email.indexOf('@')
@@ -388,7 +515,7 @@ internal fun maskEmail(email: String): String {
 
 /**
  * Masks a phone number, showing first 2 and last 2 digits.
- * Example: "+79001234567" → "+79*******67"
+ * Example: "+79001234567" -> "+79*******67"
  */
 internal fun maskPhone(phone: String): String {
     val digits = phone.filter { it.isDigit() }
@@ -497,30 +624,6 @@ private fun PreviewProfileLoadingLight() {
     CuMobileTheme(darkTheme = false) {
         ProfileScreenContent(
             state = ProfileComponent.State(isLoading = true),
-            onIntent = {},
-            onBack = {},
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun PreviewProfileWithCalendarDark() {
-    CuMobileTheme(darkTheme = true) {
-        ProfileScreenContent(
-            state = previewProfileState.copy(),
-            onIntent = {},
-            onBack = {},
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun PreviewProfileWithCalendarLight() {
-    CuMobileTheme(darkTheme = false) {
-        ProfileScreenContent(
-            state = previewProfileState.copy(),
             onIntent = {},
             onBack = {},
         )

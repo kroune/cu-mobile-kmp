@@ -7,11 +7,14 @@ import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.data.model.StudentTask
 import io.github.kroune.cumobile.data.model.TaskState
 import io.github.kroune.cumobile.presentation.common.DateTimeProvider
+import io.github.kroune.cumobile.presentation.common.decodeImageBitmap
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlin.coroutines.CoroutineContext
 
 private val logger = KotlinLogging.logger {}
 
@@ -26,6 +29,7 @@ private const val MillisPerDay = 86_400_000L
 class DefaultHomeComponent(
     componentContext: ComponentContext,
     deps: HomeDependencies,
+    private val defaultDispatcher: CoroutineContext = Dispatchers.Default,
     private val onOpenTask: (StudentTask) -> Unit,
     private val onOpenCourse: (String) -> Unit,
     private val onOpenProfile: () -> Unit = {},
@@ -111,11 +115,16 @@ class DefaultHomeComponent(
                 val courses = courseRepository.fetchCourses()
                 val initials = loadProfileInitials()
                 val lmsProfile = profileRepository.fetchLmsProfile()
+                val avatar = profileRepository.fetchAvatar()
+                val bitmap = withContext(defaultDispatcher) {
+                    avatar?.let { decodeImageBitmap(it) }
+                }
 
                 _state.value = _state.value.copy(
                     tasks = tasks.orEmpty(),
                     courses = courses.orEmpty(),
                     profileInitials = initials,
+                    avatarBitmap = bitmap,
                     lateDaysBalance = lmsProfile?.lateDaysBalance,
                     isLoading = false,
                     error = if (tasks == null && courses == null) {

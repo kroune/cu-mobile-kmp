@@ -1,5 +1,6 @@
 package io.github.kroune.cumobile.presentation.common
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -7,6 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -17,6 +19,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -38,6 +42,7 @@ import androidx.compose.ui.unit.sp
 fun TopBar(
     title: String,
     profileInitials: String,
+    avatarBitmap: ImageBitmap? = null,
     lateDaysBalance: Int?,
     onNotificationsClick: () -> Unit,
     onProfileClick: () -> Unit,
@@ -87,6 +92,7 @@ fun TopBar(
         // Profile avatar circle
         AvatarCircle(
             initials = profileInitials,
+            avatarBitmap = avatarBitmap,
             onClick = onProfileClick,
         )
     }
@@ -101,6 +107,7 @@ fun TopBar(
 @Composable
 private fun AvatarCircle(
     initials: String,
+    avatarBitmap: ImageBitmap?,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -113,12 +120,21 @@ private fun AvatarCircle(
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        Text(
-            text = initials.ifEmpty { "?" },
-            color = AppTheme.colors.accent,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Bold,
-        )
+        if (avatarBitmap != null) {
+            Image(
+                bitmap = avatarBitmap,
+                contentDescription = "Аватар",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize(),
+            )
+        } else {
+            Text(
+                text = initials.ifEmpty { "?" },
+                color = AppTheme.colors.accent,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+            )
+        }
     }
 }
 

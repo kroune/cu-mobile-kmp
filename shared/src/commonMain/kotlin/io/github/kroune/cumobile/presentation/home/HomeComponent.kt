@@ -1,5 +1,6 @@
 package io.github.kroune.cumobile.presentation.home
 
+import androidx.compose.ui.graphics.ImageBitmap
 import com.arkivanov.decompose.value.Value
 import io.github.kroune.cumobile.data.model.ClassData
 import io.github.kroune.cumobile.data.model.Course
@@ -28,6 +29,7 @@ interface HomeComponent {
         val isScheduleLoading: Boolean = false,
         val scheduleError: String? = null,
         val profileInitials: String = "",
+        val avatarBitmap: ImageBitmap? = null,
         val lateDaysBalance: Int? = null,
         val isLoading: Boolean = true,
         val error: String? = null,
@@ -47,6 +49,37 @@ interface HomeComponent {
         /** Active (non-archived) courses. */
         val activeCourses: List<Course>
             get() = courses.filter { !it.isArchived }
+
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (other !is State) return false
+            return tasks == other.tasks &&
+                courses == other.courses &&
+                classes == other.classes &&
+                selectedDateMillis == other.selectedDateMillis &&
+                isScheduleLoading == other.isScheduleLoading &&
+                scheduleError == other.scheduleError &&
+                profileInitials == other.profileInitials &&
+                avatarBitmap === other.avatarBitmap &&
+                lateDaysBalance == other.lateDaysBalance &&
+                isLoading == other.isLoading &&
+                error == other.error
+        }
+
+        override fun hashCode(): Int {
+            var result = tasks.hashCode()
+            result = 31 * result + courses.hashCode()
+            result = 31 * result + classes.hashCode()
+            result = 31 * result + selectedDateMillis.hashCode()
+            result = 31 * result + isScheduleLoading.hashCode()
+            result = 31 * result + (scheduleError?.hashCode() ?: 0)
+            result = 31 * result + profileInitials.hashCode()
+            result = 31 * result + (avatarBitmap?.hashCode() ?: 0)
+            result = 31 * result + (lateDaysBalance?.hashCode() ?: 0)
+            result = 31 * result + isLoading.hashCode()
+            result = 31 * result + (error?.hashCode() ?: 0)
+            return result
+        }
     }
 
     sealed interface Intent {
