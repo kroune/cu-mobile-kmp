@@ -109,7 +109,7 @@ data class MaterialAttachment(
 data class MaterialEstimation(
     /** ISO 8601 datetime string. */
     val deadline: String? = null,
-    val maxScore: Int = 0,
+    val maxScore: Int? = null,
     val activity: MaterialEstimationActivity? = null,
 ) {
     val activityName: String?
