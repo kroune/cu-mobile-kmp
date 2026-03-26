@@ -25,7 +25,6 @@ interface HomeComponent {
         /** Daily schedule classes for the selected date. */
         val classes: List<ClassData> = emptyList(),
         val selectedDateMillis: Long = 0,
-        val isCalendarConnected: Boolean = false,
         val isScheduleLoading: Boolean = false,
         val scheduleError: String? = null,
         val profileInitials: String = "",
@@ -73,15 +72,7 @@ interface HomeComponent {
         /** Navigate to today in schedule. */
         data object Today : Intent
 
-        /** Connect a new iCal calendar URL. */
-        data class ConnectCalendar(
-            val url: String,
-        ) : Intent
-
-        /** Disconnect the current calendar. */
-        data object DisconnectCalendar : Intent
-
-        /** Navigate to profile screen (for calendar setup). */
+        /** Navigate to profile screen. */
         data object OpenProfile : Intent
     }
 

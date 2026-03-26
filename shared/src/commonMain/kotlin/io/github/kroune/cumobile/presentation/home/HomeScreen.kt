@@ -33,7 +33,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -246,9 +245,7 @@ private fun ScheduleSection(
             onIntent = onIntent,
         )
 
-        if (!state.isCalendarConnected) {
-            ConnectCalendarSection(onIntent)
-        } else if (state.isScheduleLoading) {
+        if (state.isScheduleLoading) {
             EmptySection(text = "Загрузка расписания…")
         } else if (state.scheduleError != null) {
             EmptySection(text = state.scheduleError)
@@ -363,32 +360,6 @@ private fun ClassCard(classData: ClassData) {
                     fontSize = 12.sp,
                 )
             }
-        }
-    }
-}
-
-@Composable
-private fun ConnectCalendarSection(onIntent: (HomeComponent.Intent) -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-    ) {
-        Text(
-            text = "Календарь не подключен",
-            color = AppTheme.colors.textSecondary,
-            fontSize = 14.sp,
-        )
-        TextButton(
-            onClick = { onIntent(HomeComponent.Intent.OpenProfile) },
-        ) {
-            Text(
-                text = "Подключить в настройках профиля",
-                color = AppTheme.colors.accent,
-                fontSize = 13.sp,
-            )
         }
     }
 }
@@ -582,7 +553,7 @@ private fun PreviewHomeScreenEmptyLight() {
 }
 
 private val previewHomeWithScheduleState = previewHomeState.copy(
-    isCalendarConnected = true,
+    isScheduleLoading = false,
     classes = listOf(
         ClassData(
             startTime = "09:00",

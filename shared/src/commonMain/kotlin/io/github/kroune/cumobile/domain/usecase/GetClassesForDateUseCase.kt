@@ -1,10 +1,11 @@
 package io.github.kroune.cumobile.domain.usecase
 
-import io.github.kroune.cumobile.data.model.CalendarEvent
 import io.github.kroune.cumobile.data.model.ClassData
-import io.github.kroune.cumobile.data.network.IcalDateParser
-import io.github.kroune.cumobile.data.network.RRuleExpander
+import io.github.kroune.cumobile.data.model.TimetableCourse
+import io.github.kroune.cumobile.data.model.TimetableEventRow
+import io.github.kroune.cumobile.data.model.TimetableSchedule
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -13,16 +14,14 @@ import kotlin.time.Instant
 private val logger = KotlinLogging.logger {}
 
 /**
- * Filters a list of [CalendarEvent]s for a specific date and maps them to [ClassData].
- *
- * Handles recurring events via [RRuleExpander] and parses iCal dates via [IcalDateParser].
+ * Filters LMS timetable events for a specific date and maps them to [ClassData].
  */
 internal class GetClassesForDateUseCase {
     /**
-     * Returns classes occurring on the given [dateMillis], sorted by start time.
+     * Returns classes from the LMS timetable API for the given [dateMillis].
      */
-    fun execute(
-        events: List<CalendarEvent>,
+    fun executeFromTimetable(
+        courses: List<TimetableCourse>,
         dateMillis: Long,
     ): List<ClassData> {
         val targetDate = Instant
@@ -30,67 +29,85 @@ internal class GetClassesForDateUseCase {
             .toLocalDateTime(TimeZone.currentSystemDefault())
             .date
 
-        return events
-            .filter { event -> eventOccursOn(event, targetDate) }
-            .map { event -> mapToClassData(event) }
-            .sortedBy { it.startTime }
+        return courses
+            .flatMap { course ->
+                course.eventRows
+                    .filter { row -> timetableEventOccursOn(row, targetDate) }
+                    .map { row -> mapTimetableToClassData(row, course.courseName) }
+            }.sortedBy { it.startTime }
     }
 
-    internal fun eventOccursOn(
-        event: CalendarEvent,
+    internal fun timetableEventOccursOn(
+        row: TimetableEventRow,
         targetDate: LocalDate,
-    ): Boolean =
-        try {
-            RRuleExpander.eventOccursOn(event, targetDate)
+    ): Boolean {
+        val schedule = row.calendarEvent?.schedule ?: return false
+        return try {
+            scheduleOccursOn(schedule, targetDate)
         } catch (e: Exception) {
-            logger.warn(e) { "Failed to check if event occurs on $targetDate" }
+            logger.warn(e) { "Failed to check timetable event on $targetDate" }
             false
         }
-
-    internal fun mapToClassData(event: CalendarEvent): ClassData {
-        val startDt = IcalDateParser
-            .parse(event.dtStart)
-            .toLocalDateTime(TimeZone.currentSystemDefault())
-        val endDt = try {
-            IcalDateParser
-                .parse(event.dtEnd)
-                .toLocalDateTime(TimeZone.currentSystemDefault())
-        } catch (e: Exception) {
-            logger.warn(e) { "Failed to parse dtEnd '${event.dtEnd}', falling back to startDt" }
-            startDt
-        }
-
-        val room = extractRoom(event.summary, event.location)
-        val type = detectType(event.summary)
-
-        return ClassData(
-            startTime = formatTime(startDt.hour, startDt.minute),
-            endTime = formatTime(endDt.hour, endDt.minute),
-            room = room,
-            type = type,
-            title = event.summary,
-            link = event.url,
-        )
     }
 
     companion object {
-        private val roomRegex = Regex("""(\d{3}[а-яА-Я]?)""")
+        private const val DaysInWeek = 7
 
-        internal fun extractRoom(
-            summary: String,
-            location: String?,
-        ): String =
-            roomRegex.find(summary)?.value
-                ?: roomRegex.find(location.orEmpty())?.value
-                ?: location.orEmpty()
+        internal fun scheduleOccursOn(
+            schedule: TimetableSchedule,
+            targetDate: LocalDate,
+        ): Boolean {
+            val start = LocalDate.parse(schedule.startDate)
+            val end = LocalDate.parse(schedule.endDate)
 
-        internal fun detectType(summary: String): String =
-            if (summary.contains("лекция", ignoreCase = true)) "Лекция" else "Практика"
+            if (targetDate < start || targetDate > end) return false
 
-        internal fun formatTime(
-            hour: Int,
-            minute: Int,
-        ): String =
-            "${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}"
+            val scheduleDow = parseDayOfWeek(schedule.dayOfWeek) ?: return false
+            if (targetDate.dayOfWeek != scheduleDow) return false
+
+            if (schedule.interval > 1) {
+                val daysDiff = targetDate.toEpochDays() - start.toEpochDays()
+                val weeksDiff = daysDiff / DaysInWeek
+                if (weeksDiff % schedule.interval != 0L) return false
+            }
+
+            return true
+        }
+
+        internal fun mapTimetableToClassData(
+            row: TimetableEventRow,
+            courseName: String,
+        ): ClassData {
+            val event = row.calendarEvent
+            val schedule = event?.schedule
+
+            val type = when (row.eventType) {
+                "lecture" -> "Лекция"
+                "seminar" -> "Семинар"
+                else -> row.eventType.replaceFirstChar { it.uppercase() }
+            }
+
+            return ClassData(
+                startTime = schedule?.startTime.orEmpty(),
+                endTime = schedule?.endTime.orEmpty(),
+                room = event?.location.orEmpty(),
+                type = type,
+                title = courseName,
+                professor = event?.host?.name?.trim(),
+                link = null,
+            )
+        }
+
+        internal fun parseDayOfWeek(day: String): DayOfWeek? =
+            when (day.lowercase()) {
+                "monday" -> DayOfWeek.MONDAY
+                "tuesday" -> DayOfWeek.TUESDAY
+                "wednesday" -> DayOfWeek.WEDNESDAY
+                "thursday" -> DayOfWeek.THURSDAY
+                "friday" -> DayOfWeek.FRIDAY
+                "saturday" -> DayOfWeek.SATURDAY
+                "sunday" -> DayOfWeek.SUNDAY
+                else -> null
+            }
     }
 }

@@ -9,9 +9,8 @@ import io.github.kroune.cumobile.data.model.TaskState
 import io.github.kroune.cumobile.presentation.common.DateTimeProvider
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 private val logger = KotlinLogging.logger {}
@@ -21,7 +20,7 @@ private const val MillisPerDay = 86_400_000L
 /**
  * Default implementation of [HomeComponent].
  *
- * Loads tasks, courses, and profile data on creation.
+ * Loads tasks, courses, profile, and schedule data on creation.
  * Delegates navigation intents to [onOpenTask] and [onOpenCourse] callbacks.
  */
 class DefaultHomeComponent(
@@ -48,36 +47,26 @@ class DefaultHomeComponent(
     )
     override val state: Value<HomeComponent.State> = _state
 
+    private var scheduleJob: Job? = null
+
     init {
         loadData()
-        observeCalendarStatus()
+        loadSchedule()
     }
 
     override fun onIntent(intent: HomeComponent.Intent) {
         when (intent) {
             is HomeComponent.Intent.OpenTask -> onOpenTask(intent.task)
             is HomeComponent.Intent.OpenCourse -> onOpenCourse(intent.courseId)
-            is HomeComponent.Intent.Refresh -> loadData()
+            is HomeComponent.Intent.Refresh -> {
+                loadData()
+                loadSchedule()
+            }
             HomeComponent.Intent.PreviousDay -> changeDate(-1)
             HomeComponent.Intent.NextDay -> changeDate(1)
             HomeComponent.Intent.Today -> setToday()
-            is HomeComponent.Intent.ConnectCalendar -> connectCalendar(intent.url)
-            HomeComponent.Intent.DisconnectCalendar -> disconnectCalendar()
             HomeComponent.Intent.OpenProfile -> onOpenProfile()
         }
-    }
-
-    private fun observeCalendarStatus() {
-        calendarRepository.calendarUrlFlow
-            .onEach { url ->
-                val isConnected = !url.isNullOrBlank()
-                _state.value = _state.value.copy(isCalendarConnected = isConnected)
-                if (isConnected) {
-                    loadSchedule()
-                } else {
-                    _state.value = _state.value.copy(classes = emptyList())
-                }
-            }.launchIn(scope)
     }
 
     private fun changeDate(days: Int) {
@@ -92,22 +81,10 @@ class DefaultHomeComponent(
         loadSchedule()
     }
 
-    private fun connectCalendar(url: String) {
-        scope.launch {
-            calendarRepository.saveCalendarUrl(url)
-        }
-    }
-
-    private fun disconnectCalendar() {
-        scope.launch {
-            calendarRepository.saveCalendarUrl(null)
-        }
-    }
-
     private fun loadSchedule() {
-        if (!_state.value.isCalendarConnected) return
+        scheduleJob?.cancel()
         _state.value = _state.value.copy(isScheduleLoading = true, scheduleError = null)
-        scope.launch {
+        scheduleJob = scope.launch {
             try {
                 val dateMillis = _state.value.selectedDateMillis
                 val classes = calendarRepository.getClassesForDate(dateMillis)

@@ -2,7 +2,6 @@ package io.github.kroune.cumobile.di
 
 import com.arkivanov.decompose.ComponentContext
 import io.github.kroune.cumobile.data.local.AuthLocalDataSource
-import io.github.kroune.cumobile.data.local.CalendarLocalDataSource
 import io.github.kroune.cumobile.data.local.CourseLocalDataSource
 import io.github.kroune.cumobile.data.local.FileOpener
 import io.github.kroune.cumobile.data.local.FileRenameLocalDataSource
@@ -11,12 +10,11 @@ import io.github.kroune.cumobile.data.local.PdfGenerator
 import io.github.kroune.cumobile.data.local.db.AppDatabase
 import io.github.kroune.cumobile.data.network.ContentApiService
 import io.github.kroune.cumobile.data.network.CourseApiService
-import io.github.kroune.cumobile.data.network.IcalApiService
-import io.github.kroune.cumobile.data.network.IcalParser
 import io.github.kroune.cumobile.data.network.NotificationApiService
 import io.github.kroune.cumobile.data.network.PerformanceApiService
 import io.github.kroune.cumobile.data.network.ProfileApiService
 import io.github.kroune.cumobile.data.network.TaskApiService
+import io.github.kroune.cumobile.data.network.TimetableApiService
 import io.github.kroune.cumobile.data.network.UpdateChecker
 import io.github.kroune.cumobile.data.network.createHttpClient
 import io.github.kroune.cumobile.data.repository.AuthRepositoryImpl
@@ -59,15 +57,13 @@ private val networkModule = module {
     single { ContentApiService(get()) }
     single { NotificationApiService(get()) }
     single { PerformanceApiService(get()) }
-    single { IcalParser() }
-    single { IcalApiService(get(), get()) }
+    single { TimetableApiService(get()) }
     single { UpdateChecker(get()) }
 }
 
 private val dataModule = module {
     single { AuthLocalDataSource(get()) }
     single { CourseLocalDataSource(get()) }
-    single { CalendarLocalDataSource(get()) }
     single { get<AppDatabase>().fileRenameRuleDao() }
     single { FileRenameLocalDataSource(get()) }
 }
