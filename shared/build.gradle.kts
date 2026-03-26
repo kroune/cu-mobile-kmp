@@ -129,6 +129,9 @@ kotlin {
 
             implementation(libs.kotlin.logging)
             implementation(libs.kotlinx.datetime)
+
+            implementation(libs.ksoup)
+            implementation(libs.composemediaplayer)
         }
         commonTest.dependencies {
             api(libs.kotlin.test)

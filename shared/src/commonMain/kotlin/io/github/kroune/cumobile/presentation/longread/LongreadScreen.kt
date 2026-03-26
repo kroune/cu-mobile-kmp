@@ -41,8 +41,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
@@ -59,6 +57,11 @@ import io.github.kroune.cumobile.presentation.common.DetailTopBar
 import io.github.kroune.cumobile.presentation.common.ErrorContent
 import io.github.kroune.cumobile.presentation.common.LoadingContent
 import io.github.kroune.cumobile.presentation.common.formatSizeBytes
+import io.github.kroune.cumobile.presentation.longread.htmlrender.AudioMaterialCard
+import io.github.kroune.cumobile.presentation.longread.htmlrender.HtmlContent
+import io.github.kroune.cumobile.presentation.longread.htmlrender.ImageMaterialCard
+import io.github.kroune.cumobile.presentation.longread.htmlrender.VideoMaterialCard
+import io.github.kroune.cumobile.presentation.longread.htmlrender.parseHtmlToBlocks
 import kotlinx.coroutines.launch
 
 /**
@@ -218,6 +221,10 @@ private fun MaterialList(
                     onIntent = onIntent,
                 )
                 material.isQuestions -> QuestionsCard(material)
+                material.isImage -> ImageMaterialCard(material = material)
+                material.isVideo || material.isVideoPlatform ->
+                    VideoMaterialCard(material = material)
+                material.isAudio -> AudioMaterialCard(material = material)
                 else -> MarkdownCard(
                     material = material,
                     searchQuery = state.searchQuery,
@@ -354,15 +361,18 @@ private fun SearchNavigation(
     }
 }
 
-/** Markdown material: displays stripped HTML content as plain text. */
+/** Markdown material: renders HTML content as native Compose UI. */
 @Composable
 private fun MarkdownCard(
     material: LongreadMaterial,
     searchQuery: String = "",
     modifier: Modifier = Modifier,
 ) {
-    val content = material.viewContent?.let { stripHtmlTags(it) }.orEmpty()
-    if (content.isBlank()) return
+    val html = material.viewContent.orEmpty()
+    if (html.isBlank()) return
+
+    val blocks = remember(html) { parseHtmlToBlocks(html) }
+    if (blocks.isEmpty()) return
 
     Column(
         modifier = modifier
@@ -380,48 +390,12 @@ private fun MarkdownCard(
                 fontWeight = FontWeight.Bold,
             )
         }
-        if (searchQuery.isNotBlank()) {
-            Text(
-                text = highlightMatches(content, searchQuery),
-                color = AppTheme.colors.textPrimary,
-                fontSize = 14.sp,
-                lineHeight = 20.sp,
-            )
-        } else {
-            Text(
-                text = content,
-                color = AppTheme.colors.textPrimary,
-                fontSize = 14.sp,
-                lineHeight = 20.sp,
-            )
-        }
+        HtmlContent(
+            blocks = blocks,
+            searchQuery = searchQuery,
+        )
     }
 }
-
-/** Builds an [AnnotatedString] with highlighted search matches. */
-@Composable
-private fun highlightMatches(
-    text: String,
-    query: String,
-) =
-    buildAnnotatedString {
-        val lowerText = text.lowercase()
-        val lowerQuery = query.lowercase()
-        var lastIndex = 0
-        val highlightStyle = SpanStyle(
-            background = AppTheme.colors.accent.copy(alpha = 0.3f),
-        )
-        while (true) {
-            val index = lowerText.indexOf(lowerQuery, lastIndex)
-            if (index < 0) break
-            append(text.substring(lastIndex, index))
-            pushStyle(highlightStyle)
-            append(text.substring(index, index + query.length))
-            pop()
-            lastIndex = index + query.length
-        }
-        append(text.substring(lastIndex))
-    }
 
 /** File material: shows filename, size, and download button. */
 @Composable
@@ -500,29 +474,6 @@ private fun QuestionsCard(
         )
     }
 }
-
-/**
- * Converts HTML to readable plain text, preserving paragraph
- * breaks, list items, and line breaks.
- */
-internal fun stripHtmlTags(html: String): String =
-    html
-        .replace(Regex("<br\\s*/?>", RegexOption.IGNORE_CASE), "\n")
-        .replace(Regex("</p>", RegexOption.IGNORE_CASE), "\n\n")
-        .replace(Regex("</div>", RegexOption.IGNORE_CASE), "\n\n")
-        .replace(Regex("</h[1-6]>", RegexOption.IGNORE_CASE), "\n\n")
-        .replace(Regex("<li[^>]*>", RegexOption.IGNORE_CASE), "\n\u2022 ")
-        .replace(Regex("<[^>]*>"), "")
-        .replace("&nbsp;", " ")
-        .replace("&amp;", "&")
-        .replace("&lt;", "<")
-        .replace("&gt;", ">")
-        .replace("&quot;", "\"")
-        .replace("&#39;", "'")
-        .replace(Regex(" +"), " ")
-        .replace(Regex("\\n +"), "\n")
-        .replace(Regex("\\n{3,}"), "\n\n")
-        .trim()
 
 @Preview
 @Composable
@@ -616,9 +567,15 @@ private val previewLongreadSuccessState = LongreadComponent.State(
             discriminator = "markdown",
             content = LongreadMaterialContent(name = "Введение в алгоритмы"),
             viewContentRaw = kotlinx.serialization.json.JsonPrimitive(
-                "Алгоритм — это конечная последовательность точно определённых " +
-                    "действий для решения некоторого класса задач. Сложность алгоритма " +
-                    "определяется количеством элементарных операций.",
+                "<h2>Алгоритмы</h2>" +
+                    "<p>Алгоритм — это <strong>конечная последовательность</strong> " +
+                    "точно определённых действий для решения задач.</p>" +
+                    "<p>Подробнее на " +
+                    "<a href=\"https://example.com\">example.com</a></p>" +
+                    "<pre><code class=\"language-python\">def sort(arr):\n" +
+                    "    return sorted(arr)</code></pre>" +
+                    "<blockquote><p>Сложность — O(n log n)</p></blockquote>" +
+                    "<ul><li>Быстрая сортировка</li><li>Сортировка слиянием</li></ul>",
             ),
         ),
         LongreadMaterial(

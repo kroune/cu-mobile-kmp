@@ -32,6 +32,8 @@ KMP (Kotlin Multiplatform) rewrite of Flutter LMS app for Central University (Ц
 | essenty-lifecycle-coroutines     | 2.5.0          | Auto-cancelling coroutine scopes     |
 | kotlin-logging (io.github.oshai) | 8.0.01         | Structured logging in catch blocks   |
 | kotlinx-datetime                 | —              | Date/time formatting and parsing     |
+| Ksoup (fleeksoft)                | 0.2.6          | HTML parsing (KMP Jsoup port)        |
+| ComposeMediaPlayer               | 0.8.7          | Video/audio playback (KMP)           |
 
 ---
 
@@ -66,6 +68,7 @@ CuMobile/
         │       ├── files/         # FilesComponent (full file manager)
         │       ├── home/          # HomeComponent (deadlines + schedule + courses)
         │       ├── longread/      # LongreadComponent, Screen, TaskSection, TaskInfo
+        │       │   └── htmlrender/ # HTML→Compose rendering (Ksoup parser → HtmlBlock → composables)
         │       ├── main/          # MainComponent (ChildPages tabs + ChildStack details)
         │       ├── notifications/ # NotificationsComponent
         │       ├── performance/   # CoursePerformanceComponent (2 tabs)
