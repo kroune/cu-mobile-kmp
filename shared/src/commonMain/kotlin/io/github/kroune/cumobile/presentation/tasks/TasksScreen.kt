@@ -11,22 +11,25 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
@@ -176,30 +179,31 @@ private fun FiltersRow(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        // Search field
-        TextField(
+        // Search field — compact height
+        BasicTextField(
             value = state.searchQuery,
             onValueChange = { onIntent(TasksComponent.Intent.Search(it)) },
-            placeholder = {
-                Text(
-                    text = "Поиск по названию...",
-                    color = AppTheme.colors.textSecondary,
-                    fontSize = 14.sp,
-                )
-            },
             singleLine = true,
-            colors = TextFieldDefaults.colors(
-                focusedContainerColor = AppTheme.colors.surface,
-                unfocusedContainerColor = AppTheme.colors.surface,
-                focusedTextColor = AppTheme.colors.textPrimary,
-                unfocusedTextColor = AppTheme.colors.textPrimary,
-                cursorColor = AppTheme.colors.accent,
-                focusedIndicatorColor = AppTheme.colors.accent,
-                unfocusedIndicatorColor = AppTheme.colors.textSecondary.copy(
-                    alpha = 0.3f,
-                ),
+            textStyle = TextStyle(
+                color = AppTheme.colors.textPrimary,
+                fontSize = 14.sp,
             ),
-            modifier = Modifier.fillMaxWidth(),
+            cursorBrush = SolidColor(AppTheme.colors.accent),
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 40.dp)
+                .background(AppTheme.colors.surface)
+                .padding(horizontal = 12.dp, vertical = 10.dp),
+            decorationBox = { innerTextField ->
+                if (state.searchQuery.isEmpty()) {
+                    Text(
+                        text = "Поиск по названию...",
+                        color = AppTheme.colors.textSecondary,
+                        fontSize = 14.sp,
+                    )
+                }
+                innerTextField()
+            },
         )
 
         StatusFilterChips(
@@ -214,12 +218,10 @@ private fun FiltersRow(
             courseFilter = state.courseFilter,
             onIntent = onIntent,
         )
-
-        ResetFiltersButton(state = state, onIntent = onIntent)
     }
 }
 
-/** Status filter chips row. */
+/** Status filter chips row — selected chip moves to front. */
 @Composable
 private fun StatusFilterChips(
     allTasks: List<io.github.kroune.cumobile.data.model.StudentTask>,
@@ -229,11 +231,17 @@ private fun StatusFilterChips(
 ) {
     val statuses = availableStatuses(allTasks, segment)
     if (statuses.isEmpty()) return
+    val sorted = selectedFirst(statuses, statusFilter)
+    val listState = rememberLazyListState()
+    LaunchedEffect(statusFilter) {
+        listState.animateScrollToItem(0)
+    }
     LazyRow(
+        state = listState,
         horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         items(
-            items = statuses,
+            items = sorted,
             key = { it },
         ) { status ->
             FilterChip(
@@ -243,12 +251,13 @@ private fun StatusFilterChips(
                     val newFilter = if (statusFilter == status) null else status
                     onIntent(TasksComponent.Intent.FilterByStatus(newFilter))
                 },
+                modifier = Modifier.animateItem(),
             )
         }
     }
 }
 
-/** Course filter chips row. */
+/** Course filter chips row — selected chip moves to front. */
 @Composable
 private fun CourseFilterChips(
     allTasks: List<io.github.kroune.cumobile.data.model.StudentTask>,
@@ -257,11 +266,17 @@ private fun CourseFilterChips(
 ) {
     val courses = availableCourses(allTasks)
     if (courses.isEmpty()) return
+    val sorted = selectedFirst(courses, courseFilter) { it.first }
+    val listState = rememberLazyListState()
+    LaunchedEffect(courseFilter) {
+        listState.animateScrollToItem(0)
+    }
     LazyRow(
+        state = listState,
         horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         items(
-            items = courses,
+            items = sorted,
             key = { it.first },
         ) { (courseId, courseName) ->
             FilterChip(
@@ -271,34 +286,24 @@ private fun CourseFilterChips(
                     val newFilter = if (courseFilter == courseId) null else courseId
                     onIntent(TasksComponent.Intent.FilterByCourse(newFilter))
                 },
+                modifier = Modifier.animateItem(),
             )
         }
     }
 }
 
-/** Reset button shown only when filters are active. */
-@Composable
-private fun ResetFiltersButton(
-    state: TasksComponent.State,
-    onIntent: (TasksComponent.Intent) -> Unit,
-) {
-    val hasFilters = state.statusFilter != null ||
-        state.courseFilter != null ||
-        state.searchQuery.isNotEmpty()
-    if (!hasFilters) return
-    TextButton(
-        onClick = {
-            onIntent(TasksComponent.Intent.FilterByStatus(null))
-            onIntent(TasksComponent.Intent.FilterByCourse(null))
-            onIntent(TasksComponent.Intent.Search(""))
-        },
-    ) {
-        Text(
-            text = "Сбросить фильтры",
-            color = AppTheme.colors.accent,
-            fontSize = 13.sp,
-        )
-    }
+/**
+ * Moves the selected item to the front, keeping relative order of the rest.
+ * For simple lists where the item itself is the key (e.g., status strings).
+ */
+private fun <T> selectedFirst(
+    items: List<T>,
+    selectedKey: String?,
+    keySelector: (T) -> String = { it as String },
+): List<T> {
+    if (selectedKey == null) return items
+    val selected = items.find { keySelector(it) == selectedKey } ?: return items
+    return listOf(selected) + items.filter { keySelector(it) != selectedKey }
 }
 
 /**
@@ -326,7 +331,7 @@ private fun FilterChip(
                     AppTheme.colors.surface
                 },
             ).clickable(onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 6.dp),
+            .padding(horizontal = 12.dp, vertical = 3.dp),
     ) {
         Text(
             text = label,
