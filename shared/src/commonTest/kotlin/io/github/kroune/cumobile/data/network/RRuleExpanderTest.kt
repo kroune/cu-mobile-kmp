@@ -9,7 +9,6 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class RRuleExpanderTest {
-
     // --- Non-recurring events ---
 
     @Test
@@ -219,6 +218,20 @@ class RRuleExpanderTest {
     fun parseRRuleWithUntil() {
         val parsed = RRuleExpander.parseRRule("FREQ=DAILY;UNTIL=20261231T000000Z")
         assertEquals(RRuleExpander.Frequency.DAILY, parsed.freq)
+        assertEquals(1, parsed.interval)
+    }
+
+    @Test
+    fun parseRRuleMalformedPartIsIgnored() {
+        val parsed = RRuleExpander.parseRRule("FREQ=WEEKLY;BADPART;BYDAY=MO")
+        assertEquals(RRuleExpander.Frequency.WEEKLY, parsed.freq)
+        assertEquals(setOf(DayOfWeek.MONDAY), parsed.byDay)
+    }
+
+    @Test
+    fun parseRRuleEmptyString() {
+        val parsed = RRuleExpander.parseRRule("")
+        assertEquals(RRuleExpander.Frequency.WEEKLY, parsed.freq)
         assertEquals(1, parsed.interval)
     }
 

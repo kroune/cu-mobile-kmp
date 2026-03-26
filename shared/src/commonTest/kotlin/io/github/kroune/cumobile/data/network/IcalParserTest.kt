@@ -10,7 +10,8 @@ class IcalParserTest {
 
     @Test
     fun parseSingleEvent() {
-        val ics = """
+        val ics =
+            """
             BEGIN:VCALENDAR
             BEGIN:VEVENT
             UID:event-1
@@ -20,7 +21,7 @@ class IcalParserTest {
             LOCATION:А-301
             END:VEVENT
             END:VCALENDAR
-        """.trimIndent()
+            """.trimIndent()
 
         val events = parser.parse(ics)
         assertEquals(1, events.size)
@@ -35,7 +36,8 @@ class IcalParserTest {
 
     @Test
     fun parseMultipleEvents() {
-        val ics = """
+        val ics =
+            """
             BEGIN:VCALENDAR
             BEGIN:VEVENT
             UID:event-1
@@ -50,7 +52,7 @@ class IcalParserTest {
             DTEND:20260301T123000Z
             END:VEVENT
             END:VCALENDAR
-        """.trimIndent()
+            """.trimIndent()
 
         val events = parser.parse(ics)
         assertEquals(2, events.size)
@@ -60,7 +62,8 @@ class IcalParserTest {
 
     @Test
     fun parseEventWithRRule() {
-        val ics = """
+        val ics =
+            """
             BEGIN:VCALENDAR
             BEGIN:VEVENT
             UID:recurring-1
@@ -70,7 +73,7 @@ class IcalParserTest {
             RRULE:FREQ=WEEKLY;BYDAY=MO;UNTIL=20261231T000000Z
             END:VEVENT
             END:VCALENDAR
-        """.trimIndent()
+            """.trimIndent()
 
         val events = parser.parse(ics)
         assertEquals(1, events.size)
@@ -79,7 +82,8 @@ class IcalParserTest {
 
     @Test
     fun parseEventWithExDates() {
-        val ics = """
+        val ics =
+            """
             BEGIN:VCALENDAR
             BEGIN:VEVENT
             UID:exdate-1
@@ -91,7 +95,7 @@ class IcalParserTest {
             EXDATE:20260922T090000Z
             END:VEVENT
             END:VCALENDAR
-        """.trimIndent()
+            """.trimIndent()
 
         val events = parser.parse(ics)
         assertEquals(1, events.size)
@@ -119,10 +123,11 @@ class IcalParserTest {
 
     @Test
     fun parseEmptyCalendar() {
-        val ics = """
+        val ics =
+            """
             BEGIN:VCALENDAR
             END:VCALENDAR
-        """.trimIndent()
+            """.trimIndent()
 
         val events = parser.parse(ics)
         assertTrue(events.isEmpty())
@@ -130,7 +135,8 @@ class IcalParserTest {
 
     @Test
     fun parseEventWithOptionalFields() {
-        val ics = """
+        val ics =
+            """
             BEGIN:VCALENDAR
             BEGIN:VEVENT
             UID:opt-1
@@ -141,7 +147,7 @@ class IcalParserTest {
             URL:https://meet.example.com/123
             END:VEVENT
             END:VCALENDAR
-        """.trimIndent()
+            """.trimIndent()
 
         val events = parser.parse(ics)
         assertEquals(1, events.size)
@@ -151,7 +157,8 @@ class IcalParserTest {
 
     @Test
     fun parseEventMissingOptionalFieldsReturnsNulls() {
-        val ics = """
+        val ics =
+            """
             BEGIN:VCALENDAR
             BEGIN:VEVENT
             UID:min-1
@@ -160,7 +167,7 @@ class IcalParserTest {
             DTEND:20260301T103000Z
             END:VEVENT
             END:VCALENDAR
-        """.trimIndent()
+            """.trimIndent()
 
         val events = parser.parse(ics)
         assertEquals(1, events.size)
@@ -173,7 +180,8 @@ class IcalParserTest {
 
     @Test
     fun parseEventWithParameterizedProperty() {
-        val ics = """
+        val ics =
+            """
             BEGIN:VCALENDAR
             BEGIN:VEVENT
             UID:param-1
@@ -182,7 +190,7 @@ class IcalParserTest {
             DTEND;TZID=Europe/Moscow:20260301T103000
             END:VEVENT
             END:VCALENDAR
-        """.trimIndent()
+            """.trimIndent()
 
         val events = parser.parse(ics)
         assertEquals(1, events.size)

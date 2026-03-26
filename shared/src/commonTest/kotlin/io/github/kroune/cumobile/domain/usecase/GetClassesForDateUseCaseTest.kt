@@ -11,9 +11,13 @@ import kotlin.test.assertTrue
 class GetClassesForDateUseCaseTest {
     private val useCase = GetClassesForDateUseCase()
 
-    private fun dateMillis(year: Int, month: Int, day: Int): Long {
+    private fun dateMillis(
+        year: Int,
+        month: Int,
+        day: Int,
+    ): Long {
         val dt = LocalDateTime(year, month, day, 0, 0, 0)
-        return dt.toInstant(TimeZone.UTC).toEpochMilliseconds()
+        return dt.toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds()
     }
 
     // --- Filtering ---
@@ -172,6 +176,31 @@ class GetClassesForDateUseCaseTest {
         assertEquals("305", classData.room)
         assertEquals("Лекция", classData.type)
         assertEquals("https://meet.example.com/123", classData.link)
+    }
+
+    @Test
+    fun mapsEventWithBadDtEndFallsBackToStartTime() {
+        val event = CalendarEvent(
+            uid = "bad-end",
+            summary = "Broken event",
+            dtStart = "20260301T090000Z",
+            dtEnd = "invalid",
+        )
+        val classData = useCase.mapToClassData(event)
+        assertEquals("Broken event", classData.title)
+        assertEquals(classData.startTime, classData.endTime)
+    }
+
+    @Test
+    fun mapsEventWithEmptyDtEndFallsBackToStartTime() {
+        val event = CalendarEvent(
+            uid = "empty-end",
+            summary = "No end time",
+            dtStart = "20260301T140000Z",
+            dtEnd = "",
+        )
+        val classData = useCase.mapToClassData(event)
+        assertEquals(classData.startTime, classData.endTime)
     }
 
     private fun makeEvent(

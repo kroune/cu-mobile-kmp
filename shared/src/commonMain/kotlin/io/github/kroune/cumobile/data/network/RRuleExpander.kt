@@ -24,7 +24,6 @@ private val logger = KotlinLogging.logger {}
  * - EXDATE exclusions
  */
 internal object RRuleExpander {
-
     private const val DaysPerWeek = 7
 
     /**
@@ -33,7 +32,10 @@ internal object RRuleExpander {
      * - If the event has no RRULE, only the literal start date is checked.
      * - If RRULE is present, recurrences are expanded up to [targetDate] to determine a match.
      */
-    fun eventOccursOn(event: CalendarEvent, targetDate: LocalDate): Boolean {
+    fun eventOccursOn(
+        event: CalendarEvent,
+        targetDate: LocalDate,
+    ): Boolean {
         val startInstant = IcalDateParser.parse(event.dtStart)
         val startLocal = startInstant.toLocalDateTime(TimeZone.currentSystemDefault()).date
 
@@ -138,10 +140,17 @@ internal object RRuleExpander {
     }
 
     internal fun parseRRule(rrule: String): ParsedRRule {
-        val parts = rrule.split(';').associate { part ->
-            val (key, value) = part.split('=', limit = 2)
-            key.uppercase() to value
-        }
+        val parts = rrule
+            .split(';')
+            .mapNotNull { part ->
+                val segments = part.split('=', limit = 2)
+                if (segments.size == 2) {
+                    segments[0].uppercase() to segments[1]
+                } else {
+                    logger.warn { "Malformed RRULE part (missing '='): $part" }
+                    null
+                }
+            }.toMap()
 
         val freq = when (parts["FREQ"]?.uppercase()) {
             "WEEKLY" -> Frequency.WEEKLY
@@ -156,7 +165,8 @@ internal object RRuleExpander {
 
         val until = parts["UNTIL"]?.let { untilStr ->
             try {
-                IcalDateParser.parse(untilStr)
+                IcalDateParser
+                    .parse(untilStr)
                     .toLocalDateTime(TimeZone.currentSystemDefault())
                     .date
             } catch (e: Exception) {
@@ -183,16 +193,18 @@ internal object RRuleExpander {
     }
 
     internal fun parseExDates(exDates: List<String>): Set<LocalDate> =
-        exDates.mapNotNull { raw ->
-            try {
-                IcalDateParser.parse(raw.trim())
-                    .toLocalDateTime(TimeZone.currentSystemDefault())
-                    .date
-            } catch (e: Exception) {
-                logger.warn(e) { "Failed to parse EXDATE: $raw" }
-                null
-            }
-        }.toSet()
+        exDates
+            .mapNotNull { raw ->
+                try {
+                    IcalDateParser
+                        .parse(raw.trim())
+                        .toLocalDateTime(TimeZone.currentSystemDefault())
+                        .date
+                } catch (e: Exception) {
+                    logger.warn(e) { "Failed to parse EXDATE: $raw" }
+                    null
+                }
+            }.toSet()
 
     private fun dayAbbrevToKotlin(abbrev: String): DayOfWeek? =
         when (abbrev.uppercase()) {

@@ -8,7 +8,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 class IcalDateParserTest {
-
     @Test
     fun parseFullDateTimeWithZ() {
         val result = IcalDateParser.parse("20260301T130000Z")

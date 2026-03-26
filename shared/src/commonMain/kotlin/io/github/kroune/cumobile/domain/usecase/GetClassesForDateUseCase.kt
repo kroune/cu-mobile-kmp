@@ -18,12 +18,15 @@ private val logger = KotlinLogging.logger {}
  * Handles recurring events via [RRuleExpander] and parses iCal dates via [IcalDateParser].
  */
 internal class GetClassesForDateUseCase {
-
     /**
      * Returns classes occurring on the given [dateMillis], sorted by start time.
      */
-    fun execute(events: List<CalendarEvent>, dateMillis: Long): List<ClassData> {
-        val targetDate = Instant.fromEpochMilliseconds(dateMillis)
+    fun execute(
+        events: List<CalendarEvent>,
+        dateMillis: Long,
+    ): List<ClassData> {
+        val targetDate = Instant
+            .fromEpochMilliseconds(dateMillis)
             .toLocalDateTime(TimeZone.currentSystemDefault())
             .date
 
@@ -33,7 +36,10 @@ internal class GetClassesForDateUseCase {
             .sortedBy { it.startTime }
     }
 
-    internal fun eventOccursOn(event: CalendarEvent, targetDate: LocalDate): Boolean =
+    internal fun eventOccursOn(
+        event: CalendarEvent,
+        targetDate: LocalDate,
+    ): Boolean =
         try {
             RRuleExpander.eventOccursOn(event, targetDate)
         } catch (e: Exception) {
@@ -42,10 +48,17 @@ internal class GetClassesForDateUseCase {
         }
 
     internal fun mapToClassData(event: CalendarEvent): ClassData {
-        val startDt = IcalDateParser.parse(event.dtStart)
+        val startDt = IcalDateParser
+            .parse(event.dtStart)
             .toLocalDateTime(TimeZone.currentSystemDefault())
-        val endDt = IcalDateParser.parse(event.dtEnd)
-            .toLocalDateTime(TimeZone.currentSystemDefault())
+        val endDt = try {
+            IcalDateParser
+                .parse(event.dtEnd)
+                .toLocalDateTime(TimeZone.currentSystemDefault())
+        } catch (e: Exception) {
+            logger.warn(e) { "Failed to parse dtEnd '${event.dtEnd}', falling back to startDt" }
+            startDt
+        }
 
         val room = extractRoom(event.summary, event.location)
         val type = detectType(event.summary)
@@ -63,7 +76,10 @@ internal class GetClassesForDateUseCase {
     companion object {
         private val roomRegex = Regex("""(\d{3}[а-яА-Я]?)""")
 
-        internal fun extractRoom(summary: String, location: String?): String =
+        internal fun extractRoom(
+            summary: String,
+            location: String?,
+        ): String =
             roomRegex.find(summary)?.value
                 ?: roomRegex.find(location.orEmpty())?.value
                 ?: location.orEmpty()
@@ -71,7 +87,10 @@ internal class GetClassesForDateUseCase {
         internal fun detectType(summary: String): String =
             if (summary.contains("лекция", ignoreCase = true)) "Лекция" else "Практика"
 
-        internal fun formatTime(hour: Int, minute: Int): String =
+        internal fun formatTime(
+            hour: Int,
+            minute: Int,
+        ): String =
             "${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}"
     }
 }

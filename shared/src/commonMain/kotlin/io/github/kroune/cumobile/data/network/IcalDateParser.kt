@@ -40,7 +40,10 @@ internal object IcalDateParser {
         }
     }
 
-    private fun parseDate(clean: String, original: String): Instant {
+    private fun parseDate(
+        clean: String,
+        original: String,
+    ): Instant {
         if (clean.length >= DATE_LEN) {
             val year = clean.substring(0, YEAR_END).toInt()
             val month = clean.substring(YEAR_END, MONTH_END).toInt()
