@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+#
+# Pre-push hook: runs ktlint, detekt, and roborazzi verification.
+# Blocks the push on the first failure (early exit).
+
+set -euo pipefail
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+GRADLEW="$REPO_ROOT/gradlew"
+
+if [ ! -x "$GRADLEW" ]; then
+    echo "ERROR: gradlew not found or not executable at $GRADLEW"
+    exit 1
+fi
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+run_check() {
+    local step="$1"
+    local task="$2"
+
+    echo -e "${YELLOW}[${step}/3] Running ${task}...${NC}"
+    if "$GRADLEW" $task -q 2>&1; then
+        echo -e "${GREEN}  ✓ ${task} passed${NC}"
+    else
+        echo -e "${RED}  ✗ ${task} failed. Push aborted.${NC}"
+        exit 1
+    fi
+    echo ""
+}
+
+echo -e "${YELLOW}Running pre-push checks...${NC}"
+echo ""
+
+run_check 1 "ktlintCheck"
+run_check 2 "detektAll"
+run_check 3 ":androidApp:verifyRoborazziDebug"
+
+echo -e "${GREEN}All pre-push checks passed.${NC}"
