@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeCompiler)
@@ -11,12 +13,35 @@ val jdkVersion =
         .get()
         .toInt()
 
+val localProperties =
+    Properties().apply {
+        val file = rootProject.file("local.properties")
+        if (file.exists()) {
+            file.reader().use { load(it) }
+        }
+    }
+
+fun signingProperty(name: String): String? =
+    System.getenv(name) ?: localProperties.getProperty(name)
+
 android {
     namespace = "com.thirdparty.cumobile"
     compileSdk =
         libs.versions.android.max.sdk
             .get()
             .toInt()
+
+    signingConfigs {
+        create("release") {
+            val storeFilePath = signingProperty("RELEASE_STORE_FILE")
+            if (storeFilePath != null) {
+                storeFile = file(storeFilePath)
+                storePassword = signingProperty("RELEASE_STORE_PASSWORD")
+                keyAlias = signingProperty("RELEASE_KEY_ALIAS")
+                keyPassword = signingProperty("RELEASE_KEY_PASSWORD")
+            }
+        }
+    }
 
     defaultConfig {
         applicationId = "com.thirdparty.cumobile"
@@ -70,6 +95,7 @@ android {
         }
 
         release {
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
