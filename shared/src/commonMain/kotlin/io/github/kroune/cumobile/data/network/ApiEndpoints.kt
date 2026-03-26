@@ -68,4 +68,7 @@ internal object ApiEndpoints {
         "micro-lms/courses/$courseId/student-performance"
 
     const val GRADEBOOK = "micro-lms/gradebook"
+
+    // Timetable
+    const val TIMETABLES_ME = "micro-lms/students/me/timetables"
 }

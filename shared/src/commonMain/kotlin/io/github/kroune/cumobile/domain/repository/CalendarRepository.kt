@@ -2,10 +2,14 @@ package io.github.kroune.cumobile.domain.repository
 
 import io.github.kroune.cumobile.data.model.CalendarEvent
 import io.github.kroune.cumobile.data.model.ClassData
+import io.github.kroune.cumobile.data.model.TimetableCourse
 import kotlinx.coroutines.flow.Flow
 
 /**
- * Repository for managing the calendar feed URL and fetching events.
+ * Repository for fetching timetable/schedule data.
+ *
+ * Primary source: LMS timetable API (works for all authenticated students).
+ * Secondary source: iCal feed URL (user-configured, optional).
  */
 interface CalendarRepository {
     /** Flow emitting the current configured iCal URL. */
@@ -21,7 +25,13 @@ interface CalendarRepository {
     suspend fun fetchCalendar(): List<CalendarEvent>
 
     /**
-     * Fetches and parses classes for a specific date (represented by epoch millis).
+     * Fetches the student's timetable from the LMS API.
+     * Returns `null` on failure (not authenticated, network error, etc.).
+     */
+    suspend fun fetchTimetable(): List<TimetableCourse>?
+
+    /**
+     * Fetches classes for a specific date using the LMS timetable API.
      */
     suspend fun getClassesForDate(dateMillis: Long): List<ClassData>
 }

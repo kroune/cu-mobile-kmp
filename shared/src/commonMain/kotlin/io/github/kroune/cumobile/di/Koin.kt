@@ -17,6 +17,7 @@ import io.github.kroune.cumobile.data.network.NotificationApiService
 import io.github.kroune.cumobile.data.network.PerformanceApiService
 import io.github.kroune.cumobile.data.network.ProfileApiService
 import io.github.kroune.cumobile.data.network.TaskApiService
+import io.github.kroune.cumobile.data.network.TimetableApiService
 import io.github.kroune.cumobile.data.network.UpdateChecker
 import io.github.kroune.cumobile.data.network.createHttpClient
 import io.github.kroune.cumobile.data.repository.AuthRepositoryImpl
@@ -61,6 +62,7 @@ private val networkModule = module {
     single { PerformanceApiService(get()) }
     single { IcalParser() }
     single { IcalApiService(get(), get()) }
+    single { TimetableApiService(get()) }
     single { UpdateChecker(get()) }
 }
 
@@ -82,7 +84,7 @@ private val repositoryModule = module {
     single<NotificationRepository> { NotificationRepositoryImpl(get(), get()) }
     single<PerformanceRepository> { PerformanceRepositoryImpl(get(), get()) }
     single { GetClassesForDateUseCase() }
-    single<CalendarRepository> { CalendarRepositoryImpl(get(), get(), get()) }
+    single<CalendarRepository> { CalendarRepositoryImpl(get(), get(), get(), get(), get()) }
     single<FileRenameRepository> { FileRenameRepositoryImpl(get()) }
 }
 
