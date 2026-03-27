@@ -1,5 +1,3 @@
-@file:Suppress("MagicNumber")
-
 package io.github.kroune.cumobile.presentation.longread.htmlrender
 
 import com.fleeksoft.ksoup.Ksoup
@@ -78,7 +76,12 @@ internal fun parseChildBlocks(parent: Element): List<HtmlBlock> {
             }
             node is Element && node.tagName().lowercase() in BlockTags -> {
                 flushInlines()
-                parseBlockElement(node)?.let { blocks.add(it) }
+                val parsed = parseBlockElement(node)
+                if (parsed != null) {
+                    blocks.add(parsed)
+                } else {
+                    blocks.addAll(parseChildBlocks(node))
+                }
             }
             node is Element -> {
                 pendingInlines.addAll(parseInlineElement(node))

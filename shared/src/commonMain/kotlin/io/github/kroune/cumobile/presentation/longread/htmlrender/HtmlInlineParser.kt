@@ -91,6 +91,6 @@ internal fun parseFigure(element: Element): HtmlBlock? {
     return if (img != null) {
         HtmlBlock.ImageBlock(img.attr("src"), img.attr("alt").ifBlank { null })
     } else {
-        parseBlockElement(element)
+        null
     }
 }

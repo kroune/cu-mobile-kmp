@@ -9,9 +9,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -220,12 +220,15 @@ private fun MaterialList(
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
-        modifier = modifier.fillMaxSize().padding(horizontal = 16.dp),
+        modifier = modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
         contentPadding = androidx.compose.foundation.layout.PaddingValues(
             top = 12.dp,
             bottom = 12.dp + WindowInsets.navigationBars
-                .asPaddingValues().calculateBottomPadding(),
+                .asPaddingValues()
+                .calculateBottomPadding(),
         ),
     ) {
         items(state.materials, key = { it.id }) { material ->
@@ -389,10 +392,11 @@ private fun MarkdownCard(
     modifier: Modifier = Modifier,
 ) {
     val html = material.viewContent.orEmpty()
-    if (html.isBlank()) return
-
-    val blocks = remember(html) { parseHtmlToBlocks(html) }
-    if (blocks.isEmpty()) return
+    val title = material.contentName
+    val blocks = remember(html) {
+        if (html.isBlank()) emptyList() else parseHtmlToBlocks(html)
+    }
+    if (title.isNullOrBlank() && blocks.isEmpty()) return
 
     Column(
         modifier = modifier
@@ -402,7 +406,7 @@ private fun MarkdownCard(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        material.contentName?.let { name ->
+        title?.let { name ->
             Text(
                 text = name,
                 color = AppTheme.colors.textPrimary,
@@ -410,10 +414,12 @@ private fun MarkdownCard(
                 fontWeight = FontWeight.Bold,
             )
         }
-        HtmlContent(
-            blocks = blocks,
-            searchQuery = searchQuery,
-        )
+        if (blocks.isNotEmpty()) {
+            HtmlContent(
+                blocks = blocks,
+                searchQuery = searchQuery,
+            )
+        }
     }
 }
 

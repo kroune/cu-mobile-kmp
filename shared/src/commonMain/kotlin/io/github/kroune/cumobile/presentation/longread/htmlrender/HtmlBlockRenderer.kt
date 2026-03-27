@@ -1,5 +1,3 @@
-@file:Suppress("MagicNumber")
-
 package io.github.kroune.cumobile.presentation.longread.htmlrender
 
 import androidx.compose.foundation.background
@@ -15,13 +13,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.ClickableText
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -29,6 +26,14 @@ import androidx.compose.ui.unit.sp
 import io.github.kroune.cumobile.presentation.common.AppTheme
 
 private const val BaseUrl = "https://my.centraluniversity.ru"
+
+private val HeadingFontSizes = mapOf(
+    1 to 24,
+    2 to 20,
+    3 to 18,
+    4 to 16,
+)
+private const val HeadingDefaultFontSize = 15
 
 /**
  * Renders a list of [HtmlBlock] elements as native Compose UI.
@@ -78,24 +83,14 @@ private fun ParagraphBlock(
 ) {
     val annotated = buildInlineAnnotatedString(block.inlines, searchQuery)
     if (annotated.text.isBlank()) return
-    val uriHandler = LocalUriHandler.current
 
-    @Suppress("DEPRECATION")
-    ClickableText(
+    BasicText(
         text = annotated,
         style = androidx.compose.ui.text.TextStyle(
             color = AppTheme.colors.textPrimary,
             fontSize = 14.sp,
             lineHeight = 20.sp,
         ),
-        onClick = { offset ->
-            annotated
-                .getStringAnnotations("URL", offset, offset)
-                .firstOrNull()
-                ?.let { annotation ->
-                    uriHandler.openUri(resolveUrl(annotation.item))
-                }
-        },
     )
 }
 
@@ -104,13 +99,7 @@ private fun HeadingBlock(
     block: HtmlBlock.Heading,
     searchQuery: String,
 ) {
-    val fontSize = when (block.level) {
-        1 -> 24.sp
-        2 -> 20.sp
-        3 -> 18.sp
-        4 -> 16.sp
-        else -> 15.sp
-    }
+    val fontSize = (HeadingFontSizes[block.level] ?: HeadingDefaultFontSize).sp
     val annotated = buildInlineAnnotatedString(block.inlines, searchQuery)
     Text(
         text = annotated,
@@ -218,9 +207,16 @@ private fun TableBlock(
     }
 }
 
-internal fun resolveUrl(url: String): String =
-    if (url.startsWith("http://") || url.startsWith("https://")) {
-        url
-    } else {
-        "$BaseUrl$url"
+internal fun resolveUrl(url: String): String {
+    val value = url.trim()
+    return when {
+        value.startsWith("http://") || value.startsWith("https://") -> value
+        value.startsWith("//") -> "https:$value"
+        value.startsWith("mailto:") ||
+            value.startsWith("tel:") ||
+            value.startsWith("data:") ||
+            value.startsWith("#") -> value
+        value.startsWith("/") -> "$BaseUrl$value"
+        else -> "$BaseUrl/$value"
     }
+}

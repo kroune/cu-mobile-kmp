@@ -1,5 +1,3 @@
-@file:Suppress("MagicNumber")
-
 package io.github.kroune.cumobile.presentation.longread.htmlrender
 
 import androidx.compose.runtime.Composable
@@ -35,7 +33,6 @@ fun buildInlineAnnotatedString(
     }
 }
 
-@Suppress("CyclomaticComplexMethod")
 private fun AnnotatedString.Builder.appendInlines(
     inlines: List<InlineElement>,
     accentColor: androidx.compose.ui.graphics.Color,
@@ -67,7 +64,7 @@ private fun AnnotatedString.Builder.appendInlines(
                 pop()
             }
             is InlineElement.Link -> {
-                val link = LinkAnnotation.Url(element.href)
+                val link = LinkAnnotation.Url(resolveUrl(element.href))
                 pushStyle(
                     SpanStyle(
                         color = accentColor,

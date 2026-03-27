@@ -1,5 +1,3 @@
-@file:Suppress("MagicNumber")
-
 package io.github.kroune.cumobile.presentation.longread.htmlrender
 
 import androidx.compose.foundation.Image
@@ -54,6 +52,9 @@ import io.ktor.client.request.get
 import io.ktor.client.statement.readRawBytes
 
 private val logger = KotlinLogging.logger {}
+
+private const val VideoAspectRatioWidth = 16f
+private const val VideoAspectRatioHeight = 9f
 
 /** Renders an inline image from HTML `<img>` tag. */
 @Composable
@@ -202,7 +203,7 @@ fun VideoMaterialCard(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .aspectRatio(16f / 9f)
+                .aspectRatio(VideoAspectRatioWidth / VideoAspectRatioHeight)
                 .clip(RoundedCornerShape(8.dp))
                 .background(AppTheme.colors.codeBlockBackground),
             contentAlignment = Alignment.Center,
@@ -377,9 +378,9 @@ fun MediaUrlRow(
 
 private suspend fun loadImageBitmap(url: String): ImageBitmap? =
     try {
-        val client = HttpClient()
-        val bytes = client.get(url).readRawBytes()
-        client.close()
+        val bytes = HttpClient().use { client ->
+            client.get(url).readRawBytes()
+        }
         decodeImageBitmap(bytes)
     } catch (e: Exception) {
         logger.warn(e) { "Failed to load image: $url" }
