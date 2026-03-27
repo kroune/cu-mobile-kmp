@@ -49,6 +49,15 @@ class DefaultNotificationsComponent(
             NotificationsComponent.Intent.ExternalLinkOpened -> {
                 _state.value = _state.value.copy(externalLinkToOpen = null)
             }
+            is NotificationsComponent.Intent.ToggleExpand -> {
+                val current = _state.value.expandedNotificationIds
+                val updated = if (intent.notificationId in current) {
+                    current - intent.notificationId
+                } else {
+                    current + intent.notificationId
+                }
+                _state.value = _state.value.copy(expandedNotificationIds = updated)
+            }
         }
     }
 

@@ -25,6 +25,8 @@ interface NotificationsComponent {
         val selectedTab: Int = 0,
         /** URI that should be opened externally (set by OpenLink, consumed by UI). */
         val externalLinkToOpen: String? = null,
+        /** IDs of notifications whose descriptions are fully expanded. */
+        val expandedNotificationIds: Set<String> = emptySet(),
     ) {
         /** Notifications for the currently selected tab. */
         val currentNotifications: List<NotificationItem>
@@ -46,5 +48,10 @@ interface NotificationsComponent {
 
         /** Acknowledge that the external link has been opened. */
         data object ExternalLinkOpened : Intent
+
+        /** Toggle expand/collapse for a notification's description. */
+        data class ToggleExpand(
+            val notificationId: String,
+        ) : Intent
     }
 }

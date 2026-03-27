@@ -1,5 +1,6 @@
 package io.github.kroune.cumobile.presentation.notifications
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -23,6 +24,9 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -128,6 +132,10 @@ internal fun NotificationsScreenContent(
                 )
                 else -> NotificationsList(
                     notifications = state.currentNotifications,
+                    expandedIds = state.expandedNotificationIds,
+                    onToggleExpand = { id ->
+                        onIntent(NotificationsComponent.Intent.ToggleExpand(id))
+                    },
                     onLinkClick = { uri ->
                         onIntent(NotificationsComponent.Intent.OpenLink(uri))
                     },
@@ -140,6 +148,8 @@ internal fun NotificationsScreenContent(
 @Composable
 private fun NotificationsList(
     notifications: List<NotificationItem>,
+    expandedIds: Set<String>,
+    onToggleExpand: (String) -> Unit,
     onLinkClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -150,15 +160,24 @@ private fun NotificationsList(
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         items(notifications, key = { it.id }) { item ->
-            NotificationCard(item = item, onLinkClick = onLinkClick)
+            NotificationCard(
+                item = item,
+                isExpanded = item.id in expandedIds,
+                onToggleExpand = { onToggleExpand(item.id) },
+                onLinkClick = onLinkClick,
+            )
         }
         item { Spacer(modifier = Modifier.height(16.dp)) }
     }
 }
 
+private const val CollapsedMaxLines = 3
+
 @Composable
 private fun NotificationCard(
     item: NotificationItem,
+    isExpanded: Boolean,
+    onToggleExpand: () -> Unit,
     onLinkClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -166,6 +185,8 @@ private fun NotificationCard(
         modifier = modifier
             .fillMaxWidth()
             .background(AppTheme.colors.surface, RoundedCornerShape(12.dp))
+            .clickable(onClick = onToggleExpand)
+            .animateContentSize()
             .padding(12.dp),
     ) {
         // Category icon
@@ -193,15 +214,34 @@ private fun NotificationCard(
             )
 
             // Description
-            if (item.description.isNotBlank()) {
+            val descriptionText = normalizeWhitespace(item.description)
+            if (descriptionText.isNotBlank()) {
                 Spacer(modifier = Modifier.height(4.dp))
+
+                var hasVisualOverflow by remember { mutableStateOf(false) }
+
                 Text(
-                    text = item.description.trim(),
+                    text = descriptionText,
                     color = AppTheme.colors.textSecondary.copy(alpha = 0.8f),
                     fontSize = 12.sp,
-                    maxLines = 3,
+                    maxLines = if (isExpanded) Int.MAX_VALUE else CollapsedMaxLines,
                     overflow = TextOverflow.Ellipsis,
+                    onTextLayout = { result ->
+                        if (!isExpanded) {
+                            hasVisualOverflow = result.hasVisualOverflow
+                        }
+                    },
                 )
+
+                if (hasVisualOverflow || isExpanded) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = if (isExpanded) "Свернуть" else "Читать полностью",
+                        color = AppTheme.colors.accent,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
+                    )
+                }
             }
 
             // Link
@@ -221,6 +261,12 @@ private fun NotificationCard(
         }
     }
 }
+
+/**
+ * Trims and collapses excessive blank lines in notification descriptions.
+ */
+private fun normalizeWhitespace(text: String): String =
+    text.trim().replace(Regex("\\n{3,}"), "\n\n")
 
 @Composable
 private fun NotificationIcon(
@@ -261,6 +307,20 @@ private fun notificationIconEmoji(
         }
     }
 
+@Suppress("MagicNumber")
+private val previewLongNotification = NotificationItem(
+    id = "long",
+    title = "Длинное уведомление",
+    description = "Это длинное описание уведомления, которое должно занимать " +
+        "более трёх строк текста для демонстрации функции сворачивания и " +
+        "разворачивания. Здесь может быть дополнительная информация о " +
+        "задании, оценке или событии, которая не помещается в краткий " +
+        "предпросмотр карточки уведомления.",
+    icon = "education",
+    category = "1",
+    createdAt = "2026-03-15T12:00:00",
+)
+
 private val previewNotificationsState = NotificationsComponent.State(
     educationNotifications = listOf(
         NotificationItem(
@@ -279,6 +339,7 @@ private val previewNotificationsState = NotificationsComponent.State(
             category = "1",
             createdAt = "2026-03-17T14:30:00",
         ),
+        previewLongNotification,
     ),
 )
 
@@ -300,6 +361,21 @@ private fun PreviewNotificationsScreenLight() {
     CuMobileTheme(darkTheme = false) {
         NotificationsScreenContent(
             state = previewNotificationsState,
+            onIntent = {},
+            onBack = {},
+        )
+    }
+}
+
+@Suppress("MagicNumber")
+@Preview
+@Composable
+private fun PreviewNotificationsExpandedDark() {
+    CuMobileTheme(darkTheme = true) {
+        NotificationsScreenContent(
+            state = previewNotificationsState.copy(
+                expandedNotificationIds = setOf("long"),
+            ),
             onIntent = {},
             onBack = {},
         )
