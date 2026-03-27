@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -199,7 +200,9 @@ internal fun LongreadScreenContent(
 @Composable
 private fun EmptyMaterialsContent(modifier: Modifier = Modifier) {
     Box(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier
+            .fillMaxSize()
+            .windowInsetsPadding(WindowInsets.navigationBars),
         contentAlignment = Alignment.Center,
     ) {
         Text(
@@ -220,7 +223,9 @@ private fun MaterialList(
         modifier = modifier.fillMaxSize().padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
         contentPadding = androidx.compose.foundation.layout.PaddingValues(
-            vertical = 12.dp,
+            top = 12.dp,
+            bottom = 12.dp + WindowInsets.navigationBars
+                .asPaddingValues().calculateBottomPadding(),
         ),
     ) {
         items(state.materials, key = { it.id }) { material ->
