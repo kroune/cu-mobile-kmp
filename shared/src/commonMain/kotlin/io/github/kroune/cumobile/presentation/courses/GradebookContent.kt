@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -87,14 +88,18 @@ private fun SemesterCard(
         }
 
         if (semester.electiveGrades.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
+            HorizontalDivider(
+                color = AppTheme.colors.textSecondary.copy(alpha = 0.2f),
+            )
+            Spacer(modifier = Modifier.height(12.dp))
             Text(
                 text = "Элективы",
                 color = AppTheme.colors.textSecondary,
-                fontSize = 12.sp,
+                fontSize = 13.sp,
                 fontWeight = FontWeight.SemiBold,
             )
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             semester.electiveGrades.forEach { grade ->
                 GradeRow(grade = grade)
             }
@@ -152,8 +157,8 @@ private fun normalizedGradeLabel(grade: String): String =
         "excellent" -> "Отлично"
         "good" -> "Хорошо"
         "satisfactory" -> "Удовл."
-        "failed" -> "Не сдано"
-        else -> grade
+        "failed", "notPassed", "notCredited" -> "Не сдано"
+        else -> "—"
     }
 
 /** Normalized grade color. */
@@ -162,7 +167,7 @@ private fun normalizedGradeColor(grade: String): Color =
         "passed", "excellent" -> Color(0xFF66BB6A)
         "good" -> Color(0xFF42A5F5)
         "satisfactory" -> Color(0xFFFFA726)
-        "failed" -> Color(0xFFEF5350)
+        "failed", "notPassed", "notCredited" -> Color(0xFFEF5350)
         else -> Color(0xFF9E9E9E)
     }
 

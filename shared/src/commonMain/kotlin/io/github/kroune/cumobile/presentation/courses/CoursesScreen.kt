@@ -2,8 +2,11 @@
 
 package io.github.kroune.cumobile.presentation.courses
 
+import androidx.compose.animation.core.animate
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,22 +20,39 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListLayoutInfo
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import io.github.kroune.cumobile.data.model.Course
 import io.github.kroune.cumobile.data.model.GradebookGrade
@@ -48,11 +68,11 @@ import io.github.kroune.cumobile.presentation.common.SegmentedControl
 import io.github.kroune.cumobile.presentation.common.courseCategoryColor
 import io.github.kroune.cumobile.presentation.common.courseCategoryLabel
 import io.github.kroune.cumobile.presentation.common.stripEmojiPrefix
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 /**
  * Courses tab screen with 3 segments: Courses, Grade Sheet, Record Book.
- *
- * Matches the Flutter reference CoursesTab layout.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,7 +81,6 @@ fun CoursesScreen(
     modifier: Modifier = Modifier,
 ) {
     val state by component.state.subscribeAsState()
-
     CoursesScreenContent(
         state = state,
         onIntent = component::onIntent,
@@ -114,7 +133,7 @@ internal fun CoursesScreenContent(
     }
 }
 
-// region Segment 0: Courses list
+// region Segment 0: Courses list with drag-and-drop reordering
 
 @Composable
 private fun CoursesListContent(
@@ -130,159 +149,247 @@ private fun CoursesListContent(
         return
     }
 
+    var localActive by remember(active) { mutableStateOf(active) }
+    var draggedId by remember { mutableStateOf<String?>(null) }
+    var dragOffsetY by remember { mutableFloatStateOf(0f) }
+    val listState = rememberLazyListState()
+    val haptics = LocalHapticFeedback.current
+    val scope = rememberCoroutineScope()
+
     LazyColumn(
+        state = listState,
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(vertical = 4.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        if (active.isNotEmpty()) {
-            item {
-                EditModeToggle(
-                    isEditMode = state.isEditMode,
-                    onClick = { onIntent(CoursesComponent.Intent.ToggleEditMode) },
-                )
-            }
-        }
+        activeCoursesSection(
+            active = active,
+            localActive = localActive,
+            state = state,
+            drag = DragCallbacks(
+                draggedId = draggedId,
+                dragOffsetY = dragOffsetY,
+                onDragStart = { id ->
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    draggedId = id
+                    dragOffsetY = 0f
+                },
+                onDrag = { dy ->
+                    dragOffsetY += dy
+                    handleDragSwap(
+                        dragOffsetY,
+                        draggedId,
+                        listState,
+                        localActive,
+                        scope,
+                    ) { items, adj ->
+                        localActive = items
+                        dragOffsetY += adj
+                    }
+                },
+                onDragEnd = {
+                    onIntent(CoursesComponent.Intent.ReorderCourses(localActive.map { it.id }))
+                    scope.launch {
+                        animate(dragOffsetY, 0f, animationSpec = tween(DropAnimDuration)) { v, _ ->
+                            dragOffsetY = v
+                        }
+                        draggedId = null
+                    }
+                },
+            ),
+            onIntent = onIntent,
+        )
 
-        items(items = active, key = { it.id }) { course ->
-            ActiveCourseItem(
-                course = course,
-                active = active,
-                state = state,
-                onIntent = onIntent,
-            )
-        }
-
-        if (archived.isNotEmpty()) {
-            item(key = "archived_header") {
-                ArchivedHeader(
-                    count = archived.size,
-                    expanded = state.showArchived,
-                    onClick = { onIntent(CoursesComponent.Intent.ToggleArchived) },
-                )
-            }
-
-            if (state.showArchived) {
-                items(items = archived, key = { it.id }) { course ->
-                    CourseListTile(
-                        course = course,
-                        onClick = {
-                            onIntent(CoursesComponent.Intent.OpenCourse(course.id))
-                        },
-                    )
-                }
-            }
-        }
+        archivedCoursesSection(archived, state, onIntent)
     }
-}
-
-@Composable
-private fun EditModeToggle(
-    isEditMode: Boolean,
-    onClick: () -> Unit,
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.End,
-    ) {
-        TextButton(onClick = onClick) {
-            Text(
-                text = if (isEditMode) "Готово" else "Изменить",
-                color = AppTheme.colors.accent,
-                fontSize = 14.sp,
-            )
-        }
-    }
-}
-
-@Composable
-private fun ActiveCourseItem(
-    course: Course,
-    active: List<Course>,
-    state: CoursesComponent.State,
-    onIntent: (CoursesComponent.Intent) -> Unit,
-) {
-    CourseListTile(
-        course = course,
-        isEditMode = state.isEditMode,
-        onMoveUp = {
-            val index = active.indexOf(course)
-            if (index > 0) {
-                val newOrder = swapIds(active, index, index - 1)
-                onIntent(CoursesComponent.Intent.ReorderCourses(newOrder))
-            }
-        },
-        onMoveDown = {
-            val index = active.indexOf(course)
-            if (index < active.size - 1) {
-                val newOrder = swapIds(active, index, index + 1)
-                onIntent(CoursesComponent.Intent.ReorderCourses(newOrder))
-            }
-        },
-        onClick = {
-            onIntent(CoursesComponent.Intent.OpenCourse(course.id))
-        },
-    )
-}
-
-private fun swapIds(
-    courses: List<Course>,
-    from: Int,
-    to: Int,
-): List<String> {
-    val ids = courses.map { it.id }.toMutableList()
-    val temp = ids[from]
-    ids[from] = ids[to]
-    ids[to] = temp
-    return ids
 }
 
 /**
- * A single course row: category icon + name + category label + chevron.
+ * Bundles drag-reorder state and callbacks to keep function parameter count manageable.
  */
-@Composable
-private fun CourseListTile(
-    course: Course,
-    onClick: () -> Unit,
-    isEditMode: Boolean = false,
-    onMoveUp: () -> Unit = {},
-    onMoveDown: () -> Unit = {},
-    modifier: Modifier = Modifier,
+private data class DragCallbacks(
+    val draggedId: String?,
+    val dragOffsetY: Float,
+    val onDragStart: (String) -> Unit,
+    val onDrag: (Float) -> Unit,
+    val onDragEnd: () -> Unit,
+)
+
+private fun LazyListScope.activeCoursesSection(
+    active: List<Course>,
+    localActive: List<Course>,
+    state: CoursesComponent.State,
+    drag: DragCallbacks,
+    onIntent: (CoursesComponent.Intent) -> Unit,
 ) {
-    val catColor = courseCategoryColor(course.category)
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(AppTheme.colors.surface)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        if (isEditMode) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    text = "\u25B2", // Up arrow
-                    modifier = Modifier.clickable { onMoveUp() }.padding(4.dp),
-                    color = AppTheme.colors.accent,
-                )
-                Text(
-                    text = "\u25BC", // Down arrow
-                    modifier = Modifier.clickable { onMoveDown() }.padding(4.dp),
-                    color = AppTheme.colors.accent,
+    if (active.isNotEmpty()) {
+        item(key = "active_header") {
+            SectionHeader(
+                title = "Активные",
+                count = active.size,
+                expanded = state.showActive,
+                onClick = { onIntent(CoursesComponent.Intent.ToggleActive) },
+            )
+        }
+    }
+    if (state.showActive) {
+        items(items = localActive, key = { it.id }) { course ->
+            val isDragged = course.id == drag.draggedId
+            DraggableCourseItem(
+                course = course,
+                dragOffset = if (isDragged) drag.dragOffsetY else null,
+                onClick = { onIntent(CoursesComponent.Intent.OpenCourse(course.id)) },
+                onDragStart = { drag.onDragStart(course.id) },
+                onDrag = drag.onDrag,
+                onDragEnd = drag.onDragEnd,
+                modifier = if (isDragged) Modifier.zIndex(1f) else Modifier.animateItem(),
+            )
+        }
+    }
+}
+
+private fun LazyListScope.archivedCoursesSection(
+    archived: List<Course>,
+    state: CoursesComponent.State,
+    onIntent: (CoursesComponent.Intent) -> Unit,
+) {
+    if (archived.isNotEmpty()) {
+        item(key = "archived_header") {
+            SectionHeader(
+                title = "Архив",
+                count = archived.size,
+                expanded = state.showArchived,
+                onClick = { onIntent(CoursesComponent.Intent.ToggleArchived) },
+            )
+        }
+        if (state.showArchived) {
+            items(items = archived, key = { it.id }) { course ->
+                CourseListTile(
+                    course = course,
+                    onClick = { onIntent(CoursesComponent.Intent.OpenCourse(course.id)) },
                 )
             }
-            Spacer(modifier = Modifier.width(8.dp))
         }
+    }
+}
 
-        Box(
-            modifier = Modifier
-                .size(10.dp)
-                .clip(RoundedCornerShape(5.dp))
-                .background(catColor),
+/**
+ * Checks if the dragged item has moved past another item and returns the new list + offset adjustment.
+ * Returns null if no swap is needed.
+ */
+private fun trySwapDraggedItem(
+    dragOffsetY: Float,
+    draggedId: String?,
+    layoutInfo: LazyListLayoutInfo,
+    currentItems: List<Course>,
+): Pair<List<Course>, Float>? {
+    val currentId = draggedId ?: return null
+    val draggedInfo = layoutInfo.visibleItemsInfo
+        .firstOrNull { it.key == currentId } ?: return null
+    val draggedCenter = draggedInfo.offset + draggedInfo.size / 2f + dragOffsetY
+    val fromIdx = currentItems.indexOfFirst { it.id == currentId }
+    if (fromIdx < 0) return null
+
+    val targetItem = layoutInfo.visibleItemsInfo.firstOrNull { item ->
+        val itemKey = item.key as? String ?: return@firstOrNull false
+        if (itemKey == currentId) return@firstOrNull false
+        val toIdx = currentItems.indexOfFirst { it.id == itemKey }
+        if (toIdx < 0) return@firstOrNull false
+        val itemCenter = item.offset + item.size / 2f
+        val hysteresis = item.size * HysteresisRatio
+        if (fromIdx < toIdx) {
+            draggedCenter > itemCenter + hysteresis
+        } else {
+            draggedCenter < itemCenter - hysteresis
+        }
+    } ?: return null
+
+    val toIdx = currentItems.indexOfFirst { it.id == targetItem.key as String }
+    val newItems = currentItems.toMutableList().apply { add(toIdx, removeAt(fromIdx)) }
+    return newItems to (draggedInfo.offset - targetItem.offset).toFloat()
+}
+
+/** Performs a swap if needed and pins the viewport. Returns new offset adjustment or 0. */
+private fun handleDragSwap(
+    dragOffsetY: Float,
+    draggedId: String?,
+    listState: LazyListState,
+    localActive: List<Course>,
+    scope: CoroutineScope,
+    onSwap: (newItems: List<Course>, offsetAdj: Float) -> Unit,
+) {
+    val swap = trySwapDraggedItem(dragOffsetY, draggedId, listState.layoutInfo, localActive)
+    if (swap != null) {
+        val idx = listState.firstVisibleItemIndex
+        val off = listState.firstVisibleItemScrollOffset
+        onSwap(swap.first, swap.second)
+        scope.launch { listState.scrollToItem(idx, off) }
+    }
+}
+
+/** Duration in ms for the item to animate back to its slot after dropping. */
+private const val DropAnimDuration = 150
+
+/** Fraction of item height used as dead zone to prevent swap oscillation at list boundaries. */
+private const val HysteresisRatio = 0.15f
+
+/**
+ * Active course item with drag handle and long-press-to-reorder support.
+ */
+@Composable
+private fun DraggableCourseItem(
+    course: Course,
+    dragOffset: Float?,
+    onClick: () -> Unit,
+    onDragStart: () -> Unit,
+    onDrag: (Float) -> Unit,
+    onDragEnd: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val currentOnDragStart by rememberUpdatedState(onDragStart)
+    val currentOnDrag by rememberUpdatedState(onDrag)
+    val currentOnDragEnd by rememberUpdatedState(onDragEnd)
+    val isDragging = dragOffset != null
+    val catColor = courseCategoryColor(course.category)
+
+    val rowModifier = modifier
+        .fillMaxWidth()
+        .then(
+            if (isDragging) {
+                Modifier.graphicsLayer {
+                    translationY = dragOffset
+                    shadowElevation = 8f
+                    shape = RoundedCornerShape(12.dp)
+                    clip = true
+                }
+            } else {
+                Modifier
+            },
+        ).clip(RoundedCornerShape(12.dp))
+        .background(AppTheme.colors.surface)
+        .clickable(enabled = !isDragging, onClick = onClick)
+        .pointerInput(Unit) {
+            detectDragGesturesAfterLongPress(
+                onDragStart = { currentOnDragStart() },
+                onDrag = { change, offset ->
+                    change.consume()
+                    currentOnDrag(offset.y)
+                },
+                onDragEnd = { currentOnDragEnd() },
+                onDragCancel = { currentOnDragEnd() },
+            )
+        }.padding(end = 12.dp, top = 10.dp, bottom = 10.dp)
+
+    Row(
+        modifier = rowModifier,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            imageVector = Icons.Default.DragHandle,
+            contentDescription = null,
+            tint = AppTheme.colors.textSecondary.copy(alpha = 0.3f),
+            modifier = Modifier.padding(horizontal = 8.dp).size(20.dp),
         )
-
-        Spacer(modifier = Modifier.width(12.dp))
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
@@ -300,16 +407,52 @@ private fun CourseListTile(
             )
         }
 
-        Text(
-            text = "\u203A",
-            color = AppTheme.colors.textSecondary,
-            fontSize = 20.sp,
-        )
+        Text(text = "\u203A", color = AppTheme.colors.textSecondary, fontSize = 20.sp)
+    }
+}
+
+/**
+ * Simple course tile for archived courses (no drag support).
+ */
+@Composable
+private fun CourseListTile(
+    course: Course,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val catColor = courseCategoryColor(course.category)
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(AppTheme.colors.surface)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = stripEmojiPrefix(course.name),
+                color = AppTheme.colors.textPrimary,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = courseCategoryLabel(course.category),
+                color = catColor,
+                fontSize = 12.sp,
+            )
+        }
+
+        Text(text = "\u203A", color = AppTheme.colors.textSecondary, fontSize = 20.sp)
     }
 }
 
 @Composable
-private fun ArchivedHeader(
+private fun SectionHeader(
+    title: String,
     count: Int,
     expanded: Boolean,
     onClick: () -> Unit,
@@ -323,7 +466,7 @@ private fun ArchivedHeader(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            text = "Архив",
+            text = title,
             color = AppTheme.colors.textSecondary,
             fontSize = 14.sp,
             fontWeight = FontWeight.SemiBold,
@@ -355,6 +498,8 @@ private fun ArchivedHeader(
 }
 
 // endregion
+
+// region Previews
 
 private val previewCoursesState = CoursesComponent.State(
     courses = listOf(
@@ -420,17 +565,6 @@ private fun PreviewCoursesEmptyDark() {
     CuMobileTheme(darkTheme = true) {
         CoursesScreenContent(
             state = CoursesComponent.State(),
-            onIntent = {},
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun PreviewCoursesEditModeDark() {
-    CuMobileTheme(darkTheme = true) {
-        CoursesScreenContent(
-            state = previewCoursesState.copy(isEditMode = true),
             onIntent = {},
         )
     }
@@ -525,3 +659,5 @@ private fun PreviewGradebookLight() {
         CoursesScreenContent(state = previewGradebookState, onIntent = {})
     }
 }
+
+// endregion
