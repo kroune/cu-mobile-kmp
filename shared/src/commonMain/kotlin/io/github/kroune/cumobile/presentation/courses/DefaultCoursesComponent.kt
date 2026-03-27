@@ -97,22 +97,30 @@ class DefaultCoursesComponent(
 
         scope.launch {
             val courses = courseRepository.fetchCourses()
-            _state.value = _state.value.copy(
-                courses = if (courses != null) {
-                    ContentState.Success(courses)
-                } else {
-                    ContentState.Error("Не удалось загрузить курсы")
-                },
-            )
+            if (courses != null) {
+                _state.value = _state.value.copy(
+                    courses = ContentState.Success(courses),
+                )
+            } else {
+                logger.warn { "Failed to load courses" }
+                _state.value = _state.value.copy(
+                    courses = ContentState.Error("Не удалось загрузить курсы"),
+                )
+            }
         }
 
         scope.launch {
             val performance = performanceRepository.fetchPerformance()
-            _state.value = _state.value.copy(
-                performanceCourses = ContentState.Success(
-                    performance?.courses.orEmpty(),
-                ),
-            )
+            if (performance != null) {
+                _state.value = _state.value.copy(
+                    performanceCourses = ContentState.Success(performance.courses),
+                )
+            } else {
+                logger.warn { "Failed to load performance data" }
+                _state.value = _state.value.copy(
+                    performanceCourses = ContentState.Error("Не удалось загрузить статистику"),
+                )
+            }
         }
 
         scope.launch {

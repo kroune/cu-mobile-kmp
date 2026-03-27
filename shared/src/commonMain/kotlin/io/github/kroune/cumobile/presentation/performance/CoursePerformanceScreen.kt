@@ -39,9 +39,7 @@ import io.github.kroune.cumobile.presentation.common.ContentState
 import io.github.kroune.cumobile.presentation.common.CuMobileTheme
 import io.github.kroune.cumobile.presentation.common.DetailTopBar
 import io.github.kroune.cumobile.presentation.common.ErrorContent
-import io.github.kroune.cumobile.presentation.common.ExerciseTileSkeleton
 import io.github.kroune.cumobile.presentation.common.SegmentedControl
-import io.github.kroune.cumobile.presentation.common.TotalGradeCardSkeleton
 import io.github.kroune.cumobile.presentation.common.gradeColor
 import io.github.kroune.cumobile.presentation.common.gradeDescription
 
@@ -250,6 +248,7 @@ private fun CoursePerformanceScreenSkeleton(modifier: Modifier = Modifier) {
             onSelect = {},
             modifier = Modifier.padding(horizontal = SkeletonHorizontalPadding),
         )
+        Spacer(Modifier.height(8.dp))
         Column(
             modifier = Modifier
                 .fillMaxSize()

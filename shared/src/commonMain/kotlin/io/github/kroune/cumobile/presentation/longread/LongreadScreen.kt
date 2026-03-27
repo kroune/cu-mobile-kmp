@@ -58,7 +58,6 @@ import io.github.kroune.cumobile.presentation.common.AppTheme
 import io.github.kroune.cumobile.presentation.common.CuMobileTheme
 import io.github.kroune.cumobile.presentation.common.DetailTopBar
 import io.github.kroune.cumobile.presentation.common.ErrorContent
-import io.github.kroune.cumobile.presentation.common.LongreadMaterialSkeleton
 import io.github.kroune.cumobile.presentation.common.formatSizeBytes
 import io.github.kroune.cumobile.presentation.longread.htmlrender.AudioMaterialCard
 import io.github.kroune.cumobile.presentation.longread.htmlrender.HtmlContent

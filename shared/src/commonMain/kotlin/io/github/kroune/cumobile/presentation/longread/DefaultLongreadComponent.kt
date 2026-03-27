@@ -205,9 +205,17 @@ class DefaultLongreadComponent(
             coroutineScope {
                 val eventsDeferred = async { taskRepository.fetchTaskEvents(taskId) }
                 val commentsDeferred = async { taskRepository.fetchTaskComments(taskId) }
+                val events = eventsDeferred.await()
+                val comments = commentsDeferred.await()
+                if (events == null) {
+                    logger.warn { "Failed to load task events for taskId=$taskId" }
+                }
+                if (comments == null) {
+                    logger.warn { "Failed to load task comments for taskId=$taskId" }
+                }
                 _state.value = _state.value.copy(
-                    taskEvents = eventsDeferred.await().orEmpty(),
-                    taskComments = commentsDeferred.await().orEmpty(),
+                    taskEvents = events.orEmpty(),
+                    taskComments = comments.orEmpty(),
                 )
             }
         }

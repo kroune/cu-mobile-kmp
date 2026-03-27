@@ -47,7 +47,6 @@ import io.github.kroune.cumobile.presentation.common.CuMobileTheme
 import io.github.kroune.cumobile.presentation.common.DetailTopBar
 import io.github.kroune.cumobile.presentation.common.EmptyContent
 import io.github.kroune.cumobile.presentation.common.ErrorContent
-import io.github.kroune.cumobile.presentation.common.NotificationCardSkeleton
 import io.github.kroune.cumobile.presentation.common.SegmentedControl
 import io.github.kroune.cumobile.presentation.common.formatDateTimeFull
 
@@ -634,7 +633,7 @@ private fun PreviewLongWithLinkCollapsedDark() {
     CuMobileTheme(darkTheme = true) {
         NotificationsScreenContent(
             state = NotificationsComponent.State(
-                educationNotifications = listOf(previewLongWithLink),
+                educationNotifications = ContentState.Success(listOf(previewLongWithLink)),
             ),
             onIntent = {},
             onBack = {},
@@ -649,7 +648,7 @@ private fun PreviewLongWithLinkExpandedDark() {
     CuMobileTheme(darkTheme = true) {
         NotificationsScreenContent(
             state = NotificationsComponent.State(
-                educationNotifications = listOf(previewLongWithLink),
+                educationNotifications = ContentState.Success(listOf(previewLongWithLink)),
                 expandedNotificationIds = setOf("long-link"),
             ),
             onIntent = {},

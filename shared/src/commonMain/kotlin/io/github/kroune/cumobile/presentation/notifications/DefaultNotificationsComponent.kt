@@ -8,12 +8,15 @@ import io.github.kroune.cumobile.data.model.NotificationCategory
 import io.github.kroune.cumobile.data.model.NotificationItem
 import io.github.kroune.cumobile.domain.repository.NotificationRepository
 import io.github.kroune.cumobile.presentation.common.ContentState
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+
+private val logger = KotlinLogging.logger {}
 
 /**
  * Default implementation of [NotificationsComponent].
@@ -78,26 +81,32 @@ class DefaultNotificationsComponent(
             val education = notificationRepository.fetchNotifications(
                 category = NotificationCategory.Education,
             )
-            _state.value = _state.value.copy(
-                educationNotifications = if (education != null) {
-                    ContentState.Success(sortByDate(education))
-                } else {
-                    ContentState.Error("Не удалось загрузить уведомления")
-                },
-            )
+            if (education != null) {
+                _state.value = _state.value.copy(
+                    educationNotifications = ContentState.Success(sortByDate(education)),
+                )
+            } else {
+                logger.warn { "Failed to load education notifications" }
+                _state.value = _state.value.copy(
+                    educationNotifications = ContentState.Error("Не удалось загрузить уведомления"),
+                )
+            }
         }
 
         scope.launch {
             val other = notificationRepository.fetchNotifications(
                 category = NotificationCategory.Other,
             )
-            _state.value = _state.value.copy(
-                otherNotifications = if (other != null) {
-                    ContentState.Success(sortByDate(other))
-                } else {
-                    ContentState.Error("Не удалось загрузить уведомления")
-                },
-            )
+            if (other != null) {
+                _state.value = _state.value.copy(
+                    otherNotifications = ContentState.Success(sortByDate(other)),
+                )
+            } else {
+                logger.warn { "Failed to load other notifications" }
+                _state.value = _state.value.copy(
+                    otherNotifications = ContentState.Error("Не удалось загрузить уведомления"),
+                )
+            }
         }
     }
 

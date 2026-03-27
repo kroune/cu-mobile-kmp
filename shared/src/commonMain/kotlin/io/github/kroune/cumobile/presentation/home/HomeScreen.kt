@@ -57,13 +57,10 @@ import io.github.kroune.cumobile.data.model.TaskExercise
 import io.github.kroune.cumobile.data.model.TaskState
 import io.github.kroune.cumobile.presentation.common.ActionErrorBar
 import io.github.kroune.cumobile.presentation.common.AppTheme
-import io.github.kroune.cumobile.presentation.common.ClassCardSkeleton
 import io.github.kroune.cumobile.presentation.common.ContentState
 import io.github.kroune.cumobile.presentation.common.CourseCard
-import io.github.kroune.cumobile.presentation.common.CourseCardSkeleton
 import io.github.kroune.cumobile.presentation.common.CuMobileTheme
 import io.github.kroune.cumobile.presentation.common.DeadlineTaskCard
-import io.github.kroune.cumobile.presentation.common.DeadlineTaskCardSkeleton
 import io.github.kroune.cumobile.presentation.common.ErrorContent
 import io.github.kroune.cumobile.presentation.common.formatEpochDate
 import io.github.kroune.cumobile.presentation.common.isError
