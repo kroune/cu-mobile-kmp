@@ -39,8 +39,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -69,6 +67,8 @@ import io.github.kroune.cumobile.presentation.common.SegmentedControl
 import io.github.kroune.cumobile.presentation.common.courseCategoryColor
 import io.github.kroune.cumobile.presentation.common.courseCategoryLabel
 import io.github.kroune.cumobile.presentation.common.stripEmojiPrefix
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 /**
  * Courses tab screen with 3 segments: Courses, Grade Sheet, Record Book.
@@ -143,7 +143,10 @@ private fun CoursesListContent(
     val active = activeCourses(state.courses, state.courseOrder)
     val archived = archivedCourses(state.courses, state.courseOrder)
 
-    if (active.isEmpty() && archived.isEmpty()) { EmptyContent(text = "Нет курсов"); return }
+    if (active.isEmpty() && archived.isEmpty()) {
+        EmptyContent(text = "Нет курсов")
+        return
+    }
 
     var localActive by remember(active) { mutableStateOf(active) }
     var draggedId by remember { mutableStateOf<String?>(null) }
@@ -160,8 +163,12 @@ private fun CoursesListContent(
     ) {
         if (active.isNotEmpty()) {
             item(key = "active_header") {
-                SectionHeader("Активные", active.size, state.showActive,
-                    onClick = { onIntent(CoursesComponent.Intent.ToggleActive) })
+                SectionHeader(
+                    title = "Активные",
+                    count = active.size,
+                    expanded = state.showActive,
+                    onClick = { onIntent(CoursesComponent.Intent.ToggleActive) },
+                )
             }
         }
         if (state.showActive) {
@@ -173,13 +180,21 @@ private fun CoursesListContent(
                     onClick = { onIntent(CoursesComponent.Intent.OpenCourse(course.id)) },
                     onDragStart = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        draggedId = course.id; dragOffsetY = 0f
+                        draggedId = course.id
+                        dragOffsetY = 0f
                     },
                     onDrag = { dy ->
                         dragOffsetY += dy
                         handleDragSwap(
-                            dragOffsetY, draggedId, listState, localActive, scope,
-                        ) { items, adj -> localActive = items; dragOffsetY += adj }
+                            dragOffsetY,
+                            draggedId,
+                            listState,
+                            localActive,
+                            scope,
+                        ) { items, adj ->
+                            localActive = items
+                            dragOffsetY += adj
+                        }
                     },
                     onDragEnd = {
                         onIntent(CoursesComponent.Intent.ReorderCourses(localActive.map { it.id }))
@@ -197,8 +212,12 @@ private fun CoursesListContent(
 
         if (archived.isNotEmpty()) {
             item(key = "archived_header") {
-                SectionHeader("Архив", archived.size, state.showArchived,
-                    onClick = { onIntent(CoursesComponent.Intent.ToggleArchived) })
+                SectionHeader(
+                    title = "Архив",
+                    count = archived.size,
+                    expanded = state.showArchived,
+                    onClick = { onIntent(CoursesComponent.Intent.ToggleArchived) },
+                )
             }
             if (state.showArchived) {
                 items(items = archived, key = { it.id }) { course ->
@@ -291,36 +310,36 @@ private fun DraggableCourseItem(
     val isDragging = dragOffset != null
     val catColor = courseCategoryColor(course.category)
 
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .then(
-                if (isDragging) {
-                    Modifier.graphicsLayer {
-                        translationY = dragOffset
-                        shadowElevation = 8f
-                        shape = RoundedCornerShape(12.dp)
-                        clip = true
-                    }
-                } else {
-                    Modifier
+    val rowModifier = modifier
+        .fillMaxWidth()
+        .then(
+            if (isDragging) {
+                Modifier.graphicsLayer {
+                    translationY = dragOffset
+                    shadowElevation = 8f
+                    shape = RoundedCornerShape(12.dp)
+                    clip = true
+                }
+            } else {
+                Modifier
+            },
+        ).clip(RoundedCornerShape(12.dp))
+        .background(AppTheme.colors.surface)
+        .clickable(enabled = !isDragging, onClick = onClick)
+        .pointerInput(Unit) {
+            detectDragGesturesAfterLongPress(
+                onDragStart = { currentOnDragStart() },
+                onDrag = { change, offset ->
+                    change.consume()
+                    currentOnDrag(offset.y)
                 },
+                onDragEnd = { currentOnDragEnd() },
+                onDragCancel = { currentOnDragEnd() },
             )
-            .clip(RoundedCornerShape(12.dp))
-            .background(AppTheme.colors.surface)
-            .clickable(enabled = !isDragging, onClick = onClick)
-            .pointerInput(Unit) {
-                detectDragGesturesAfterLongPress(
-                    onDragStart = { currentOnDragStart() },
-                    onDrag = { change, offset ->
-                        change.consume()
-                        currentOnDrag(offset.y)
-                    },
-                    onDragEnd = { currentOnDragEnd() },
-                    onDragCancel = { currentOnDragEnd() },
-                )
-            }
-            .padding(end = 12.dp, top = 10.dp, bottom = 10.dp),
+        }.padding(end = 12.dp, top = 10.dp, bottom = 10.dp)
+
+    Row(
+        modifier = rowModifier,
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
