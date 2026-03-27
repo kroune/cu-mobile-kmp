@@ -166,52 +166,61 @@ private fun CoursesListContent(
             active = active,
             localActive = localActive,
             state = state,
-            draggedId = draggedId,
-            dragOffsetY = dragOffsetY,
-            onIntent = onIntent,
-            onDragStart = { id ->
-                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                draggedId = id
-                dragOffsetY = 0f
-            },
-            onDrag = { dy ->
-                dragOffsetY += dy
-                handleDragSwap(
-                    dragOffsetY,
-                    draggedId,
-                    listState,
-                    localActive,
-                    scope,
-                ) { items, adj ->
-                    localActive = items
-                    dragOffsetY += adj
-                }
-            },
-            onDragEnd = {
-                onIntent(CoursesComponent.Intent.ReorderCourses(localActive.map { it.id }))
-                scope.launch {
-                    animate(dragOffsetY, 0f, animationSpec = tween(DropAnimDuration)) { v, _ ->
-                        dragOffsetY = v
+            drag = DragCallbacks(
+                draggedId = draggedId,
+                dragOffsetY = dragOffsetY,
+                onDragStart = { id ->
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    draggedId = id
+                    dragOffsetY = 0f
+                },
+                onDrag = { dy ->
+                    dragOffsetY += dy
+                    handleDragSwap(
+                        dragOffsetY,
+                        draggedId,
+                        listState,
+                        localActive,
+                        scope,
+                    ) { items, adj ->
+                        localActive = items
+                        dragOffsetY += adj
                     }
-                    draggedId = null
-                }
-            },
+                },
+                onDragEnd = {
+                    onIntent(CoursesComponent.Intent.ReorderCourses(localActive.map { it.id }))
+                    scope.launch {
+                        animate(dragOffsetY, 0f, animationSpec = tween(DropAnimDuration)) { v, _ ->
+                            dragOffsetY = v
+                        }
+                        draggedId = null
+                    }
+                },
+            ),
+            onIntent = onIntent,
         )
 
         archivedCoursesSection(archived, state, onIntent)
     }
 }
 
+/**
+ * Bundles drag-reorder state and callbacks to keep function parameter count manageable.
+ */
+private data class DragCallbacks(
+    val draggedId: String?,
+    val dragOffsetY: Float,
+    val onDragStart: (String) -> Unit,
+    val onDrag: (Float) -> Unit,
+    val onDragEnd: () -> Unit,
+)
+
 private fun LazyListScope.activeCoursesSection(
     active: List<Course>,
     localActive: List<Course>,
     state: CoursesComponent.State,
-    draggedId: String?,
-    dragOffsetY: Float,
+    drag: DragCallbacks,
     onIntent: (CoursesComponent.Intent) -> Unit,
-    onDragStart: (String) -> Unit,
-    onDrag: (Float) -> Unit,
-    onDragEnd: () -> Unit,
 ) {
     if (active.isNotEmpty()) {
         item(key = "active_header") {
@@ -225,14 +234,14 @@ private fun LazyListScope.activeCoursesSection(
     }
     if (state.showActive) {
         items(items = localActive, key = { it.id }) { course ->
-            val isDragged = course.id == draggedId
+            val isDragged = course.id == drag.draggedId
             DraggableCourseItem(
                 course = course,
-                dragOffset = if (isDragged) dragOffsetY else null,
+                dragOffset = if (isDragged) drag.dragOffsetY else null,
                 onClick = { onIntent(CoursesComponent.Intent.OpenCourse(course.id)) },
-                onDragStart = { onDragStart(course.id) },
-                onDrag = onDrag,
-                onDragEnd = onDragEnd,
+                onDragStart = { drag.onDragStart(course.id) },
+                onDrag = drag.onDrag,
+                onDragEnd = drag.onDragEnd,
                 modifier = if (isDragged) Modifier.zIndex(1f) else Modifier.animateItem(),
             )
         }
