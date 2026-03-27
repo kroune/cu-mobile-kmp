@@ -1,6 +1,7 @@
 package io.github.kroune.cumobile.presentation.longread.htmlrender
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
@@ -35,9 +36,9 @@ fun buildInlineAnnotatedString(
 
 private fun AnnotatedString.Builder.appendInlines(
     inlines: List<InlineElement>,
-    accentColor: androidx.compose.ui.graphics.Color,
-    codeBg: androidx.compose.ui.graphics.Color,
-    textColor: androidx.compose.ui.graphics.Color,
+    accentColor: Color,
+    codeBg: Color,
+    textColor: Color,
 ) {
     for (element in inlines) {
         when (element) {
@@ -87,7 +88,7 @@ private fun AnnotatedString.Builder.appendInlines(
 private fun applySearchHighlight(
     builder: AnnotatedString.Builder,
     query: String,
-    highlightColor: androidx.compose.ui.graphics.Color,
+    highlightColor: Color,
 ) {
     val text = builder.toAnnotatedString().text.lowercase()
     val lowerQuery = query.lowercase()
