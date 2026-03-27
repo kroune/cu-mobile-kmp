@@ -63,8 +63,8 @@ import io.github.kroune.cumobile.data.model.StudentPerformanceCourse
 import io.github.kroune.cumobile.presentation.common.ActionErrorBar
 import io.github.kroune.cumobile.presentation.common.AppTheme
 import io.github.kroune.cumobile.presentation.common.ContentState
-import io.github.kroune.cumobile.presentation.common.CuMobileTheme
 import io.github.kroune.cumobile.presentation.common.CourseListTileSkeleton
+import io.github.kroune.cumobile.presentation.common.CuMobileTheme
 import io.github.kroune.cumobile.presentation.common.EmptyContent
 import io.github.kroune.cumobile.presentation.common.ErrorContent
 import io.github.kroune.cumobile.presentation.common.SegmentedControl
@@ -711,34 +711,36 @@ private val previewGradebookState = CoursesComponent.State(
     segment = 2,
     courses = ContentState.Success(emptyList()),
     performanceCourses = ContentState.Success(emptyList()),
-    gradebook = ContentState.Success(GradebookResponse(
-        semesters = listOf(
-            GradebookSemester(
-                year = 2025,
-                semesterNumber = 1,
-                grades = listOf(
-                    GradebookGrade(
-                        subject = "Математический анализ",
-                        grade = 5.0,
-                        normalizedGrade = "excellent",
-                        assessmentType = "exam",
-                    ),
-                    GradebookGrade(
-                        subject = "Физическая культура",
-                        normalizedGrade = "passed",
-                        assessmentType = "credit",
-                    ),
-                    GradebookGrade(
-                        subject = "Основы программирования",
-                        grade = 4.0,
-                        normalizedGrade = "good",
-                        assessmentType = "difCredit",
-                        subjectType = "elective",
+    gradebook = ContentState.Success(
+        GradebookResponse(
+            semesters = listOf(
+                GradebookSemester(
+                    year = 2025,
+                    semesterNumber = 1,
+                    grades = listOf(
+                        GradebookGrade(
+                            subject = "Математический анализ",
+                            grade = 5.0,
+                            normalizedGrade = "excellent",
+                            assessmentType = "exam",
+                        ),
+                        GradebookGrade(
+                            subject = "Физическая культура",
+                            normalizedGrade = "passed",
+                            assessmentType = "credit",
+                        ),
+                        GradebookGrade(
+                            subject = "Основы программирования",
+                            grade = 4.0,
+                            normalizedGrade = "good",
+                            assessmentType = "difCredit",
+                            subjectType = "elective",
+                        ),
                     ),
                 ),
             ),
         ),
-    )),
+    ),
 )
 
 @Preview

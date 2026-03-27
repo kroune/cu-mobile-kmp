@@ -335,24 +335,26 @@ private fun PreviewNotificationsScreenSkeletonLight() {
 }
 
 private val previewNotificationsState = NotificationsComponent.State(
-    educationNotifications = ContentState.Success(listOf(
-        NotificationItem(
-            id = "1",
-            title = "Новое задание",
-            description = "Преподаватель назначил задание по курсу Алгоритмы",
-            icon = "education",
-            category = "1",
-            createdAt = "2026-03-18T10:00:00",
+    educationNotifications = ContentState.Success(
+        listOf(
+            NotificationItem(
+                id = "1",
+                title = "Новое задание",
+                description = "Преподаватель назначил задание по курсу Алгоритмы",
+                icon = "education",
+                category = "1",
+                createdAt = "2026-03-18T10:00:00",
+            ),
+            NotificationItem(
+                id = "2",
+                title = "Оценка выставлена",
+                description = "Получена оценка 8 за ДЗ: Деревья",
+                icon = "education",
+                category = "1",
+                createdAt = "2026-03-17T14:30:00",
+            ),
         ),
-        NotificationItem(
-            id = "2",
-            title = "Оценка выставлена",
-            description = "Получена оценка 8 за ДЗ: Деревья",
-            icon = "education",
-            category = "1",
-            createdAt = "2026-03-17T14:30:00",
-        ),
-    )),
+    ),
     otherNotifications = ContentState.Success(emptyList()),
 )
 
@@ -440,28 +442,30 @@ private fun PreviewNotificationsEmptyDark() {
 private val previewOtherTabState = NotificationsComponent.State(
     selectedTab = 1,
     educationNotifications = ContentState.Success(emptyList()),
-    otherNotifications = ContentState.Success(listOf(
-        NotificationItem(
-            id = "10",
-            title = "Обновление системы",
-            description = "Плановое техническое обслуживание 25 марта с 02:00 до 06:00",
-            icon = "news",
-            category = "2",
-            createdAt = "2026-03-20T09:00:00",
-        ),
-        NotificationItem(
-            id = "11",
-            title = "Новый опрос",
-            description = "Пожалуйста, заполните опрос удовлетворённости обучением",
-            icon = "servicedesk",
-            category = "2",
-            createdAt = "2026-03-19T16:00:00",
-            link = NotificationLink(
-                uri = "https://example.com/survey",
-                label = "Пройти опрос",
+    otherNotifications = ContentState.Success(
+        listOf(
+            NotificationItem(
+                id = "10",
+                title = "Обновление системы",
+                description = "Плановое техническое обслуживание 25 марта с 02:00 до 06:00",
+                icon = "news",
+                category = "2",
+                createdAt = "2026-03-20T09:00:00",
+            ),
+            NotificationItem(
+                id = "11",
+                title = "Новый опрос",
+                description = "Пожалуйста, заполните опрос удовлетворённости обучением",
+                icon = "servicedesk",
+                category = "2",
+                createdAt = "2026-03-19T16:00:00",
+                link = NotificationLink(
+                    uri = "https://example.com/survey",
+                    label = "Пройти опрос",
+                ),
             ),
         ),
-    )),
+    ),
 )
 
 @Preview

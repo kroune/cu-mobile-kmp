@@ -21,7 +21,9 @@ interface NotificationsComponent {
     fun onIntent(intent: Intent)
 
     sealed interface Effect {
-        data class ShowError(val message: String) : Effect
+        data class ShowError(
+            val message: String,
+        ) : Effect
     }
 
     data class State(

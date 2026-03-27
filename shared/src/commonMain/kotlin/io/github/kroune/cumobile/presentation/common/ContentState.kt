@@ -9,9 +9,13 @@ package io.github.kroune.cumobile.presentation.common
 sealed interface ContentState<out T> {
     data object Loading : ContentState<Nothing>
 
-    data class Success<T>(val data: T) : ContentState<T>
+    data class Success<T>(
+        val data: T,
+    ) : ContentState<T>
 
-    data class Error(val message: String) : ContentState<Nothing>
+    data class Error(
+        val message: String,
+    ) : ContentState<Nothing>
 }
 
 /** Returns the data if this is [ContentState.Success], or `null` otherwise. */

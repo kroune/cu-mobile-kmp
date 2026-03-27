@@ -26,7 +26,9 @@ interface HomeComponent {
     fun onIntent(intent: Intent)
 
     sealed interface Effect {
-        data class ShowError(val message: String) : Effect
+        data class ShowError(
+            val message: String,
+        ) : Effect
     }
 
     data class State(
@@ -49,14 +51,17 @@ interface HomeComponent {
          * Sorted by deadline ascending (tasks without deadlines go to the end).
          */
         val deadlineTasks: List<StudentTask>
-            get() = tasks.dataOrNull.orEmpty()
+            get() = tasks.dataOrNull
+                .orEmpty()
                 .filter { !it.course.isArchived }
                 .filter { it.state in ACTIVE_TASK_STATES }
                 .sortedBy { it.exercise.deadline ?: "9999-12-31" }
 
         /** Active (non-archived) courses. */
         val activeCourses: List<Course>
-            get() = courses.dataOrNull.orEmpty().filter { !it.isArchived }
+            get() = courses.dataOrNull
+                .orEmpty()
+                .filter { !it.isArchived }
 
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
