@@ -171,7 +171,9 @@ private fun NotificationsList(
     }
 }
 
-private const val CollapsedMaxLines = 3
+private const val CollapsedDescriptionMaxLines = 3
+private const val CollapsedTitleMaxLines = 2
+private const val CollapsedLinkMaxLines = 1
 
 @Composable
 private fun NotificationCard(
@@ -181,6 +183,9 @@ private fun NotificationCard(
     onLinkClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var hasOverflow by remember(item.id) { mutableStateOf(false) }
+    val onOverflowDetected = { hasOverflow = true }
+
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -189,76 +194,107 @@ private fun NotificationCard(
             .animateContentSize()
             .padding(12.dp),
     ) {
-        // Category icon
         NotificationIcon(icon = item.icon, category = item.category)
-
         Spacer(modifier = Modifier.width(12.dp))
+        NotificationCardContent(
+            item = item,
+            isExpanded = isExpanded,
+            hasOverflow = hasOverflow,
+            onOverflowDetected = onOverflowDetected,
+            onLinkClick = onLinkClick,
+            modifier = Modifier.weight(1f),
+        )
+    }
+}
 
-        Column(modifier = Modifier.weight(1f)) {
-            // Title
-            Text(
-                text = item.title,
-                color = AppTheme.colors.textPrimary,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-
-            // Date
+@Composable
+private fun NotificationCardContent(
+    item: NotificationItem,
+    isExpanded: Boolean,
+    hasOverflow: Boolean,
+    onOverflowDetected: () -> Unit,
+    onLinkClick: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier) {
+        NotificationCardHeader(
+            item = item,
+            isExpanded = isExpanded,
+            onOverflowDetected = onOverflowDetected,
+        )
+        NotificationCardBody(
+            item = item,
+            isExpanded = isExpanded,
+            onOverflowDetected = onOverflowDetected,
+            onLinkClick = onLinkClick,
+        )
+        if (hasOverflow || isExpanded) {
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = formatDateTimeFull(item.createdAt),
-                color = AppTheme.colors.textSecondary,
-                fontSize = 11.sp,
+                text = if (isExpanded) "Свернуть" else "Читать полностью",
+                color = AppTheme.colors.accent,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
             )
-
-            // Description
-            val descriptionText = normalizeWhitespace(item.description)
-            if (descriptionText.isNotBlank()) {
-                Spacer(modifier = Modifier.height(4.dp))
-
-                var hasVisualOverflow by remember { mutableStateOf(false) }
-
-                Text(
-                    text = descriptionText,
-                    color = AppTheme.colors.textSecondary.copy(alpha = 0.8f),
-                    fontSize = 12.sp,
-                    maxLines = if (isExpanded) Int.MAX_VALUE else CollapsedMaxLines,
-                    overflow = TextOverflow.Ellipsis,
-                    onTextLayout = { result ->
-                        if (!isExpanded) {
-                            hasVisualOverflow = result.hasVisualOverflow
-                        }
-                    },
-                )
-
-                if (hasVisualOverflow || isExpanded) {
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = if (isExpanded) "Свернуть" else "Читать полностью",
-                        color = AppTheme.colors.accent,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium,
-                    )
-                }
-            }
-
-            // Link
-            val link = item.link
-            if (link != null && link.uri.isNotBlank()) {
-                Spacer(modifier = Modifier.height(6.dp))
-                Text(
-                    text = link.label.ifBlank { link.uri },
-                    color = AppTheme.colors.accent,
-                    fontSize = 12.sp,
-                    textDecoration = TextDecoration.Underline,
-                    modifier = Modifier.clickable { onLinkClick(link.uri) },
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
         }
+    }
+}
+
+@Composable
+private fun NotificationCardHeader(
+    item: NotificationItem,
+    isExpanded: Boolean,
+    onOverflowDetected: () -> Unit,
+) {
+    Text(
+        text = item.title,
+        color = AppTheme.colors.textPrimary,
+        fontSize = 14.sp,
+        fontWeight = FontWeight.SemiBold,
+        maxLines = if (isExpanded) Int.MAX_VALUE else CollapsedTitleMaxLines,
+        overflow = TextOverflow.Ellipsis,
+        onTextLayout = { if (!isExpanded && it.hasVisualOverflow) onOverflowDetected() },
+    )
+    Spacer(modifier = Modifier.height(4.dp))
+    Text(
+        text = formatDateTimeFull(item.createdAt),
+        color = AppTheme.colors.textSecondary,
+        fontSize = 11.sp,
+    )
+}
+
+@Composable
+private fun NotificationCardBody(
+    item: NotificationItem,
+    isExpanded: Boolean,
+    onOverflowDetected: () -> Unit,
+    onLinkClick: (String) -> Unit,
+) {
+    val descriptionText = normalizeWhitespace(item.description)
+    if (descriptionText.isNotBlank()) {
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = descriptionText,
+            color = AppTheme.colors.textSecondary.copy(alpha = 0.8f),
+            fontSize = 12.sp,
+            maxLines = if (isExpanded) Int.MAX_VALUE else CollapsedDescriptionMaxLines,
+            overflow = TextOverflow.Ellipsis,
+            onTextLayout = { if (!isExpanded && it.hasVisualOverflow) onOverflowDetected() },
+        )
+    }
+    val link = item.link
+    if (link != null && link.uri.isNotBlank()) {
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(
+            text = link.label.ifBlank { link.uri },
+            color = AppTheme.colors.accent,
+            fontSize = 12.sp,
+            textDecoration = TextDecoration.Underline,
+            modifier = Modifier.clickable { onLinkClick(link.uri) },
+            maxLines = if (isExpanded) Int.MAX_VALUE else CollapsedLinkMaxLines,
+            overflow = TextOverflow.Ellipsis,
+            onTextLayout = { if (!isExpanded && it.hasVisualOverflow) onOverflowDetected() },
+        )
     }
 }
 
@@ -472,6 +508,25 @@ private fun PreviewNotificationsOtherTabDark() {
     }
 }
 
+@Suppress("MagicNumber")
+private val previewLongWithLink = NotificationItem(
+    id = "long-link",
+    title = "Очень длинный заголовок уведомления, который не помещается в две строки " +
+        "и должен быть обрезан при сворачивании карточки",
+    description = "Это длинное описание уведомления, которое должно занимать " +
+        "более трёх строк текста для демонстрации функции сворачивания и " +
+        "разворачивания. Здесь может быть дополнительная информация о " +
+        "задании, оценке или событии, которая не помещается в краткий " +
+        "предпросмотр карточки уведомления.",
+    icon = "education",
+    category = "1",
+    createdAt = "2026-03-16T08:00:00",
+    link = NotificationLink(
+        uri = "/learn/courses/view/actual/123/themes/456/longreads/789",
+        label = "Открыть лонгрид «Динамическое программирование: основы и продвинутые техники»",
+    ),
+)
+
 @Preview
 @Composable
 private fun PreviewNotificationsWithLinkDark() {
@@ -491,6 +546,36 @@ private fun PreviewNotificationsWithLinkDark() {
                             label = "Открыть лонгрид",
                         ),
                     ),
+            ),
+            onIntent = {},
+            onBack = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewLongWithLinkCollapsedDark() {
+    CuMobileTheme(darkTheme = true) {
+        NotificationsScreenContent(
+            state = NotificationsComponent.State(
+                educationNotifications = listOf(previewLongWithLink),
+            ),
+            onIntent = {},
+            onBack = {},
+        )
+    }
+}
+
+@Suppress("MagicNumber")
+@Preview
+@Composable
+private fun PreviewLongWithLinkExpandedDark() {
+    CuMobileTheme(darkTheme = true) {
+        NotificationsScreenContent(
+            state = NotificationsComponent.State(
+                educationNotifications = listOf(previewLongWithLink),
+                expandedNotificationIds = setOf("long-link"),
             ),
             onIntent = {},
             onBack = {},
