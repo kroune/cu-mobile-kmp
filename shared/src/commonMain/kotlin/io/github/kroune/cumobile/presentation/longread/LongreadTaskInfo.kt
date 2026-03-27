@@ -348,39 +348,39 @@ private fun EventCard(
     }
 }
 
-/** Returns a display label for an event type (API sends PascalCase). */
+/** Returns a display label for an event type (API sends camelCase). */
 @Suppress("CyclomaticComplexMethod")
 private fun eventTypeLabel(type: String): String =
     when (type) {
-        "TaskStarted" -> "Начато"
-        "TaskSubmitted" -> "Отправлено"
-        "TaskEvaluated" -> "Оценено"
-        "TaskRejected" -> "Отклонено"
-        "TaskFailed" -> "Не сдано"
-        "TaskReset" -> "Сброшено"
-        "TaskExtraScoreGranted" -> "Доп. баллы"
-        "MaxScoreChanged", "ExerciseMaxScoreChanged" -> "Макс. балл изменён"
-        "ExerciseEstimated" -> "Оценка задания"
-        "ExerciseDeadlineChanged" -> "Дедлайн изменён"
-        "AssistantAssigned" -> "Назначен ассистент"
-        "ReviewerAssigned" -> "Назначен ревьюер"
-        "TaskProlonged" -> "Продлено"
-        "SolutionAttached" -> "Решение прикреплено"
-        "TaskLateDaysReset" -> "Late days сброшены"
-        "TaskLateDaysCancelled" -> "Late days -"
-        "TaskLateDaysProlong" -> "Late days +"
+        "taskStarted" -> "Начато"
+        "taskSubmitted" -> "Отправлено"
+        "taskEvaluated" -> "Оценено"
+        "taskRejected" -> "Отклонено"
+        "taskFailed" -> "Не сдано"
+        "taskReset" -> "Сброшено"
+        "taskExtraScoreGranted" -> "Доп. баллы"
+        "maxScoreChanged", "exerciseMaxScoreChanged" -> "Макс. балл изменён"
+        "exerciseEstimated" -> "Оценка задания"
+        "exerciseDeadlineChanged" -> "Дедлайн изменён"
+        "assistantAssigned" -> "Назначен ассистент"
+        "reviewerAssigned" -> "Назначен ревьюер"
+        "taskProlonged" -> "Продлено"
+        "solutionAttached" -> "Решение прикреплено"
+        "taskLateDaysReset" -> "Late days сброшены"
+        "taskLateDaysCancelled" -> "Late days -"
+        "taskLateDaysProlong" -> "Late days +"
         else -> type
     }
 
-/** Returns a color for an event type (API sends PascalCase). */
+/** Returns a color for an event type (API sends camelCase). */
 @Composable
 private fun eventTypeColor(type: String): androidx.compose.ui.graphics.Color =
     when (type) {
-        "TaskStarted" -> AppTheme.colors.taskInProgress
-        "TaskSubmitted", "SolutionAttached" -> AppTheme.colors.taskHasSolution
-        "TaskEvaluated", "TaskExtraScoreGranted" -> AppTheme.colors.taskEvaluated
-        "TaskRejected" -> AppTheme.colors.taskRevision
-        "TaskFailed" -> AppTheme.colors.taskFailed
-        "ReviewerAssigned", "AssistantAssigned" -> AppTheme.colors.accent
+        "taskStarted" -> AppTheme.colors.taskInProgress
+        "taskSubmitted", "solutionAttached" -> AppTheme.colors.taskHasSolution
+        "taskEvaluated", "taskExtraScoreGranted" -> AppTheme.colors.taskEvaluated
+        "taskRejected" -> AppTheme.colors.taskRevision
+        "taskFailed" -> AppTheme.colors.taskFailed
+        "reviewerAssigned", "assistantAssigned" -> AppTheme.colors.accent
         else -> AppTheme.colors.textSecondary
     }
