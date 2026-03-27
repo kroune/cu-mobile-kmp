@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListLayoutInfo
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -161,71 +162,103 @@ private fun CoursesListContent(
         contentPadding = PaddingValues(vertical = 4.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        if (active.isNotEmpty()) {
-            item(key = "active_header") {
-                SectionHeader(
-                    title = "Активные",
-                    count = active.size,
-                    expanded = state.showActive,
-                    onClick = { onIntent(CoursesComponent.Intent.ToggleActive) },
-                )
-            }
-        }
-        if (state.showActive) {
-            items(items = localActive, key = { it.id }) { course ->
-                val isDragged = course.id == draggedId
-                DraggableCourseItem(
-                    course = course,
-                    dragOffset = if (isDragged) dragOffsetY else null,
-                    onClick = { onIntent(CoursesComponent.Intent.OpenCourse(course.id)) },
-                    onDragStart = {
-                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        draggedId = course.id
-                        dragOffsetY = 0f
-                    },
-                    onDrag = { dy ->
-                        dragOffsetY += dy
-                        handleDragSwap(
-                            dragOffsetY,
-                            draggedId,
-                            listState,
-                            localActive,
-                            scope,
-                        ) { items, adj ->
-                            localActive = items
-                            dragOffsetY += adj
-                        }
-                    },
-                    onDragEnd = {
-                        onIntent(CoursesComponent.Intent.ReorderCourses(localActive.map { it.id }))
-                        scope.launch {
-                            animate(dragOffsetY, 0f, animationSpec = tween(DropAnimDuration)) { v, _ ->
-                                dragOffsetY = v
-                            }
-                            draggedId = null
-                        }
-                    },
-                    modifier = if (isDragged) Modifier.zIndex(1f) else Modifier.animateItem(),
-                )
-            }
-        }
-
-        if (archived.isNotEmpty()) {
-            item(key = "archived_header") {
-                SectionHeader(
-                    title = "Архив",
-                    count = archived.size,
-                    expanded = state.showArchived,
-                    onClick = { onIntent(CoursesComponent.Intent.ToggleArchived) },
-                )
-            }
-            if (state.showArchived) {
-                items(items = archived, key = { it.id }) { course ->
-                    CourseListTile(
-                        course = course,
-                        onClick = { onIntent(CoursesComponent.Intent.OpenCourse(course.id)) },
-                    )
+        activeCoursesSection(
+            active = active,
+            localActive = localActive,
+            state = state,
+            draggedId = draggedId,
+            dragOffsetY = dragOffsetY,
+            onIntent = onIntent,
+            onDragStart = { id ->
+                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                draggedId = id
+                dragOffsetY = 0f
+            },
+            onDrag = { dy ->
+                dragOffsetY += dy
+                handleDragSwap(
+                    dragOffsetY,
+                    draggedId,
+                    listState,
+                    localActive,
+                    scope,
+                ) { items, adj ->
+                    localActive = items
+                    dragOffsetY += adj
                 }
+            },
+            onDragEnd = {
+                onIntent(CoursesComponent.Intent.ReorderCourses(localActive.map { it.id }))
+                scope.launch {
+                    animate(dragOffsetY, 0f, animationSpec = tween(DropAnimDuration)) { v, _ ->
+                        dragOffsetY = v
+                    }
+                    draggedId = null
+                }
+            },
+        )
+
+        archivedCoursesSection(archived, state, onIntent)
+    }
+}
+
+private fun LazyListScope.activeCoursesSection(
+    active: List<Course>,
+    localActive: List<Course>,
+    state: CoursesComponent.State,
+    draggedId: String?,
+    dragOffsetY: Float,
+    onIntent: (CoursesComponent.Intent) -> Unit,
+    onDragStart: (String) -> Unit,
+    onDrag: (Float) -> Unit,
+    onDragEnd: () -> Unit,
+) {
+    if (active.isNotEmpty()) {
+        item(key = "active_header") {
+            SectionHeader(
+                title = "Активные",
+                count = active.size,
+                expanded = state.showActive,
+                onClick = { onIntent(CoursesComponent.Intent.ToggleActive) },
+            )
+        }
+    }
+    if (state.showActive) {
+        items(items = localActive, key = { it.id }) { course ->
+            val isDragged = course.id == draggedId
+            DraggableCourseItem(
+                course = course,
+                dragOffset = if (isDragged) dragOffsetY else null,
+                onClick = { onIntent(CoursesComponent.Intent.OpenCourse(course.id)) },
+                onDragStart = { onDragStart(course.id) },
+                onDrag = onDrag,
+                onDragEnd = onDragEnd,
+                modifier = if (isDragged) Modifier.zIndex(1f) else Modifier.animateItem(),
+            )
+        }
+    }
+}
+
+private fun LazyListScope.archivedCoursesSection(
+    archived: List<Course>,
+    state: CoursesComponent.State,
+    onIntent: (CoursesComponent.Intent) -> Unit,
+) {
+    if (archived.isNotEmpty()) {
+        item(key = "archived_header") {
+            SectionHeader(
+                title = "Архив",
+                count = archived.size,
+                expanded = state.showArchived,
+                onClick = { onIntent(CoursesComponent.Intent.ToggleArchived) },
+            )
+        }
+        if (state.showArchived) {
+            items(items = archived, key = { it.id }) { course ->
+                CourseListTile(
+                    course = course,
+                    onClick = { onIntent(CoursesComponent.Intent.OpenCourse(course.id)) },
+                )
             }
         }
     }
