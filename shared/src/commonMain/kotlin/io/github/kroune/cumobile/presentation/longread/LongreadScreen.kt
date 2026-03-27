@@ -172,6 +172,7 @@ internal fun LongreadScreenContent(
                         error = state.error,
                         onRetry = { onIntent(LongreadComponent.Intent.Refresh) },
                     )
+                    !state.isLoading && state.materials.isEmpty() -> EmptyMaterialsContent()
                     else -> MaterialList(
                         state = state,
                         onIntent = onIntent,
@@ -192,6 +193,20 @@ internal fun LongreadScreenContent(
                 actionColor = AppTheme.colors.accent,
             )
         }
+    }
+}
+
+@Composable
+private fun EmptyMaterialsContent(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = "Материалы пока не добавлены",
+            color = AppTheme.colors.textSecondary,
+            fontSize = 14.sp,
+        )
     }
 }
 
