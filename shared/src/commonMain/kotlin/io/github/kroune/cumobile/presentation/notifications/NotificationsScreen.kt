@@ -1,5 +1,6 @@
 package io.github.kroune.cumobile.presentation.notifications
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -151,6 +152,10 @@ internal fun NotificationsScreenContent(
                     } else {
                         NotificationsList(
                             notifications = current.data,
+                            expandedIds = state.expandedNotificationIds,
+                            onToggleExpand = { id ->
+                                onIntent(NotificationsComponent.Intent.ToggleExpand(id))
+                            },
                             onLinkClick = { uri ->
                                 onIntent(NotificationsComponent.Intent.OpenLink(uri))
                             },
@@ -165,6 +170,8 @@ internal fun NotificationsScreenContent(
 @Composable
 private fun NotificationsList(
     notifications: List<NotificationItem>,
+    expandedIds: Set<String>,
+    onToggleExpand: (String) -> Unit,
     onLinkClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -175,77 +182,149 @@ private fun NotificationsList(
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         items(notifications, key = { it.id }) { item ->
-            NotificationCard(item = item, onLinkClick = onLinkClick)
+            NotificationCard(
+                item = item,
+                isExpanded = item.id in expandedIds,
+                onToggleExpand = { onToggleExpand(item.id) },
+                onLinkClick = onLinkClick,
+            )
         }
         item { Spacer(modifier = Modifier.height(16.dp)) }
     }
 }
 
+private const val CollapsedDescriptionMaxLines = 3
+private const val CollapsedTitleMaxLines = 2
+private const val CollapsedLinkMaxLines = 1
+
 @Composable
 private fun NotificationCard(
     item: NotificationItem,
+    isExpanded: Boolean,
+    onToggleExpand: () -> Unit,
     onLinkClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var hasOverflow by remember(item.id) { mutableStateOf(false) }
+    val onOverflowDetected = { hasOverflow = true }
+
     Row(
         modifier = modifier
             .fillMaxWidth()
             .background(AppTheme.colors.surface, RoundedCornerShape(12.dp))
+            .clickable(onClick = onToggleExpand)
+            .animateContentSize()
             .padding(12.dp),
     ) {
-        // Category icon
         NotificationIcon(icon = item.icon, category = item.category)
-
         Spacer(modifier = Modifier.width(12.dp))
+        NotificationCardContent(
+            item = item,
+            isExpanded = isExpanded,
+            hasOverflow = hasOverflow,
+            onOverflowDetected = onOverflowDetected,
+            onLinkClick = onLinkClick,
+            modifier = Modifier.weight(1f),
+        )
+    }
+}
 
-        Column(modifier = Modifier.weight(1f)) {
-            // Title
-            Text(
-                text = item.title,
-                color = AppTheme.colors.textPrimary,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-
-            // Date
+@Composable
+private fun NotificationCardContent(
+    item: NotificationItem,
+    isExpanded: Boolean,
+    hasOverflow: Boolean,
+    onOverflowDetected: () -> Unit,
+    onLinkClick: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier) {
+        NotificationCardHeader(
+            item = item,
+            isExpanded = isExpanded,
+            onOverflowDetected = onOverflowDetected,
+        )
+        NotificationCardBody(
+            item = item,
+            isExpanded = isExpanded,
+            onOverflowDetected = onOverflowDetected,
+            onLinkClick = onLinkClick,
+        )
+        if (hasOverflow || isExpanded) {
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = formatDateTimeFull(item.createdAt),
-                color = AppTheme.colors.textSecondary,
-                fontSize = 11.sp,
+                text = if (isExpanded) "Свернуть" else "Читать полностью",
+                color = AppTheme.colors.accent,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
             )
-
-            // Description
-            if (item.description.isNotBlank()) {
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = item.description.trim(),
-                    color = AppTheme.colors.textSecondary.copy(alpha = 0.8f),
-                    fontSize = 12.sp,
-                    maxLines = 3,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-
-            // Link
-            val link = item.link
-            if (link != null && link.uri.isNotBlank()) {
-                Spacer(modifier = Modifier.height(6.dp))
-                Text(
-                    text = link.label.ifBlank { link.uri },
-                    color = AppTheme.colors.accent,
-                    fontSize = 12.sp,
-                    textDecoration = TextDecoration.Underline,
-                    modifier = Modifier.clickable { onLinkClick(link.uri) },
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
         }
     }
 }
+
+@Composable
+private fun NotificationCardHeader(
+    item: NotificationItem,
+    isExpanded: Boolean,
+    onOverflowDetected: () -> Unit,
+) {
+    Text(
+        text = item.title,
+        color = AppTheme.colors.textPrimary,
+        fontSize = 14.sp,
+        fontWeight = FontWeight.SemiBold,
+        maxLines = if (isExpanded) Int.MAX_VALUE else CollapsedTitleMaxLines,
+        overflow = TextOverflow.Ellipsis,
+        onTextLayout = { if (!isExpanded && it.hasVisualOverflow) onOverflowDetected() },
+    )
+    Spacer(modifier = Modifier.height(4.dp))
+    Text(
+        text = formatDateTimeFull(item.createdAt),
+        color = AppTheme.colors.textSecondary,
+        fontSize = 11.sp,
+    )
+}
+
+@Composable
+private fun NotificationCardBody(
+    item: NotificationItem,
+    isExpanded: Boolean,
+    onOverflowDetected: () -> Unit,
+    onLinkClick: (String) -> Unit,
+) {
+    val descriptionText = normalizeWhitespace(item.description)
+    if (descriptionText.isNotBlank()) {
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = descriptionText,
+            color = AppTheme.colors.textSecondary.copy(alpha = 0.8f),
+            fontSize = 12.sp,
+            maxLines = if (isExpanded) Int.MAX_VALUE else CollapsedDescriptionMaxLines,
+            overflow = TextOverflow.Ellipsis,
+            onTextLayout = { if (!isExpanded && it.hasVisualOverflow) onOverflowDetected() },
+        )
+    }
+    val link = item.link
+    if (link != null && link.uri.isNotBlank()) {
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(
+            text = link.label.ifBlank { link.uri },
+            color = AppTheme.colors.accent,
+            fontSize = 12.sp,
+            textDecoration = TextDecoration.Underline,
+            modifier = Modifier.clickable { onLinkClick(link.uri) },
+            maxLines = if (isExpanded) Int.MAX_VALUE else CollapsedLinkMaxLines,
+            overflow = TextOverflow.Ellipsis,
+            onTextLayout = { if (!isExpanded && it.hasVisualOverflow) onOverflowDetected() },
+        )
+    }
+}
+
+/**
+ * Trims and collapses excessive blank lines in notification descriptions.
+ */
+private fun normalizeWhitespace(text: String): String =
+    text.trim().replace(Regex("\\n{3,}"), "\n\n")
 
 @Composable
 private fun NotificationIcon(
@@ -287,28 +366,34 @@ private fun notificationIconEmoji(
     }
 
 private const val SkeletonNotificationCount = 4
-private val SkeletonNotificationSpacing = 8.dp
-private val SkeletonNotificationPadding = 16.dp
 
-/**
- * Skeleton loading state for the Notifications screen.
- *
- * Shows shimmer placeholder cards matching the notification list layout.
- * The [SegmentedControl] is already rendered above the when-block.
- */
 @Composable
 private fun NotificationsScreenSkeleton(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = SkeletonNotificationPadding),
-        verticalArrangement = Arrangement.spacedBy(SkeletonNotificationSpacing),
+            .padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         repeat(SkeletonNotificationCount) {
             NotificationCardSkeleton()
         }
     }
 }
+
+@Suppress("MagicNumber")
+private val previewLongNotification = NotificationItem(
+    id = "long",
+    title = "Длинное уведомление",
+    description = "Это длинное описание уведомления, которое должно занимать " +
+        "более трёх строк текста для демонстрации функции сворачивания и " +
+        "разворачивания. Здесь может быть дополнительная информация о " +
+        "задании, оценке или событии, которая не помещается в краткий " +
+        "предпросмотр карточки уведомления.",
+    icon = "education",
+    category = "1",
+    createdAt = "2026-03-15T12:00:00",
+)
 
 @Preview
 @Composable
@@ -353,6 +438,7 @@ private val previewNotificationsState = NotificationsComponent.State(
                 category = "1",
                 createdAt = "2026-03-17T14:30:00",
             ),
+            previewLongNotification,
         ),
     ),
     otherNotifications = ContentState.Success(emptyList()),
@@ -376,6 +462,21 @@ private fun PreviewNotificationsScreenLight() {
     CuMobileTheme(darkTheme = false) {
         NotificationsScreenContent(
             state = previewNotificationsState,
+            onIntent = {},
+            onBack = {},
+        )
+    }
+}
+
+@Suppress("MagicNumber")
+@Preview
+@Composable
+private fun PreviewNotificationsExpandedDark() {
+    CuMobileTheme(darkTheme = true) {
+        NotificationsScreenContent(
+            state = previewNotificationsState.copy(
+                expandedNotificationIds = setOf("long"),
+            ),
             onIntent = {},
             onBack = {},
         )
@@ -480,6 +581,25 @@ private fun PreviewNotificationsOtherTabDark() {
     }
 }
 
+@Suppress("MagicNumber")
+private val previewLongWithLink = NotificationItem(
+    id = "long-link",
+    title = "Очень длинный заголовок уведомления, который не помещается в две строки " +
+        "и должен быть обрезан при сворачивании карточки",
+    description = "Это длинное описание уведомления, которое должно занимать " +
+        "более трёх строк текста для демонстрации функции сворачивания и " +
+        "разворачивания. Здесь может быть дополнительная информация о " +
+        "задании, оценке или событии, которая не помещается в краткий " +
+        "предпросмотр карточки уведомления.",
+    icon = "education",
+    category = "1",
+    createdAt = "2026-03-16T08:00:00",
+    link = NotificationLink(
+        uri = "/learn/courses/view/actual/123/themes/456/longreads/789",
+        label = "Открыть лонгрид «Динамическое программирование: основы и продвинутые техники»",
+    ),
+)
+
 @Preview
 @Composable
 private fun PreviewNotificationsWithLinkDark() {
@@ -501,6 +621,36 @@ private fun PreviewNotificationsWithLinkDark() {
                         ),
                     ),
                 ),
+            ),
+            onIntent = {},
+            onBack = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewLongWithLinkCollapsedDark() {
+    CuMobileTheme(darkTheme = true) {
+        NotificationsScreenContent(
+            state = NotificationsComponent.State(
+                educationNotifications = listOf(previewLongWithLink),
+            ),
+            onIntent = {},
+            onBack = {},
+        )
+    }
+}
+
+@Suppress("MagicNumber")
+@Preview
+@Composable
+private fun PreviewLongWithLinkExpandedDark() {
+    CuMobileTheme(darkTheme = true) {
+        NotificationsScreenContent(
+            state = NotificationsComponent.State(
+                educationNotifications = listOf(previewLongWithLink),
+                expandedNotificationIds = setOf("long-link"),
             ),
             onIntent = {},
             onBack = {},

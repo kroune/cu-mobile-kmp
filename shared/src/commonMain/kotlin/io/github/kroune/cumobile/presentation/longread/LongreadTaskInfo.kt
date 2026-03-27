@@ -19,6 +19,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
@@ -36,6 +37,8 @@ import io.github.kroune.cumobile.presentation.common.formatDateTime
 import io.github.kroune.cumobile.presentation.common.formatDeadline
 import io.github.kroune.cumobile.presentation.common.taskStateColor
 import io.github.kroune.cumobile.presentation.common.taskStateLabel
+import io.github.kroune.cumobile.presentation.longread.htmlrender.HtmlContent
+import io.github.kroune.cumobile.presentation.longread.htmlrender.parseHtmlToBlocks
 
 /**
  * Comments tab: displays comment list and input field with file attachments.
@@ -159,11 +162,18 @@ private fun CommentCard(
                 )
             }
         }
-        Text(
-            text = comment.content,
-            color = AppTheme.colors.textPrimary,
-            fontSize = 13.sp,
-        )
+        val blocks = remember(comment.content) {
+            if (comment.content.isBlank()) emptyList() else parseHtmlToBlocks(comment.content)
+        }
+        if (blocks.isNotEmpty()) {
+            HtmlContent(blocks = blocks)
+        } else {
+            Text(
+                text = comment.content,
+                color = AppTheme.colors.textPrimary,
+                fontSize = 13.sp,
+            )
+        }
         // Attachments
         comment.attachments.forEach { attachment ->
             Text(
