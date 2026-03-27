@@ -29,10 +29,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.kroune.cumobile.data.model.StudentPerformanceCourse
 import io.github.kroune.cumobile.presentation.common.AppTheme
+import io.github.kroune.cumobile.presentation.common.ContentState
+import io.github.kroune.cumobile.presentation.common.CourseListTileSkeleton
 import io.github.kroune.cumobile.presentation.common.EmptyContent
+import io.github.kroune.cumobile.presentation.common.ErrorContent
 import io.github.kroune.cumobile.presentation.common.gradeColor
 import io.github.kroune.cumobile.presentation.common.gradeDescription
 import io.github.kroune.cumobile.presentation.common.stripEmojiPrefix
+
+private const val SkeletonTileCount = 4
 
 /**
  * Segment 1: Grade Sheet ("Ведомость").
@@ -45,33 +50,51 @@ internal fun GradeSheetContent(
     onIntent: (CoursesComponent.Intent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val items = state.performanceCourses.filter { perf ->
-        state.courses.none { it.id == perf.id && it.isArchived }
-    }
+    when (val perfState = state.performanceCourses) {
+        is ContentState.Loading -> {
+            Column(
+                modifier = modifier,
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                repeat(SkeletonTileCount) {
+                    CourseListTileSkeleton()
+                }
+            }
+        }
+        is ContentState.Error -> ErrorContent(
+            error = perfState.message,
+            onRetry = { onIntent(CoursesComponent.Intent.Refresh) },
+        )
+        is ContentState.Success -> {
+            val items = perfState.data.filter { perf ->
+                state.courseList.none { it.id == perf.id && it.isArchived }
+            }
 
-    if (items.isEmpty()) {
-        EmptyContent(text = "Нет данных по ведомости")
-        return
-    }
+            if (items.isEmpty()) {
+                EmptyContent(text = "Нет данных по ведомости")
+                return
+            }
 
-    LazyColumn(
-        modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(vertical = 4.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-    ) {
-        items(items = items, key = { it.id }) { perf ->
-            GradeSheetTile(
-                performance = perf,
-                onClick = {
-                    onIntent(
-                        CoursesComponent.Intent.OpenCoursePerformance(
-                            courseId = perf.id,
-                            courseName = perf.name,
-                            totalGrade = perf.total,
-                        ),
+            LazyColumn(
+                modifier = modifier.fillMaxSize(),
+                contentPadding = PaddingValues(vertical = 4.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                items(items = items, key = { it.id }) { perf ->
+                    GradeSheetTile(
+                        performance = perf,
+                        onClick = {
+                            onIntent(
+                                CoursesComponent.Intent.OpenCoursePerformance(
+                                    courseId = perf.id,
+                                    courseName = perf.name,
+                                    totalGrade = perf.total,
+                                ),
+                            )
+                        },
                     )
-                },
-            )
+                }
+            }
         }
     }
 }

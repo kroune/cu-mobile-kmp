@@ -35,7 +35,11 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -51,15 +55,18 @@ import io.github.kroune.cumobile.data.model.StudentTask
 import io.github.kroune.cumobile.data.model.TaskCourse
 import io.github.kroune.cumobile.data.model.TaskExercise
 import io.github.kroune.cumobile.data.model.TaskState
+import io.github.kroune.cumobile.presentation.common.ActionErrorBar
 import io.github.kroune.cumobile.presentation.common.AppTheme
+import io.github.kroune.cumobile.presentation.common.ClassCardSkeleton
+import io.github.kroune.cumobile.presentation.common.ContentState
 import io.github.kroune.cumobile.presentation.common.CourseCard
+import io.github.kroune.cumobile.presentation.common.CourseCardSkeleton
 import io.github.kroune.cumobile.presentation.common.CuMobileTheme
 import io.github.kroune.cumobile.presentation.common.DeadlineTaskCard
-import io.github.kroune.cumobile.presentation.common.ClassCardSkeleton
-import io.github.kroune.cumobile.presentation.common.CourseCardSkeleton
 import io.github.kroune.cumobile.presentation.common.DeadlineTaskCardSkeleton
 import io.github.kroune.cumobile.presentation.common.ErrorContent
 import io.github.kroune.cumobile.presentation.common.formatEpochDate
+import io.github.kroune.cumobile.presentation.common.isError
 
 /**
  * Home screen composable for the "Главная" tab.
@@ -75,31 +82,47 @@ fun HomeScreen(
     modifier: Modifier = Modifier,
 ) {
     val state by component.state.subscribeAsState()
+    var actionError by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(Unit) {
+        component.effects.collect { effect ->
+            when (effect) {
+                is HomeComponent.Effect.ShowError -> {
+                    actionError = effect.message
+                }
+            }
+        }
+    }
 
     PullToRefreshBox(
-        isRefreshing = state.isLoading,
+        isRefreshing = state.isContentLoading,
         onRefresh = { component.onIntent(HomeComponent.Intent.Refresh) },
         modifier = modifier
             .fillMaxSize()
             .background(AppTheme.colors.background),
     ) {
         when {
-            state.isLoading && state.tasks.isEmpty() && state.courses.isEmpty() ->
-                HomeScreenSkeleton()
-            state.error != null && state.tasks.isEmpty() && state.courses.isEmpty() -> ErrorContent(
-                error = state.error.orEmpty(),
+            state.tasks.isError && state.courses.isError -> ErrorContent(
+                error = "Не удалось загрузить данные",
                 onRetry = { component.onIntent(HomeComponent.Intent.Refresh) },
             )
-            else -> HomeContent(
-                state = state,
-                onIntent = { component.onIntent(it) },
-                onTaskClick = { task ->
-                    component.onIntent(HomeComponent.Intent.OpenTask(task))
-                },
-                onCourseClick = { courseId ->
-                    component.onIntent(HomeComponent.Intent.OpenCourse(courseId))
-                },
-            )
+            state.isContentLoading -> HomeScreenSkeleton()
+            else -> Column(modifier = Modifier.fillMaxSize()) {
+                ActionErrorBar(
+                    error = actionError,
+                    onDismiss = { actionError = null },
+                )
+                HomeContent(
+                    state = state,
+                    onIntent = { component.onIntent(it) },
+                    onTaskClick = { task ->
+                        component.onIntent(HomeComponent.Intent.OpenTask(task))
+                    },
+                    onCourseClick = { courseId ->
+                        component.onIntent(HomeComponent.Intent.OpenCourse(courseId))
+                    },
+                )
+            }
         }
     }
 }
@@ -119,7 +142,8 @@ internal fun HomeContent(
             .verticalScroll(rememberScrollState()),
     ) {
         DeadlinesSection(
-            tasks = state.deadlineTasks,
+            tasksState = state.tasks,
+            deadlineTasks = state.deadlineTasks,
             onTaskClick = onTaskClick,
         )
 
@@ -133,7 +157,8 @@ internal fun HomeContent(
         Spacer(modifier = Modifier.height(16.dp))
 
         CoursesSection(
-            courses = state.activeCourses,
+            coursesState = state.courses,
+            activeCourses = state.activeCourses,
             onCourseClick = onCourseClick,
         )
 
@@ -147,31 +172,49 @@ internal fun HomeContent(
  */
 @Composable
 private fun DeadlinesSection(
-    tasks: List<StudentTask>,
+    tasksState: ContentState<List<StudentTask>>,
+    deadlineTasks: List<StudentTask>,
     onTaskClick: (StudentTask) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.padding(top = 8.dp)) {
         SectionHeader(
             title = "Дедлайны",
-            count = tasks.size,
+            count = deadlineTasks.size,
         )
 
-        if (tasks.isEmpty()) {
-            EmptySection(text = "Нет активных заданий")
-        } else {
-            LazyRow(
-                contentPadding = PaddingValues(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                items(
-                    items = tasks,
-                    key = { it.id },
-                ) { task ->
-                    DeadlineTaskCard(
-                        task = task,
-                        onClick = { onTaskClick(task) },
-                    )
+        when (tasksState) {
+            is ContentState.Loading -> {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = SkeletonHorizontalPadding),
+                    horizontalArrangement = Arrangement.spacedBy(SkeletonCardSpacing),
+                ) {
+                    repeat(SkeletonTaskCardCount) {
+                        DeadlineTaskCardSkeleton()
+                    }
+                }
+            }
+            is ContentState.Error -> EmptySection(text = "Не удалось загрузить задания")
+            is ContentState.Success -> {
+                if (deadlineTasks.isEmpty()) {
+                    EmptySection(text = "Нет активных заданий")
+                } else {
+                    LazyRow(
+                        contentPadding = PaddingValues(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        items(
+                            items = deadlineTasks,
+                            key = { it.id },
+                        ) { task ->
+                            DeadlineTaskCard(
+                                task = task,
+                                onClick = { onTaskClick(task) },
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -186,42 +229,60 @@ private fun DeadlinesSection(
  */
 @Composable
 private fun CoursesSection(
-    courses: List<Course>,
+    coursesState: ContentState<List<Course>>,
+    activeCourses: List<Course>,
     onCourseClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
         SectionHeader(
             title = "Курсы",
-            count = courses.size,
+            count = activeCourses.size,
         )
 
-        if (courses.isEmpty()) {
-            EmptySection(text = "Нет активных курсов")
-        } else {
-            // Fixed-height grid to avoid nested scroll conflict
-            val rowCount = (courses.size + 1) / 2
-            val itemHeight = 120.dp
-            val spacing = 12.dp
-            val gridHeight = (itemHeight * rowCount) + (spacing * rowCount)
+        when (coursesState) {
+            is ContentState.Loading -> {
+                Row(
+                    modifier = Modifier.padding(horizontal = SkeletonHorizontalPadding),
+                    horizontalArrangement = Arrangement.spacedBy(SkeletonCardSpacing),
+                ) {
+                    repeat(2) {
+                        CourseCardSkeleton(
+                            Modifier.weight(1f).aspectRatio(CourseCardAspectRatio),
+                        )
+                    }
+                }
+            }
+            is ContentState.Error -> EmptySection(text = "Не удалось загрузить курсы")
+            is ContentState.Success -> {
+                if (activeCourses.isEmpty()) {
+                    EmptySection(text = "Нет активных курсов")
+                } else {
+                    // Fixed-height grid to avoid nested scroll conflict
+                    val rowCount = (activeCourses.size + 1) / 2
+                    val itemHeight = 120.dp
+                    val spacing = 12.dp
+                    val gridHeight = (itemHeight * rowCount) + (spacing * rowCount)
 
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                contentPadding = PaddingValues(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(spacing),
-                verticalArrangement = Arrangement.spacedBy(spacing),
-                userScrollEnabled = false,
-                modifier = Modifier.height(gridHeight),
-            ) {
-                items(
-                    items = courses,
-                    key = { it.id },
-                ) { course ->
-                    CourseCard(
-                        course = course,
-                        onClick = { onCourseClick(course.id) },
-                        modifier = Modifier.aspectRatio(1.4f),
-                    )
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(2),
+                        contentPadding = PaddingValues(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(spacing),
+                        verticalArrangement = Arrangement.spacedBy(spacing),
+                        userScrollEnabled = false,
+                        modifier = Modifier.height(gridHeight),
+                    ) {
+                        items(
+                            items = activeCourses,
+                            key = { it.id },
+                        ) { course ->
+                            CourseCard(
+                                course = course,
+                                onClick = { onCourseClick(course.id) },
+                                modifier = Modifier.aspectRatio(1.4f),
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -248,19 +309,23 @@ private fun ScheduleSection(
             onIntent = onIntent,
         )
 
-        if (state.isScheduleLoading) {
-            EmptySection(text = "Загрузка расписания…")
-        } else if (state.scheduleError != null) {
-            EmptySection(text = state.scheduleError)
-        } else if (state.classes.isEmpty()) {
-            EmptySection(text = "Нет занятий на этот день")
-        } else {
-            Column(
-                modifier = Modifier.padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                state.classes.forEach { classData ->
-                    ClassCard(classData)
+        when (val schedule = state.schedule) {
+            is ContentState.Loading ->
+                EmptySection(text = "Загрузка расписания…")
+            is ContentState.Error ->
+                EmptySection(text = schedule.message)
+            is ContentState.Success -> {
+                if (schedule.data.isEmpty()) {
+                    EmptySection(text = "Нет занятий на этот день")
+                } else {
+                    Column(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        schedule.data.forEach { classData ->
+                            ClassCard(classData)
+                        }
+                    }
                 }
             }
         }
@@ -518,29 +583,34 @@ private fun PreviewHomeScreenSkeletonLight() {
 }
 
 private val previewHomeState = HomeComponent.State(
-    isLoading = false,
-    profileInitials = "ИП",
-    lateDaysBalance = 5,
+    tasks = ContentState.Success(
+        listOf(
+            StudentTask(
+                id = "1",
+                state = TaskState.InProgress,
+                exercise = TaskExercise(name = "ДЗ: Деревья", deadline = "2026-04-01T23:59:00"),
+                course = TaskCourse(name = "Алгоритмы"),
+            ),
+            StudentTask(
+                id = "2",
+                state = TaskState.Backlog,
+                exercise = TaskExercise(name = "Лабораторная 3", deadline = "2026-04-05T23:59:00"),
+                course = TaskCourse(name = "Линейная алгебра"),
+            ),
+        ),
+    ),
+    courses = ContentState.Success(
+        listOf(
+            Course(id = "1", name = "Алгоритмы", category = "development"),
+            Course(id = "2", name = "Линейная алгебра", category = "mathematics"),
+            Course(id = "3", name = "Менеджмент", category = "business"),
+        ),
+    ),
+    profileInitials = ContentState.Success("ИП"),
+    lateDaysBalance = ContentState.Success(5),
+    avatarBitmap = ContentState.Success(null),
     selectedDateMillis = 1774051200000L,
-    tasks = listOf(
-        StudentTask(
-            id = "1",
-            state = TaskState.InProgress,
-            exercise = TaskExercise(name = "ДЗ: Деревья", deadline = "2026-04-01T23:59:00"),
-            course = TaskCourse(name = "Алгоритмы"),
-        ),
-        StudentTask(
-            id = "2",
-            state = TaskState.Backlog,
-            exercise = TaskExercise(name = "Лабораторная 3", deadline = "2026-04-05T23:59:00"),
-            course = TaskCourse(name = "Линейная алгебра"),
-        ),
-    ),
-    courses = listOf(
-        Course(id = "1", name = "Алгоритмы", category = "development"),
-        Course(id = "2", name = "Линейная алгебра", category = "mathematics"),
-        Course(id = "3", name = "Менеджмент", category = "business"),
-    ),
+    schedule = ContentState.Success(emptyList()),
 )
 
 @Preview
@@ -559,11 +629,6 @@ private fun PreviewHomeScreenLight() {
     }
 }
 
-private val previewHomeErrorState = HomeComponent.State(
-    isLoading = false,
-    error = "Не удалось загрузить данные",
-)
-
 @Preview
 @Composable
 private fun PreviewHomeScreenErrorDark() {
@@ -573,8 +638,8 @@ private fun PreviewHomeScreenErrorDark() {
                 .fillMaxSize()
                 .background(AppTheme.colors.background),
         ) {
-            io.github.kroune.cumobile.presentation.common.ErrorContent(
-                error = previewHomeErrorState.error.orEmpty(),
+            ErrorContent(
+                error = "Не удалось загрузить данные",
                 onRetry = {},
             )
         }
@@ -590,8 +655,8 @@ private fun PreviewHomeScreenErrorLight() {
                 .fillMaxSize()
                 .background(AppTheme.colors.background),
         ) {
-            io.github.kroune.cumobile.presentation.common.ErrorContent(
-                error = previewHomeErrorState.error.orEmpty(),
+            ErrorContent(
+                error = "Не удалось загрузить данные",
                 onRetry = {},
             )
         }
@@ -607,9 +672,13 @@ private fun PreviewHomeScreenLoadingDark() {
 }
 
 private val previewHomeEmptyState = HomeComponent.State(
-    isLoading = false,
-    profileInitials = "ИП",
+    tasks = ContentState.Success(emptyList()),
+    courses = ContentState.Success(emptyList()),
+    profileInitials = ContentState.Success("ИП"),
+    avatarBitmap = ContentState.Success(null),
+    lateDaysBalance = ContentState.Success(null),
     selectedDateMillis = 1774051200000L,
+    schedule = ContentState.Success(emptyList()),
 )
 
 @Preview
@@ -639,28 +708,29 @@ private fun PreviewHomeScreenEmptyLight() {
 }
 
 private val previewHomeWithScheduleState = previewHomeState.copy(
-    isScheduleLoading = false,
-    classes = listOf(
-        ClassData(
-            startTime = "09:00",
-            endTime = "10:30",
-            title = "Математический анализ",
-            room = "А-301",
-            type = "Лекция",
-        ),
-        ClassData(
-            startTime = "11:00",
-            endTime = "12:30",
-            title = "Программирование",
-            room = "Б-204",
-            type = "Семинар",
-        ),
-        ClassData(
-            startTime = "14:00",
-            endTime = "15:30",
-            title = "Физика",
-            room = "",
-            type = "Лабораторная",
+    schedule = ContentState.Success(
+        listOf(
+            ClassData(
+                startTime = "09:00",
+                endTime = "10:30",
+                title = "Математический анализ",
+                room = "А-301",
+                type = "Лекция",
+            ),
+            ClassData(
+                startTime = "11:00",
+                endTime = "12:30",
+                title = "Программирование",
+                room = "Б-204",
+                type = "Семинар",
+            ),
+            ClassData(
+                startTime = "14:00",
+                endTime = "15:30",
+                title = "Физика",
+                room = "",
+                type = "Лабораторная",
+            ),
         ),
     ),
 )

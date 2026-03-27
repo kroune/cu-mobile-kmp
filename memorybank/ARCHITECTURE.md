@@ -92,6 +92,18 @@ Every screen has:
 - `DefaultXxxComponent.kt` — implementation
 - `XxxScreen.kt` — Compose UI consuming state + dispatching intents + collecting effects
 
+### ContentState<T> — Progressive Loading
+
+- `ContentState<T>` sealed interface in `presentation/common/ContentState.kt`: `Loading`, `Success<T>`, `Error`
+- Replaces `isLoading: Boolean` + `error: String?` + plain data fields in component State
+- Each data field in State wraps its content in `ContentState<T>` for per-section loading/error handling
+- **Important content Error** → full-screen `ErrorContent`; **Minor content Error** → `ActionErrorBar`
+- On refresh → reset all ContentState fields to `Loading` → skeletons show → content fills in progressively
+- **No `isLoading`/`isRefreshing` booleans** — derived: `val isContentLoading get() = tasks.isLoading && courses.isLoading`
+- Extensions: `dataOrNull`, `isLoading`, `isError`, `isSuccess`, `errorOrNull`
+- Used in: `HomeComponent`, `CoursesComponent`, `ProfileComponent`, `NotificationsComponent`, `CoursePerformanceComponent`
+- **Parallel loading**: Default components launch separate coroutines per API call, each updates its own ContentState independently
+
 ### One-shot Effects
 
 - Components that perform mutations expose `val effects: Flow<Effect>` for one-shot events (error
@@ -100,7 +112,7 @@ Every screen has:
 - UI collects effects in `LaunchedEffect(Unit)` into local `mutableStateOf` for display
 - `ActionErrorBar` composable (in `CommonStates.kt`) shows transient error messages with dismiss
   button
-- Currently used in: `LongreadComponent`, `FilesComponent`, `ProfileComponent`
+- Currently used in: `HomeComponent`, `CoursesComponent`, `NotificationsComponent`, `LongreadComponent`, `FilesComponent`, `ProfileComponent`
 - Pattern: `_effects.trySend(Effect.ShowError("message"))` in component, collected in screen
   composable
 

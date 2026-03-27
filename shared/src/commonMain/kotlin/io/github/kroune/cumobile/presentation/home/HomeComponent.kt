@@ -6,6 +6,10 @@ import io.github.kroune.cumobile.data.model.ClassData
 import io.github.kroune.cumobile.data.model.Course
 import io.github.kroune.cumobile.data.model.StudentTask
 import io.github.kroune.cumobile.data.model.TaskState
+import io.github.kroune.cumobile.presentation.common.ContentState
+import io.github.kroune.cumobile.presentation.common.dataOrNull
+import io.github.kroune.cumobile.presentation.common.isLoading
+import kotlinx.coroutines.flow.Flow
 
 /**
  * MVI component for the Home tab ("Главная").
@@ -17,23 +21,27 @@ import io.github.kroune.cumobile.data.model.TaskState
  */
 interface HomeComponent {
     val state: Value<State>
+    val effects: Flow<Effect>
 
     fun onIntent(intent: Intent)
 
+    sealed interface Effect {
+        data class ShowError(val message: String) : Effect
+    }
+
     data class State(
-        val tasks: List<StudentTask> = emptyList(),
-        val courses: List<Course> = emptyList(),
-        /** Daily schedule classes for the selected date. */
-        val classes: List<ClassData> = emptyList(),
+        val tasks: ContentState<List<StudentTask>> = ContentState.Loading,
+        val courses: ContentState<List<Course>> = ContentState.Loading,
+        val schedule: ContentState<List<ClassData>> = ContentState.Loading,
         val selectedDateMillis: Long = 0,
-        val isScheduleLoading: Boolean = false,
-        val scheduleError: String? = null,
-        val profileInitials: String = "",
-        val avatarBitmap: ImageBitmap? = null,
-        val lateDaysBalance: Int? = null,
-        val isLoading: Boolean = true,
-        val error: String? = null,
+        val profileInitials: ContentState<String> = ContentState.Loading,
+        val avatarBitmap: ContentState<ImageBitmap?> = ContentState.Loading,
+        val lateDaysBalance: ContentState<Int?> = ContentState.Loading,
     ) {
+        /** Whether any important content is still loading. */
+        val isContentLoading: Boolean
+            get() = tasks.isLoading && courses.isLoading
+
         /**
          * Active tasks suitable for the deadlines section.
          *
@@ -41,43 +49,35 @@ interface HomeComponent {
          * Sorted by deadline ascending (tasks without deadlines go to the end).
          */
         val deadlineTasks: List<StudentTask>
-            get() = tasks
+            get() = tasks.dataOrNull.orEmpty()
                 .filter { !it.course.isArchived }
                 .filter { it.state in ACTIVE_TASK_STATES }
                 .sortedBy { it.exercise.deadline ?: "9999-12-31" }
 
         /** Active (non-archived) courses. */
         val activeCourses: List<Course>
-            get() = courses.filter { !it.isArchived }
+            get() = courses.dataOrNull.orEmpty().filter { !it.isArchived }
 
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (other !is State) return false
             return tasks == other.tasks &&
                 courses == other.courses &&
-                classes == other.classes &&
+                schedule == other.schedule &&
                 selectedDateMillis == other.selectedDateMillis &&
-                isScheduleLoading == other.isScheduleLoading &&
-                scheduleError == other.scheduleError &&
                 profileInitials == other.profileInitials &&
                 avatarBitmap === other.avatarBitmap &&
-                lateDaysBalance == other.lateDaysBalance &&
-                isLoading == other.isLoading &&
-                error == other.error
+                lateDaysBalance == other.lateDaysBalance
         }
 
         override fun hashCode(): Int {
             var result = tasks.hashCode()
             result = 31 * result + courses.hashCode()
-            result = 31 * result + classes.hashCode()
+            result = 31 * result + schedule.hashCode()
             result = 31 * result + selectedDateMillis.hashCode()
-            result = 31 * result + isScheduleLoading.hashCode()
-            result = 31 * result + (scheduleError?.hashCode() ?: 0)
             result = 31 * result + profileInitials.hashCode()
-            result = 31 * result + (avatarBitmap?.hashCode() ?: 0)
-            result = 31 * result + (lateDaysBalance?.hashCode() ?: 0)
-            result = 31 * result + isLoading.hashCode()
-            result = 31 * result + (error?.hashCode() ?: 0)
+            result = 31 * result + (avatarBitmap.hashCode())
+            result = 31 * result + lateDaysBalance.hashCode()
             return result
         }
     }

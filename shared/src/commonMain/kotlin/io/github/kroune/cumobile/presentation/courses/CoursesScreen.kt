@@ -33,6 +33,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -59,7 +60,9 @@ import io.github.kroune.cumobile.data.model.GradebookGrade
 import io.github.kroune.cumobile.data.model.GradebookResponse
 import io.github.kroune.cumobile.data.model.GradebookSemester
 import io.github.kroune.cumobile.data.model.StudentPerformanceCourse
+import io.github.kroune.cumobile.presentation.common.ActionErrorBar
 import io.github.kroune.cumobile.presentation.common.AppTheme
+import io.github.kroune.cumobile.presentation.common.ContentState
 import io.github.kroune.cumobile.presentation.common.CuMobileTheme
 import io.github.kroune.cumobile.presentation.common.CourseListTileSkeleton
 import io.github.kroune.cumobile.presentation.common.EmptyContent
@@ -67,6 +70,7 @@ import io.github.kroune.cumobile.presentation.common.ErrorContent
 import io.github.kroune.cumobile.presentation.common.SegmentedControl
 import io.github.kroune.cumobile.presentation.common.courseCategoryColor
 import io.github.kroune.cumobile.presentation.common.courseCategoryLabel
+import io.github.kroune.cumobile.presentation.common.isError
 import io.github.kroune.cumobile.presentation.common.stripEmojiPrefix
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -81,9 +85,23 @@ fun CoursesScreen(
     modifier: Modifier = Modifier,
 ) {
     val state by component.state.subscribeAsState()
+    var actionError by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(Unit) {
+        component.effects.collect { effect ->
+            when (effect) {
+                is CoursesComponent.Effect.ShowError -> {
+                    actionError = effect.message
+                }
+            }
+        }
+    }
+
     CoursesScreenContent(
         state = state,
+        actionError = actionError,
         onIntent = component::onIntent,
+        onDismissError = { actionError = null },
         modifier = modifier,
     )
 }
@@ -92,11 +110,13 @@ fun CoursesScreen(
 @Composable
 internal fun CoursesScreenContent(
     state: CoursesComponent.State,
+    actionError: String? = null,
     onIntent: (CoursesComponent.Intent) -> Unit,
+    onDismissError: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     PullToRefreshBox(
-        isRefreshing = state.isLoading,
+        isRefreshing = state.isContentLoading,
         onRefresh = { onIntent(CoursesComponent.Intent.Refresh) },
         modifier = modifier
             .fillMaxSize()
@@ -117,16 +137,18 @@ internal fun CoursesScreenContent(
 
             Spacer(modifier = Modifier.height(12.dp))
 
+            ActionErrorBar(error = actionError, onDismiss = onDismissError)
+
             when {
-                state.isLoading && state.courses.isEmpty() -> CoursesScreenSkeleton()
-                state.error != null && state.courses.isEmpty() -> ErrorContent(
-                    error = state.error,
+                state.courses.isError -> ErrorContent(
+                    error = "Не удалось загрузить курсы",
                     onRetry = { onIntent(CoursesComponent.Intent.Refresh) },
                 )
+                state.isContentLoading -> CoursesScreenSkeleton()
                 else -> when (state.segment) {
                     0 -> CoursesListContent(state = state, onIntent = onIntent)
                     1 -> GradeSheetContent(state = state, onIntent = onIntent)
-                    2 -> GradebookContent(state = state)
+                    2 -> GradebookContent(state = state, onIntent = onIntent)
                 }
             }
         }
@@ -141,8 +163,8 @@ private fun CoursesListContent(
     onIntent: (CoursesComponent.Intent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val active = activeCourses(state.courses, state.courseOrder)
-    val archived = archivedCourses(state.courses, state.courseOrder)
+    val active = activeCourses(state.courseList, state.courseOrder)
+    val archived = archivedCourses(state.courseList, state.courseOrder)
 
     if (active.isEmpty() && archived.isEmpty()) {
         EmptyContent(text = "Нет курсов")
@@ -558,12 +580,16 @@ private fun PreviewCoursesScreenSkeletonLight() {
 // region Previews
 
 private val previewCoursesState = CoursesComponent.State(
-    courses = listOf(
-        Course(id = "1", name = "Алгоритмы и структуры данных", category = "development"),
-        Course(id = "2", name = "Линейная алгебра", category = "mathematics"),
-        Course(id = "3", name = "Управление проектами", category = "business"),
-        Course(id = "4", name = "Физика", category = "stem"),
+    courses = ContentState.Success(
+        listOf(
+            Course(id = "1", name = "Алгоритмы и структуры данных", category = "development"),
+            Course(id = "2", name = "Линейная алгебра", category = "mathematics"),
+            Course(id = "3", name = "Управление проектами", category = "business"),
+            Course(id = "4", name = "Физика", category = "stem"),
+        ),
     ),
+    performanceCourses = ContentState.Success(emptyList()),
+    gradebook = ContentState.Success(null),
 )
 
 @Preview
@@ -587,7 +613,7 @@ private fun PreviewCoursesScreenLight() {
 private fun PreviewCoursesLoadingDark() {
     CuMobileTheme(darkTheme = true) {
         CoursesScreenContent(
-            state = CoursesComponent.State(isLoading = true),
+            state = CoursesComponent.State(),
             onIntent = {},
         )
     }
@@ -598,7 +624,9 @@ private fun PreviewCoursesLoadingDark() {
 private fun PreviewCoursesErrorDark() {
     CuMobileTheme(darkTheme = true) {
         CoursesScreenContent(
-            state = CoursesComponent.State(error = "Не удалось загрузить курсы"),
+            state = CoursesComponent.State(
+                courses = ContentState.Error("Не удалось загрузить курсы"),
+            ),
             onIntent = {},
         )
     }
@@ -609,7 +637,9 @@ private fun PreviewCoursesErrorDark() {
 private fun PreviewCoursesErrorLight() {
     CuMobileTheme(darkTheme = false) {
         CoursesScreenContent(
-            state = CoursesComponent.State(error = "Не удалось загрузить курсы"),
+            state = CoursesComponent.State(
+                courses = ContentState.Error("Не удалось загрузить курсы"),
+            ),
             onIntent = {},
         )
     }
@@ -620,16 +650,22 @@ private fun PreviewCoursesErrorLight() {
 private fun PreviewCoursesEmptyDark() {
     CuMobileTheme(darkTheme = true) {
         CoursesScreenContent(
-            state = CoursesComponent.State(),
+            state = CoursesComponent.State(
+                courses = ContentState.Success(emptyList()),
+                performanceCourses = ContentState.Success(emptyList()),
+                gradebook = ContentState.Success(null),
+            ),
             onIntent = {},
         )
     }
 }
 
 private val previewCoursesWithArchived = previewCoursesState.copy(
-    courses = previewCoursesState.courses + listOf(
-        Course(id = "5", name = "Введение в ИИ", category = "development", isArchived = true),
-        Course(id = "6", name = "Философия", category = "general", isArchived = true),
+    courses = ContentState.Success(
+        previewCoursesState.courseList + listOf(
+            Course(id = "5", name = "Введение в ИИ", category = "development", isArchived = true),
+            Course(id = "6", name = "Философия", category = "general", isArchived = true),
+        ),
     ),
     showArchived = true,
 )
@@ -645,11 +681,14 @@ private fun PreviewCoursesArchivedDark() {
 private val previewGradeSheetState = CoursesComponent.State(
     segment = 1,
     courses = previewCoursesState.courses,
-    performanceCourses = listOf(
-        StudentPerformanceCourse(id = "1", name = "Алгоритмы и структуры данных", total = 8),
-        StudentPerformanceCourse(id = "2", name = "Линейная алгебра", total = 6),
-        StudentPerformanceCourse(id = "3", name = "Управление проектами", total = 4),
+    performanceCourses = ContentState.Success(
+        listOf(
+            StudentPerformanceCourse(id = "1", name = "Алгоритмы и структуры данных", total = 8),
+            StudentPerformanceCourse(id = "2", name = "Линейная алгебра", total = 6),
+            StudentPerformanceCourse(id = "3", name = "Управление проектами", total = 4),
+        ),
     ),
+    gradebook = ContentState.Success(null),
 )
 
 @Preview
@@ -670,7 +709,9 @@ private fun PreviewGradeSheetLight() {
 
 private val previewGradebookState = CoursesComponent.State(
     segment = 2,
-    gradebook = GradebookResponse(
+    courses = ContentState.Success(emptyList()),
+    performanceCourses = ContentState.Success(emptyList()),
+    gradebook = ContentState.Success(GradebookResponse(
         semesters = listOf(
             GradebookSemester(
                 year = 2025,
@@ -697,7 +738,7 @@ private val previewGradebookState = CoursesComponent.State(
                 ),
             ),
         ),
-    ),
+    )),
 )
 
 @Preview

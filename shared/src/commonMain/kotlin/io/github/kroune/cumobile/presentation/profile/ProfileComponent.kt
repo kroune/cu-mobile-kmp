@@ -5,6 +5,9 @@ import com.arkivanov.decompose.value.Value
 import io.github.kroune.cumobile.data.model.PickedFile
 import io.github.kroune.cumobile.data.model.StudentLmsProfile
 import io.github.kroune.cumobile.data.model.StudentProfile
+import io.github.kroune.cumobile.presentation.common.ContentState
+import io.github.kroune.cumobile.presentation.common.dataOrNull
+import io.github.kroune.cumobile.presentation.common.isLoading
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -26,19 +29,28 @@ interface ProfileComponent {
     }
 
     data class State(
-        val profile: StudentProfile? = null,
-        val lmsProfile: StudentLmsProfile? = null,
-        val avatarBytes: ByteArray? = null,
-        val avatarBitmap: ImageBitmap? = null,
-        val isLoading: Boolean = false,
-        val error: String? = null,
+        val profile: ContentState<StudentProfile> = ContentState.Loading,
+        val lmsProfile: ContentState<StudentLmsProfile?> = ContentState.Loading,
+        val avatar: ContentState<AvatarData?> = ContentState.Loading,
         val isDeletingAvatar: Boolean = false,
         val isUploadingAvatar: Boolean = false,
     ) {
+        /** Whether the important content (profile) is still loading. */
+        val isContentLoading: Boolean
+            get() = profile.isLoading
+
+        /** Avatar bytes for upload state tracking. */
+        val avatarBytes: ByteArray?
+            get() = avatar.dataOrNull?.bytes
+
+        /** Avatar bitmap for display. */
+        val avatarBitmap: ImageBitmap?
+            get() = avatar.dataOrNull?.bitmap
+
         /** User initials for avatar placeholder (first char of first + last name). */
         val initials: String
             get() {
-                val p = profile ?: return ""
+                val p = profile.dataOrNull ?: return ""
                 val first = p.firstName
                     .firstOrNull()
                     ?.uppercase()
@@ -52,11 +64,11 @@ interface ProfileComponent {
 
         /** Translated education level label. */
         val educationLevelLabel: String
-            get() = when (profile?.educationLevel?.lowercase()) {
+            get() = when (profile.dataOrNull?.educationLevel?.lowercase()) {
                 "bachelor" -> "Бакалавриат"
                 "master" -> "Магистратура"
                 "specialist" -> "Специалитет"
-                else -> profile?.educationLevel.orEmpty()
+                else -> profile.dataOrNull?.educationLevel.orEmpty()
             }
 
         /**
@@ -65,7 +77,7 @@ interface ProfileComponent {
          */
         val otherEmails: List<io.github.kroune.cumobile.data.model.EmailInfo>
             get() {
-                val p = profile ?: return emptyList()
+                val p = profile.dataOrNull ?: return emptyList()
                 val uni = p.universityEmail ?: return p.emails
                 return p.emails.filter { it.value != uni }
             }
@@ -75,10 +87,7 @@ interface ProfileComponent {
             if (other !is State) return false
             return profile == other.profile &&
                 lmsProfile == other.lmsProfile &&
-                avatarBytes.contentEquals(other.avatarBytes) &&
-                avatarBitmap === other.avatarBitmap &&
-                isLoading == other.isLoading &&
-                error == other.error &&
+                avatar == other.avatar &&
                 isDeletingAvatar == other.isDeletingAvatar &&
                 isUploadingAvatar == other.isUploadingAvatar
         }
@@ -86,10 +95,7 @@ interface ProfileComponent {
         override fun hashCode(): Int {
             var result = profile.hashCode()
             result = 31 * result + lmsProfile.hashCode()
-            result = 31 * result + (avatarBytes?.contentHashCode() ?: 0)
-            result = 31 * result + (avatarBitmap?.hashCode() ?: 0)
-            result = 31 * result + isLoading.hashCode()
-            result = 31 * result + error.hashCode()
+            result = 31 * result + avatar.hashCode()
             result = 31 * result + isDeletingAvatar.hashCode()
             result = 31 * result + isUploadingAvatar.hashCode()
             return result
@@ -108,5 +114,26 @@ interface ProfileComponent {
         data object DeleteAvatar : Intent
 
         data object Logout : Intent
+    }
+}
+
+/**
+ * Container for avatar data (raw bytes + decoded bitmap).
+ */
+data class AvatarData(
+    val bytes: ByteArray?,
+    val bitmap: ImageBitmap?,
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is AvatarData) return false
+        return bytes.contentEquals(other.bytes) &&
+            bitmap === other.bitmap
+    }
+
+    override fun hashCode(): Int {
+        var result = bytes?.contentHashCode() ?: 0
+        result = 31 * result + (bitmap?.hashCode() ?: 0)
+        return result
     }
 }

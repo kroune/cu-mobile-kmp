@@ -30,7 +30,12 @@ import androidx.compose.ui.unit.sp
 import io.github.kroune.cumobile.data.model.GradebookGrade
 import io.github.kroune.cumobile.data.model.GradebookSemester
 import io.github.kroune.cumobile.presentation.common.AppTheme
+import io.github.kroune.cumobile.presentation.common.ContentState
+import io.github.kroune.cumobile.presentation.common.CourseListTileSkeleton
 import io.github.kroune.cumobile.presentation.common.EmptyContent
+import io.github.kroune.cumobile.presentation.common.ErrorContent
+
+private const val SkeletonTileCount = 3
 
 /**
  * Segment 2: Record Book ("Зачетка").
@@ -40,24 +45,43 @@ import io.github.kroune.cumobile.presentation.common.EmptyContent
 @Composable
 internal fun GradebookContent(
     state: CoursesComponent.State,
+    onIntent: (CoursesComponent.Intent) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
-    val gradebook = state.gradebook
-    if (gradebook == null || gradebook.semesters.isEmpty()) {
-        EmptyContent(text = "Нет данных по зачетке")
-        return
-    }
+    when (val gbState = state.gradebook) {
+        is ContentState.Loading -> {
+            Column(
+                modifier = modifier,
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                repeat(SkeletonTileCount) {
+                    CourseListTileSkeleton()
+                }
+            }
+        }
+        is ContentState.Error -> ErrorContent(
+            error = gbState.message,
+            onRetry = { onIntent(CoursesComponent.Intent.Refresh) },
+        )
+        is ContentState.Success -> {
+            val gradebook = gbState.data
+            if (gradebook == null || gradebook.semesters.isEmpty()) {
+                EmptyContent(text = "Нет данных по зачетке")
+                return
+            }
 
-    LazyColumn(
-        modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(vertical = 4.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        items(
-            items = gradebook.semesters,
-            key = { "${it.year}_${it.semesterNumber}" },
-        ) { semester ->
-            SemesterCard(semester = semester)
+            LazyColumn(
+                modifier = modifier.fillMaxSize(),
+                contentPadding = PaddingValues(vertical = 4.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                items(
+                    items = gradebook.semesters,
+                    key = { "${it.year}_${it.semesterNumber}" },
+                ) { semester ->
+                    SemesterCard(semester = semester)
+                }
+            }
         }
     }
 }

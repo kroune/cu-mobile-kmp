@@ -3,6 +3,9 @@ package io.github.kroune.cumobile.presentation.performance
 import com.arkivanov.decompose.value.Value
 import io.github.kroune.cumobile.data.model.CourseExercise
 import io.github.kroune.cumobile.data.model.TaskScore
+import io.github.kroune.cumobile.presentation.common.ContentState
+import io.github.kroune.cumobile.presentation.common.dataOrNull
+import io.github.kroune.cumobile.presentation.common.isLoading
 
 /**
  * Component for the course performance screen.
@@ -20,13 +23,22 @@ interface CoursePerformanceComponent {
         val courseId: String,
         val courseName: String = "",
         val totalGrade: Int = 0,
-        val exercises: List<ExerciseWithScore> = emptyList(),
-        val activitySummaries: List<ActivitySummary> = emptyList(),
-        val isLoading: Boolean = false,
-        val error: String? = null,
+        val content: ContentState<PerformanceData> = ContentState.Loading,
         val selectedTab: Int = 0,
         val activityFilter: String? = null,
     ) {
+        /** Exercises from loaded data. */
+        val exercises: List<ExerciseWithScore>
+            get() = content.dataOrNull?.exercises.orEmpty()
+
+        /** Activity summaries from loaded data. */
+        val activitySummaries: List<ActivitySummary>
+            get() = content.dataOrNull?.activitySummaries.orEmpty()
+
+        /** Whether content is still loading. */
+        val isContentLoading: Boolean
+            get() = content.isLoading
+
         /** All unique activity names for the filter chips. */
         val activityNames: List<String>
             get() = exercises
@@ -61,6 +73,14 @@ interface CoursePerformanceComponent {
         ) : Intent
     }
 }
+
+/**
+ * Container for loaded performance data (exercises + activity summaries).
+ */
+data class PerformanceData(
+    val exercises: List<ExerciseWithScore>,
+    val activitySummaries: List<ActivitySummary>,
+)
 
 /**
  * Joins a [CourseExercise] with its optional [TaskScore].

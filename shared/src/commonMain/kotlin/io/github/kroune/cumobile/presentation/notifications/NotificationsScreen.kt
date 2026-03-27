@@ -23,6 +23,9 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -36,7 +39,9 @@ import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import io.github.kroune.cumobile.data.model.NotificationItem
 import io.github.kroune.cumobile.data.model.NotificationLink
+import io.github.kroune.cumobile.presentation.common.ActionErrorBar
 import io.github.kroune.cumobile.presentation.common.AppTheme
+import io.github.kroune.cumobile.presentation.common.ContentState
 import io.github.kroune.cumobile.presentation.common.CuMobileTheme
 import io.github.kroune.cumobile.presentation.common.DetailTopBar
 import io.github.kroune.cumobile.presentation.common.EmptyContent
@@ -62,6 +67,17 @@ fun NotificationsScreen(
 ) {
     val state by component.state.subscribeAsState()
     val uriHandler = LocalUriHandler.current
+    var actionError by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(Unit) {
+        component.effects.collect { effect ->
+            when (effect) {
+                is NotificationsComponent.Effect.ShowError -> {
+                    actionError = effect.message
+                }
+            }
+        }
+    }
 
     // Open external links when the component signals one
     val externalLink = state.externalLinkToOpen
@@ -81,8 +97,10 @@ fun NotificationsScreen(
 
     NotificationsScreenContent(
         state = state,
+        actionError = actionError,
         onIntent = component::onIntent,
         onBack = onBack,
+        onDismissError = { actionError = null },
         modifier = modifier,
     )
 }
@@ -91,12 +109,14 @@ fun NotificationsScreen(
 @Composable
 internal fun NotificationsScreenContent(
     state: NotificationsComponent.State,
+    actionError: String? = null,
     onIntent: (NotificationsComponent.Intent) -> Unit,
     onBack: () -> Unit,
+    onDismissError: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     PullToRefreshBox(
-        isRefreshing = state.isLoading,
+        isRefreshing = state.isContentLoading,
         onRefresh = { onIntent(NotificationsComponent.Intent.Refresh) },
         modifier = modifier
             .fillMaxSize()
@@ -117,22 +137,26 @@ internal fun NotificationsScreenContent(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             )
 
-            when {
-                state.isLoading && state.currentNotifications.isEmpty() ->
-                    NotificationsScreenSkeleton()
-                state.error != null && state.currentNotifications.isEmpty() -> ErrorContent(
-                    error = state.error,
+            ActionErrorBar(error = actionError, onDismiss = onDismissError)
+
+            when (val current = state.currentNotifications) {
+                is ContentState.Loading -> NotificationsScreenSkeleton()
+                is ContentState.Error -> ErrorContent(
+                    error = current.message,
                     onRetry = { onIntent(NotificationsComponent.Intent.Refresh) },
                 )
-                state.currentNotifications.isEmpty() -> EmptyContent(
-                    text = "Нет уведомлений",
-                )
-                else -> NotificationsList(
-                    notifications = state.currentNotifications,
-                    onLinkClick = { uri ->
-                        onIntent(NotificationsComponent.Intent.OpenLink(uri))
-                    },
-                )
+                is ContentState.Success -> {
+                    if (current.data.isEmpty()) {
+                        EmptyContent(text = "Нет уведомлений")
+                    } else {
+                        NotificationsList(
+                            notifications = current.data,
+                            onLinkClick = { uri ->
+                                onIntent(NotificationsComponent.Intent.OpenLink(uri))
+                            },
+                        )
+                    }
+                }
             }
         }
     }
@@ -291,7 +315,7 @@ private fun NotificationsScreenSkeleton(modifier: Modifier = Modifier) {
 private fun PreviewNotificationsScreenSkeletonDark() {
     CuMobileTheme(darkTheme = true) {
         NotificationsScreenContent(
-            state = NotificationsComponent.State(isLoading = true),
+            state = NotificationsComponent.State(),
             onIntent = {},
             onBack = {},
         )
@@ -303,7 +327,7 @@ private fun PreviewNotificationsScreenSkeletonDark() {
 private fun PreviewNotificationsScreenSkeletonLight() {
     CuMobileTheme(darkTheme = false) {
         NotificationsScreenContent(
-            state = NotificationsComponent.State(isLoading = true),
+            state = NotificationsComponent.State(),
             onIntent = {},
             onBack = {},
         )
@@ -311,7 +335,7 @@ private fun PreviewNotificationsScreenSkeletonLight() {
 }
 
 private val previewNotificationsState = NotificationsComponent.State(
-    educationNotifications = listOf(
+    educationNotifications = ContentState.Success(listOf(
         NotificationItem(
             id = "1",
             title = "Новое задание",
@@ -328,7 +352,8 @@ private val previewNotificationsState = NotificationsComponent.State(
             category = "1",
             createdAt = "2026-03-17T14:30:00",
         ),
-    ),
+    )),
+    otherNotifications = ContentState.Success(emptyList()),
 )
 
 @Preview
@@ -360,7 +385,7 @@ private fun PreviewNotificationsScreenLight() {
 private fun PreviewNotificationsLoadingDark() {
     CuMobileTheme(darkTheme = true) {
         NotificationsScreenContent(
-            state = NotificationsComponent.State(isLoading = true),
+            state = NotificationsComponent.State(),
             onIntent = {},
             onBack = {},
         )
@@ -373,7 +398,8 @@ private fun PreviewNotificationsErrorDark() {
     CuMobileTheme(darkTheme = true) {
         NotificationsScreenContent(
             state = NotificationsComponent.State(
-                error = "Не удалось загрузить уведомления",
+                educationNotifications = ContentState.Error("Не удалось загрузить уведомления"),
+                otherNotifications = ContentState.Error("Не удалось загрузить уведомления"),
             ),
             onIntent = {},
             onBack = {},
@@ -387,7 +413,8 @@ private fun PreviewNotificationsErrorLight() {
     CuMobileTheme(darkTheme = false) {
         NotificationsScreenContent(
             state = NotificationsComponent.State(
-                error = "Не удалось загрузить уведомления",
+                educationNotifications = ContentState.Error("Не удалось загрузить уведомления"),
+                otherNotifications = ContentState.Error("Не удалось загрузить уведомления"),
             ),
             onIntent = {},
             onBack = {},
@@ -400,7 +427,10 @@ private fun PreviewNotificationsErrorLight() {
 private fun PreviewNotificationsEmptyDark() {
     CuMobileTheme(darkTheme = true) {
         NotificationsScreenContent(
-            state = NotificationsComponent.State(),
+            state = NotificationsComponent.State(
+                educationNotifications = ContentState.Success(emptyList()),
+                otherNotifications = ContentState.Success(emptyList()),
+            ),
             onIntent = {},
             onBack = {},
         )
@@ -409,7 +439,8 @@ private fun PreviewNotificationsEmptyDark() {
 
 private val previewOtherTabState = NotificationsComponent.State(
     selectedTab = 1,
-    otherNotifications = listOf(
+    educationNotifications = ContentState.Success(emptyList()),
+    otherNotifications = ContentState.Success(listOf(
         NotificationItem(
             id = "10",
             title = "Обновление системы",
@@ -430,7 +461,7 @@ private val previewOtherTabState = NotificationsComponent.State(
                 label = "Пройти опрос",
             ),
         ),
-    ),
+    )),
 )
 
 @Preview
@@ -448,11 +479,12 @@ private fun PreviewNotificationsOtherTabDark() {
 @Preview
 @Composable
 private fun PreviewNotificationsWithLinkDark() {
+    val eduData = (previewNotificationsState.educationNotifications as ContentState.Success).data
     CuMobileTheme(darkTheme = true) {
         NotificationsScreenContent(
             state = previewNotificationsState.copy(
-                educationNotifications = previewNotificationsState.educationNotifications +
-                    NotificationItem(
+                educationNotifications = ContentState.Success(
+                    eduData + NotificationItem(
                         id = "3",
                         title = "Новый лонгрид по Алгоритмам",
                         description = "Добавлен материал «Динамическое программирование»",
@@ -464,6 +496,7 @@ private fun PreviewNotificationsWithLinkDark() {
                             label = "Открыть лонгрид",
                         ),
                     ),
+                ),
             ),
             onIntent = {},
             onBack = {},

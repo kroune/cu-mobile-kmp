@@ -35,6 +35,7 @@ import io.github.kroune.cumobile.data.model.CourseExerciseTheme
 import io.github.kroune.cumobile.data.model.TaskScore
 import io.github.kroune.cumobile.data.model.TaskScoreActivity
 import io.github.kroune.cumobile.presentation.common.AppTheme
+import io.github.kroune.cumobile.presentation.common.ContentState
 import io.github.kroune.cumobile.presentation.common.CuMobileTheme
 import io.github.kroune.cumobile.presentation.common.DetailTopBar
 import io.github.kroune.cumobile.presentation.common.ErrorContent
@@ -74,7 +75,7 @@ internal fun CoursePerformanceScreenContent(
     modifier: Modifier = Modifier,
 ) {
     PullToRefreshBox(
-        isRefreshing = state.isLoading,
+        isRefreshing = state.isContentLoading,
         onRefresh = { onIntent(CoursePerformanceComponent.Intent.Refresh) },
         modifier = modifier
             .fillMaxSize()
@@ -88,16 +89,18 @@ internal fun CoursePerformanceScreenContent(
                 onBack = onBack,
             )
 
-            when {
-                state.isLoading && state.exercises.isEmpty() ->
-                    CoursePerformanceScreenSkeleton()
-                state.error != null && state.exercises.isEmpty() -> ErrorContent(
-                    error = state.error,
+            when (val content = state.content) {
+                is ContentState.Loading -> CoursePerformanceScreenSkeleton()
+                is ContentState.Error -> ErrorContent(
+                    error = content.message,
                     onRetry = {
                         onIntent(CoursePerformanceComponent.Intent.Refresh)
                     },
                 )
-                else -> PerformanceContent(state = state, onIntent = onIntent)
+                is ContentState.Success -> PerformanceContent(
+                    state = state,
+                    onIntent = onIntent,
+                )
             }
         }
     }
@@ -265,7 +268,7 @@ private fun CoursePerformanceScreenSkeleton(modifier: Modifier = Modifier) {
 private fun PreviewPerformanceScreenSkeletonDark() {
     CuMobileTheme(darkTheme = true) {
         CoursePerformanceScreenContent(
-            state = CoursePerformanceComponent.State(courseId = "1", isLoading = true),
+            state = CoursePerformanceComponent.State(courseId = "1"),
             onIntent = {},
             onBack = {},
         )
@@ -277,7 +280,7 @@ private fun PreviewPerformanceScreenSkeletonDark() {
 private fun PreviewPerformanceScreenSkeletonLight() {
     CuMobileTheme(darkTheme = false) {
         CoursePerformanceScreenContent(
-            state = CoursePerformanceComponent.State(courseId = "1", isLoading = true),
+            state = CoursePerformanceComponent.State(courseId = "1"),
             onIntent = {},
             onBack = {},
         )
@@ -346,21 +349,25 @@ private val previewPerformanceState =
         courseId = "1",
         courseName = "Алгоритмы и структуры данных",
         totalGrade = 7,
-        exercises = previewPerformanceExercises,
-        activitySummaries = listOf(
-            ActivitySummary(
-                activityId = "1",
-                activityName = "Домашнее задание",
-                count = 5,
-                averageScore = 8.0,
-                weight = 0.4,
-            ),
-            ActivitySummary(
-                activityId = "2",
-                activityName = "Лабораторная",
-                count = 3,
-                averageScore = 5.0,
-                weight = 0.3,
+        content = ContentState.Success(
+            PerformanceData(
+                exercises = previewPerformanceExercises,
+                activitySummaries = listOf(
+                    ActivitySummary(
+                        activityId = "1",
+                        activityName = "Домашнее задание",
+                        count = 5,
+                        averageScore = 8.0,
+                        weight = 0.4,
+                    ),
+                    ActivitySummary(
+                        activityId = "2",
+                        activityName = "Лабораторная",
+                        count = 3,
+                        averageScore = 5.0,
+                        weight = 0.3,
+                    ),
+                ),
             ),
         ),
     )
@@ -406,7 +413,7 @@ private fun PreviewPerformanceTabDark() {
 private fun PreviewPerformanceLoadingDark() {
     CuMobileTheme(darkTheme = true) {
         CoursePerformanceScreenContent(
-            state = CoursePerformanceComponent.State(courseId = "1", isLoading = true),
+            state = CoursePerformanceComponent.State(courseId = "1"),
             onIntent = {},
             onBack = {},
         )
@@ -420,7 +427,7 @@ private fun PreviewPerformanceErrorDark() {
         CoursePerformanceScreenContent(
             state = CoursePerformanceComponent.State(
                 courseId = "1",
-                error = "Не удалось загрузить успеваемость",
+                content = ContentState.Error("Не удалось загрузить успеваемость"),
             ),
             onIntent = {},
             onBack = {},
@@ -435,7 +442,7 @@ private fun PreviewPerformanceErrorLight() {
         CoursePerformanceScreenContent(
             state = CoursePerformanceComponent.State(
                 courseId = "1",
-                error = "Не удалось загрузить успеваемость",
+                content = ContentState.Error("Не удалось загрузить успеваемость"),
             ),
             onIntent = {},
             onBack = {},

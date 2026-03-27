@@ -6,16 +6,23 @@ import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.domain.repository.CourseRepository
 import io.github.kroune.cumobile.domain.repository.PerformanceRepository
+import io.github.kroune.cumobile.presentation.common.ContentState
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+
+private val logger = KotlinLogging.logger {}
 
 /**
  * Default implementation of [CoursesComponent].
  *
- * Loads courses, performance data, and gradebook from repositories.
+ * Loads courses, performance data, and gradebook from repositories in parallel.
  * Delegates course navigation to the parent via callbacks.
  */
 class DefaultCoursesComponent(
@@ -32,6 +39,9 @@ class DefaultCoursesComponent(
 
     private val _state = MutableValue(CoursesComponent.State())
     override val state: Value<CoursesComponent.State> = _state
+
+    private val _effects = Channel<CoursesComponent.Effect>(Channel.BUFFERED)
+    override val effects: Flow<CoursesComponent.Effect> = _effects.receiveAsFlow()
 
     override fun onIntent(intent: CoursesComponent.Intent) {
         when (intent) {
@@ -79,24 +89,45 @@ class DefaultCoursesComponent(
     }
 
     private fun loadAllData() {
+        _state.value = _state.value.copy(
+            courses = ContentState.Loading,
+            performanceCourses = ContentState.Loading,
+            gradebook = ContentState.Loading,
+        )
+
         scope.launch {
-            _state.value = _state.value.copy(isLoading = true, error = null)
-
             val courses = courseRepository.fetchCourses()
-            val performance = performanceRepository.fetchPerformance()
-            val gradebook = performanceRepository.fetchGradebook()
+            _state.value = _state.value.copy(
+                courses = if (courses != null) {
+                    ContentState.Success(courses)
+                } else {
+                    ContentState.Error("Не удалось загрузить курсы")
+                },
+            )
+        }
 
-            if (courses != null) {
+        scope.launch {
+            val performance = performanceRepository.fetchPerformance()
+            _state.value = _state.value.copy(
+                performanceCourses = ContentState.Success(
+                    performance?.courses.orEmpty(),
+                ),
+            )
+        }
+
+        scope.launch {
+            try {
+                val gradebook = performanceRepository.fetchGradebook()
                 _state.value = _state.value.copy(
-                    courses = courses,
-                    performanceCourses = performance?.courses.orEmpty(),
-                    gradebook = gradebook,
-                    isLoading = false,
+                    gradebook = ContentState.Success(gradebook),
                 )
-            } else {
+            } catch (e: Exception) {
+                logger.error(e) { "Failed to load gradebook" }
                 _state.value = _state.value.copy(
-                    isLoading = false,
-                    error = "Не удалось загрузить курсы",
+                    gradebook = ContentState.Error("Не удалось загрузить зачётку"),
+                )
+                _effects.trySend(
+                    CoursesComponent.Effect.ShowError("Не удалось загрузить зачётку"),
                 )
             }
         }

@@ -8,7 +8,9 @@ import io.github.kroune.cumobile.data.model.LongreadMaterial
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
@@ -166,14 +168,19 @@ class DefaultLongreadComponent(
         val codingTaskIds = materials
             .filter { it.isCoding && it.taskId != null }
             .mapNotNull { it.taskId }
-        val detailsMap = _state.value.taskDetails.toMutableMap()
-        for (taskId in codingTaskIds) {
-            val details = taskRepository.fetchTaskDetails(taskId)
-            if (details != null) {
-                detailsMap[taskId] = details
+        coroutineScope {
+            val deferredDetails = codingTaskIds.map { taskId ->
+                async { taskId to taskRepository.fetchTaskDetails(taskId) }
+            }
+            val detailsMap = _state.value.taskDetails.toMutableMap()
+            for (deferred in deferredDetails) {
+                val (taskId, details) = deferred.await()
+                if (details != null) {
+                    detailsMap[taskId] = details
+                    _state.value = _state.value.copy(taskDetails = detailsMap.toMap())
+                }
             }
         }
-        _state.value = _state.value.copy(taskDetails = detailsMap)
     }
 
     private fun selectTask(taskId: String) {
@@ -195,12 +202,14 @@ class DefaultLongreadComponent(
 
     private fun loadTaskEventsAndComments(taskId: String) {
         scope.launch {
-            val events = taskRepository.fetchTaskEvents(taskId)
-            val comments = taskRepository.fetchTaskComments(taskId)
-            _state.value = _state.value.copy(
-                taskEvents = events.orEmpty(),
-                taskComments = comments.orEmpty(),
-            )
+            coroutineScope {
+                val eventsDeferred = async { taskRepository.fetchTaskEvents(taskId) }
+                val commentsDeferred = async { taskRepository.fetchTaskComments(taskId) }
+                _state.value = _state.value.copy(
+                    taskEvents = eventsDeferred.await().orEmpty(),
+                    taskComments = commentsDeferred.await().orEmpty(),
+                )
+            }
         }
     }
 

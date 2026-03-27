@@ -7,8 +7,12 @@ import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.data.model.NotificationCategory
 import io.github.kroune.cumobile.data.model.NotificationItem
 import io.github.kroune.cumobile.domain.repository.NotificationRepository
+import io.github.kroune.cumobile.presentation.common.ContentState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 
 /**
@@ -26,8 +30,11 @@ class DefaultNotificationsComponent(
     ComponentContext by componentContext {
     private val scope = coroutineScope(Dispatchers.Main.immediate + SupervisorJob())
 
-    private val _state = MutableValue(NotificationsComponent.State(isLoading = true))
+    private val _state = MutableValue(NotificationsComponent.State())
     override val state: Value<NotificationsComponent.State> = _state
+
+    private val _effects = Channel<NotificationsComponent.Effect>(Channel.BUFFERED)
+    override val effects: Flow<NotificationsComponent.Effect> = _effects.receiveAsFlow()
 
     init {
         loadNotifications()
@@ -53,22 +60,35 @@ class DefaultNotificationsComponent(
     }
 
     private fun loadNotifications() {
+        _state.value = _state.value.copy(
+            educationNotifications = ContentState.Loading,
+            otherNotifications = ContentState.Loading,
+        )
+
         scope.launch {
-            _state.value = _state.value.copy(isLoading = true, error = null)
-            val education = notificationRepository.fetchNotifications(category = NotificationCategory.Education)
-            val other = notificationRepository.fetchNotifications(category = NotificationCategory.Other)
-            if (education != null || other != null) {
-                _state.value = _state.value.copy(
-                    educationNotifications = sortByDate(education.orEmpty()),
-                    otherNotifications = sortByDate(other.orEmpty()),
-                    isLoading = false,
-                )
-            } else {
-                _state.value = _state.value.copy(
-                    isLoading = false,
-                    error = "Не удалось загрузить уведомления",
-                )
-            }
+            val education = notificationRepository.fetchNotifications(
+                category = NotificationCategory.Education,
+            )
+            _state.value = _state.value.copy(
+                educationNotifications = if (education != null) {
+                    ContentState.Success(sortByDate(education))
+                } else {
+                    ContentState.Error("Не удалось загрузить уведомления")
+                },
+            )
+        }
+
+        scope.launch {
+            val other = notificationRepository.fetchNotifications(
+                category = NotificationCategory.Other,
+            )
+            _state.value = _state.value.copy(
+                otherNotifications = if (other != null) {
+                    ContentState.Success(sortByDate(other))
+                } else {
+                    ContentState.Error("Не удалось загрузить уведомления")
+                },
+            )
         }
     }
 

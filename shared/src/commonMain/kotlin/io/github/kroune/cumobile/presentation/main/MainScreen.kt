@@ -33,6 +33,7 @@ import com.arkivanov.decompose.extensions.compose.stack.Children
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import io.github.kroune.cumobile.presentation.common.AppTheme
 import io.github.kroune.cumobile.presentation.common.TopBar
+import io.github.kroune.cumobile.presentation.common.dataOrNull
 import io.github.kroune.cumobile.presentation.courses.CoursesScreen
 import io.github.kroune.cumobile.presentation.courses.detail.CourseDetailScreen
 import io.github.kroune.cumobile.presentation.files.FilesScreen
@@ -85,9 +86,9 @@ fun MainScreen(component: MainComponent) {
         ) {
             TopBar(
                 title = TAB_LABELS[selectedIndex],
-                profileInitials = homeState?.profileInitials.orEmpty(),
-                avatarBitmap = homeState?.avatarBitmap,
-                lateDaysBalance = homeState?.lateDaysBalance,
+                profileInitials = homeState?.profileInitials?.dataOrNull.orEmpty(),
+                avatarBitmap = homeState?.avatarBitmap?.dataOrNull,
+                lateDaysBalance = homeState?.lateDaysBalance?.dataOrNull,
                 onNotificationsClick = { component.navigateToNotifications() },
                 onProfileClick = { component.navigateToProfile() },
             )

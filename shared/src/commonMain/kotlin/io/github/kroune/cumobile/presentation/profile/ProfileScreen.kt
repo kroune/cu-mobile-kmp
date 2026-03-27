@@ -58,11 +58,13 @@ import io.github.kroune.cumobile.data.model.PhoneInfo
 import io.github.kroune.cumobile.data.model.StudentProfile
 import io.github.kroune.cumobile.presentation.common.ActionErrorBar
 import io.github.kroune.cumobile.presentation.common.AppTheme
+import io.github.kroune.cumobile.presentation.common.ContentState
 import io.github.kroune.cumobile.presentation.common.CuMobileTheme
 import io.github.kroune.cumobile.presentation.common.DetailTopBar
 import io.github.kroune.cumobile.presentation.common.ErrorContent
 import io.github.kroune.cumobile.presentation.common.ShimmerBox
 import io.github.kroune.cumobile.presentation.common.ShimmerCircle
+import io.github.kroune.cumobile.presentation.common.dataOrNull
 import io.github.kroune.cumobile.presentation.common.rememberFilePicker
 import kotlinx.coroutines.launch
 
@@ -136,14 +138,15 @@ internal fun ProfileScreenContent(
 
         ActionErrorBar(error = actionError, onDismiss = onDismissError)
 
-        when {
-            state.isLoading -> ProfileScreenSkeleton()
-            state.error != null && state.profile == null -> ErrorContent(
-                error = state.error,
+        when (val profileState = state.profile) {
+            is ContentState.Loading -> ProfileScreenSkeleton()
+            is ContentState.Error -> ErrorContent(
+                error = profileState.message,
                 onRetry = { onIntent(ProfileComponent.Intent.Refresh) },
             )
-            state.profile != null -> ProfileContent(
+            is ContentState.Success -> ProfileContent(
                 state = state,
+                profile = profileState.data,
                 onIntent = onIntent,
             )
         }
@@ -153,10 +156,10 @@ internal fun ProfileScreenContent(
 @Composable
 private fun ProfileContent(
     state: ProfileComponent.State,
+    profile: StudentProfile,
     onIntent: (ProfileComponent.Intent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val profile = state.profile ?: return
     val avatarPicker = rememberFilePicker { file ->
         onIntent(ProfileComponent.Intent.UploadAvatar(file))
     }
@@ -334,7 +337,7 @@ private fun InfoCard(
     state: ProfileComponent.State,
     modifier: Modifier = Modifier,
 ) {
-    val profile = state.profile ?: return
+    val profile = state.profile.dataOrNull ?: return
 
     Column(
         modifier = modifier
@@ -613,13 +616,17 @@ private fun PreviewProfileScreenSkeletonLight() {
 }
 
 private val previewProfileState = ProfileComponent.State(
-    profile = StudentProfile(
-        firstName = "Иван",
-        lastName = "Петров",
-        educationLevel = "bachelor",
-        course = 2,
-        telegram = "@ipetrov",
+    profile = ContentState.Success(
+        StudentProfile(
+            firstName = "Иван",
+            lastName = "Петров",
+            educationLevel = "bachelor",
+            course = 2,
+            telegram = "@ipetrov",
+        ),
     ),
+    lmsProfile = ContentState.Success(null),
+    avatar = ContentState.Success(null),
 )
 
 @Preview
@@ -644,7 +651,7 @@ private fun PreviewProfileLoadErrorDark() {
     CuMobileTheme(darkTheme = true) {
         ProfileScreenContent(
             state = ProfileComponent.State(
-                error = "Не удалось загрузить профиль",
+                profile = ContentState.Error("Не удалось загрузить профиль"),
             ),
             onIntent = {},
             onBack = {},
@@ -658,7 +665,7 @@ private fun PreviewProfileLoadErrorLight() {
     CuMobileTheme(darkTheme = false) {
         ProfileScreenContent(
             state = ProfileComponent.State(
-                error = "Не удалось загрузить профиль",
+                profile = ContentState.Error("Не удалось загрузить профиль"),
             ),
             onIntent = {},
             onBack = {},
@@ -697,7 +704,7 @@ private fun PreviewProfileActionErrorLight() {
 private fun PreviewProfileLoadingDark() {
     CuMobileTheme(darkTheme = true) {
         ProfileScreenContent(
-            state = ProfileComponent.State(isLoading = true),
+            state = ProfileComponent.State(),
             onIntent = {},
             onBack = {},
         )
@@ -709,7 +716,7 @@ private fun PreviewProfileLoadingDark() {
 private fun PreviewProfileLoadingLight() {
     CuMobileTheme(darkTheme = false) {
         ProfileScreenContent(
-            state = ProfileComponent.State(isLoading = true),
+            state = ProfileComponent.State(),
             onIntent = {},
             onBack = {},
         )
@@ -734,7 +741,7 @@ private fun PreviewProfileDeletingAvatarDark() {
     CuMobileTheme(darkTheme = true) {
         ProfileScreenContent(
             state = previewProfileState.copy(
-                avatarBytes = ByteArray(0),
+                avatar = ContentState.Success(AvatarData(bytes = ByteArray(0), bitmap = null)),
                 isDeletingAvatar = true,
             ),
             onIntent = {},
@@ -744,25 +751,29 @@ private fun PreviewProfileDeletingAvatarDark() {
 }
 
 private val previewProfileFullState = ProfileComponent.State(
-    profile = StudentProfile(
-        firstName = "Иван",
-        lastName = "Петров",
-        middleName = "Сергеевич",
-        educationLevel = "bachelor",
-        course = 2,
-        telegram = "@ipetrov",
-        timeLogin = "ipetrov",
-        emails = listOf(
-            EmailInfo(
-                value = "ipetrov@edu.centraluniversity.ru",
-                type = "university",
+    profile = ContentState.Success(
+        StudentProfile(
+            firstName = "Иван",
+            lastName = "Петров",
+            middleName = "Сергеевич",
+            educationLevel = "bachelor",
+            course = 2,
+            telegram = "@ipetrov",
+            timeLogin = "ipetrov",
+            emails = listOf(
+                EmailInfo(
+                    value = "ipetrov@edu.centraluniversity.ru",
+                    type = "university",
+                ),
+                EmailInfo(value = "ivan.petrov@gmail.com", type = "personal"),
             ),
-            EmailInfo(value = "ivan.petrov@gmail.com", type = "personal"),
-        ),
-        phones = listOf(
-            PhoneInfo(value = "+79001234567", type = "mobile"),
+            phones = listOf(
+                PhoneInfo(value = "+79001234567", type = "mobile"),
+            ),
         ),
     ),
+    lmsProfile = ContentState.Success(null),
+    avatar = ContentState.Success(null),
 )
 
 @Preview
