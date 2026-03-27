@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -132,35 +133,42 @@ internal fun HomeContent(
     onCourseClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(
+    LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .background(AppTheme.colors.background)
-            .verticalScroll(rememberScrollState()),
+            .background(AppTheme.colors.background),
+        contentPadding = PaddingValues(bottom = 16.dp),
     ) {
-        DeadlinesSection(
-            tasksState = state.tasks,
-            deadlineTasks = state.deadlineTasks,
-            onTaskClick = onTaskClick,
-        )
+        item {
+            DeadlinesSection(
+                tasksState = state.tasks,
+                deadlineTasks = state.deadlineTasks,
+                onTaskClick = onTaskClick,
+            )
+        }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        item {
+            Spacer(modifier = Modifier.height(16.dp))
+        }
 
-        ScheduleSection(
-            state = state,
-            onIntent = onIntent,
-        )
+        item {
+            ScheduleSection(
+                state = state,
+                onIntent = onIntent,
+            )
+        }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        item {
+            Spacer(modifier = Modifier.height(16.dp))
+        }
 
-        CoursesSection(
-            coursesState = state.courses,
-            activeCourses = state.activeCourses,
-            onCourseClick = onCourseClick,
-        )
-
-        // Bottom padding for content above nav bar
-        Spacer(modifier = Modifier.height(16.dp))
+        item {
+            CoursesSection(
+                coursesState = state.courses,
+                activeCourses = state.activeCourses,
+                onCourseClick = onCourseClick,
+            )
+        }
     }
 }
 
