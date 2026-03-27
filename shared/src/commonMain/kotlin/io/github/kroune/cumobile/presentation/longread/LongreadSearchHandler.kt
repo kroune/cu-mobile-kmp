@@ -1,6 +1,7 @@
 package io.github.kroune.cumobile.presentation.longread
 
 import com.arkivanov.decompose.value.MutableValue
+import io.github.kroune.cumobile.presentation.longread.htmlrender.extractPlainText
 
 /**
  * Handles search functionality (toggle, query update, match navigation)
@@ -51,7 +52,7 @@ internal class LongreadSearchHandler(
     private fun countMatches(query: String): Int {
         val lowerQuery = query.lowercase()
         return state.value.materials.sumOf { material ->
-            val text = material.viewContent?.let { stripHtmlTags(it) }.orEmpty()
+            val text = material.viewContent?.let { extractPlainText(it) }.orEmpty()
             if (text.isBlank()) return@sumOf 0
             var count = 0
             var startIndex = 0

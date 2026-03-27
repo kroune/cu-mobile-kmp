@@ -112,7 +112,7 @@ private fun TaskHeader(
             )
             material.estimation?.let { est ->
                 Text(
-                    text = "Макс. балл: ${est.maxScore}" +
+                    text = "Макс. балл: ${est.maxScore ?: "-"}" +
                         (est.activityName?.let { " \u2022 $it" }.orEmpty()),
                     color = AppTheme.colors.textSecondary,
                     fontSize = 12.sp,

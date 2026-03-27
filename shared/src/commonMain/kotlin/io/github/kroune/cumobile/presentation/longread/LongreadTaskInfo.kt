@@ -348,31 +348,39 @@ private fun EventCard(
     }
 }
 
-/** Returns a display label for an event type. */
+/** Returns a display label for an event type (API sends camelCase). */
+@Suppress("CyclomaticComplexMethod")
 private fun eventTypeLabel(type: String): String =
     when (type) {
-        "task_started" -> "Начато"
-        "task_submitted" -> "Отправлено"
-        "task_evaluated" -> "Оценено"
-        "task_reworked" -> "На доработку"
-        "task_revision" -> "Доработка"
-        "comment_added" -> "Комментарий"
-        "late_days_prolonged" -> "Late days +"
-        "late_days_cancelled" -> "Late days -"
-        "task_created" -> "Создано"
-        "reviewer_assigned" -> "Назначен ревьюер"
+        "taskStarted" -> "Начато"
+        "taskSubmitted" -> "Отправлено"
+        "taskEvaluated" -> "Оценено"
+        "taskRejected" -> "Отклонено"
+        "taskFailed" -> "Не сдано"
+        "taskReset" -> "Сброшено"
+        "taskExtraScoreGranted" -> "Доп. баллы"
+        "maxScoreChanged", "exerciseMaxScoreChanged" -> "Макс. балл изменён"
+        "exerciseEstimated" -> "Оценка задания"
+        "exerciseDeadlineChanged" -> "Дедлайн изменён"
+        "assistantAssigned" -> "Назначен ассистент"
+        "reviewerAssigned" -> "Назначен ревьюер"
+        "taskProlonged" -> "Продлено"
+        "solutionAttached" -> "Решение прикреплено"
+        "taskLateDaysReset" -> "Late days сброшены"
+        "taskLateDaysCancelled" -> "Late days -"
+        "taskLateDaysProlong" -> "Late days +"
         else -> type
     }
 
-/** Returns a color for an event type. */
+/** Returns a color for an event type (API sends camelCase). */
 @Composable
 private fun eventTypeColor(type: String): androidx.compose.ui.graphics.Color =
     when (type) {
-        "task_started" -> AppTheme.colors.taskInProgress
-        "task_submitted" -> AppTheme.colors.taskHasSolution
-        "task_evaluated" -> AppTheme.colors.taskEvaluated
-        "task_reworked", "task_revision" -> AppTheme.colors.taskRevision
-        "comment_added" -> AppTheme.colors.accent
-        "late_days_prolonged", "late_days_cancelled" -> AppTheme.colors.textSecondary
+        "taskStarted" -> AppTheme.colors.taskInProgress
+        "taskSubmitted", "solutionAttached" -> AppTheme.colors.taskHasSolution
+        "taskEvaluated", "taskExtraScoreGranted" -> AppTheme.colors.taskEvaluated
+        "taskRejected" -> AppTheme.colors.taskRevision
+        "taskFailed" -> AppTheme.colors.taskFailed
+        "reviewerAssigned", "assistantAssigned" -> AppTheme.colors.accent
         else -> AppTheme.colors.textSecondary
     }
