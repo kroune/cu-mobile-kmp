@@ -111,29 +111,37 @@ private fun AvatarCircle(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Box(
-        modifier = modifier
-            .size(40.dp)
-            .clip(CircleShape)
-            .border(2.dp, AppTheme.colors.accent, CircleShape)
-            .background(AppTheme.colors.surface, CircleShape)
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center,
-    ) {
-        if (avatarBitmap != null) {
-            Image(
-                bitmap = avatarBitmap,
-                contentDescription = "Аватар",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize(),
-            )
-        } else {
-            Text(
-                text = initials.ifEmpty { "?" },
-                color = AppTheme.colors.accent,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
-            )
+    val isLoading = initials.isEmpty() && avatarBitmap == null
+    if (isLoading) {
+        ShimmerCircle(
+            size = 40.dp,
+            modifier = modifier.clickable(onClick = onClick),
+        )
+    } else {
+        Box(
+            modifier = modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .border(2.dp, AppTheme.colors.accent, CircleShape)
+                .background(AppTheme.colors.surface, CircleShape)
+                .clickable(onClick = onClick),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (avatarBitmap != null) {
+                Image(
+                    bitmap = avatarBitmap,
+                    contentDescription = "Аватар",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            } else {
+                Text(
+                    text = initials.ifEmpty { "?" },
+                    color = AppTheme.colors.accent,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
         }
     }
 }
@@ -160,6 +168,34 @@ private fun PreviewTopBarLight() {
             title = "Главная",
             profileInitials = "ИП",
             lateDaysBalance = 5,
+            onNotificationsClick = {},
+            onProfileClick = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewTopBarAvatarLoadingDark() {
+    CuMobileTheme(darkTheme = true) {
+        TopBar(
+            title = "Главная",
+            profileInitials = "",
+            lateDaysBalance = null,
+            onNotificationsClick = {},
+            onProfileClick = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewTopBarAvatarLoadingLight() {
+    CuMobileTheme(darkTheme = false) {
+        TopBar(
+            title = "Главная",
+            profileInitials = "",
+            lateDaysBalance = null,
             onNotificationsClick = {},
             onProfileClick = {},
         )

@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -37,8 +38,9 @@ import io.github.kroune.cumobile.presentation.common.AppTheme
 import io.github.kroune.cumobile.presentation.common.CuMobileTheme
 import io.github.kroune.cumobile.presentation.common.DetailTopBar
 import io.github.kroune.cumobile.presentation.common.ErrorContent
-import io.github.kroune.cumobile.presentation.common.LoadingContent
+import io.github.kroune.cumobile.presentation.common.ExerciseTileSkeleton
 import io.github.kroune.cumobile.presentation.common.SegmentedControl
+import io.github.kroune.cumobile.presentation.common.TotalGradeCardSkeleton
 import io.github.kroune.cumobile.presentation.common.gradeColor
 import io.github.kroune.cumobile.presentation.common.gradeDescription
 
@@ -87,7 +89,8 @@ internal fun CoursePerformanceScreenContent(
             )
 
             when {
-                state.isLoading && state.exercises.isEmpty() -> LoadingContent()
+                state.isLoading && state.exercises.isEmpty() ->
+                    CoursePerformanceScreenSkeleton()
                 state.error != null && state.exercises.isEmpty() -> ErrorContent(
                     error = state.error,
                     onRetry = {
@@ -218,6 +221,68 @@ internal fun scoreRatioColor(ratio: Double): Color =
         ratio >= 0.4 -> Color(0xFFFFA726)
         else -> Color(0xFFEF5350)
     }
+
+// endregion
+
+// region Skeleton
+
+private const val SkeletonExerciseCount = 4
+private val SkeletonExerciseSpacing = 8.dp
+private val SkeletonHorizontalPadding = 16.dp
+
+/**
+ * Skeleton loading state for the Course Performance screen.
+ *
+ * Shows shimmer placeholders for the total grade card,
+ * segmented control, and exercise tiles.
+ * The [DetailTopBar] is already rendered above the when-block.
+ */
+@Composable
+private fun CoursePerformanceScreenSkeleton(modifier: Modifier = Modifier) {
+    Column(modifier = modifier.fillMaxSize()) {
+        TotalGradeCardSkeleton()
+        SegmentedControl(
+            labels = listOf("Набранные баллы", "Успеваемость"),
+            selectedIndex = 0,
+            onSelect = {},
+            modifier = Modifier.padding(horizontal = SkeletonHorizontalPadding),
+        )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = SkeletonHorizontalPadding),
+        ) {
+            repeat(SkeletonExerciseCount) {
+                ExerciseTileSkeleton()
+                Spacer(Modifier.height(SkeletonExerciseSpacing))
+            }
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewPerformanceScreenSkeletonDark() {
+    CuMobileTheme(darkTheme = true) {
+        CoursePerformanceScreenContent(
+            state = CoursePerformanceComponent.State(courseId = "1", isLoading = true),
+            onIntent = {},
+            onBack = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewPerformanceScreenSkeletonLight() {
+    CuMobileTheme(darkTheme = false) {
+        CoursePerformanceScreenContent(
+            state = CoursePerformanceComponent.State(courseId = "1", isLoading = true),
+            onIntent = {},
+            onBack = {},
+        )
+    }
+}
 
 // endregion
 

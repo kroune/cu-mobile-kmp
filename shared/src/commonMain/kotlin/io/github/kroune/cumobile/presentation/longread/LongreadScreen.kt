@@ -10,8 +10,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -56,7 +58,7 @@ import io.github.kroune.cumobile.presentation.common.AppTheme
 import io.github.kroune.cumobile.presentation.common.CuMobileTheme
 import io.github.kroune.cumobile.presentation.common.DetailTopBar
 import io.github.kroune.cumobile.presentation.common.ErrorContent
-import io.github.kroune.cumobile.presentation.common.LoadingContent
+import io.github.kroune.cumobile.presentation.common.LongreadMaterialSkeleton
 import io.github.kroune.cumobile.presentation.common.formatSizeBytes
 import io.github.kroune.cumobile.presentation.longread.htmlrender.AudioMaterialCard
 import io.github.kroune.cumobile.presentation.longread.htmlrender.HtmlContent
@@ -168,7 +170,8 @@ internal fun LongreadScreenContent(
                 }
 
                 when {
-                    state.isLoading && state.materials.isEmpty() -> LoadingContent()
+                    state.isLoading && state.materials.isEmpty() ->
+                        LongreadScreenSkeleton()
                     state.error != null && state.materials.isEmpty() -> ErrorContent(
                         error = state.error,
                         onRetry = { onIntent(LongreadComponent.Intent.Refresh) },
@@ -497,6 +500,58 @@ private fun QuestionsCard(
             color = AppTheme.colors.textSecondary,
             fontSize = 14.sp,
             modifier = Modifier.padding(top = 8.dp),
+        )
+    }
+}
+
+private const val SkeletonMaterialCount = 3
+private val SkeletonMaterialSpacing = 12.dp
+private val SkeletonMaterialPadding = 16.dp
+private val SkeletonMaterialTopSpacing = 12.dp
+
+/**
+ * Skeleton loading state for the Longread screen.
+ *
+ * Shows shimmer placeholder blocks matching the material list layout.
+ * The [DetailTopBar] is already rendered above the when-block.
+ */
+@Composable
+private fun LongreadScreenSkeleton(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(horizontal = SkeletonMaterialPadding),
+        verticalArrangement = Arrangement.spacedBy(SkeletonMaterialSpacing),
+    ) {
+        Spacer(Modifier.height(SkeletonMaterialTopSpacing))
+        repeat(SkeletonMaterialCount) {
+            LongreadMaterialSkeleton()
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewLongreadScreenSkeletonDark() {
+    CuMobileTheme(darkTheme = true) {
+        LongreadScreenContent(
+            state = LongreadComponent.State(isLoading = true),
+            actionError = null,
+            onIntent = {},
+            onDismissError = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewLongreadScreenSkeletonLight() {
+    CuMobileTheme(darkTheme = false) {
+        LongreadScreenContent(
+            state = LongreadComponent.State(isLoading = true),
+            actionError = null,
+            onIntent = {},
+            onDismissError = {},
         )
     }
 }

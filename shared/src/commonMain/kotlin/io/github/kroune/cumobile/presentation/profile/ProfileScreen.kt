@@ -61,7 +61,8 @@ import io.github.kroune.cumobile.presentation.common.AppTheme
 import io.github.kroune.cumobile.presentation.common.CuMobileTheme
 import io.github.kroune.cumobile.presentation.common.DetailTopBar
 import io.github.kroune.cumobile.presentation.common.ErrorContent
-import io.github.kroune.cumobile.presentation.common.LoadingContent
+import io.github.kroune.cumobile.presentation.common.ShimmerBox
+import io.github.kroune.cumobile.presentation.common.ShimmerCircle
 import io.github.kroune.cumobile.presentation.common.rememberFilePicker
 import kotlinx.coroutines.launch
 
@@ -136,7 +137,7 @@ internal fun ProfileScreenContent(
         ActionErrorBar(error = actionError, onDismiss = onDismissError)
 
         when {
-            state.isLoading -> LoadingContent()
+            state.isLoading -> ProfileScreenSkeleton()
             state.error != null && state.profile == null -> ErrorContent(
                 error = state.error,
                 onRetry = { onIntent(ProfileComponent.Intent.Refresh) },
@@ -524,6 +525,91 @@ internal fun maskPhone(phone: String): String {
     val suffix = phone.takeLast(2)
     val masked = "*".repeat(phone.length - 5)
     return "$prefix$masked$suffix"
+}
+
+// region Skeleton constants
+private val ProfileAvatarSize = 80.dp
+private val ProfileAvatarTopSpacing = 24.dp
+private val ProfileNameWidth = 160.dp
+private val ProfileNameHeight = 20.dp
+private val ProfileCourseWidth = 120.dp
+private val ProfileCourseHeight = 14.dp
+private val ProfileInfoCardPadding = 16.dp
+private val ProfileInfoLabelWidth = 60.dp
+private val ProfileInfoLabelHeight = 12.dp
+private val ProfileInfoValueHeight = 14.dp
+private val ProfileInfoRowSpacing = 12.dp
+private val ProfileNameSpacing = 4.dp
+private const val ProfileInfoRowCount = 4
+private const val ProfileInfoValueFraction = 0.7f
+private val ProfileInfoValueSpacing = 2.dp
+// endregion
+
+/**
+ * Skeleton loading state for the Profile screen.
+ *
+ * Shows shimmer placeholders for avatar circle, name, course info,
+ * and info card with label/value rows.
+ */
+@Composable
+private fun ProfileScreenSkeleton(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(horizontal = ProfileInfoCardPadding),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Spacer(Modifier.height(ProfileAvatarTopSpacing))
+
+        ShimmerCircle(size = ProfileAvatarSize)
+
+        Spacer(Modifier.height(ProfileInfoCardPadding))
+
+        ShimmerBox(Modifier.width(ProfileNameWidth), height = ProfileNameHeight)
+        Spacer(Modifier.height(ProfileNameSpacing))
+        ShimmerBox(Modifier.width(ProfileCourseWidth), height = ProfileCourseHeight)
+
+        Spacer(Modifier.height(ProfileAvatarTopSpacing))
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(AppTheme.colors.surface, RoundedCornerShape(12.dp))
+                .padding(ProfileInfoCardPadding),
+        ) {
+            repeat(ProfileInfoRowCount) { index ->
+                if (index > 0) Spacer(Modifier.height(ProfileInfoRowSpacing))
+                ShimmerBox(Modifier.width(ProfileInfoLabelWidth), height = ProfileInfoLabelHeight)
+                Spacer(Modifier.height(ProfileInfoValueSpacing))
+                ShimmerBox(
+                    Modifier.fillMaxWidth(ProfileInfoValueFraction),
+                    height = ProfileInfoValueHeight,
+                )
+            }
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewProfileScreenSkeletonDark() {
+    CuMobileTheme(darkTheme = true) {
+        Column(Modifier.fillMaxSize().background(AppTheme.colors.background)) {
+            DetailTopBar(title = "Профиль", onBack = {})
+            ProfileScreenSkeleton()
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewProfileScreenSkeletonLight() {
+    CuMobileTheme(darkTheme = false) {
+        Column(Modifier.fillMaxSize().background(AppTheme.colors.background)) {
+            DetailTopBar(title = "Профиль", onBack = {})
+            ProfileScreenSkeleton()
+        }
+    }
 }
 
 private val previewProfileState = ProfileComponent.State(

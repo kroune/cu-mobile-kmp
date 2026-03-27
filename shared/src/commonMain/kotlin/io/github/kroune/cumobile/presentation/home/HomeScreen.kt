@@ -55,8 +55,10 @@ import io.github.kroune.cumobile.presentation.common.AppTheme
 import io.github.kroune.cumobile.presentation.common.CourseCard
 import io.github.kroune.cumobile.presentation.common.CuMobileTheme
 import io.github.kroune.cumobile.presentation.common.DeadlineTaskCard
+import io.github.kroune.cumobile.presentation.common.ClassCardSkeleton
+import io.github.kroune.cumobile.presentation.common.CourseCardSkeleton
+import io.github.kroune.cumobile.presentation.common.DeadlineTaskCardSkeleton
 import io.github.kroune.cumobile.presentation.common.ErrorContent
-import io.github.kroune.cumobile.presentation.common.LoadingContent
 import io.github.kroune.cumobile.presentation.common.formatEpochDate
 
 /**
@@ -82,7 +84,8 @@ fun HomeScreen(
             .background(AppTheme.colors.background),
     ) {
         when {
-            state.isLoading && state.tasks.isEmpty() && state.courses.isEmpty() -> LoadingContent()
+            state.isLoading && state.tasks.isEmpty() && state.courses.isEmpty() ->
+                HomeScreenSkeleton()
             state.error != null && state.tasks.isEmpty() && state.courses.isEmpty() -> ErrorContent(
                 error = state.error.orEmpty(),
                 onRetry = { component.onIntent(HomeComponent.Intent.Refresh) },
@@ -424,6 +427,96 @@ private fun EmptySection(
     }
 }
 
+private const val SkeletonTaskCardCount = 3
+private const val SkeletonClassCardCount = 2
+private val SkeletonCardSpacing = 12.dp
+private val SkeletonSectionSpacing = 16.dp
+private val SkeletonHorizontalPadding = 16.dp
+private val SkeletonScheduleItemSpacing = 8.dp
+private const val CourseCardAspectRatio = 1.4f
+
+/**
+ * Skeleton loading state for the Home screen.
+ *
+ * Shows shimmer placeholders matching the real layout:
+ * deadlines row, schedule section, and courses grid.
+ */
+@Composable
+private fun HomeScreenSkeleton(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(AppTheme.colors.background)
+            .verticalScroll(rememberScrollState()),
+    ) {
+        // Deadlines section
+        SectionHeader(title = "Дедлайны", count = 0)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = SkeletonHorizontalPadding),
+            horizontalArrangement = Arrangement.spacedBy(SkeletonCardSpacing),
+        ) {
+            repeat(SkeletonTaskCardCount) {
+                DeadlineTaskCardSkeleton()
+            }
+        }
+
+        Spacer(Modifier.height(SkeletonSectionSpacing))
+
+        // Schedule section
+        SectionHeader(title = "Расписание", count = 0)
+        Column(
+            modifier = Modifier.padding(horizontal = SkeletonHorizontalPadding),
+            verticalArrangement = Arrangement.spacedBy(SkeletonScheduleItemSpacing),
+        ) {
+            repeat(SkeletonClassCardCount) {
+                ClassCardSkeleton()
+            }
+        }
+
+        Spacer(Modifier.height(SkeletonSectionSpacing))
+
+        // Courses section
+        SectionHeader(title = "Курсы", count = 0)
+        Row(
+            modifier = Modifier.padding(horizontal = SkeletonHorizontalPadding),
+            horizontalArrangement = Arrangement.spacedBy(SkeletonCardSpacing),
+        ) {
+            repeat(2) {
+                CourseCardSkeleton(Modifier.weight(1f).aspectRatio(CourseCardAspectRatio))
+            }
+        }
+        Spacer(Modifier.height(SkeletonCardSpacing))
+        Row(
+            modifier = Modifier.padding(horizontal = SkeletonHorizontalPadding),
+            horizontalArrangement = Arrangement.spacedBy(SkeletonCardSpacing),
+        ) {
+            repeat(2) {
+                CourseCardSkeleton(Modifier.weight(1f).aspectRatio(CourseCardAspectRatio))
+            }
+        }
+
+        Spacer(Modifier.height(SkeletonSectionSpacing))
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewHomeScreenSkeletonDark() {
+    CuMobileTheme(darkTheme = true) {
+        HomeScreenSkeleton()
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewHomeScreenSkeletonLight() {
+    CuMobileTheme(darkTheme = false) {
+        HomeScreenSkeleton()
+    }
+}
+
 private val previewHomeState = HomeComponent.State(
     isLoading = false,
     profileInitials = "ИП",
@@ -509,14 +602,7 @@ private fun PreviewHomeScreenErrorLight() {
 @Composable
 private fun PreviewHomeScreenLoadingDark() {
     CuMobileTheme(darkTheme = true) {
-        Box(
-            Modifier
-                .fillMaxSize()
-                .background(AppTheme.colors.background),
-        ) {
-            io.github.kroune.cumobile.presentation.common
-                .LoadingContent()
-        }
+        HomeScreenSkeleton()
     }
 }
 

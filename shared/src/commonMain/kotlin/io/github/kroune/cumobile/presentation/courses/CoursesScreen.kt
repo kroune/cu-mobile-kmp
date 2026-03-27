@@ -61,9 +61,9 @@ import io.github.kroune.cumobile.data.model.GradebookSemester
 import io.github.kroune.cumobile.data.model.StudentPerformanceCourse
 import io.github.kroune.cumobile.presentation.common.AppTheme
 import io.github.kroune.cumobile.presentation.common.CuMobileTheme
+import io.github.kroune.cumobile.presentation.common.CourseListTileSkeleton
 import io.github.kroune.cumobile.presentation.common.EmptyContent
 import io.github.kroune.cumobile.presentation.common.ErrorContent
-import io.github.kroune.cumobile.presentation.common.LoadingContent
 import io.github.kroune.cumobile.presentation.common.SegmentedControl
 import io.github.kroune.cumobile.presentation.common.courseCategoryColor
 import io.github.kroune.cumobile.presentation.common.courseCategoryLabel
@@ -118,7 +118,7 @@ internal fun CoursesScreenContent(
             Spacer(modifier = Modifier.height(12.dp))
 
             when {
-                state.isLoading && state.courses.isEmpty() -> LoadingContent()
+                state.isLoading && state.courses.isEmpty() -> CoursesScreenSkeleton()
                 state.error != null && state.courses.isEmpty() -> ErrorContent(
                     error = state.error,
                     onRetry = { onIntent(CoursesComponent.Intent.Refresh) },
@@ -494,6 +494,62 @@ private fun SectionHeader(
             color = AppTheme.colors.textSecondary,
             fontSize = 12.sp,
         )
+    }
+}
+
+// endregion
+
+// region Skeleton
+
+private const val SkeletonTileCount = 5
+private val SkeletonTileSpacing = 4.dp
+
+/**
+ * Skeleton loading state for the Courses screen.
+ *
+ * Shows shimmer placeholder tiles matching the courses list layout.
+ * The [SegmentedControl] is already rendered above the when-block,
+ * so only the content area is replaced.
+ */
+@Composable
+private fun CoursesScreenSkeleton(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(SkeletonTileSpacing),
+    ) {
+        repeat(SkeletonTileCount) {
+            CourseListTileSkeleton()
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewCoursesScreenSkeletonDark() {
+    CuMobileTheme(darkTheme = true) {
+        Box(
+            Modifier
+                .fillMaxSize()
+                .background(AppTheme.colors.background)
+                .padding(horizontal = 16.dp),
+        ) {
+            CoursesScreenSkeleton()
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewCoursesScreenSkeletonLight() {
+    CuMobileTheme(darkTheme = false) {
+        Box(
+            Modifier
+                .fillMaxSize()
+                .background(AppTheme.colors.background)
+                .padding(horizontal = 16.dp),
+        ) {
+            CoursesScreenSkeleton()
+        }
     }
 }
 

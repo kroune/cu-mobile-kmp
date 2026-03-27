@@ -41,7 +41,7 @@ import io.github.kroune.cumobile.presentation.common.CuMobileTheme
 import io.github.kroune.cumobile.presentation.common.DetailTopBar
 import io.github.kroune.cumobile.presentation.common.EmptyContent
 import io.github.kroune.cumobile.presentation.common.ErrorContent
-import io.github.kroune.cumobile.presentation.common.LoadingContent
+import io.github.kroune.cumobile.presentation.common.NotificationCardSkeleton
 import io.github.kroune.cumobile.presentation.common.SegmentedControl
 import io.github.kroune.cumobile.presentation.common.formatDateTimeFull
 
@@ -118,7 +118,8 @@ internal fun NotificationsScreenContent(
             )
 
             when {
-                state.isLoading && state.currentNotifications.isEmpty() -> LoadingContent()
+                state.isLoading && state.currentNotifications.isEmpty() ->
+                    NotificationsScreenSkeleton()
                 state.error != null && state.currentNotifications.isEmpty() -> ErrorContent(
                     error = state.error,
                     onRetry = { onIntent(NotificationsComponent.Intent.Refresh) },
@@ -260,6 +261,54 @@ private fun notificationIconEmoji(
             "\uD83D\uDD14" // 🔔
         }
     }
+
+private const val SkeletonNotificationCount = 4
+private val SkeletonNotificationSpacing = 8.dp
+private val SkeletonNotificationPadding = 16.dp
+
+/**
+ * Skeleton loading state for the Notifications screen.
+ *
+ * Shows shimmer placeholder cards matching the notification list layout.
+ * The [SegmentedControl] is already rendered above the when-block.
+ */
+@Composable
+private fun NotificationsScreenSkeleton(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(horizontal = SkeletonNotificationPadding),
+        verticalArrangement = Arrangement.spacedBy(SkeletonNotificationSpacing),
+    ) {
+        repeat(SkeletonNotificationCount) {
+            NotificationCardSkeleton()
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewNotificationsScreenSkeletonDark() {
+    CuMobileTheme(darkTheme = true) {
+        NotificationsScreenContent(
+            state = NotificationsComponent.State(isLoading = true),
+            onIntent = {},
+            onBack = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewNotificationsScreenSkeletonLight() {
+    CuMobileTheme(darkTheme = false) {
+        NotificationsScreenContent(
+            state = NotificationsComponent.State(isLoading = true),
+            onIntent = {},
+            onBack = {},
+        )
+    }
+}
 
 private val previewNotificationsState = NotificationsComponent.State(
     educationNotifications = listOf(
