@@ -31,10 +31,10 @@ interface CoursesComponent {
         val error: String? = null,
         /** Currently selected segment: 0 = Courses, 1 = Grade Sheet, 2 = Record Book. */
         val segment: Int = 0,
+        /** Whether to show active courses in the courses segment. */
+        val showActive: Boolean = true,
         /** Whether to show archived courses in the courses segment. */
         val showArchived: Boolean = false,
-        /** Whether the courses list is in edit mode. */
-        val isEditMode: Boolean = false,
     )
 
     sealed interface Intent {
@@ -43,11 +43,11 @@ interface CoursesComponent {
             val index: Int,
         ) : Intent
 
+        /** Toggle display of active courses. */
+        data object ToggleActive : Intent
+
         /** Toggle display of archived courses. */
         data object ToggleArchived : Intent
-
-        /** Toggle edit mode. */
-        data object ToggleEditMode : Intent
 
         /** Open course detail. */
         data class OpenCourse(

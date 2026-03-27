@@ -37,13 +37,13 @@ class DefaultCoursesComponent(
         when (intent) {
             is CoursesComponent.Intent.SelectSegment ->
                 _state.value = _state.value.copy(segment = intent.index)
+            CoursesComponent.Intent.ToggleActive ->
+                _state.value = _state.value.copy(
+                    showActive = !_state.value.showActive,
+                )
             CoursesComponent.Intent.ToggleArchived ->
                 _state.value = _state.value.copy(
                     showArchived = !_state.value.showArchived,
-                )
-            CoursesComponent.Intent.ToggleEditMode ->
-                _state.value = _state.value.copy(
-                    isEditMode = !_state.value.isEditMode,
                 )
             is CoursesComponent.Intent.OpenCourse ->
                 onOpenCourse(intent.courseId)

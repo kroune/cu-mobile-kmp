@@ -11,8 +11,9 @@ import com.arkivanov.decompose.router.pages.select
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
+import com.arkivanov.decompose.router.stack.bringToFront
 import com.arkivanov.decompose.router.stack.pop
-import com.arkivanov.decompose.router.stack.push
+import com.arkivanov.decompose.router.stack.pushNew
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
@@ -136,15 +137,15 @@ class DefaultMainComponent(
         )
 
     override fun navigateToProfile() {
-        detailNavigation.push(DetailConfig.Profile)
+        detailNavigation.pushNew(DetailConfig.Profile)
     }
 
     override fun navigateToNotifications() {
-        detailNavigation.push(DetailConfig.Notifications)
+        detailNavigation.pushNew(DetailConfig.Notifications)
     }
 
     override fun navigateToCourseDetail(courseId: String) {
-        detailNavigation.push(DetailConfig.CourseDetail(courseId))
+        detailNavigation.pushNew(DetailConfig.CourseDetail(courseId))
     }
 
     override fun navigateToCoursePerformance(
@@ -152,7 +153,7 @@ class DefaultMainComponent(
         courseName: String,
         totalGrade: Int,
     ) {
-        detailNavigation.push(
+        detailNavigation.bringToFront(
             DetailConfig.CoursePerformance(courseId, courseName, totalGrade),
         )
     }
@@ -162,17 +163,17 @@ class DefaultMainComponent(
         courseId: String,
         themeId: String,
     ) {
-        detailNavigation.push(
+        detailNavigation.pushNew(
             DetailConfig.Longread(longreadId, courseId, themeId),
         )
     }
 
     override fun navigateToFileRenameSettings() {
-        detailNavigation.push(DetailConfig.FileRenameSettings)
+        detailNavigation.pushNew(DetailConfig.FileRenameSettings)
     }
 
     override fun navigateToScanner() {
-        detailNavigation.push(DetailConfig.Scanner)
+        detailNavigation.pushNew(DetailConfig.Scanner)
     }
 
     override fun navigateDetailBack() {
