@@ -56,6 +56,7 @@ private fun CaptureButtons(imagePicker: ImagePicker?) {
         OutlinedButton(
             onClick = { imagePicker?.launchCamera() },
             modifier = Modifier.weight(1f),
+            enabled = imagePicker != null,
             colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.colors.accent),
             shape = RoundedCornerShape(12.dp),
         ) {
@@ -66,6 +67,7 @@ private fun CaptureButtons(imagePicker: ImagePicker?) {
         OutlinedButton(
             onClick = { imagePicker?.launchGallery() },
             modifier = Modifier.weight(1f),
+            enabled = imagePicker != null,
             colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.colors.accent),
             shape = RoundedCornerShape(12.dp),
         ) {

@@ -69,12 +69,12 @@ interface TasksComponent {
 
         val availableStatuses: ImmutableList<String>
             get() {
-                val segmentFilter = if (segment == 0) ActiveStates else ArchiveStates
-                return allTasks
+                val presentStatuses = allTasks
                     .map { normalizeTaskState(effectiveTaskState(it)) }
-                    .filter { it in segmentFilter }
-                    .distinct()
-                    .sorted()
+                    .toSet()
+                val segmentFilter = (if (segment == 0) ActiveStates else ArchiveStates)
+                return segmentFilter
+                    .filter { it in presentStatuses }
                     .toImmutableList()
             }
     }

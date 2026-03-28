@@ -159,7 +159,15 @@ internal class IosFileStorage : FileStorage {
             val path = "$downloadsDir/$item"
             val deleted = memScoped {
                 val errorPtr = alloc<ObjCObjectVar<NSError?>>()
-                fileManager.removeItemAtPath(path, error = errorPtr.ptr)
+                val success = fileManager.removeItemAtPath(path, error = errorPtr.ptr)
+                if (!success) {
+                    errorPtr.value?.let {
+                        logger.error {
+                            "Failed to delete $item during deleteAll: ${it.localizedDescription}"
+                        }
+                    }
+                }
+                success
             }
             if (deleted) {
                 count++
