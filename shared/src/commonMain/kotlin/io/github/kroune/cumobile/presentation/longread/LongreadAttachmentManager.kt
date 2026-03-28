@@ -6,9 +6,9 @@ import io.github.kroune.cumobile.data.model.PendingAttachment
 import io.github.kroune.cumobile.data.model.PickedFile
 import io.github.kroune.cumobile.data.model.UploadStatus
 import io.github.kroune.cumobile.domain.repository.ContentRepository
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.CoroutineScope
-import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.launch
 
 private val logger = KotlinLogging.logger {}
