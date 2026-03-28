@@ -10,9 +10,10 @@ import io.github.kroune.cumobile.data.model.TaskExercise
 import io.github.kroune.cumobile.data.model.TaskState
 import io.github.kroune.cumobile.presentation.common.ui.CuMobileTheme
 import io.github.kroune.cumobile.presentation.tasks.TasksComponent
+import kotlinx.collections.immutable.persistentListOf
 
 private val previewTasksState = TasksComponent.State(
-    allTasks = listOf(
+    allTasks = persistentListOf(
         StudentTask(
             id = "1",
             state = TaskState.InProgress,
@@ -36,7 +37,7 @@ private val previewTasksState = TasksComponent.State(
 
 private val previewTasksArchiveState = TasksComponent.State(
     segment = 1,
-    allTasks = listOf(
+    allTasks = persistentListOf(
         StudentTask(
             id = "10",
             state = TaskState.Evaluated,

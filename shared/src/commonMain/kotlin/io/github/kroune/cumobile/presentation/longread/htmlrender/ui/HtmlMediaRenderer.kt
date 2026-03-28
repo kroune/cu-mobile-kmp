@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.sp
 import io.github.kdroidfilter.composemediaplayer.VideoPlayerSurface
 import io.github.kdroidfilter.composemediaplayer.rememberVideoPlayerState
 import io.github.kroune.cumobile.data.model.LongreadMaterial
+import io.github.kroune.cumobile.util.runCatchingCancellable
 import io.github.kroune.cumobile.presentation.common.decodeImageBitmap
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 import io.github.kroune.cumobile.presentation.longread.htmlrender.HtmlBlock
@@ -378,12 +379,12 @@ fun MediaUrlRow(
 }
 
 private suspend fun loadImageBitmap(url: String): ImageBitmap? =
-    try {
+    runCatchingCancellable {
         val bytes = HttpClient().use { client ->
             client.get(url).readRawBytes()
         }
         decodeImageBitmap(bytes)
-    } catch (e: Exception) {
+    }.getOrElse { e ->
         logger.warn(e) { "Failed to load image: $url" }
         null
     }

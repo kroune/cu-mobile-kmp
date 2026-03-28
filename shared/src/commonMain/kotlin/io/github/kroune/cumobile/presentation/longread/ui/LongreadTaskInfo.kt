@@ -39,6 +39,7 @@ import io.github.kroune.cumobile.presentation.common.ui.taskStateColor
 import io.github.kroune.cumobile.presentation.common.ui.taskStateLabel
 import io.github.kroune.cumobile.presentation.longread.LongreadComponent
 import io.github.kroune.cumobile.presentation.longread.htmlrender.parseHtmlToBlocks
+import kotlinx.collections.immutable.persistentListOf
 import io.github.kroune.cumobile.presentation.longread.htmlrender.ui.HtmlContent
 
 /**
@@ -164,7 +165,7 @@ private fun CommentCard(
             }
         }
         val blocks = remember(comment.content) {
-            if (comment.content.isBlank()) emptyList() else parseHtmlToBlocks(comment.content)
+            if (comment.content.isBlank()) persistentListOf() else parseHtmlToBlocks(comment.content)
         }
         if (blocks.isNotEmpty()) {
             HtmlContent(blocks = blocks)

@@ -16,6 +16,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.collections.immutable.ImmutableList
 
 /**
  * Reusable segmented control (tab selector).
@@ -29,7 +30,7 @@ import androidx.compose.ui.unit.sp
  */
 @Composable
 internal fun SegmentedControl(
-    labels: List<String>,
+    labels: ImmutableList<String>,
     selectedIndex: Int,
     onSelect: (Int) -> Unit,
     modifier: Modifier = Modifier,
@@ -50,7 +51,8 @@ internal fun SegmentedControl(
                     .clip(RoundedCornerShape(6.dp))
                     .background(
                         if (selected) AppTheme.colors.accent.copy(alpha = 0.2f) else AppTheme.colors.surface,
-                    ).clickable { onSelect(index) }
+                    )
+                    .clickable { onSelect(index) }
                     .padding(vertical = 8.dp),
                 contentAlignment = Alignment.Center,
             ) {

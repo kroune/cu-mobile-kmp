@@ -36,6 +36,7 @@ import io.github.kroune.cumobile.presentation.common.ui.SegmentedControl
 import io.github.kroune.cumobile.presentation.common.ui.gradeColor
 import io.github.kroune.cumobile.presentation.common.ui.gradeDescription
 import io.github.kroune.cumobile.presentation.performance.CoursePerformanceComponent
+import kotlinx.collections.immutable.persistentListOf
 
 /**
  * Course performance screen with two tabs:
@@ -104,7 +105,7 @@ private fun PerformanceContent(
     onIntent: (CoursePerformanceComponent.Intent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val tabLabels = listOf("Набранные баллы", "Успеваемость")
+    val tabLabels = persistentListOf("Набранные баллы", "Успеваемость")
     Column(modifier = modifier.fillMaxSize()) {
         TotalGradeCard(
             grade = state.totalGrade,
@@ -237,7 +238,7 @@ private fun CoursePerformanceScreenSkeleton(modifier: Modifier = Modifier) {
     Column(modifier = modifier.fillMaxSize()) {
         TotalGradeCardSkeleton()
         SegmentedControl(
-            labels = listOf("Набранные баллы", "Успеваемость"),
+            labels = persistentListOf("Набранные баллы", "Успеваемость"),
             selectedIndex = 0,
             onSelect = {},
             modifier = Modifier.padding(horizontal = SkeletonHorizontalPadding),

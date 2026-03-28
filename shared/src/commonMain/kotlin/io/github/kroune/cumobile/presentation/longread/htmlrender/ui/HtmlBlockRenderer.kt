@@ -25,10 +25,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 import io.github.kroune.cumobile.presentation.longread.htmlrender.HtmlBlock
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentMapOf
 
 private const val BaseUrl = "https://my.centraluniversity.ru"
 
-private val HeadingFontSizes = mapOf(
+private val HeadingFontSizes = persistentMapOf(
     1 to 24,
     2 to 20,
     3 to 18,
@@ -42,7 +44,7 @@ private const val HeadingDefaultFontSize = 15
  */
 @Composable
 fun HtmlContent(
-    blocks: List<HtmlBlock>,
+    blocks: ImmutableList<HtmlBlock>,
     searchQuery: String = "",
     modifier: Modifier = Modifier,
 ) {

@@ -4,6 +4,9 @@ import com.fleeksoft.ksoup.Ksoup
 import com.fleeksoft.ksoup.nodes.Element
 import com.fleeksoft.ksoup.nodes.TextNode
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 
 private val logger = KotlinLogging.logger {}
 
@@ -33,13 +36,13 @@ private val BlockTags = setOf(
 private val ParagraphLikeTags = setOf("p", "div", "section", "article", "header", "footer")
 
 /** Parses an HTML string into a list of renderable [HtmlBlock] elements. */
-fun parseHtmlToBlocks(html: String): List<HtmlBlock> =
+fun parseHtmlToBlocks(html: String): ImmutableList<HtmlBlock> =
     try {
         val body = Ksoup.parse(html).body()
         parseChildBlocks(body)
     } catch (e: Exception) {
         logger.warn(e) { "Failed to parse HTML to blocks" }
-        listOf(HtmlBlock.Paragraph(listOf(InlineElement.Text(html))))
+        persistentListOf(HtmlBlock.Paragraph(persistentListOf(InlineElement.Text(html))))
     }
 
 /** Extracts plain text from HTML (for search indexing). */
@@ -55,13 +58,13 @@ fun extractPlainText(html: String): String =
  * Parses all child nodes of [parent] into a list of blocks.
  * Consecutive inline nodes are merged into a single [HtmlBlock.Paragraph].
  */
-internal fun parseChildBlocks(parent: Element): List<HtmlBlock> {
+internal fun parseChildBlocks(parent: Element): ImmutableList<HtmlBlock> {
     val blocks = mutableListOf<HtmlBlock>()
     val pendingInlines = mutableListOf<InlineElement>()
 
     fun flushInlines() {
         if (pendingInlines.isNotEmpty()) {
-            blocks.add(HtmlBlock.Paragraph(pendingInlines.toList()))
+            blocks.add(HtmlBlock.Paragraph(pendingInlines.toImmutableList()))
             pendingInlines.clear()
         }
     }
@@ -89,7 +92,7 @@ internal fun parseChildBlocks(parent: Element): List<HtmlBlock> {
         }
     }
     flushInlines()
-    return blocks
+    return blocks.toImmutableList()
 }
 
 /** Maps a block-level element to the corresponding [HtmlBlock]. */

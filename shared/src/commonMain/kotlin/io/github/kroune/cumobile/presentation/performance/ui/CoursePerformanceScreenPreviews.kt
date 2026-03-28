@@ -15,9 +15,10 @@ import io.github.kroune.cumobile.presentation.performance.ActivitySummary
 import io.github.kroune.cumobile.presentation.performance.CoursePerformanceComponent
 import io.github.kroune.cumobile.presentation.performance.ExerciseWithScore
 import io.github.kroune.cumobile.presentation.performance.PerformanceData
+import kotlinx.collections.immutable.persistentListOf
 
 private val previewPerformanceExercises =
-    listOf(
+    persistentListOf(
         ExerciseWithScore(
             exercise = CourseExercise(
                 id = "1",
@@ -77,7 +78,7 @@ private val previewPerformanceState =
         content = ContentState.Success(
             PerformanceData(
                 exercises = previewPerformanceExercises,
-                activitySummaries = listOf(
+                activitySummaries = persistentListOf(
                     ActivitySummary(
                         activityId = "1",
                         activityName = "Домашнее задание",

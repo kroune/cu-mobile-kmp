@@ -39,14 +39,9 @@ import io.github.kroune.cumobile.presentation.common.ui.LoadingContent
 import io.github.kroune.cumobile.presentation.common.ui.SegmentedControl
 import io.github.kroune.cumobile.presentation.common.ui.stripEmojiPrefix
 import io.github.kroune.cumobile.presentation.common.ui.taskStateLabel
-import io.github.kroune.cumobile.presentation.tasks.ActiveStates
-import io.github.kroune.cumobile.presentation.tasks.ArchiveStates
 import io.github.kroune.cumobile.presentation.tasks.TasksComponent
-import io.github.kroune.cumobile.presentation.tasks.availableCourses
-import io.github.kroune.cumobile.presentation.tasks.availableStatuses
-import io.github.kroune.cumobile.presentation.tasks.effectiveTaskState
-import io.github.kroune.cumobile.presentation.tasks.filteredTasks
-import io.github.kroune.cumobile.presentation.tasks.normalizeTaskState
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 /**
  * Tasks tab screen with segment control, filters, search, and task list.
@@ -79,9 +74,6 @@ internal fun TasksScreenContent(
     onIntent: (TasksComponent.Intent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val tasks = filteredTasks(state)
-    val allTasks = state.allTasks
-
     PullToRefreshBox(
         isRefreshing = state.isLoading,
         onRefresh = { onIntent(TasksComponent.Intent.Refresh) },
@@ -97,9 +89,9 @@ internal fun TasksScreenContent(
             Spacer(modifier = Modifier.height(8.dp))
 
             SegmentedControl(
-                labels = listOf(
-                    "Активные (${countBySegment(allTasks, 0)})",
-                    "Архив (${countBySegment(allTasks, 1)})",
+                labels = persistentListOf(
+                    "Активные (${state.activeCount})",
+                    "Архив (${state.archiveCount})",
                 ),
                 selectedIndex = state.segment,
                 onSelect = { onIntent(TasksComponent.Intent.SelectSegment(it)) },
@@ -109,7 +101,6 @@ internal fun TasksScreenContent(
 
             FiltersRow(
                 state = state,
-                allTasks = allTasks,
                 onIntent = onIntent,
             )
 
@@ -117,7 +108,7 @@ internal fun TasksScreenContent(
 
             TasksContentArea(
                 state = state,
-                tasks = tasks,
+                tasks = state.filteredTasks,
                 onIntent = onIntent,
             )
         }
@@ -130,7 +121,7 @@ internal fun TasksScreenContent(
 @Composable
 private fun TasksContentArea(
     state: TasksComponent.State,
-    tasks: List<io.github.kroune.cumobile.data.model.StudentTask>,
+    tasks: ImmutableList<StudentTask>,
     onIntent: (TasksComponent.Intent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -173,7 +164,6 @@ private fun TasksContentArea(
 @Composable
 private fun FiltersRow(
     state: TasksComponent.State,
-    allTasks: List<io.github.kroune.cumobile.data.model.StudentTask>,
     onIntent: (TasksComponent.Intent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -208,14 +198,13 @@ private fun FiltersRow(
         )
 
         StatusFilterChips(
-            allTasks = allTasks,
-            segment = state.segment,
+            availableStatuses = state.availableStatuses,
             statusFilter = state.statusFilter,
             onIntent = onIntent,
         )
 
         CourseFilterChips(
-            allTasks = allTasks,
+            availableCourses = state.availableCourses,
             courseFilter = state.courseFilter,
             onIntent = onIntent,
         )
@@ -225,12 +214,11 @@ private fun FiltersRow(
 /** Status filter chips row — selected chip moves to front. */
 @Composable
 private fun StatusFilterChips(
-    allTasks: List<io.github.kroune.cumobile.data.model.StudentTask>,
-    segment: Int,
+    availableStatuses: ImmutableList<String>,
     statusFilter: String?,
     onIntent: (TasksComponent.Intent) -> Unit,
 ) {
-    val statuses = availableStatuses(allTasks, segment)
+    val statuses = availableStatuses
     if (statuses.isEmpty()) return
     val sorted = selectedFirst(statuses, statusFilter)
     val listState = rememberLazyListState()
@@ -261,13 +249,12 @@ private fun StatusFilterChips(
 /** Course filter chips row — selected chip moves to front. */
 @Composable
 private fun CourseFilterChips(
-    allTasks: List<io.github.kroune.cumobile.data.model.StudentTask>,
+    availableCourses: ImmutableList<Pair<String, String>>,
     courseFilter: String?,
     onIntent: (TasksComponent.Intent) -> Unit,
 ) {
-    val courses = availableCourses(allTasks)
-    if (courses.isEmpty()) return
-    val sorted = selectedFirst(courses, courseFilter) { it.first }
+    if (availableCourses.isEmpty()) return
+    val sorted = selectedFirst(availableCourses, courseFilter) { it.first }
     val listState = rememberLazyListState()
     LaunchedEffect(courseFilter) {
         listState.animateScrollToItem(0)
@@ -347,15 +334,3 @@ private fun FilterChip(
     }
 }
 
-/**
- * Counts tasks belonging to the given segment.
- */
-private fun countBySegment(
-    tasks: List<StudentTask>,
-    segment: Int,
-): Int {
-    val segmentStates = if (segment == 0) ActiveStates else ArchiveStates
-    return tasks.count {
-        normalizeTaskState(effectiveTaskState(it)) in segmentStates
-    }
-}

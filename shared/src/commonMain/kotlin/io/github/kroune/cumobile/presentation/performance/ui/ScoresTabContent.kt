@@ -27,14 +27,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 import io.github.kroune.cumobile.presentation.performance.ExerciseWithScore
+import kotlinx.collections.immutable.ImmutableList
 
 /**
  * Scores tab content: activity filter chips + exercise tiles.
  */
 @Composable
 internal fun ScoresTab(
-    exercises: List<ExerciseWithScore>,
-    activityNames: List<String>,
+    exercises: ImmutableList<ExerciseWithScore>,
+    activityNames: ImmutableList<String>,
     activeFilter: String?,
     onFilterActivity: (String?) -> Unit,
     modifier: Modifier = Modifier,
@@ -63,7 +64,7 @@ internal fun ScoresTab(
 
 @Composable
 private fun ActivityFilterChips(
-    activityNames: List<String>,
+    activityNames: ImmutableList<String>,
     activeFilter: String?,
     onFilterActivity: (String?) -> Unit,
     modifier: Modifier = Modifier,

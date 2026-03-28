@@ -67,6 +67,7 @@ import io.github.kroune.cumobile.presentation.common.ui.stripEmojiPrefix
 import io.github.kroune.cumobile.presentation.courses.CoursesComponent
 import io.github.kroune.cumobile.presentation.courses.activeCourses
 import io.github.kroune.cumobile.presentation.courses.archivedCourses
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -125,7 +126,7 @@ internal fun CoursesScreenContent(
             Spacer(modifier = Modifier.height(8.dp))
 
             SegmentedControl(
-                labels = listOf("Курсы", "Ведомость", "Зачетка"),
+                labels = persistentListOf("Курсы", "Ведомость", "Зачетка"),
                 selectedIndex = state.segment,
                 onSelect = { onIntent(CoursesComponent.Intent.SelectSegment(it)) },
             )

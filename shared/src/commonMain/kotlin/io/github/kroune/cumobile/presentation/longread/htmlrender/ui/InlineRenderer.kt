@@ -12,6 +12,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 import io.github.kroune.cumobile.presentation.longread.htmlrender.InlineElement
+import kotlinx.collections.immutable.ImmutableList
 
 /**
  * Converts a list of [InlineElement] into an [AnnotatedString] with proper
@@ -20,7 +21,7 @@ import io.github.kroune.cumobile.presentation.longread.htmlrender.InlineElement
  */
 @Composable
 fun buildInlineAnnotatedString(
-    inlines: List<InlineElement>,
+    inlines: ImmutableList<InlineElement>,
     searchQuery: String = "",
 ): AnnotatedString {
     val accentColor = AppTheme.colors.accent
@@ -36,7 +37,7 @@ fun buildInlineAnnotatedString(
 }
 
 private fun AnnotatedString.Builder.appendInlines(
-    inlines: List<InlineElement>,
+    inlines: ImmutableList<InlineElement>,
     accentColor: Color,
     codeBg: Color,
     textColor: Color,

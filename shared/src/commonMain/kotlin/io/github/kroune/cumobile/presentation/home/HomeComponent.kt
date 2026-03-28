@@ -9,6 +9,8 @@ import io.github.kroune.cumobile.data.model.TaskState
 import io.github.kroune.cumobile.presentation.common.ContentState
 import io.github.kroune.cumobile.presentation.common.dataOrNull
 import io.github.kroune.cumobile.presentation.common.isLoading
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -50,18 +52,20 @@ interface HomeComponent {
          * Filters out tasks from archived courses and keeps only actionable states.
          * Sorted by deadline ascending (tasks without deadlines go to the end).
          */
-        val deadlineTasks: List<StudentTask>
+        val deadlineTasks: ImmutableList<StudentTask>
             get() = tasks.dataOrNull
                 .orEmpty()
                 .filter { !it.course.isArchived }
                 .filter { it.state in ACTIVE_TASK_STATES }
                 .sortedBy { it.exercise.deadline ?: "9999-12-31" }
+                .toImmutableList()
 
         /** Active (non-archived) courses. */
-        val activeCourses: List<Course>
+        val activeCourses: ImmutableList<Course>
             get() = courses.dataOrNull
                 .orEmpty()
                 .filter { !it.isArchived }
+                .toImmutableList()
 
         override fun equals(other: Any?): Boolean {
             if (this === other) return true

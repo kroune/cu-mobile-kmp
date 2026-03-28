@@ -1,16 +1,18 @@
 package io.github.kroune.cumobile.presentation.longread.htmlrender
 
+import kotlinx.collections.immutable.ImmutableList
+
 /**
  * Block-level HTML element, rendered as a distinct composable in the content column.
  */
 sealed interface HtmlBlock {
     data class Paragraph(
-        val inlines: List<InlineElement>,
+        val inlines: ImmutableList<InlineElement>,
     ) : HtmlBlock
 
     data class Heading(
         val level: Int,
-        val inlines: List<InlineElement>,
+        val inlines: ImmutableList<InlineElement>,
     ) : HtmlBlock
 
     data class CodeBlock(
@@ -19,15 +21,15 @@ sealed interface HtmlBlock {
     ) : HtmlBlock
 
     data class BlockQuote(
-        val children: List<HtmlBlock>,
+        val children: ImmutableList<HtmlBlock>,
     ) : HtmlBlock
 
     data class UnorderedList(
-        val items: List<ListItem>,
+        val items: ImmutableList<ListItem>,
     ) : HtmlBlock
 
     data class OrderedList(
-        val items: List<ListItem>,
+        val items: ImmutableList<ListItem>,
         val startIndex: Int = 1,
     ) : HtmlBlock
 
@@ -37,8 +39,8 @@ sealed interface HtmlBlock {
     ) : HtmlBlock
 
     data class Table(
-        val headers: List<List<InlineElement>>,
-        val rows: List<List<List<InlineElement>>>,
+        val headers: ImmutableList<ImmutableList<InlineElement>>,
+        val rows: ImmutableList<ImmutableList<ImmutableList<InlineElement>>>,
     ) : HtmlBlock
 
     data object HorizontalRule : HtmlBlock
@@ -46,7 +48,7 @@ sealed interface HtmlBlock {
 
 /** Single list item, which may contain nested blocks (e.g. paragraphs, sub-lists). */
 data class ListItem(
-    val blocks: List<HtmlBlock>,
+    val blocks: ImmutableList<HtmlBlock>,
 )
 
 /**
@@ -58,11 +60,11 @@ sealed interface InlineElement {
     ) : InlineElement
 
     data class Bold(
-        val children: List<InlineElement>,
+        val children: ImmutableList<InlineElement>,
     ) : InlineElement
 
     data class Italic(
-        val children: List<InlineElement>,
+        val children: ImmutableList<InlineElement>,
     ) : InlineElement
 
     data class Code(
@@ -71,7 +73,7 @@ sealed interface InlineElement {
 
     data class Link(
         val href: String,
-        val children: List<InlineElement>,
+        val children: ImmutableList<InlineElement>,
     ) : InlineElement
 
     data object LineBreak : InlineElement

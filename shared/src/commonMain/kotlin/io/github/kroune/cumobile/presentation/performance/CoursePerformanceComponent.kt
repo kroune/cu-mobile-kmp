@@ -6,6 +6,8 @@ import io.github.kroune.cumobile.data.model.TaskScore
 import io.github.kroune.cumobile.presentation.common.ContentState
 import io.github.kroune.cumobile.presentation.common.dataOrNull
 import io.github.kroune.cumobile.presentation.common.isLoading
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 
 /**
  * Component for the course performance screen.
@@ -28,30 +30,31 @@ interface CoursePerformanceComponent {
         val activityFilter: String? = null,
     ) {
         /** Exercises from loaded data. */
-        val exercises: List<ExerciseWithScore>
-            get() = content.dataOrNull?.exercises.orEmpty()
+        val exercises: ImmutableList<ExerciseWithScore>
+            get() = content.dataOrNull?.exercises.orEmpty().toImmutableList()
 
         /** Activity summaries from loaded data. */
-        val activitySummaries: List<ActivitySummary>
-            get() = content.dataOrNull?.activitySummaries.orEmpty()
+        val activitySummaries: ImmutableList<ActivitySummary>
+            get() = content.dataOrNull?.activitySummaries.orEmpty().toImmutableList()
 
         /** Whether content is still loading. */
         val isContentLoading: Boolean
             get() = content.isLoading
 
         /** All unique activity names for the filter chips. */
-        val activityNames: List<String>
+        val activityNames: ImmutableList<String>
             get() = exercises
                 .map { it.activityName }
                 .distinct()
                 .sorted()
+                .toImmutableList()
 
         /** Exercises filtered by the selected activity. */
-        val filteredExercises: List<ExerciseWithScore>
+        val filteredExercises: ImmutableList<ExerciseWithScore>
             get() = if (activityFilter == null) {
                 exercises
             } else {
-                exercises.filter { it.activityName == activityFilter }
+                exercises.filter { it.activityName == activityFilter }.toImmutableList()
             }
 
         /** Grand total contribution across all activities. */
@@ -78,8 +81,8 @@ interface CoursePerformanceComponent {
  * Container for loaded performance data (exercises + activity summaries).
  */
 data class PerformanceData(
-    val exercises: List<ExerciseWithScore>,
-    val activitySummaries: List<ActivitySummary>,
+    val exercises: ImmutableList<ExerciseWithScore>,
+    val activitySummaries: ImmutableList<ActivitySummary>,
 )
 
 /**

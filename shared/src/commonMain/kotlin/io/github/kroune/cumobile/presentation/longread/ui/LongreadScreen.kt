@@ -58,6 +58,7 @@ import io.github.kroune.cumobile.presentation.common.ui.DetailTopBar
 import io.github.kroune.cumobile.presentation.common.ui.ErrorContent
 import io.github.kroune.cumobile.presentation.longread.LongreadComponent
 import io.github.kroune.cumobile.presentation.longread.htmlrender.parseHtmlToBlocks
+import kotlinx.collections.immutable.persistentListOf
 import io.github.kroune.cumobile.presentation.longread.htmlrender.ui.AudioMaterialCard
 import io.github.kroune.cumobile.presentation.longread.htmlrender.ui.HtmlContent
 import io.github.kroune.cumobile.presentation.longread.htmlrender.ui.ImageMaterialCard
@@ -394,7 +395,7 @@ private fun MarkdownCard(
     val html = material.viewContent.orEmpty()
     val title = material.contentName
     val blocks = remember(html) {
-        if (html.isBlank()) emptyList() else parseHtmlToBlocks(html)
+        if (html.isBlank()) persistentListOf() else parseHtmlToBlocks(html)
     }
     if (title.isNullOrBlank() && blocks.isEmpty()) return
 

@@ -22,13 +22,14 @@ import androidx.compose.ui.unit.sp
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 import io.github.kroune.cumobile.presentation.common.ui.gradeColor
 import io.github.kroune.cumobile.presentation.performance.ActivitySummary
+import kotlinx.collections.immutable.ImmutableList
 
 /**
  * Performance tab content: weighted activity summaries table.
  */
 @Composable
 internal fun PerformanceTab(
-    summaries: List<ActivitySummary>,
+    summaries: ImmutableList<ActivitySummary>,
     totalContribution: Double,
     modifier: Modifier = Modifier,
 ) {

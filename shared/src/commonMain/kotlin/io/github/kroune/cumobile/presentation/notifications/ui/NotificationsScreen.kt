@@ -47,6 +47,7 @@ import io.github.kroune.cumobile.presentation.common.ui.EmptyContent
 import io.github.kroune.cumobile.presentation.common.ui.ErrorContent
 import io.github.kroune.cumobile.presentation.common.ui.SegmentedControl
 import io.github.kroune.cumobile.presentation.notifications.NotificationsComponent
+import kotlinx.collections.immutable.persistentListOf
 
 /**
  * Notifications screen with two tabs: "Учеба" and "Другое".
@@ -129,7 +130,7 @@ internal fun NotificationsScreenContent(
             )
 
             SegmentedControl(
-                labels = listOf("Учеба", "Другое"),
+                labels = persistentListOf("Учеба", "Другое"),
                 selectedIndex = state.selectedTab,
                 onSelect = { onIntent(NotificationsComponent.Intent.SelectTab(it)) },
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),

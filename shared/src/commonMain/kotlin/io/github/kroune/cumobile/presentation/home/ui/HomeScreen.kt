@@ -61,6 +61,7 @@ import io.github.kroune.cumobile.presentation.common.ui.CourseCard
 import io.github.kroune.cumobile.presentation.common.ui.DeadlineTaskCard
 import io.github.kroune.cumobile.presentation.common.ui.ErrorContent
 import io.github.kroune.cumobile.presentation.home.HomeComponent
+import kotlinx.collections.immutable.ImmutableList
 
 /**
  * Home screen composable for the "Главная" tab.
@@ -174,7 +175,7 @@ internal fun HomeContent(
 @Composable
 private fun DeadlinesSection(
     tasksState: ContentState<List<StudentTask>>,
-    deadlineTasks: List<StudentTask>,
+    deadlineTasks: ImmutableList<StudentTask>,
     onTaskClick: (StudentTask) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -231,7 +232,7 @@ private fun DeadlinesSection(
 @Composable
 private fun CoursesSection(
     coursesState: ContentState<List<Course>>,
-    activeCourses: List<Course>,
+    activeCourses: ImmutableList<Course>,
     onCourseClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {

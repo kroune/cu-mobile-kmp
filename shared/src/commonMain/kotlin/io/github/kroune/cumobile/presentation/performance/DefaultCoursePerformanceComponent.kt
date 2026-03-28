@@ -8,6 +8,7 @@ import io.github.kroune.cumobile.data.model.CourseExercise
 import io.github.kroune.cumobile.data.model.TaskScore
 import io.github.kroune.cumobile.domain.repository.PerformanceRepository
 import io.github.kroune.cumobile.presentation.common.ContentState
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
@@ -89,8 +90,8 @@ class DefaultCoursePerformanceComponent(
             _state.value = _state.value.copy(
                 content = ContentState.Success(
                     PerformanceData(
-                        exercises = exercisesWithScores,
-                        activitySummaries = summaries,
+                        exercises = exercisesWithScores.toImmutableList(),
+                        activitySummaries = summaries.toImmutableList(),
                     ),
                 ),
             )
