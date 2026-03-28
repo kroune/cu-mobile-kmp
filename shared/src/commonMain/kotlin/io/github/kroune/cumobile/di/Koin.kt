@@ -8,6 +8,7 @@ import io.github.kroune.cumobile.data.local.FileRenameLocalDataSource
 import io.github.kroune.cumobile.data.local.FileStorage
 import io.github.kroune.cumobile.data.local.PdfGenerator
 import io.github.kroune.cumobile.data.local.db.AppDatabase
+import io.github.kroune.cumobile.data.network.AuthApiService
 import io.github.kroune.cumobile.data.network.ContentApiService
 import io.github.kroune.cumobile.data.network.CourseApiService
 import io.github.kroune.cumobile.data.network.NotificationApiService
@@ -51,6 +52,7 @@ import org.koin.mp.KoinPlatform
  */
 private val networkModule = module {
     single { createHttpClient() }
+    factory { AuthApiService() }
     single { ProfileApiService(get()) }
     single { TaskApiService(get()) }
     single { CourseApiService(get()) }
@@ -122,6 +124,7 @@ fun createRootComponent(componentContext: ComponentContext): DefaultRootComponen
     return DefaultRootComponent(
         componentContext = componentContext,
         authRepository = koin.get<AuthRepository>(),
+        authApiServiceFactory = { koin.get<AuthApiService>() },
         mainDependencies = mainDependencies,
     )
 }

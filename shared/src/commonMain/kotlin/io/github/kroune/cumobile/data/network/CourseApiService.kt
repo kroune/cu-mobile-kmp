@@ -7,12 +7,12 @@ import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.statement.bodyAsText
+import io.github.kroune.cumobile.util.runCatchingCancellable
 import io.ktor.http.HttpStatusCode
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonArray
-import kotlin.coroutines.cancellation.CancellationException
 
 private val logger = KotlinLogging.logger {}
 
@@ -35,13 +35,13 @@ internal class CourseApiService(
      * with an `"items"` key containing the array.
      */
     suspend fun fetchCourses(cookie: String): List<Course>? =
-        try {
-            val response = httpClient.get("${ApiEndpoints.COURSES_STUDENT}?limit=$MaxListLimit") {
+        runCatchingCancellable {
+            val response = httpClient.get("${ApiEndpoints.Courses.STUDENT}?limit=$MaxListLimit") {
                 header("Cookie", cookieHeader(cookie))
             }
             if (response.status != HttpStatusCode.OK) {
                 logger.warn { "fetch courses returned ${response.status}" }
-                return null
+                return@runCatchingCancellable null
             }
             val text = response.bodyAsText()
             val element = json.parseToJsonElement(text)
@@ -55,9 +55,7 @@ internal class CourseApiService(
                 }
                 else -> emptyList()
             }
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
+        }.getOrElse { e ->
             logger.error(e) { "Failed to fetch courses" }
             null
         }
@@ -68,7 +66,7 @@ internal class CourseApiService(
         courseId: String,
     ): CourseOverview? =
         safeApiCall(logger, "fetch course overview for courseId=$courseId") {
-            httpClient.get(ApiEndpoints.courseOverview(courseId)) {
+            httpClient.get(ApiEndpoints.Courses.overview(courseId)) {
                 header("Cookie", cookieHeader(cookie))
             }
         }

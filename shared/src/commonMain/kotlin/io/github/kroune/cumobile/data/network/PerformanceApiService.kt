@@ -20,7 +20,7 @@ internal class PerformanceApiService(
     /** Fetches overall student performance summary. */
     suspend fun fetchPerformance(cookie: String): StudentPerformanceResponse? =
         safeApiCall(logger, "fetch performance") {
-            httpClient.get(ApiEndpoints.PERFORMANCE_STUDENT) {
+            httpClient.get(ApiEndpoints.Performance.STUDENT) {
                 header("Cookie", cookieHeader(cookie))
             }
         }
@@ -31,7 +31,7 @@ internal class PerformanceApiService(
         courseId: String,
     ): CourseExercisesResponse? =
         safeApiCall(logger, "fetch course exercises for courseId=$courseId") {
-            httpClient.get(ApiEndpoints.courseExercises(courseId)) {
+            httpClient.get(ApiEndpoints.Courses.exercises(courseId)) {
                 header("Cookie", cookieHeader(cookie))
             }
         }
@@ -42,7 +42,7 @@ internal class PerformanceApiService(
         courseId: String,
     ): CourseStudentPerformanceResponse? =
         safeApiCall(logger, "fetch course performance for courseId=$courseId") {
-            httpClient.get(ApiEndpoints.coursePerformance(courseId)) {
+            httpClient.get(ApiEndpoints.Performance.coursePerformance(courseId)) {
                 header("Cookie", cookieHeader(cookie))
             }
         }
@@ -50,7 +50,7 @@ internal class PerformanceApiService(
     /** Fetches the student's gradebook. */
     suspend fun fetchGradebook(cookie: String): GradebookResponse? =
         safeApiCall(logger, "fetch gradebook") {
-            httpClient.get(ApiEndpoints.GRADEBOOK) {
+            httpClient.get(ApiEndpoints.Performance.GRADEBOOK) {
                 header("Cookie", cookieHeader(cookie))
             }
         }

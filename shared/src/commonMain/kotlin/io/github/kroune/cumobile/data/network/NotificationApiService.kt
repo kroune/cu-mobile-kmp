@@ -37,7 +37,7 @@ internal class NotificationApiService(
                 limit = limit,
                 offset = offset,
             )
-            httpClient.post(ApiEndpoints.NOTIFICATIONS_IN_APP) {
+            httpClient.post(ApiEndpoints.Notifications.IN_APP) {
                 header("Cookie", cookieHeader(cookie))
                 contentType(ContentType.Application.Json)
                 setBody(body)

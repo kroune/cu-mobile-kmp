@@ -10,6 +10,7 @@ import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.router.stack.replaceAll
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
+import io.github.kroune.cumobile.data.network.AuthApiService
 import io.github.kroune.cumobile.domain.repository.AuthRepository
 import io.github.kroune.cumobile.presentation.auth.DefaultLoginComponent
 import io.github.kroune.cumobile.presentation.auth.webview.DefaultWebViewLoginComponent
@@ -38,6 +39,7 @@ private val logger = KotlinLogging.logger {}
 class DefaultRootComponent(
     componentContext: ComponentContext,
     private val authRepository: AuthRepository,
+    private val authApiServiceFactory: () -> AuthApiService,
     private val mainDependencies: MainDependencies,
 ) : RootComponent,
     ComponentContext by componentContext {
@@ -98,10 +100,12 @@ class DefaultRootComponent(
                 DefaultLoginComponent(
                     componentContext = childContext,
                     authRepository = authRepository,
+                    authApiServiceFactory = authApiServiceFactory,
                     onLoginSuccess = ::navigateToMain,
                     onNavigateToWebView = ::navigateToWebView,
                 ),
             )
+
             is Config.WebViewLogin -> RootComponent.Child.WebViewLoginChild(
                 DefaultWebViewLoginComponent(
                     componentContext = childContext,
@@ -110,6 +114,7 @@ class DefaultRootComponent(
                     onBack = ::navigateBackFromWebView,
                 ),
             )
+
             is Config.Main -> RootComponent.Child.MainChild(
                 DefaultMainComponent(
                     componentContext = childContext,

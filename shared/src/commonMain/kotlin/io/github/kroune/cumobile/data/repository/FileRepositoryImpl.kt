@@ -27,15 +27,13 @@ internal class FileRepositoryImpl(
     private val httpClient: HttpClient,
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : FileRepository {
-    override suspend fun listDownloadedFiles(): List<DownloadedFileInfo> =
-        withContext(dispatcher) {
-            fileStorage.listFiles()
-        }
+    override suspend fun listDownloadedFiles(): List<DownloadedFileInfo> = withContext(dispatcher) {
+        fileStorage.listFiles()
+    }
 
-    override suspend fun deleteFile(name: String): Boolean =
-        withContext(dispatcher) {
-            fileStorage.deleteFile(name)
-        }
+    override suspend fun deleteFile(name: String): Boolean = withContext(dispatcher) {
+        fileStorage.deleteFile(name)
+    }
 
     override suspend fun deleteAllFiles(): Int =
         withContext(dispatcher) {
