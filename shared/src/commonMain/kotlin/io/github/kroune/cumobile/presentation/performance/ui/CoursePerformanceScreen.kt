@@ -198,6 +198,7 @@ private fun TotalGradeCard(
 // region Helpers
 
 /** Format a score, showing one decimal place only if needed. */
+@Suppress("MagicNumber")
 internal fun formatScore(value: Double): String {
     val rounded = (value * 10).toInt() / 10.0
     return if (rounded == rounded.toInt().toDouble()) {
@@ -208,6 +209,7 @@ internal fun formatScore(value: Double): String {
 }
 
 /** Color based on score ratio (0.0 to 1.0). */
+@Suppress("MagicNumber")
 internal fun scoreRatioColor(ratio: Double): Color =
     when {
         ratio >= 0.8 -> Color(0xFF66BB6A)

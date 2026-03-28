@@ -88,6 +88,7 @@ class IosPdfGenerator(
         return rotateImage(image, page.rotationDegrees)
     }
 
+    @Suppress("MagicNumber")
     private fun rotateImage(
         image: UIImage,
         degrees: Float,

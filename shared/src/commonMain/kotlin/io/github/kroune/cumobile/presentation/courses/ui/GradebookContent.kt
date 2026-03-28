@@ -172,32 +172,39 @@ private fun GradeRow(
     }
 }
 
-/** Normalized grade label. */
+private val gradeLabels = mapOf(
+    "passed" to "Зачтено",
+    "excellent" to "Отлично",
+    "good" to "Хорошо",
+    "satisfactory" to "Удовл.",
+    "failed" to "Не сдано",
+    "notPassed" to "Не сдано",
+    "notCredited" to "Не сдано",
+)
+
+private val gradeColors = mapOf(
+    "passed" to Color(0xFF66BB6A),
+    "excellent" to Color(0xFF66BB6A),
+    "good" to Color(0xFF42A5F5),
+    "satisfactory" to Color(0xFFFFA726),
+    "failed" to Color(0xFFEF5350),
+    "notPassed" to Color(0xFFEF5350),
+    "notCredited" to Color(0xFFEF5350),
+)
+
+private val DefaultGradeColor = Color(0xFF9E9E9E)
+
+private val assessmentTypeLabels = mapOf(
+    "exam" to "Экзамен",
+    "credit" to "Зачет",
+    "difCredit" to "Дифф. зачет",
+)
+
 private fun normalizedGradeLabel(grade: String): String =
-    when (grade) {
-        "passed" -> "Зачтено"
-        "excellent" -> "Отлично"
-        "good" -> "Хорошо"
-        "satisfactory" -> "Удовл."
-        "failed", "notPassed", "notCredited" -> "Не сдано"
-        else -> "—"
-    }
+    gradeLabels.getOrElse(grade) { "—" }
 
-/** Normalized grade color. */
 private fun normalizedGradeColor(grade: String): Color =
-    when (grade) {
-        "passed", "excellent" -> Color(0xFF66BB6A)
-        "good" -> Color(0xFF42A5F5)
-        "satisfactory" -> Color(0xFFFFA726)
-        "failed", "notPassed", "notCredited" -> Color(0xFFEF5350)
-        else -> Color(0xFF9E9E9E)
-    }
+    gradeColors.getOrElse(grade) { DefaultGradeColor }
 
-/** Assessment type label. */
 private fun assessmentTypeLabel(type: String): String =
-    when (type) {
-        "exam" -> "Экзамен"
-        "credit" -> "Зачет"
-        "difCredit" -> "Дифф. зачет"
-        else -> type
-    }
+    assessmentTypeLabels.getOrElse(type) { type }
