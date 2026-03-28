@@ -6,6 +6,7 @@ import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.Lifecycle
 import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.domain.repository.FileRepository
+import io.github.kroune.cumobile.util.runCatchingCancellable
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -73,31 +74,36 @@ class DefaultFilesComponent(
     private fun loadFiles() {
         scope.launch {
             _state.value = _state.value.copy(isLoading = true, error = null)
-            try {
-                val start = TimeSource.Monotonic.markNow()
-                val files = fileRepository.listDownloadedFiles()
-                val remaining = MIN_LOADING_DURATION_MS - start.elapsedNow().inWholeMilliseconds
-                if (remaining > 0) delay(remaining)
-                _state.value = _state.value.copy(
-                    files = files,
-                    isLoading = false,
-                )
-            } catch (e: Exception) {
-                logger.error(e) { "Failed to load downloaded files" }
-                _state.value = _state.value.copy(
-                    isLoading = false,
-                    error = "Не удалось загрузить список файлов",
-                )
-            }
+            val start = TimeSource.Monotonic.markNow()
+            runCatchingCancellable {
+                fileRepository.listDownloadedFiles()
+            }.fold(
+                onSuccess = { files ->
+                    val remaining = MIN_LOADING_DURATION_MS - start.elapsedNow().inWholeMilliseconds
+                    if (remaining > 0) delay(remaining)
+                    _state.value = _state.value.copy(
+                        files = files,
+                        isLoading = false,
+                    )
+                },
+                onFailure = { e ->
+                    logger.error(e) { "Failed to load downloaded files" }
+                    _state.value = _state.value.copy(
+                        isLoading = false,
+                        error = "Не удалось загрузить список файлов",
+                    )
+                },
+            )
         }
     }
 
     private fun deleteFile(name: String) {
         scope.launch {
-            try {
+            runCatchingCancellable {
                 fileRepository.deleteFile(name)
+            }.onSuccess {
                 removeFileFromState(name)
-            } catch (e: Exception) {
+            }.onFailure { e ->
                 logger.error(e) { "Failed to delete file: $name" }
                 _effects.trySend(
                     FilesComponent.Effect.ShowError("Не удалось удалить файл"),
@@ -108,13 +114,14 @@ class DefaultFilesComponent(
 
     private fun deleteAllFiles() {
         scope.launch {
-            try {
+            runCatchingCancellable {
                 fileRepository.deleteAllFiles()
+            }.onSuccess {
                 _state.value = _state.value.copy(
                     files = emptyList(),
                     selectedFiles = emptySet(),
                 )
-            } catch (e: Exception) {
+            }.onFailure { e ->
                 logger.error(e) { "Failed to delete all files" }
                 _effects.trySend(
                     FilesComponent.Effect.ShowError("Не удалось удалить файлы"),
@@ -125,24 +132,29 @@ class DefaultFilesComponent(
 
     private fun deleteSelected() {
         scope.launch {
-            try {
+            runCatchingCancellable {
                 val toDelete = _state.value.selectedFiles.toList()
                 for (name in toDelete) {
                     fileRepository.deleteFile(name)
                 }
-                val remaining = _state.value.files.filter {
-                    it.name !in toDelete
-                }
-                _state.value = _state.value.copy(
-                    files = remaining,
-                    selectedFiles = emptySet(),
-                )
-            } catch (e: Exception) {
-                logger.error(e) { "Failed to delete selected files" }
-                _effects.trySend(
-                    FilesComponent.Effect.ShowError("Не удалось удалить выбранные файлы"),
-                )
-            }
+                toDelete
+            }.fold(
+                onSuccess = { toDelete ->
+                    val remaining = _state.value.files.filter {
+                        it.name !in toDelete
+                    }
+                    _state.value = _state.value.copy(
+                        files = remaining,
+                        selectedFiles = emptySet(),
+                    )
+                },
+                onFailure = { e ->
+                    logger.error(e) { "Failed to delete selected files" }
+                    _effects.trySend(
+                        FilesComponent.Effect.ShowError("Не удалось удалить выбранные файлы"),
+                    )
+                },
+            )
         }
     }
 

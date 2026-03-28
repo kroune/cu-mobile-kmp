@@ -8,8 +8,10 @@ import io.github.kroune.cumobile.data.model.PickedFile
 import io.github.kroune.cumobile.domain.repository.ProfileRepository
 import io.github.kroune.cumobile.presentation.common.ContentState
 import io.github.kroune.cumobile.presentation.common.decodeImageBitmap
+import io.github.kroune.cumobile.util.runCatchingCancellable
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -42,6 +44,8 @@ class DefaultProfileComponent(
     private val _effects = Channel<ProfileComponent.Effect>(Channel.BUFFERED)
     override val effects: Flow<ProfileComponent.Effect> = _effects.receiveAsFlow()
 
+    private var currentLoadJob: Job? = null
+
     init {
         loadProfile()
     }
@@ -57,43 +61,52 @@ class DefaultProfileComponent(
     }
 
     private fun loadProfile() {
+        currentLoadJob?.cancel()
+
         _state.value = _state.value.copy(
             profile = ContentState.Loading,
             lmsProfile = ContentState.Loading,
             avatar = ContentState.Loading,
         )
 
-        scope.launch {
-            val profile = profileRepository.fetchProfile()
-            _state.value = _state.value.copy(
-                profile = if (profile != null) {
-                    ContentState.Success(profile)
-                } else {
-                    ContentState.Error("Не удалось загрузить профиль")
-                },
-            )
-        }
-
-        scope.launch {
-            val lmsProfile = profileRepository.fetchLmsProfile()
-            _state.value = _state.value.copy(
-                lmsProfile = ContentState.Success(lmsProfile),
-            )
-        }
-
-        scope.launch {
-            try {
-                val avatarBytes = profileRepository.fetchAvatar()
-                val bitmap = withContext(defaultDispatcher) {
-                    avatarBytes?.let { decodeImageBitmap(it) }
-                }
+        currentLoadJob = scope.launch {
+            launch {
+                val profile = profileRepository.fetchProfile()
                 _state.value = _state.value.copy(
-                    avatar = ContentState.Success(AvatarData(avatarBytes, bitmap)),
+                    profile = if (profile != null) {
+                        ContentState.Success(profile)
+                    } else {
+                        ContentState.Error("Не удалось загрузить профиль")
+                    },
                 )
-            } catch (e: Exception) {
-                logger.error(e) { "Failed to load avatar" }
+            }
+
+            launch {
+                val lmsProfile = profileRepository.fetchLmsProfile()
                 _state.value = _state.value.copy(
-                    avatar = ContentState.Success(null),
+                    lmsProfile = ContentState.Success(lmsProfile),
+                )
+            }
+
+            launch {
+                runCatchingCancellable {
+                    val avatarBytes = profileRepository.fetchAvatar()
+                    val bitmap = withContext(defaultDispatcher) {
+                        avatarBytes?.let { decodeImageBitmap(it) }
+                    }
+                    AvatarData(avatarBytes, bitmap)
+                }.fold(
+                    onSuccess = { avatarData ->
+                        _state.value = _state.value.copy(
+                            avatar = ContentState.Success(avatarData),
+                        )
+                    },
+                    onFailure = { e ->
+                        logger.error(e) { "Failed to load avatar" }
+                        _state.value = _state.value.copy(
+                            avatar = ContentState.Success(null),
+                        )
+                    },
                 )
             }
         }

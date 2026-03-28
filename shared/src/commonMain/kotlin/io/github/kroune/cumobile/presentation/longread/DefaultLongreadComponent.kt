@@ -5,6 +5,7 @@ import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.data.model.LongreadMaterial
+import io.github.kroune.cumobile.presentation.longread.ui.LongreadTaskActions
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -178,6 +179,8 @@ class DefaultLongreadComponent(
                 if (details != null) {
                     detailsMap[taskId] = details
                     _state.value = _state.value.copy(taskDetails = detailsMap.toMap())
+                } else {
+                    logger.warn { "Failed to load task details for taskId=$taskId" }
                 }
             }
         }

@@ -8,6 +8,7 @@ import io.github.kroune.cumobile.data.local.FileStorage
 import io.github.kroune.cumobile.data.local.PdfGenerator
 import io.github.kroune.cumobile.data.local.PdfPageInput
 import io.github.kroune.cumobile.data.model.PickedFile
+import io.github.kroune.cumobile.util.runCatchingCancellable
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -163,48 +164,50 @@ class DefaultScannerComponent(
         _state.value = currentState.copy(isSaving = true)
 
         scope.launch {
-            try {
+            runCatchingCancellable {
                 val pdfPages = currentState.pages.map { page ->
                     PdfPageInput(
                         imageBytes = page.imageBytes,
                         rotationDegrees = page.rotationDegrees,
                     )
                 }
-
-                val pdfBytes = pdfGenerator.generatePdf(
+                pdfGenerator.generatePdf(
                     pages = pdfPages,
                     compress = currentState.compressImages,
-                )
+                ) to currentState.fileName
+            }.fold(
+                onSuccess = { (pdfBytes, fileName) ->
+                    if (pdfBytes == null) {
+                        _state.value = _state.value.copy(isSaving = false)
+                        _effects.trySend(
+                            ScannerComponent.Effect.ShowError("Не удалось создать PDF"),
+                        )
+                        return@fold
+                    }
 
-                if (pdfBytes == null) {
+                    val filename = buildUniqueFilename(fileName)
+                    val saved = fileStorage.saveFile(pdfBytes, filename)
+
+                    _state.value = _state.value.copy(isSaving = false)
+
+                    if (saved) {
+                        _effects.trySend(ScannerComponent.Effect.SaveSuccess)
+                        onFileSaved()
+                        onBack()
+                    } else {
+                        _effects.trySend(
+                            ScannerComponent.Effect.ShowError("Не удалось сохранить PDF"),
+                        )
+                    }
+                },
+                onFailure = { e ->
+                    logger.error(e) { "Failed to save PDF" }
                     _state.value = _state.value.copy(isSaving = false)
                     _effects.trySend(
-                        ScannerComponent.Effect.ShowError("Не удалось создать PDF"),
+                        ScannerComponent.Effect.ShowError("Ошибка при сохранении: ${e.message}"),
                     )
-                    return@launch
-                }
-
-                val filename = buildUniqueFilename(currentState.fileName)
-                val saved = fileStorage.saveFile(pdfBytes, filename)
-
-                _state.value = _state.value.copy(isSaving = false)
-
-                if (saved) {
-                    _effects.trySend(ScannerComponent.Effect.SaveSuccess)
-                    onFileSaved()
-                    onBack()
-                } else {
-                    _effects.trySend(
-                        ScannerComponent.Effect.ShowError("Не удалось сохранить PDF"),
-                    )
-                }
-            } catch (e: Exception) {
-                logger.error(e) { "Failed to save PDF" }
-                _state.value = _state.value.copy(isSaving = false)
-                _effects.trySend(
-                    ScannerComponent.Effect.ShowError("Ошибка при сохранении: ${e.message}"),
-                )
-            }
+                },
+            )
         }
     }
 

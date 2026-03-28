@@ -7,8 +7,10 @@ import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.domain.repository.CourseRepository
 import io.github.kroune.cumobile.domain.repository.PerformanceRepository
 import io.github.kroune.cumobile.presentation.common.ContentState
+import io.github.kroune.cumobile.util.runCatchingCancellable
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -42,6 +44,8 @@ class DefaultCoursesComponent(
 
     private val _effects = Channel<CoursesComponent.Effect>(Channel.BUFFERED)
     override val effects: Flow<CoursesComponent.Effect> = _effects.receiveAsFlow()
+
+    private var currentLoadJob: Job? = null
 
     override fun onIntent(intent: CoursesComponent.Intent) {
         when (intent) {
@@ -89,54 +93,59 @@ class DefaultCoursesComponent(
     }
 
     private fun loadAllData() {
+        currentLoadJob?.cancel()
+
         _state.value = _state.value.copy(
             courses = ContentState.Loading,
             performanceCourses = ContentState.Loading,
             gradebook = ContentState.Loading,
         )
 
-        scope.launch {
-            val courses = courseRepository.fetchCourses()
-            if (courses != null) {
-                _state.value = _state.value.copy(
-                    courses = ContentState.Success(courses),
-                )
-            } else {
-                logger.warn { "Failed to load courses" }
-                _state.value = _state.value.copy(
-                    courses = ContentState.Error("Не удалось загрузить курсы"),
-                )
+        currentLoadJob = scope.launch {
+            launch {
+                val courses = courseRepository.fetchCourses()
+                if (courses != null) {
+                    _state.value = _state.value.copy(
+                        courses = ContentState.Success(courses),
+                    )
+                } else {
+                    logger.warn { "Failed to load courses" }
+                    _state.value = _state.value.copy(
+                        courses = ContentState.Error("Не удалось загрузить курсы"),
+                    )
+                }
             }
-        }
 
-        scope.launch {
-            val performance = performanceRepository.fetchPerformance()
-            if (performance != null) {
-                _state.value = _state.value.copy(
-                    performanceCourses = ContentState.Success(performance.courses),
-                )
-            } else {
-                logger.warn { "Failed to load performance data" }
-                _state.value = _state.value.copy(
-                    performanceCourses = ContentState.Error("Не удалось загрузить статистику"),
-                )
+            launch {
+                val performance = performanceRepository.fetchPerformance()
+                if (performance != null) {
+                    _state.value = _state.value.copy(
+                        performanceCourses = ContentState.Success(performance.courses),
+                    )
+                } else {
+                    logger.warn { "Failed to load performance data" }
+                    _state.value = _state.value.copy(
+                        performanceCourses = ContentState.Error("Не удалось загрузить статистику"),
+                    )
+                }
             }
-        }
 
-        scope.launch {
-            try {
-                val gradebook = performanceRepository.fetchGradebook()
-                _state.value = _state.value.copy(
-                    gradebook = ContentState.Success(gradebook),
-                )
-            } catch (e: Exception) {
-                logger.error(e) { "Failed to load gradebook" }
-                _state.value = _state.value.copy(
-                    gradebook = ContentState.Error("Не удалось загрузить зачётку"),
-                )
-                _effects.trySend(
-                    CoursesComponent.Effect.ShowError("Не удалось загрузить зачётку"),
-                )
+            launch {
+                runCatchingCancellable {
+                    performanceRepository.fetchGradebook()
+                }.onSuccess { gradebook ->
+                    _state.value = _state.value.copy(
+                        gradebook = ContentState.Success(gradebook),
+                    )
+                }.onFailure { e ->
+                    logger.error(e) { "Failed to load gradebook" }
+                    _state.value = _state.value.copy(
+                        gradebook = ContentState.Error("Не удалось загрузить зачётку"),
+                    )
+                    _effects.trySend(
+                        CoursesComponent.Effect.ShowError("Не удалось загрузить зачётку"),
+                    )
+                }
             }
         }
     }

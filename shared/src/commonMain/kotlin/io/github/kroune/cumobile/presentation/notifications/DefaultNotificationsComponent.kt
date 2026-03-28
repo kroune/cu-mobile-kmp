@@ -10,6 +10,7 @@ import io.github.kroune.cumobile.domain.repository.NotificationRepository
 import io.github.kroune.cumobile.presentation.common.ContentState
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -38,6 +39,8 @@ class DefaultNotificationsComponent(
 
     private val _effects = Channel<NotificationsComponent.Effect>(Channel.BUFFERED)
     override val effects: Flow<NotificationsComponent.Effect> = _effects.receiveAsFlow()
+
+    private var currentLoadJob: Job? = null
 
     init {
         loadNotifications()
@@ -72,40 +75,48 @@ class DefaultNotificationsComponent(
     }
 
     private fun loadNotifications() {
+        currentLoadJob?.cancel()
+
         _state.value = _state.value.copy(
             educationNotifications = ContentState.Loading,
             otherNotifications = ContentState.Loading,
         )
 
-        scope.launch {
-            val education = notificationRepository.fetchNotifications(
-                category = NotificationCategory.Education,
-            )
-            if (education != null) {
-                _state.value = _state.value.copy(
-                    educationNotifications = ContentState.Success(sortByDate(education)),
+        currentLoadJob = scope.launch {
+            launch {
+                val education = notificationRepository.fetchNotifications(
+                    category = NotificationCategory.Education,
                 )
-            } else {
-                logger.warn { "Failed to load education notifications" }
-                _state.value = _state.value.copy(
-                    educationNotifications = ContentState.Error("Не удалось загрузить уведомления"),
-                )
+                if (education != null) {
+                    _state.value = _state.value.copy(
+                        educationNotifications = ContentState.Success(sortByDate(education)),
+                    )
+                } else {
+                    logger.warn { "Failed to load education notifications" }
+                    _state.value = _state.value.copy(
+                        educationNotifications = ContentState.Error(
+                            "Не удалось загрузить уведомления",
+                        ),
+                    )
+                }
             }
-        }
 
-        scope.launch {
-            val other = notificationRepository.fetchNotifications(
-                category = NotificationCategory.Other,
-            )
-            if (other != null) {
-                _state.value = _state.value.copy(
-                    otherNotifications = ContentState.Success(sortByDate(other)),
+            launch {
+                val other = notificationRepository.fetchNotifications(
+                    category = NotificationCategory.Other,
                 )
-            } else {
-                logger.warn { "Failed to load other notifications" }
-                _state.value = _state.value.copy(
-                    otherNotifications = ContentState.Error("Не удалось загрузить уведомления"),
-                )
+                if (other != null) {
+                    _state.value = _state.value.copy(
+                        otherNotifications = ContentState.Success(sortByDate(other)),
+                    )
+                } else {
+                    logger.warn { "Failed to load other notifications" }
+                    _state.value = _state.value.copy(
+                        otherNotifications = ContentState.Error(
+                            "Не удалось загрузить уведомления",
+                        ),
+                    )
+                }
             }
         }
     }
