@@ -93,19 +93,19 @@ class DefaultLongreadComponent(
             LongreadComponent.Intent.CreateComment,
             is LongreadComponent.Intent.ProlongLateDays,
             LongreadComponent.Intent.CancelLateDays,
-                -> handleTaskActionIntent(intent)
+            -> handleTaskActionIntent(intent)
 
             is LongreadComponent.Intent.PickSolutionAttachment,
             is LongreadComponent.Intent.RemoveSolutionAttachment,
             is LongreadComponent.Intent.PickCommentAttachment,
             is LongreadComponent.Intent.RemoveCommentAttachment,
-                -> handleAttachmentIntent(intent)
+            -> handleAttachmentIntent(intent)
 
             LongreadComponent.Intent.ToggleSearch,
             is LongreadComponent.Intent.UpdateSearchQuery,
             LongreadComponent.Intent.NextMatch,
             LongreadComponent.Intent.PreviousMatch,
-                -> handleSearchIntent(intent)
+            -> handleSearchIntent(intent)
 
             LongreadComponent.Intent.NavigateToFiles -> onNavigateToFiles()
         }

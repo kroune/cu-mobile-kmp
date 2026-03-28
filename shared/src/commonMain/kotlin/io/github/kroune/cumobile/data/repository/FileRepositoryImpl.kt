@@ -3,6 +3,7 @@ package io.github.kroune.cumobile.data.repository
 import io.github.kroune.cumobile.data.local.DownloadedFileInfo
 import io.github.kroune.cumobile.data.local.FileStorage
 import io.github.kroune.cumobile.domain.repository.FileRepository
+import io.github.kroune.cumobile.util.runCatchingCancellable
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
@@ -11,7 +12,6 @@ import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
-import io.github.kroune.cumobile.util.runCatchingCancellable
 import kotlinx.coroutines.withContext
 
 private val logger = KotlinLogging.logger {}
@@ -27,13 +27,15 @@ internal class FileRepositoryImpl(
     private val httpClient: HttpClient,
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : FileRepository {
-    override suspend fun listDownloadedFiles(): List<DownloadedFileInfo> = withContext(dispatcher) {
-        fileStorage.listFiles()
-    }
+    override suspend fun listDownloadedFiles(): List<DownloadedFileInfo> =
+        withContext(dispatcher) {
+            fileStorage.listFiles()
+        }
 
-    override suspend fun deleteFile(name: String): Boolean = withContext(dispatcher) {
-        fileStorage.deleteFile(name)
-    }
+    override suspend fun deleteFile(name: String): Boolean =
+        withContext(dispatcher) {
+            fileStorage.deleteFile(name)
+        }
 
     override suspend fun deleteAllFiles(): Int =
         withContext(dispatcher) {

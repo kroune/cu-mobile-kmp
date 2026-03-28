@@ -31,11 +31,17 @@ interface CoursePerformanceComponent {
     ) {
         /** Exercises from loaded data. */
         val exercises: ImmutableList<ExerciseWithScore>
-            get() = content.dataOrNull?.exercises.orEmpty().toImmutableList()
+            get() = content.dataOrNull
+                ?.exercises
+                .orEmpty()
+                .toImmutableList()
 
         /** Activity summaries from loaded data. */
         val activitySummaries: ImmutableList<ActivitySummary>
-            get() = content.dataOrNull?.activitySummaries.orEmpty().toImmutableList()
+            get() = content.dataOrNull
+                ?.activitySummaries
+                .orEmpty()
+                .toImmutableList()
 
         /** Whether content is still loading. */
         val isContentLoading: Boolean

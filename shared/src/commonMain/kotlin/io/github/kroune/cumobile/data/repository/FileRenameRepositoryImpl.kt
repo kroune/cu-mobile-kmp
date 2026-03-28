@@ -29,5 +29,6 @@ internal class FileRenameRepositoryImpl(
         courseId: String,
         activityName: String,
         extension: String,
-    ): FileRenameRule? = localDataSource.getMatchingRule(courseId, activityName, extension)
+    ): FileRenameRule? =
+        localDataSource.getMatchingRule(courseId, activityName, extension)
 }

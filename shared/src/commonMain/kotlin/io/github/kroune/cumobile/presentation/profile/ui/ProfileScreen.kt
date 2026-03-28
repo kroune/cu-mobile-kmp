@@ -470,7 +470,7 @@ private fun InfoRowWithBadge(
         )
         Spacer(modifier = Modifier.height(2.dp))
         TooltipBox(
-            positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Above,),
+            positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Above),
             tooltip = {
                 PlainTooltip(
                     containerColor = AppTheme.colors.textSecondary,

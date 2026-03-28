@@ -44,17 +44,16 @@ import androidx.compose.ui.unit.sp
 import io.github.kdroidfilter.composemediaplayer.VideoPlayerSurface
 import io.github.kdroidfilter.composemediaplayer.rememberVideoPlayerState
 import io.github.kroune.cumobile.data.model.LongreadMaterial
-import io.github.kroune.cumobile.util.runCatchingCancellable
 import io.github.kroune.cumobile.presentation.common.decodeImageBitmap
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 import io.github.kroune.cumobile.presentation.longread.htmlrender.HtmlBlock
+import io.github.kroune.cumobile.util.runCatchingCancellable
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.statement.readRawBytes
 
 private val logger = KotlinLogging.logger {}
-
 
 /** Renders an inline image from HTML `<img>` tag. */
 @Composable

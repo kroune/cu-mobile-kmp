@@ -46,8 +46,7 @@ interface TasksComponent {
                             (statusFilter == null || effectiveState == statusFilter) &&
                             (courseFilter == null || task.course.id == courseFilter) &&
                             (searchQuery.isEmpty() || task.exercise.name.contains(searchQuery, ignoreCase = true))
-                    }
-                    .sortedWith(taskComparator())
+                    }.sortedWith(taskComparator())
                     .toImmutableList()
             }
 

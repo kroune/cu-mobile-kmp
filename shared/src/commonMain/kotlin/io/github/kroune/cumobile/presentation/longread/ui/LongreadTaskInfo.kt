@@ -39,9 +39,9 @@ import io.github.kroune.cumobile.presentation.common.ui.taskStateColor
 import io.github.kroune.cumobile.presentation.common.ui.taskStateLabel
 import io.github.kroune.cumobile.presentation.longread.LongreadComponent
 import io.github.kroune.cumobile.presentation.longread.htmlrender.parseHtmlToBlocks
-import kotlinx.collections.immutable.persistentListOf
 import io.github.kroune.cumobile.presentation.longread.htmlrender.ui.HtmlContent
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 /**
  * Comments tab: displays comment list and input field with file attachments.

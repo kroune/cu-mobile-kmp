@@ -518,6 +518,7 @@ private fun SectionHeader(
 // region Skeleton
 
 private const val SkeletonTileCount = 5
+
 /**
  * Skeleton loading state for the Courses screen.
  *

@@ -18,18 +18,20 @@ internal class CourseRepositoryImpl(
     authLocal: AuthLocalDataSource,
     private val courseLocal: CourseLocalDataSource,
     private val courseApi: CourseApiService,
-) : CookieAwareRepository(authLocal), CourseRepository {
-    override suspend fun fetchCourses(): List<Course>? = withCookie {
-        courseApi.fetchCourses(it)
-    }
+) : CookieAwareRepository(authLocal),
+    CourseRepository {
+    override suspend fun fetchCourses(): List<Course>? =
+        withCookie {
+            courseApi.fetchCourses(it)
+        }
 
-    override suspend fun fetchCourseOverview(courseId: String): CourseOverview? = withCookie {
-        courseApi.fetchCourseOverview(it, courseId)
-    }
+    override suspend fun fetchCourseOverview(courseId: String): CourseOverview? =
+        withCookie {
+            courseApi.fetchCourseOverview(it, courseId)
+        }
 
     override val courseIdOrderFlow: Flow<List<String>> = courseLocal.courseIdOrderFlow
 
-    override suspend fun saveCourseIdOrder(
-        ids: List<String>,
-    ) = courseLocal.saveCourseIdOrder(ids)
+    override suspend fun saveCourseIdOrder(ids: List<String>) =
+        courseLocal.saveCourseIdOrder(ids)
 }

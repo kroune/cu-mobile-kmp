@@ -56,11 +56,11 @@ import io.github.kroune.cumobile.presentation.common.ui.DetailTopBar
 import io.github.kroune.cumobile.presentation.common.ui.ErrorContent
 import io.github.kroune.cumobile.presentation.longread.LongreadComponent
 import io.github.kroune.cumobile.presentation.longread.htmlrender.parseHtmlToBlocks
-import kotlinx.collections.immutable.persistentListOf
 import io.github.kroune.cumobile.presentation.longread.htmlrender.ui.AudioMaterialCard
 import io.github.kroune.cumobile.presentation.longread.htmlrender.ui.HtmlContent
 import io.github.kroune.cumobile.presentation.longread.htmlrender.ui.ImageMaterialCard
 import io.github.kroune.cumobile.presentation.longread.htmlrender.ui.VideoMaterialCard
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.launch
 
 /**

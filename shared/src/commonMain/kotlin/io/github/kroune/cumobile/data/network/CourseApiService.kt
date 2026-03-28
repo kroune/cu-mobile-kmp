@@ -2,12 +2,12 @@ package io.github.kroune.cumobile.data.network
 
 import io.github.kroune.cumobile.data.model.Course
 import io.github.kroune.cumobile.data.model.CourseOverview
+import io.github.kroune.cumobile.util.runCatchingCancellable
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.statement.bodyAsText
-import io.github.kroune.cumobile.util.runCatchingCancellable
 import io.ktor.http.HttpStatusCode
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray

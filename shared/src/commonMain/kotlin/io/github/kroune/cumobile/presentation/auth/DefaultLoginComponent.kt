@@ -28,7 +28,8 @@ class DefaultLoginComponent(
     private val authApiServiceFactory: () -> AuthApiService,
     private val onLoginSuccess: () -> Unit,
     private val onNavigateToWebView: () -> Unit,
-) : LoginComponent, ComponentContext by componentContext {
+) : LoginComponent,
+    ComponentContext by componentContext {
     private val scope = coroutineScope(Dispatchers.Main.immediate + SupervisorJob())
     private val _state = MutableValue(LoginComponent.State())
     override val state: Value<LoginComponent.State> = _state
@@ -204,7 +205,7 @@ class DefaultLoginComponent(
     private fun handleBack() {
         val currentState = _state.value
         when (currentState.step) {
-            AuthStep.Email -> { /* nothing to go back to */
+            AuthStep.Email -> { // nothing to go back to
             }
 
             AuthStep.Password -> {

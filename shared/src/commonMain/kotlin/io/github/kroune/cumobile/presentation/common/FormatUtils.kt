@@ -112,7 +112,10 @@ fun formatDeadlineShort(deadline: String): String =
  * Adds [daysToAdd] to an ISO 8601 deadline and returns formatted `"dd.MM HH:mm"`.
  * Returns `null` when [isoDate] is null or on parse errors.
  */
-fun formatDeadlinePlusDays(isoDate: String?, daysToAdd: Int): String? {
+fun formatDeadlinePlusDays(
+    isoDate: String?,
+    daysToAdd: Int,
+): String? {
     if (isoDate == null) return null
     return try {
         val dt = parseIsoDateTime(isoDate)
@@ -134,7 +137,8 @@ fun formatDeadlinePlusDays(isoDate: String?, daysToAdd: Int): String? {
 fun formatEpochDate(millis: Long): String {
     if (millis < 0L) return ""
     return try {
-        Instant.fromEpochMilliseconds(millis)
+        Instant
+            .fromEpochMilliseconds(millis)
             .toLocalDateTime(TimeZone.currentSystemDefault())
             .date
             .format(dayMonthYearDateFormat)

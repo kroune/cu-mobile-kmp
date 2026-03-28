@@ -51,8 +51,7 @@ internal fun SegmentedControl(
                     .clip(RoundedCornerShape(6.dp))
                     .background(
                         if (selected) AppTheme.colors.accent.copy(alpha = 0.2f) else AppTheme.colors.surface,
-                    )
-                    .clickable { onSelect(index) }
+                    ).clickable { onSelect(index) }
                     .padding(vertical = 8.dp),
                 contentAlignment = Alignment.Center,
             ) {

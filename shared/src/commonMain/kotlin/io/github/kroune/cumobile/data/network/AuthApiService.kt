@@ -75,13 +75,14 @@ class AuthApiService {
     /**
      * Initiates the auth flow by loading the Keycloak login page.
      */
-    suspend fun startAuth(): AuthStepResult = runCatchingCancellable {
-        val response = client.get(AuthOidcUrl)
-        handleAuthResponse(response)
-    }.getOrElse { e ->
-        logger.error(e) { "Failed to start auth" }
-        AuthStepResult.Error("Ошибка подключения: ${e.message}")
-    }
+    suspend fun startAuth(): AuthStepResult =
+        runCatchingCancellable {
+            val response = client.get(AuthOidcUrl)
+            handleAuthResponse(response)
+        }.getOrElse { e ->
+            logger.error(e) { "Failed to start auth" }
+            AuthStepResult.Error("Ошибка подключения: ${e.message}")
+        }
 
     /**
      * Submits the email/login to Keycloak.
@@ -89,10 +90,11 @@ class AuthApiService {
     suspend fun submitUsername(
         loginAction: String,
         username: String,
-    ): AuthStepResult = postForm(
-        loginAction,
-        "username=${username.encodeURLParameter()}",
-    )
+    ): AuthStepResult =
+        postForm(
+            loginAction,
+            "username=${username.encodeURLParameter()}",
+        )
 
     /**
      * Submits the password to Keycloak.
@@ -100,10 +102,11 @@ class AuthApiService {
     suspend fun submitPassword(
         loginAction: String,
         password: String,
-    ): AuthStepResult = postForm(
-        loginAction,
-        "password=${password.encodeURLParameter()}",
-    )
+    ): AuthStepResult =
+        postForm(
+            loginAction,
+            "password=${password.encodeURLParameter()}",
+        )
 
     /**
      * Submits the SMS OTP code to Keycloak.
@@ -112,15 +115,16 @@ class AuthApiService {
         loginAction: String,
         code: String,
         phoneNumber: String,
-    ): AuthStepResult = postForm(
-        loginAction,
-        buildString {
-            append("phoneNumber=${phoneNumber.encodeURLParameter()}")
-            append("&code=${code.encodeURLParameter()}")
-            append("&action=verify")
-            append("&credentialId=")
-        },
-    )
+    ): AuthStepResult =
+        postForm(
+            loginAction,
+            buildString {
+                append("phoneNumber=${phoneNumber.encodeURLParameter()}")
+                append("&code=${code.encodeURLParameter()}")
+                append("&action=verify")
+                append("&credentialId=")
+            },
+        )
 
     /**
      * Follows the callback URL to exchange the auth code for a bff.cookie.
@@ -264,7 +268,11 @@ internal fun extractJsStringValue(
     val result = """(.*)?"""
     val someSpaces = """\s*"""
     val pattern = Regex("""${Regex.escape(key)}$someSpaces=$someSpaces(['"])$result\1""")
-    return pattern.findAll(html).lastOrNull()?.groupValues?.get(2)
+    return pattern
+        .findAll(html)
+        .lastOrNull()
+        ?.groupValues
+        ?.get(2)
 }
 
 // Informational messages that are not errors map to null; unknown codes are returned as-is.

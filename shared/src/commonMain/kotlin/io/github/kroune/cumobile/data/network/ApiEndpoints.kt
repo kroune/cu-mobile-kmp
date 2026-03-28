@@ -7,7 +7,6 @@ package io.github.kroune.cumobile.data.network
  * and prepares for a future remote-config approach.
  */
 internal object ApiEndpoints {
-
     object Profile {
         const val ME = "student-hub/students/me"
         const val AVATAR_ME = "hub/avatars/me"

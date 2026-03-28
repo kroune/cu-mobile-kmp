@@ -2,6 +2,7 @@ package io.github.kroune.cumobile.data.network
 
 import io.github.kroune.cumobile.data.model.StudentLmsProfile
 import io.github.kroune.cumobile.data.model.StudentProfile
+import io.github.kroune.cumobile.util.runCatchingCancellable
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.request.delete
@@ -12,7 +13,6 @@ import io.ktor.client.request.header
 import io.ktor.client.statement.readRawBytes
 import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
-import io.github.kroune.cumobile.util.runCatchingCancellable
 import io.ktor.http.HttpStatusCode
 
 private val logger = KotlinLogging.logger {}

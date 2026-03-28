@@ -5,7 +5,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
 class ExtractJsStringValueTest {
-
     @Test
     fun doubleQuotedValue() {
         val html = """window.authConfiguration.urls.loginAction = "https://example.com/login";"""
@@ -26,10 +25,11 @@ class ExtractJsStringValueTest {
 
     @Test
     fun returnsLastOccurrenceWhenMultiple() {
-        val html = """
+        val html =
+            """
             window.authConfiguration.activePage = "first";
             window.authConfiguration.activePage = "second";
-        """.trimIndent()
+            """.trimIndent()
         assertEquals("second", extractJsStringValue(html, "activePage"))
     }
 

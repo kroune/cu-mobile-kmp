@@ -3,6 +3,7 @@ package io.github.kroune.cumobile.data.network
 import io.github.kroune.cumobile.data.model.LongreadMaterial
 import io.github.kroune.cumobile.data.model.LongreadMaterialsResponse
 import io.github.kroune.cumobile.data.model.UploadLinkData
+import io.github.kroune.cumobile.util.runCatchingCancellable
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -11,7 +12,6 @@ import io.ktor.client.request.header
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
-import io.github.kroune.cumobile.util.runCatchingCancellable
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.ByteArrayContent
 import kotlinx.serialization.json.JsonElement
