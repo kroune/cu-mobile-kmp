@@ -3,7 +3,6 @@ package io.github.kroune.cumobile.presentation.scanner.ui
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,32 +15,18 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.RotateLeft
-import androidx.compose.material.icons.automirrored.filled.RotateRight
 import androidx.compose.material.icons.filled.AddAPhoto
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.PhotoLibrary
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -51,7 +36,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
@@ -360,254 +344,3 @@ private fun ReorderButton(
         Icon(icon, description, tint = tint, modifier = Modifier.size(18.dp))
     }
 }
-
-// region Footer
-
-@Composable
-private fun ScannerFooter(
-    state: ScannerComponent.State,
-    imagePicker: ImagePicker?,
-    onIntent: (ScannerComponent.Intent) -> Unit,
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(AppTheme.colors.surface)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
-    ) {
-        CaptureButtons(imagePicker)
-        CompressionToggle(state.compressImages) { onIntent(ScannerComponent.Intent.Settings.SetCompression(it)) }
-        SaveButton(state) { onIntent(ScannerComponent.Intent.SavePdf) }
-    }
-}
-
-@Composable
-private fun CaptureButtons(imagePicker: ImagePicker?) {
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        OutlinedButton(
-            onClick = { imagePicker?.launchCamera() },
-            modifier = Modifier.weight(1f),
-            colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.colors.accent),
-            shape = RoundedCornerShape(12.dp),
-        ) {
-            Icon(Icons.Default.AddAPhoto, null, modifier = Modifier.size(18.dp))
-            Spacer(modifier = Modifier.width(6.dp))
-            Text("Камера", fontSize = 14.sp)
-        }
-        OutlinedButton(
-            onClick = { imagePicker?.launchGallery() },
-            modifier = Modifier.weight(1f),
-            colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.colors.accent),
-            shape = RoundedCornerShape(12.dp),
-        ) {
-            Icon(Icons.Default.PhotoLibrary, null, modifier = Modifier.size(18.dp))
-            Spacer(modifier = Modifier.width(6.dp))
-            Text("Галерея", fontSize = 14.sp)
-        }
-    }
-}
-
-@Composable
-private fun CompressionToggle(
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
-    ) {
-        Column {
-            Text("Сжать изображения", color = AppTheme.colors.textPrimary, fontSize = 14.sp)
-            Text("Уменьшает размер PDF", color = AppTheme.colors.textSecondary, fontSize = 12.sp)
-        }
-        Switch(
-            checked = checked,
-            onCheckedChange = onCheckedChange,
-            colors = SwitchDefaults.colors(
-                checkedThumbColor = AppTheme.colors.accent,
-                checkedTrackColor = AppTheme.colors.accent.copy(alpha = 0.3f),
-            ),
-        )
-    }
-}
-
-@Composable
-private fun SaveButton(
-    state: ScannerComponent.State,
-    onClick: () -> Unit,
-) {
-    Button(
-        onClick = onClick,
-        enabled = state.canSave,
-        modifier = Modifier.fillMaxWidth(),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = AppTheme.colors.accent,
-            disabledContainerColor = AppTheme.colors.textSecondary.copy(alpha = 0.3f),
-        ),
-        shape = RoundedCornerShape(12.dp),
-    ) {
-        if (state.isSaving) {
-            CircularProgressIndicator(
-                modifier = Modifier.size(18.dp),
-                strokeWidth = 2.dp,
-                color = AppTheme.colors.background,
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-        }
-        Text(
-            if (state.isSaving) "Сохранение..." else "Сохранить PDF",
-            color = AppTheme.colors.background,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Medium,
-        )
-    }
-}
-
-// endregion
-
-// region Image Editor Overlay
-
-@Composable
-private fun ImageEditorOverlay(
-    page: ScannerComponent.ScanPage,
-    onUpdateRotation: (Float) -> Unit,
-    onDone: () -> Unit,
-) {
-    val imageBitmap = remember(page.id, page.imageBytes) { decodeImageBitmap(page.imageBytes) }
-
-    Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.95f))) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            EditorTopBar(onDone)
-            EditorImagePreview(
-                imageBitmap = imageBitmap,
-                rotationDegrees = page.rotationDegrees,
-                modifier = Modifier.weight(1f).fillMaxWidth(),
-            )
-            RotationControls(page.rotationDegrees, onUpdateRotation)
-            EditorDoneButton(onDone)
-        }
-    }
-}
-
-@Composable
-private fun EditorTopBar(onDone: () -> Unit) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            "Редактирование",
-            color = Color.White,
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(start = 8.dp),
-        )
-        IconButton(onClick = onDone) { Icon(Icons.Default.Close, "Закрыть", tint = Color.White) }
-    }
-}
-
-@Composable
-private fun EditorImagePreview(
-    imageBitmap: androidx.compose.ui.graphics.ImageBitmap?,
-    rotationDegrees: Float,
-    modifier: Modifier = Modifier,
-) {
-    Box(modifier = modifier.padding(16.dp), contentAlignment = Alignment.Center) {
-        if (imageBitmap != null) {
-            Image(
-                bitmap = imageBitmap,
-                contentDescription = "Предпросмотр",
-                contentScale = ContentScale.Fit,
-                modifier = Modifier.fillMaxSize().graphicsLayer { rotationZ = rotationDegrees },
-            )
-        }
-    }
-}
-
-@Composable
-private fun RotationControls(
-    rotationDegrees: Float,
-    onUpdateRotation: (Float) -> Unit,
-) {
-    Column(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text(
-            "${rotationDegrees.toInt()}°",
-            color = if (rotationDegrees != 0f) AppTheme.colors.accent else Color.White,
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Slider(
-            value = rotationDegrees,
-            onValueChange = onUpdateRotation,
-            valueRange = -180f..180f,
-            modifier = Modifier.fillMaxWidth(),
-            colors = SliderDefaults.colors(
-                thumbColor = AppTheme.colors.accent,
-                activeTrackColor = AppTheme.colors.accent,
-                inactiveTrackColor = Color.White.copy(alpha = 0.2f),
-            ),
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        QuickRotationButtons(onUpdateRotation)
-    }
-}
-
-@Composable
-private fun QuickRotationButtons(onUpdateRotation: (Float) -> Unit) {
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-        QuickRotateButton(
-            Icons.AutoMirrored.Filled.RotateLeft,
-            "-90°",
-        ) { onUpdateRotation(-RotationStep) }
-        TextButton(onClick = { onUpdateRotation(0f) }) {
-            Text("Сброс", color = Color.White, fontSize = 14.sp)
-        }
-        QuickRotateButton(
-            Icons.AutoMirrored.Filled.RotateRight,
-            "+90°",
-        ) { onUpdateRotation(RotationStep) }
-    }
-}
-
-@Composable
-private fun QuickRotateButton(
-    icon: ImageVector,
-    label: String,
-    onClick: () -> Unit,
-) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        IconButton(
-            onClick = onClick,
-            modifier = Modifier
-                .size(44.dp)
-                .clip(CircleShape)
-                .background(Color.White.copy(alpha = 0.1f)),
-        ) {
-            Icon(icon, label, tint = Color.White)
-        }
-        Text(label, color = Color.White.copy(alpha = 0.7f), fontSize = 12.sp)
-    }
-}
-
-@Composable
-private fun EditorDoneButton(onDone: () -> Unit) {
-    Button(
-        onClick = onDone,
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.accent),
-        shape = RoundedCornerShape(12.dp),
-    ) {
-        Text("Готово", color = AppTheme.colors.background, fontSize = 16.sp, fontWeight = FontWeight.Medium)
-    }
-}
-
-// endregion
-
-private const val RotationStep = 90f

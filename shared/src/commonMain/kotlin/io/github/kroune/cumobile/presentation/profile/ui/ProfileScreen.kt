@@ -507,8 +507,8 @@ private fun InfoRowWithBadge(
  */
 internal fun maskEmail(email: String): String {
     val atIndex = email.indexOf('@')
-    if (atIndex <= 3) return email
-    val visible = email.substring(0, 3)
+    if (atIndex <= EmailVisibleChars) return email
+    val visible = email.substring(0, EmailVisibleChars)
     val domain = email.substring(atIndex)
     return "$visible***$domain"
 }
@@ -519,12 +519,17 @@ internal fun maskEmail(email: String): String {
  */
 internal fun maskPhone(phone: String): String {
     val digits = phone.filter { it.isDigit() }
-    if (digits.length <= 4) return phone
-    val prefix = phone.take(3)
-    val suffix = phone.takeLast(2)
-    val masked = "*".repeat(phone.length - 5)
+    if (digits.length <= MinPhoneDigits) return phone
+    val prefix = phone.take(PhonePrefixLength)
+    val suffix = phone.takeLast(PhoneSuffixLength)
+    val masked = "*".repeat(phone.length - PhonePrefixLength - PhoneSuffixLength)
     return "$prefix$masked$suffix"
 }
+
+private const val EmailVisibleChars = 3
+private const val MinPhoneDigits = 4
+private const val PhonePrefixLength = 3
+private const val PhoneSuffixLength = 2
 
 private const val ProfileInfoRowCount = 4
 

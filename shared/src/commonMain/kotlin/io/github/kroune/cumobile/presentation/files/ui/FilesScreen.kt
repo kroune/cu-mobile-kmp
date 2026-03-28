@@ -414,31 +414,6 @@ private fun DownloadingRow(name: String) {
 }
 
 @Composable
-private fun ExtensionBadge(extension: String) {
-    val badgeColor = extensionColor(extension)
-    val label = if (extension.isNotEmpty() && extension.length <= 4) {
-        extension
-    } else {
-        "FILE"
-    }
-    Box(
-        modifier = Modifier
-            .size(40.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .background(badgeColor.copy(alpha = 0.2f)),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = label,
-            color = badgeColor,
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center,
-        )
-    }
-}
-
-@Composable
 private fun EmptyState(onOpenRenameSettings: () -> Unit) {
     Column(
         modifier = Modifier
@@ -514,18 +489,3 @@ private fun ConfirmDeleteDialog(
     )
 }
 
-/**
- * Returns a color for the extension badge based on file type.
- */
-@Composable
-private fun extensionColor(ext: String) =
-    when (ext) {
-        "PDF" -> AppTheme.colors.error
-        "DOC", "DOCX" -> AppTheme.colors.taskInProgress
-        "XLS", "XLSX" -> AppTheme.colors.taskEvaluated
-        "PPT", "PPTX" -> AppTheme.colors.taskRework
-        "ZIP", "RAR", "7Z" -> AppTheme.colors.taskReview
-        "JPG", "JPEG", "PNG", "GIF", "SVG" -> AppTheme.colors.categorySoftSkills
-        "MP4", "MOV", "AVI" -> AppTheme.colors.categoryBusiness
-        else -> AppTheme.colors.textSecondary
-    }
