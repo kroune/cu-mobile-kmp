@@ -501,9 +501,6 @@ private fun QuestionsCard(
 }
 
 private const val SkeletonMaterialCount = 3
-private val SkeletonMaterialSpacing = 12.dp
-private val SkeletonMaterialPadding = 16.dp
-private val SkeletonMaterialTopSpacing = 12.dp
 
 /**
  * Skeleton loading state for the Longread screen.
@@ -516,10 +513,10 @@ private fun LongreadScreenSkeleton(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = SkeletonMaterialPadding),
-        verticalArrangement = Arrangement.spacedBy(SkeletonMaterialSpacing),
+            .padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Spacer(Modifier.height(SkeletonMaterialTopSpacing))
+        Spacer(Modifier.height(12.dp))
         repeat(SkeletonMaterialCount) {
             LongreadMaterialSkeleton()
         }

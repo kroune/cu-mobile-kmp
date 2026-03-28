@@ -518,8 +518,6 @@ private fun SectionHeader(
 // region Skeleton
 
 private const val SkeletonTileCount = 5
-private val SkeletonTileSpacing = 4.dp
-
 /**
  * Skeleton loading state for the Courses screen.
  *
@@ -531,7 +529,7 @@ private val SkeletonTileSpacing = 4.dp
 internal fun CoursesScreenSkeleton(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(SkeletonTileSpacing),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         repeat(SkeletonTileCount) {
             CourseListTileSkeleton()

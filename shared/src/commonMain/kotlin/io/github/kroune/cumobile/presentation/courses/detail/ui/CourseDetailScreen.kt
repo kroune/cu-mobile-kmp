@@ -394,6 +394,7 @@ private fun ExerciseRow(
  * Returns Russian plural form for exercise count.
  * E.g.: "1 задание", "2 задания", "5 заданий".
  */
+@Suppress("MagicNumber")
 private fun exerciseCountLabel(count: Int): String {
     val mod10 = count % 10
     val mod100 = count % 100

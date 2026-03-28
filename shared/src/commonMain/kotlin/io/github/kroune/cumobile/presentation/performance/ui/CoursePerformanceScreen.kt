@@ -223,8 +223,6 @@ internal fun scoreRatioColor(ratio: Double): Color =
 // region Skeleton
 
 private const val SkeletonExerciseCount = 4
-private val SkeletonExerciseSpacing = 8.dp
-private val SkeletonHorizontalPadding = 16.dp
 
 /**
  * Skeleton loading state for the Course Performance screen.
@@ -241,17 +239,17 @@ private fun CoursePerformanceScreenSkeleton(modifier: Modifier = Modifier) {
             labels = persistentListOf("Набранные баллы", "Успеваемость"),
             selectedIndex = 0,
             onSelect = {},
-            modifier = Modifier.padding(horizontal = SkeletonHorizontalPadding),
+            modifier = Modifier.padding(horizontal = 16.dp),
         )
         Spacer(Modifier.height(8.dp))
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = SkeletonHorizontalPadding),
+                .padding(horizontal = 16.dp),
         ) {
             repeat(SkeletonExerciseCount) {
                 ExerciseTileSkeleton()
-                Spacer(Modifier.height(SkeletonExerciseSpacing))
+                Spacer(Modifier.height(8.dp))
             }
         }
     }

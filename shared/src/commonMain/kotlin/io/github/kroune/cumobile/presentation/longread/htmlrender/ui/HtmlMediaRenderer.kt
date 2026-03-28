@@ -55,8 +55,6 @@ import io.ktor.client.statement.readRawBytes
 
 private val logger = KotlinLogging.logger {}
 
-private const val VideoAspectRatioWidth = 16f
-private const val VideoAspectRatioHeight = 9f
 
 /** Renders an inline image from HTML `<img>` tag. */
 @Composable
@@ -205,7 +203,7 @@ fun VideoMaterialCard(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .aspectRatio(VideoAspectRatioWidth / VideoAspectRatioHeight)
+                .aspectRatio(16f / 9f)
                 .clip(RoundedCornerShape(8.dp))
                 .background(AppTheme.colors.codeBlockBackground),
             contentAlignment = Alignment.Center,
@@ -333,6 +331,7 @@ fun MediaUrlRow(
     url: String,
     modifier: Modifier = Modifier,
 ) {
+    @Suppress("DEPRECATION")
     val clipboardManager = LocalClipboardManager.current
     val uriHandler = LocalUriHandler.current
 

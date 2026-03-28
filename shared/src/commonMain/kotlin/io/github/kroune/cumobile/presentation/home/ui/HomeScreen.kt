@@ -188,8 +188,8 @@ private fun DeadlinesSection(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = SkeletonHorizontalPadding),
-                    horizontalArrangement = Arrangement.spacedBy(SkeletonCardSpacing),
+                        .padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     repeat(SkeletonTaskCardCount) {
                         DeadlineTaskCardSkeleton()
@@ -243,12 +243,12 @@ private fun CoursesSection(
         when (coursesState) {
             is ContentState.Loading -> {
                 Row(
-                    modifier = Modifier.padding(horizontal = SkeletonHorizontalPadding),
-                    horizontalArrangement = Arrangement.spacedBy(SkeletonCardSpacing),
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     repeat(2) {
                         CourseCardSkeleton(
-                            Modifier.weight(1f).aspectRatio(CourseCardAspectRatio),
+                            Modifier.weight(1f).aspectRatio(1.4f),
                         )
                     }
                 }
@@ -494,11 +494,6 @@ private fun EmptySection(
 
 private const val SkeletonTaskCardCount = 3
 private const val SkeletonClassCardCount = 2
-private val SkeletonCardSpacing = 12.dp
-private val SkeletonSectionSpacing = 16.dp
-private val SkeletonHorizontalPadding = 16.dp
-private val SkeletonScheduleItemSpacing = 8.dp
-private const val CourseCardAspectRatio = 1.4f
 
 /**
  * Skeleton loading state for the Home screen.
@@ -519,49 +514,49 @@ internal fun HomeScreenSkeleton(modifier: Modifier = Modifier) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = SkeletonHorizontalPadding),
-            horizontalArrangement = Arrangement.spacedBy(SkeletonCardSpacing),
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             repeat(SkeletonTaskCardCount) {
                 DeadlineTaskCardSkeleton()
             }
         }
 
-        Spacer(Modifier.height(SkeletonSectionSpacing))
+        Spacer(Modifier.height(16.dp))
 
         // Schedule section
         SectionHeader(title = "Расписание", count = 0)
         Column(
-            modifier = Modifier.padding(horizontal = SkeletonHorizontalPadding),
-            verticalArrangement = Arrangement.spacedBy(SkeletonScheduleItemSpacing),
+            modifier = Modifier.padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             repeat(SkeletonClassCardCount) {
                 ClassCardSkeleton()
             }
         }
 
-        Spacer(Modifier.height(SkeletonSectionSpacing))
+        Spacer(Modifier.height(16.dp))
 
         // Courses section
         SectionHeader(title = "Курсы", count = 0)
         Row(
-            modifier = Modifier.padding(horizontal = SkeletonHorizontalPadding),
-            horizontalArrangement = Arrangement.spacedBy(SkeletonCardSpacing),
+            modifier = Modifier.padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             repeat(2) {
-                CourseCardSkeleton(Modifier.weight(1f).aspectRatio(CourseCardAspectRatio))
+                CourseCardSkeleton(Modifier.weight(1f).aspectRatio(1.4f))
             }
         }
-        Spacer(Modifier.height(SkeletonCardSpacing))
+        Spacer(Modifier.height(12.dp))
         Row(
-            modifier = Modifier.padding(horizontal = SkeletonHorizontalPadding),
-            horizontalArrangement = Arrangement.spacedBy(SkeletonCardSpacing),
+            modifier = Modifier.padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             repeat(2) {
-                CourseCardSkeleton(Modifier.weight(1f).aspectRatio(CourseCardAspectRatio))
+                CourseCardSkeleton(Modifier.weight(1f).aspectRatio(1.4f))
             }
         }
 
-        Spacer(Modifier.height(SkeletonSectionSpacing))
+        Spacer(Modifier.height(16.dp))
     }
 }

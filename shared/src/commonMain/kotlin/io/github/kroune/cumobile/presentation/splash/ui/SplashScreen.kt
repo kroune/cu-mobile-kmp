@@ -15,8 +15,6 @@ import cumobile.shared.generated.resources.app_logo
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 import org.jetbrains.compose.resources.painterResource
 
-private val SplashIconSize = 192.dp
-
 @Composable
 fun SplashScreen() {
     Box(
@@ -28,7 +26,7 @@ fun SplashScreen() {
         Image(
             painter = painterResource(Res.drawable.app_logo),
             contentDescription = null,
-            modifier = Modifier.size(SplashIconSize),
+            modifier = Modifier.size(192.dp),
             colorFilter = ColorFilter.tint(AppTheme.colors.textPrimary),
         )
     }

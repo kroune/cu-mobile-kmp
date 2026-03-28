@@ -21,12 +21,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
-private const val ShimmerDurationMs = 1200
-private const val ShimmerTargetValue = 1000f
-private val DefaultBoxHeight = 14.dp
-private val DefaultBoxCornerRadius = 4.dp
-private val DefaultCircleSize = 36.dp
-
 /**
  * Returns an animated [Brush] that produces a shimmer sweep effect.
  *
@@ -38,9 +32,9 @@ internal fun shimmerBrush(): Brush {
     val transition = rememberInfiniteTransition(label = "shimmer")
     val translateAnim by transition.animateFloat(
         initialValue = 0f,
-        targetValue = ShimmerTargetValue,
+        targetValue = 1000f,
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = ShimmerDurationMs, easing = LinearEasing),
+            animation = tween(durationMillis = 1200, easing = LinearEasing),
             repeatMode = RepeatMode.Restart,
         ),
         label = "shimmerTranslate",
@@ -48,7 +42,7 @@ internal fun shimmerBrush(): Brush {
     return Brush.linearGradient(
         colors = listOf(colors.shimmerBase, colors.shimmerHighlight, colors.shimmerBase),
         start = Offset(translateAnim, 0f),
-        end = Offset(translateAnim + ShimmerTargetValue / 2f, 0f),
+        end = Offset(translateAnim + 500f, 0f),
     )
 }
 
@@ -61,8 +55,8 @@ internal fun shimmerBrush(): Brush {
 @Composable
 internal fun ShimmerBox(
     modifier: Modifier = Modifier,
-    height: Dp = DefaultBoxHeight,
-    cornerRadius: Dp = DefaultBoxCornerRadius,
+    height: Dp = 14.dp,
+    cornerRadius: Dp = 4.dp,
 ) {
     val brush = shimmerBrush()
     Box(
@@ -81,7 +75,7 @@ internal fun ShimmerBox(
 @Composable
 internal fun ShimmerCircle(
     modifier: Modifier = Modifier,
-    size: Dp = DefaultCircleSize,
+    size: Dp = 36.dp,
 ) {
     val brush = shimmerBrush()
     Box(

@@ -14,9 +14,6 @@ import androidx.compose.ui.unit.dp
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 import io.github.kroune.cumobile.presentation.common.ui.ShimmerBox
 
-private const val TitleWidthFraction = 0.6f
-private const val LastLineWidthFraction = 0.7f
-
 /**
  * Skeleton placeholder for a longread material (markdown) card.
  *
@@ -31,12 +28,12 @@ internal fun LongreadMaterialSkeleton(modifier: Modifier = Modifier) {
             .background(AppTheme.colors.surface)
             .padding(16.dp),
     ) {
-        ShimmerBox(Modifier.fillMaxWidth(TitleWidthFraction), height = 16.dp)
+        ShimmerBox(Modifier.fillMaxWidth(0.6f), height = 16.dp)
         Spacer(Modifier.height(8.dp))
         ShimmerBox(Modifier.fillMaxWidth(), height = 12.dp)
         Spacer(Modifier.height(4.dp))
         ShimmerBox(Modifier.fillMaxWidth(), height = 12.dp)
         Spacer(Modifier.height(4.dp))
-        ShimmerBox(Modifier.fillMaxWidth(LastLineWidthFraction), height = 12.dp)
+        ShimmerBox(Modifier.fillMaxWidth(0.7f), height = 12.dp)
     }
 }

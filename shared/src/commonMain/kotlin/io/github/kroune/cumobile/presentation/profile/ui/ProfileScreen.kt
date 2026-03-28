@@ -526,23 +526,7 @@ internal fun maskPhone(phone: String): String {
     return "$prefix$masked$suffix"
 }
 
-// region Skeleton constants
-private val ProfileAvatarSize = 80.dp
-private val ProfileAvatarTopSpacing = 24.dp
-private val ProfileNameWidth = 160.dp
-private val ProfileNameHeight = 20.dp
-private val ProfileCourseWidth = 120.dp
-private val ProfileCourseHeight = 14.dp
-private val ProfileInfoCardPadding = 16.dp
-private val ProfileInfoLabelWidth = 60.dp
-private val ProfileInfoLabelHeight = 12.dp
-private val ProfileInfoValueHeight = 14.dp
-private val ProfileInfoRowSpacing = 12.dp
-private val ProfileNameSpacing = 4.dp
 private const val ProfileInfoRowCount = 4
-private const val ProfileInfoValueFraction = 0.7f
-private val ProfileInfoValueSpacing = 2.dp
-// endregion
 
 /**
  * Skeleton loading state for the Profile screen.
@@ -555,34 +539,34 @@ internal fun ProfileScreenSkeleton(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = ProfileInfoCardPadding),
+            .padding(horizontal = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Spacer(Modifier.height(ProfileAvatarTopSpacing))
+        Spacer(Modifier.height(24.dp))
 
-        ShimmerCircle(size = ProfileAvatarSize)
+        ShimmerCircle(size = 80.dp)
 
-        Spacer(Modifier.height(ProfileInfoCardPadding))
+        Spacer(Modifier.height(16.dp))
 
-        ShimmerBox(Modifier.width(ProfileNameWidth), height = ProfileNameHeight)
-        Spacer(Modifier.height(ProfileNameSpacing))
-        ShimmerBox(Modifier.width(ProfileCourseWidth), height = ProfileCourseHeight)
+        ShimmerBox(Modifier.width(160.dp), height = 20.dp)
+        Spacer(Modifier.height(4.dp))
+        ShimmerBox(Modifier.width(120.dp), height = 14.dp)
 
-        Spacer(Modifier.height(ProfileAvatarTopSpacing))
+        Spacer(Modifier.height(24.dp))
 
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(AppTheme.colors.surface, RoundedCornerShape(12.dp))
-                .padding(ProfileInfoCardPadding),
+                .padding(16.dp),
         ) {
             repeat(ProfileInfoRowCount) { index ->
-                if (index > 0) Spacer(Modifier.height(ProfileInfoRowSpacing))
-                ShimmerBox(Modifier.width(ProfileInfoLabelWidth), height = ProfileInfoLabelHeight)
-                Spacer(Modifier.height(ProfileInfoValueSpacing))
+                if (index > 0) Spacer(Modifier.height(12.dp))
+                ShimmerBox(Modifier.width(60.dp), height = 12.dp)
+                Spacer(Modifier.height(2.dp))
                 ShimmerBox(
-                    Modifier.fillMaxWidth(ProfileInfoValueFraction),
-                    height = ProfileInfoValueHeight,
+                    Modifier.fillMaxWidth(0.7f),
+                    height = 14.dp,
                 )
             }
         }
