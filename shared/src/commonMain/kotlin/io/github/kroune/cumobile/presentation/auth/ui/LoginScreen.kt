@@ -22,10 +22,14 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -207,8 +211,12 @@ private fun StepHeader(
 @Composable
 private fun BackRow(onIntent: (LoginComponent.Intent) -> Unit) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
-        TextButton(onClick = { onIntent(LoginComponent.Intent.Back) }) {
-            Text(text = "\u2190 Назад", color = AppTheme.colors.accent, fontSize = 14.sp)
+        IconButton(onClick = { onIntent(LoginComponent.Intent.Back) }) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = "Назад",
+                tint = AppTheme.colors.accent,
+            )
         }
     }
     Spacer(modifier = Modifier.height(8.dp))
