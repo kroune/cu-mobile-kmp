@@ -2,14 +2,16 @@
 
 ## Project Overview
 
-KMP (Kotlin Multiplatform) rewrite of Flutter LMS app for Central University (ЦУ).
+KMP (Kotlin Multiplatform) rewrite of Flutter LMS app (`/home/olowo/StudioProjects/lms-mobile`) for
+Central University (ЦУ). Flutter LMS app was created based on the website. We have done our own
+reverse of the web, it can be found at `web-reverse`, it contains analysis of the api, models, how
+web functions, etc.
 
-- Flutter reference: `cu-3rd-party/lms-mobile` (DeepWiki indexed), installed at
-  `/home/olowo/StudioProjects/lms-mobile`
 - Target platforms: Android + iOS (test on Android emulator, Linux host)
-- Goal: maximum shared code in `shared/` module
+- Maximum shared code in `shared/` module
 
-**Android applicationId**: `com.thirdparty.cumobile` (matches Flutter app for seamless update)
+**Android applicationId**: `com.thirdparty.cumobile` (matches Flutter app for seamless update),
+debug postfix if build is a debug one
 **iOS bundleId**: `ru.spacedreamer.centraluniversity` (matches Flutter app)
 **Kotlin package**: `io.github.kroune.cumobile` (internal source code package, unchanged)
 **Base URL**: `https://my.centraluniversity.ru/api/`
@@ -20,20 +22,20 @@ KMP (Kotlin Multiplatform) rewrite of Flutter LMS app for Central University (Ц
 
 ## Tech Stack
 
-| Library                          | Version        | Use                                  |
-|----------------------------------|----------------|--------------------------------------|
-| Compose Multiplatform            | 1.11.0-alpha02 | UI (shared)                          |
-| Decompose                        | 3.4.0          | Navigation (ChildPages + ChildStack) |
-| Koin                             | —              | DI                                   |
-| Ktor                             | —              | HTTP client                          |
-| kotlinx-serialization            | —              | JSON                                 |
-| DataStore Preferences            | —              | Key-value local persistence          |
-| Room                             | 2.8.4          | Structured local persistence (SQLite)|
-| essenty-lifecycle-coroutines     | 2.5.0          | Auto-cancelling coroutine scopes     |
-| kotlin-logging (io.github.oshai) | 8.0.01         | Structured logging in catch blocks   |
-| kotlinx-datetime                 | —              | Date/time formatting and parsing     |
-| Ksoup (fleeksoft)                | 0.2.6          | HTML parsing (KMP Jsoup port)        |
-| ComposeMediaPlayer               | 0.8.7          | Video/audio playback (KMP)           |
+| Library                          | Version        | Use                                   |
+|----------------------------------|----------------|---------------------------------------|
+| Compose Multiplatform            | 1.11.0-alpha02 | UI (shared)                           |
+| Decompose                        | 3.4.0          | Navigation (ChildPages + ChildStack)  |
+| Koin                             | —              | DI                                    |
+| Ktor                             | —              | HTTP client                           |
+| kotlinx-serialization            | —              | JSON                                  |
+| DataStore Preferences            | —              | Key-value local persistence           |
+| Room                             | 2.8.4          | Structured local persistence (SQLite) |
+| essenty-lifecycle-coroutines     | 2.5.0          | Auto-cancelling coroutine scopes      |
+| kotlin-logging (io.github.oshai) | 8.0.01         | Structured logging in catch blocks    |
+| kotlinx-datetime                 | —              | Date/time formatting and parsing      |
+| Ksoup (fleeksoft)                | 0.2.6          | HTML parsing (KMP Jsoup port)         |
+| ComposeMediaPlayer               | 0.8.7          | Video/audio playback (KMP)            |
 
 ---
 
@@ -90,21 +92,26 @@ Every screen has:
 
 - `XxxComponent.kt` — interface with `State`, `Intent`, `Effect`, and `stateFlow`/`effects`
 - `DefaultXxxComponent.kt` — implementation
-- `XxxScreen.kt` — Compose UI consuming state + dispatching intents + collecting effects
+- `XxxScreen.kt` — Compose UI consuming state + dispatching intents + collecting effects, it can be split into multiple files depending on the complexity
 
 ### ContentState<T> — Progressive Loading
 
-- `ContentState<T>` sealed interface in `presentation/common/ContentState.kt`: `Loading`, `Success<T>`, `Error`
+- `ContentState<T>` sealed interface in `presentation/common/ContentState.kt`: `Loading`,
+  `Success<T>`, `Error`
 - Replaces `isLoading: Boolean` + `error: String?` + plain data fields in component State
-- Each data field in State wraps its content in `ContentState<T>` for per-section loading/error handling
-- **Important content Error** → full-screen `ErrorContent`; **Minor content Error** → `ActionErrorBar`
-- On refresh → reset all ContentState fields to `Loading` → skeletons show → content fills in progressively
-- **No `isLoading`/`isRefreshing` booleans** — derived: `val isContentLoading get() = tasks.isLoading && courses.isLoading`
+- Each data field in State wraps its content in `ContentState<T>` for per-section loading/error
+  handling
+- **Important content Error** → full-screen `ErrorContent`; **Minor content Error** →
+  `ActionErrorBar`
+- On refresh → reset all ContentState fields to `Loading` → skeletons show → content fills in
+  progressively
+- **No `isLoading`/`isRefreshing` booleans** — derived:
+  `val isContentLoading get() = tasks.isLoading && courses.isLoading`
 - Extensions: `dataOrNull`, `isLoading`, `isError`, `isSuccess`, `errorOrNull`
-- Used in: `HomeComponent`, `CoursesComponent`, `ProfileComponent`, `NotificationsComponent`, `CoursePerformanceComponent`
-- **Parallel loading**: Default components launch separate coroutines per API call, each updates its own ContentState independently
+- **Parallel loading**: Default components launch separate coroutines per API call, each updates its
+  own ContentState independently
 
-### One-shot Effects
+### One-time Effects
 
 - Components that perform mutations expose `val effects: Flow<Effect>` for one-shot events (error
   messages, toasts)
@@ -112,7 +119,6 @@ Every screen has:
 - UI collects effects in `LaunchedEffect(Unit)` into local `mutableStateOf` for display
 - `ActionErrorBar` composable (in `CommonStates.kt`) shows transient error messages with dismiss
   button
-- Currently used in: `HomeComponent`, `CoursesComponent`, `NotificationsComponent`, `LongreadComponent`, `FilesComponent`, `ProfileComponent`
 - Pattern: `_effects.trySend(Effect.ShowError("message"))` in component, collected in screen
   composable
 
@@ -137,7 +143,7 @@ Every screen has:
 - Cookie retrieved via `authLocal.cookieFlow.first()`
 - `ApiService` methods accept `cookie: String` as first param; repositories hide this from domain
   layer
-- ApiService returns `null` / `false` / empty list on failure — **never throws**
+- ApiService returns `null` / `false` / empty list on failure — **never throws**, always logs errors
 
 ### Logging
 
@@ -162,7 +168,8 @@ Every screen has:
 ## Authentication Flow
 
 1. App starts → Android native splash screen is shown by `androidx.core:core-splashscreen`
-2. Root navigation starts in `SplashChild` while `DefaultRootComponent.checkSavedAuth()` does a fast local cookie check (`hasCookie()`)
+2. Root navigation starts in `SplashChild` while `DefaultRootComponent.checkSavedAuth()` does a fast
+   local cookie check (`hasCookie()`)
 3. Cookie exists → navigate from `SplashChild` to `MainChild`, validate in background
 4. No cookie → navigate from `SplashChild` to `LoginChild`
 5. Background validation fails → redirect to `LoginChild`
@@ -171,7 +178,8 @@ Every screen has:
 8. On each page load, check cookies for `bff.cookie`
 9. Captured → save via `AuthRepository` → validate via `GET /student-hub/students/me` → `MainChild`
 10. Logout → clear cookie → back to `LoginChild`
-11. Android native splash: removed via `setKeepOnScreenCondition` — stays visible while active child is `SplashChild`
+11. Android native splash: removed via `setKeepOnScreenCondition` — stays visible while active child
+    is `SplashChild`
 
 ---
 
@@ -221,21 +229,9 @@ Every screen has:
 - Cannot extend in: review, evaluated, revision, rework
 - Cancel allowed if lateDays > 0 AND effectiveDeadline > 24h from now
 
-### Schedule / Calendar
-
-- ICS parser (pure Kotlin, shared) fetches from user-configured Yandex Calendar URL
-- URL stored in DataStore (key: `ics_url`)
-- **RRULE expansion** handled by `RRuleExpander` (supports WEEKLY, DAILY, INTERVAL, UNTIL, COUNT, BYDAY, EXDATE)
-- **Date parsing** extracted to `IcalDateParser` (parses iCal date/datetime strings to `Instant`)
-- **Event→ClassData mapping** in `GetClassesForDateUseCase` (room extraction, type detection, date filtering with recurrence)
-- `CalendarRepositoryImpl` delegates to `GetClassesForDateUseCase` for filtering/mapping
-- Home tab has daily view with date navigation, loading/error states for schedule section
-- URL configuration in Profile screen
-
 ### Course Reordering
 
 - Custom order persisted in DataStore
-- Edit mode with Up/Down arrows in Courses tab (no drag-and-drop yet)
 
 ---
 
@@ -257,22 +253,16 @@ Every screen has:
 
 ### Icons
 
-- Material Icons Extended **is available** (
-  `androidx.compose.material:material-icons-extended:1.11.0-alpha02`) but **not currently declared**
-  in `shared/build.gradle.kts`
-- Add to `commonMain.dependencies` when needed for richer icons
-- Bottom nav currently uses Unicode emoji (can be migrated to Material icons after adding the
-  dependency)
+- Material Icons Extended used `androidx.compose.material:material-icons-extended:1.11.0-alpha02`
 
 ### Previews
 
 - Every `@Composable` screen function must have a `@Preview` companion (dark + light)
-- Pattern: `XxxScreen(component)` delegates to `XxxScreenContent(state, onIntent, ...)` which is
+- Pattern: `XxxScreen(component)` doesn't have any ui logic, it simply delegates to `XxxScreenContent(state, onIntent, ...)` which is
   `internal`; previews call the content function with mock state
 - Common components (TopBar, TaskCard, etc.) have previews wrapping in `CuMobileTheme` +
   `Box(background)`
 - Import: `import androidx.compose.ui.tooling.preview.Preview`
-- It is ok to suppress magic number in previews
 
 ### Detekt
 
