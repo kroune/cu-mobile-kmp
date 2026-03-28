@@ -6,6 +6,7 @@ import io.github.kroune.cumobile.data.model.PendingAttachment
 import io.github.kroune.cumobile.data.model.PickedFile
 import io.github.kroune.cumobile.data.model.UploadStatus
 import io.github.kroune.cumobile.domain.repository.ContentRepository
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -31,12 +32,12 @@ internal class LongreadAttachmentManager(
         if (isSolution) {
             state.value = state.value.copy(
                 pendingSolutionAttachments =
-                    state.value.pendingSolutionAttachments + pending,
+                    (state.value.pendingSolutionAttachments + pending).toPersistentList(),
             )
         } else {
             state.value = state.value.copy(
                 pendingCommentAttachments =
-                    state.value.pendingCommentAttachments + pending,
+                    (state.value.pendingCommentAttachments + pending).toPersistentList(),
             )
         }
         val directory = if (isSolution) {
@@ -63,7 +64,7 @@ internal class LongreadAttachmentManager(
         val list = state.value.pendingSolutionAttachments.toMutableList()
         if (index in list.indices) {
             list.removeAt(index)
-            state.value = state.value.copy(pendingSolutionAttachments = list)
+            state.value = state.value.copy(pendingSolutionAttachments = list.toPersistentList())
         }
     }
 
@@ -71,7 +72,7 @@ internal class LongreadAttachmentManager(
         val list = state.value.pendingCommentAttachments.toMutableList()
         if (index in list.indices) {
             list.removeAt(index)
-            state.value = state.value.copy(pendingCommentAttachments = list)
+            state.value = state.value.copy(pendingCommentAttachments = list.toPersistentList())
         }
     }
 
@@ -88,7 +89,7 @@ internal class LongreadAttachmentManager(
                 status = if (attachment != null) UploadStatus.Uploaded else UploadStatus.Failed,
                 uploadedAttachment = attachment,
             )
-            state.value = state.value.copy(pendingSolutionAttachments = list)
+            state.value = state.value.copy(pendingSolutionAttachments = list.toPersistentList())
         }
     }
 
@@ -105,7 +106,8 @@ internal class LongreadAttachmentManager(
                 status = if (attachment != null) UploadStatus.Uploaded else UploadStatus.Failed,
                 uploadedAttachment = attachment,
             )
-            state.value = state.value.copy(pendingCommentAttachments = list)
+            state.value =
+                state.value.copy(pendingCommentAttachments = list.toPersistentList())
         }
     }
 }

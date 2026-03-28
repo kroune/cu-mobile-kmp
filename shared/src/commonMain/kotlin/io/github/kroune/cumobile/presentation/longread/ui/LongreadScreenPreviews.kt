@@ -1,5 +1,3 @@
-@file:Suppress("MagicNumber")
-
 package io.github.kroune.cumobile.presentation.longread.ui
 
 import androidx.compose.runtime.Composable
@@ -8,9 +6,10 @@ import io.github.kroune.cumobile.data.model.LongreadMaterial
 import io.github.kroune.cumobile.data.model.LongreadMaterialContent
 import io.github.kroune.cumobile.presentation.common.ui.CuMobileTheme
 import io.github.kroune.cumobile.presentation.longread.LongreadComponent
+import kotlinx.collections.immutable.persistentListOf
 
 private val previewLongreadSuccessState = LongreadComponent.State(
-    materials = listOf(
+    materials = persistentListOf(
         LongreadMaterial(
             id = "1",
             discriminator = "markdown",
@@ -110,7 +109,7 @@ private fun PreviewLongreadActionErrorDark() {
     CuMobileTheme(darkTheme = true) {
         LongreadScreenContent(
             state = LongreadComponent.State(
-                materials = listOf(
+                materials = persistentListOf(
                     LongreadMaterial(
                         id = "1",
                         name = "Тестовый материал",
@@ -131,7 +130,7 @@ private fun PreviewLongreadActionErrorLight() {
     CuMobileTheme(darkTheme = false) {
         LongreadScreenContent(
             state = LongreadComponent.State(
-                materials = listOf(
+                materials = persistentListOf(
                     LongreadMaterial(
                         id = "1",
                         name = "Тестовый материал",

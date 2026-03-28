@@ -1,5 +1,3 @@
-@file:Suppress("MagicNumber")
-
 package io.github.kroune.cumobile.presentation.files.ui
 
 import androidx.compose.runtime.Composable

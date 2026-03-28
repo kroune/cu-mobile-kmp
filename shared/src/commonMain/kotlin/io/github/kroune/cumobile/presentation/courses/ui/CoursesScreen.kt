@@ -1,5 +1,3 @@
-@file:Suppress("MagicNumber")
-
 package io.github.kroune.cumobile.presentation.courses.ui
 
 import androidx.compose.animation.core.animate

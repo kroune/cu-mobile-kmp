@@ -4,6 +4,9 @@ import com.arkivanov.decompose.value.MutableValue
 import io.github.kroune.cumobile.domain.repository.TaskRepository
 import io.github.kroune.cumobile.presentation.longread.LongreadComponent
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
+import kotlinx.collections.immutable.toPersistentMap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
@@ -50,7 +53,7 @@ internal class LongreadTaskActions(
             if (success) {
                 state.value = state.value.copy(
                     solutionUrl = "",
-                    pendingSolutionAttachments = emptyList(),
+                    pendingSolutionAttachments = persistentListOf(),
                 )
                 refreshTaskDetails(taskId)
             } else {
@@ -75,11 +78,11 @@ internal class LongreadTaskActions(
                 state.value = state.value.copy(
                     isSubmitting = false,
                     commentText = "",
-                    pendingCommentAttachments = emptyList(),
+                    pendingCommentAttachments = persistentListOf(),
                 )
                 val comments = taskRepository.fetchTaskComments(taskId)
                 state.value = state.value.copy(
-                    taskComments = comments.orEmpty(),
+                    taskComments = comments.orEmpty().toPersistentList(),
                 )
             } else {
                 logger.warn { "Failed to create comment for task $taskId" }
@@ -130,7 +133,7 @@ internal class LongreadTaskActions(
         if (details != null) {
             val updated = state.value.taskDetails.toMutableMap()
             updated[taskId] = details
-            state.value = state.value.copy(taskDetails = updated)
+            state.value = state.value.copy(taskDetails = updated.toPersistentMap())
         }
         loadTaskEventsAndComments(taskId)
     }

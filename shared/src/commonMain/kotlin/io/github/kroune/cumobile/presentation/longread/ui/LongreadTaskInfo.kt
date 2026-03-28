@@ -1,5 +1,3 @@
-@file:Suppress("MagicNumber")
-
 package io.github.kroune.cumobile.presentation.longread.ui
 
 import androidx.compose.foundation.background
@@ -22,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
@@ -33,6 +32,7 @@ import io.github.kroune.cumobile.data.model.TaskDetails
 import io.github.kroune.cumobile.data.model.TaskEvent
 import io.github.kroune.cumobile.presentation.common.formatDateTime
 import io.github.kroune.cumobile.presentation.common.formatDeadline
+import io.github.kroune.cumobile.presentation.common.ui.AppColorScheme
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 import io.github.kroune.cumobile.presentation.common.ui.StatusBadge
 import io.github.kroune.cumobile.presentation.common.ui.taskStateColor
@@ -41,16 +41,17 @@ import io.github.kroune.cumobile.presentation.longread.LongreadComponent
 import io.github.kroune.cumobile.presentation.longread.htmlrender.parseHtmlToBlocks
 import kotlinx.collections.immutable.persistentListOf
 import io.github.kroune.cumobile.presentation.longread.htmlrender.ui.HtmlContent
+import kotlinx.collections.immutable.ImmutableList
 
 /**
  * Comments tab: displays comment list and input field with file attachments.
  */
 @Composable
 internal fun CommentsTab(
-    comments: List<TaskComment>,
+    comments: ImmutableList<TaskComment>,
     commentText: String,
     isSubmitting: Boolean,
-    pendingAttachments: List<PendingAttachment>,
+    pendingAttachments: ImmutableList<PendingAttachment>,
     onIntent: (LongreadComponent.Intent) -> Unit,
     onAttach: () -> Unit,
     modifier: Modifier = Modifier,
@@ -267,7 +268,7 @@ private fun TaskInfoSummary(
 private fun InfoRow(
     label: String,
     value: String,
-    valueColor: androidx.compose.ui.graphics.Color = AppTheme.colors.textPrimary,
+    valueColor: Color = AppTheme.colors.textPrimary,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -360,39 +361,42 @@ private fun EventCard(
     }
 }
 
-/** Returns a display label for an event type (API sends camelCase). */
-@Suppress("CyclomaticComplexMethod")
-private fun eventTypeLabel(type: String): String =
-    when (type) {
-        "taskStarted" -> "Начато"
-        "taskSubmitted" -> "Отправлено"
-        "taskEvaluated" -> "Оценено"
-        "taskRejected" -> "Отклонено"
-        "taskFailed" -> "Не сдано"
-        "taskReset" -> "Сброшено"
-        "taskExtraScoreGranted" -> "Доп. баллы"
-        "maxScoreChanged", "exerciseMaxScoreChanged" -> "Макс. балл изменён"
-        "exerciseEstimated" -> "Оценка задания"
-        "exerciseDeadlineChanged" -> "Дедлайн изменён"
-        "assistantAssigned" -> "Назначен ассистент"
-        "reviewerAssigned" -> "Назначен ревьюер"
-        "taskProlonged" -> "Продлено"
-        "solutionAttached" -> "Решение прикреплено"
-        "taskLateDaysReset" -> "Late days сброшены"
-        "taskLateDaysCancelled" -> "Late days -"
-        "taskLateDaysProlong" -> "Late days +"
-        else -> type
-    }
+private val eventTypeLabels = mapOf(
+    "taskStarted" to "Начато",
+    "taskSubmitted" to "Отправлено",
+    "taskEvaluated" to "Оценено",
+    "taskRejected" to "Отклонено",
+    "taskFailed" to "Не сдано",
+    "taskReset" to "Сброшено",
+    "taskExtraScoreGranted" to "Доп. баллы",
+    "maxScoreChanged" to "Макс. балл изменён",
+    "exerciseMaxScoreChanged" to "Макс. балл изменён",
+    "exerciseEstimated" to "Оценка задания",
+    "exerciseDeadlineChanged" to "Дедлайн изменён",
+    "assistantAssigned" to "Назначен ассистент",
+    "reviewerAssigned" to "Назначен ревьюер",
+    "taskProlonged" to "Продлено",
+    "solutionAttached" to "Решение прикреплено",
+    "taskLateDaysReset" to "Late days сброшены",
+    "taskLateDaysCancelled" to "Late days -",
+    "taskLateDaysProlong" to "Late days +",
+)
 
-/** Returns a color for an event type (API sends camelCase). */
+private fun eventTypeLabel(type: String): String =
+    eventTypeLabels.getOrElse(type) { type }
+
+private val eventTypeColorAccessors: Map<String, (AppColorScheme) -> Color> = mapOf(
+    "taskStarted" to { it.taskInProgress },
+    "taskSubmitted" to { it.taskHasSolution },
+    "solutionAttached" to { it.taskHasSolution },
+    "taskEvaluated" to { it.taskEvaluated },
+    "taskExtraScoreGranted" to { it.taskEvaluated },
+    "taskRejected" to { it.taskRevision },
+    "taskFailed" to { it.taskFailed },
+    "reviewerAssigned" to { it.accent },
+    "assistantAssigned" to { it.accent },
+)
+
 @Composable
-private fun eventTypeColor(type: String): androidx.compose.ui.graphics.Color =
-    when (type) {
-        "taskStarted" -> AppTheme.colors.taskInProgress
-        "taskSubmitted", "solutionAttached" -> AppTheme.colors.taskHasSolution
-        "taskEvaluated", "taskExtraScoreGranted" -> AppTheme.colors.taskEvaluated
-        "taskRejected" -> AppTheme.colors.taskRevision
-        "taskFailed" -> AppTheme.colors.taskFailed
-        "reviewerAssigned", "assistantAssigned" -> AppTheme.colors.accent
-        else -> AppTheme.colors.textSecondary
-    }
+private fun eventTypeColor(type: String): Color =
+    eventTypeColorAccessors[type]?.invoke(AppTheme.colors) ?: AppTheme.colors.textSecondary

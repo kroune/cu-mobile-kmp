@@ -3,6 +3,7 @@ package io.github.kroune.cumobile.data.local.db
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.cinterop.BetaInteropApi
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.ObjCObjectVar
 import kotlinx.cinterop.alloc
@@ -23,7 +24,7 @@ fun getDatabaseBuilder(): RoomDatabase.Builder<AppDatabase> {
     )
 }
 
-@OptIn(ExperimentalForeignApi::class)
+@OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
 private fun appSupportDirectory(): String {
     val fileManager = NSFileManager.defaultManager
     val url = memScoped {

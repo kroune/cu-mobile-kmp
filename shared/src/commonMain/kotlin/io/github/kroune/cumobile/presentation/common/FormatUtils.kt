@@ -1,160 +1,128 @@
-@file:Suppress("MagicNumber")
-
 package io.github.kroune.cumobile.presentation.common
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.number
+import kotlinx.datetime.format
+import kotlinx.datetime.format.DateTimeComponents
+import kotlinx.datetime.format.char
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
 import kotlin.math.roundToLong
+import kotlin.time.Duration.Companion.days
 import kotlin.time.Instant
 
 private val logger = KotlinLogging.logger {}
+
+private const val BytesPerKb = 1024L
+private const val DecimalBase = 10
+
+// ──────────────────────────────────────────────────────
+// Format definitions (kotlinx-datetime Format DSL)
+// ──────────────────────────────────────────────────────
+
+/** `dd.MM HH:mm` */
+private val dayMonthTimeFormat = LocalDateTime.Format {
+    day()
+    char('.')
+    monthNumber()
+    char(' ')
+    hour()
+    char(':')
+    minute()
+}
+
+/** `dd.MM.yyyy HH:mm` */
+private val dayMonthYearTimeFormat = LocalDateTime.Format {
+    day()
+    char('.')
+    monthNumber()
+    char('.')
+    year()
+    char(' ')
+    hour()
+    char(':')
+    minute()
+}
+
+/** `dd.MM` */
+private val dayMonthFormat = LocalDateTime.Format {
+    day()
+    char('.')
+    monthNumber()
+}
+
+/** `dd.MM.yyyy` */
+private val dayMonthYearDateFormat = LocalDate.Format {
+    day()
+    char('.')
+    monthNumber()
+    char('.')
+    year()
+}
 
 // ──────────────────────────────────────────────────────
 // ISO 8601 date/time formatting
 // ──────────────────────────────────────────────────────
 
+private fun parseIsoDateTime(iso: String): LocalDateTime =
+    runCatching {
+        LocalDateTime.parse(iso)
+    }.getOrElse {
+        DateTimeComponents.Formats.ISO_DATE_TIME_OFFSET
+            .parse(iso)
+            .toLocalDateTime()
+    }
+
+private inline fun formatIsoOrFallback(
+    iso: String,
+    fallback: String = iso,
+    format: (LocalDateTime) -> String,
+): String =
+    try {
+        format(parseIsoDateTime(iso))
+    } catch (e: Exception) {
+        logger.error(e) { "Failed to format ISO datetime: $iso" }
+        fallback
+    }
+
 /**
- * Formats an ISO 8601 deadline string to a short display format.
- *
- * Example: `"2026-02-15T14:00:00"` → `"15.02 14:00"`
- *
- * Returns `"Без дедлайна"` when [isoDate] is null.
- * Falls back to the raw string on parse errors.
+ * Formats an ISO 8601 deadline to `"dd.MM HH:mm"`.
+ * Returns `"Без дедлайна"` when [isoDate] is null, raw string on parse errors.
  */
 fun formatDeadline(isoDate: String?): String {
     if (isoDate == null) return "Без дедлайна"
-    return try {
-        val dt = parseIsoDateTime(isoDate)
-        val day = dt.day.toString().padStart(2, '0')
-        val month = dt.month.number
-            .toString()
-            .padStart(2, '0')
-        val hour = dt.hour.toString().padStart(2, '0')
-        val minute = dt.minute.toString().padStart(2, '0')
-        "$day.$month $hour:$minute"
-    } catch (e: Exception) {
-        logger.error(e) { "Failed to format deadline: $isoDate" }
-        isoDate
-    }
+    return formatIsoOrFallback(isoDate) { dayMonthTimeFormat.format(it) }
 }
 
-/**
- * Formats an ISO 8601 datetime string to `"dd.MM HH:mm"`.
- *
- * Example: `"2026-02-15T14:00:00.000Z"` → `"15.02 14:00"`
- *
- * Falls back to the raw string on parse errors.
- */
+/** Formats an ISO 8601 datetime to `"dd.MM HH:mm"`. Falls back to the raw string. */
 fun formatDateTime(dateTime: String): String =
-    try {
-        val dt = parseIsoDateTime(dateTime)
-        val day = dt.day.toString().padStart(2, '0')
-        val month = dt.month.number
-            .toString()
-            .padStart(2, '0')
-        val hour = dt.hour.toString().padStart(2, '0')
-        val minute = dt.minute.toString().padStart(2, '0')
-        "$day.$month $hour:$minute"
-    } catch (e: Exception) {
-        logger.error(e) { "Failed to format datetime: $dateTime" }
-        dateTime
-    }
+    formatIsoOrFallback(dateTime) { dayMonthTimeFormat.format(it) }
 
-/**
- * Formats an ISO 8601 datetime string to `"dd.MM.yyyy HH:mm"`.
- *
- * Example: `"2026-02-22T14:30:00Z"` → `"22.02.2026 14:30"`
- *
- * Falls back to the raw string on parse errors.
- */
+/** Formats an ISO 8601 datetime to `"dd.MM.yyyy HH:mm"`. Falls back to the raw string. */
 fun formatDateTimeFull(isoDate: String): String =
-    try {
-        val dt = parseIsoDateTime(isoDate)
-        val day = dt.day.toString().padStart(2, '0')
-        val month = dt.month.number
-            .toString()
-            .padStart(2, '0')
-        val hour = dt.hour.toString().padStart(2, '0')
-        val minute = dt.minute.toString().padStart(2, '0')
-        "$day.$month.${dt.year} $hour:$minute"
-    } catch (e: Exception) {
-        logger.error(e) { "Failed to format full datetime: $isoDate" }
-        isoDate
-    }
+    formatIsoOrFallback(isoDate) { dayMonthYearTimeFormat.format(it) }
 
-/**
- * Formats an ISO 8601 deadline string to a short day-month display.
- *
- * Example: `"2025-06-01T23:59:00Z"` → `"01.06"`
- *
- * Falls back to the raw string on parse errors.
- */
+/** Formats an ISO 8601 deadline to `"dd.MM"`. Falls back to the raw string. */
 fun formatDeadlineShort(deadline: String): String =
-    try {
-        val dt = parseIsoDateTime(deadline)
-        val day = dt.day.toString().padStart(2, '0')
-        val month = dt.month.number
-            .toString()
-            .padStart(2, '0')
-        "$day.$month"
-    } catch (e: Exception) {
-        logger.error(e) { "Failed to format short deadline: $deadline" }
-        deadline
-    }
+    formatIsoOrFallback(deadline) { dayMonthFormat.format(it) }
 
 /**
- * Adds [days] to an ISO 8601 deadline and returns formatted `"dd.MM HH:mm"`.
- *
+ * Adds [daysToAdd] to an ISO 8601 deadline and returns formatted `"dd.MM HH:mm"`.
  * Returns `null` when [isoDate] is null or on parse errors.
  */
-fun formatDeadlinePlusDays(
-    isoDate: String?,
-    days: Int,
-): String? {
+fun formatDeadlinePlusDays(isoDate: String?, daysToAdd: Int): String? {
     if (isoDate == null) return null
     return try {
         val dt = parseIsoDateTime(isoDate)
-        val instant = dt.toInstant(TimeZone.currentSystemDefault())
-        val shifted = Instant.fromEpochMilliseconds(
-            instant.toEpochMilliseconds() + days * 86_400_000L,
-        )
-        val local = shifted.toLocalDateTime(TimeZone.currentSystemDefault())
-        val day = local.day.toString().padStart(2, '0')
-        val month = local.month.number
-            .toString()
-            .padStart(2, '0')
-        val hour = local.hour.toString().padStart(2, '0')
-        val minute = local.minute.toString().padStart(2, '0')
-        "$day.$month $hour:$minute"
+        val zone = TimeZone.currentSystemDefault()
+        val shifted = (dt.toInstant(zone) + daysToAdd.days)
+            .toLocalDateTime(zone)
+        dayMonthTimeFormat.format(shifted)
     } catch (e: Exception) {
-        logger.error(e) { "Failed to compute deadline + $days days: $isoDate" }
+        logger.error(e) { "Failed to compute deadline + $daysToAdd days: $isoDate" }
         null
-    }
-}
-
-private val timezoneOffsetRegex = Regex("[+-]\\d{2}:\\d{2}$")
-
-private fun parseIsoDateTime(iso: String): LocalDateTime {
-    // kotlinx-datetime LocalDateTime parser is strict, strip timezone info
-    var normalized = iso.trim()
-    // Strip timezone offset (+HH:MM / -HH:MM)
-    val offsetMatch = timezoneOffsetRegex.find(normalized)
-    if (offsetMatch != null) {
-        normalized = normalized.substring(0, offsetMatch.range.first)
-    }
-    // Strip Z suffix
-    if (normalized.endsWith("Z")) {
-        normalized = normalized.removeSuffix("Z")
-    }
-    // If it's just a date, append T00:00
-    return if (!normalized.contains("T")) {
-        LocalDateTime.parse("${normalized}T00:00:00")
-    } else {
-        LocalDateTime.parse(normalized)
     }
 }
 
@@ -162,22 +130,14 @@ private fun parseIsoDateTime(iso: String): LocalDateTime {
 // Epoch millis → date
 // ──────────────────────────────────────────────────────
 
-/**
- * Formats a millisecond timestamp to `"dd.MM.yyyy"`.
- *
- * Uses kotlinx-datetime for reliable cross-platform formatting.
- */
+/** Formats a millisecond timestamp to `"dd.MM.yyyy"`. */
 fun formatEpochDate(millis: Long): String {
     if (millis < 0L) return ""
     return try {
-        val instant = Instant.fromEpochMilliseconds(millis)
-        val localDate = instant.toLocalDateTime(TimeZone.currentSystemDefault()).date
-        val day = localDate.day.toString().padStart(2, '0')
-        val month = localDate.month
-            .number
-            .toString()
-            .padStart(2, '0')
-        "$day.$month.${localDate.year}"
+        Instant.fromEpochMilliseconds(millis)
+            .toLocalDateTime(TimeZone.currentSystemDefault())
+            .date
+            .format(dayMonthYearDateFormat)
     } catch (e: Exception) {
         logger.error(e) { "Failed to format epoch date: $millis" }
         ""
@@ -188,22 +148,18 @@ fun formatEpochDate(millis: Long): String {
 // File size formatting
 // ──────────────────────────────────────────────────────
 
-/**
- * Formats a byte count into a human-readable string (Б, КБ, МБ).
- *
- * Works with both `Long` and `Int` inputs.
- */
+/** Formats a byte count into a human-readable string (Б, КБ, МБ). */
 fun formatSizeBytes(bytes: Long): String {
-    if (bytes < 1024L) return "$bytes Б"
-    val kb = bytes.toDouble() / 1024.0
-    if (kb < 1024.0) return "${roundOneDecimal(kb)} КБ"
-    val mb = kb / 1024.0
+    if (bytes < BytesPerKb) return "$bytes Б"
+    val kb = bytes.toDouble() / BytesPerKb
+    if (kb < BytesPerKb) return "${roundOneDecimal(kb)} КБ"
+    val mb = kb / BytesPerKb
     return "${roundOneDecimal(mb)} МБ"
 }
 
 private fun roundOneDecimal(value: Double): String {
-    val rounded = (value * 10).roundToLong()
-    val intPart = rounded / 10
-    val decPart = rounded % 10
+    val rounded = (value * DecimalBase).roundToLong()
+    val intPart = rounded / DecimalBase
+    val decPart = rounded % DecimalBase
     return "$intPart.$decPart"
 }

@@ -328,7 +328,6 @@ fun AudioMaterialCard(
 }
 
 /** Row displaying a URL with copy-to-clipboard and open-in-browser actions. */
-@Suppress("DEPRECATION")
 @Composable
 fun MediaUrlRow(
     url: String,

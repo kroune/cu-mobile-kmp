@@ -38,6 +38,7 @@ import io.github.kroune.cumobile.data.model.TaskState
 import io.github.kroune.cumobile.data.model.UploadStatus
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 import io.github.kroune.cumobile.presentation.longread.LongreadComponent
+import kotlinx.collections.immutable.ImmutableList
 
 /** Solution tab: URL input, file attachments, submit button, existing solution display. */
 @Composable
@@ -45,7 +46,7 @@ internal fun SolutionTab(
     taskDetails: TaskDetails,
     solutionUrl: String,
     isSubmitting: Boolean,
-    pendingAttachments: List<PendingAttachment>,
+    pendingAttachments: ImmutableList<PendingAttachment>,
     onIntent: (LongreadComponent.Intent) -> Unit,
     onAttach: () -> Unit,
     modifier: Modifier = Modifier,
@@ -109,7 +110,7 @@ private fun ExistingSolutionDisplay(
 private fun SolutionUrlInput(
     solutionUrl: String,
     isSubmitting: Boolean,
-    pendingAttachments: List<PendingAttachment>,
+    pendingAttachments: ImmutableList<PendingAttachment>,
     onIntent: (LongreadComponent.Intent) -> Unit,
     onAttach: () -> Unit,
     modifier: Modifier = Modifier,
@@ -214,7 +215,7 @@ internal fun AttachButton(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun PendingAttachmentsList(
-    attachments: List<PendingAttachment>,
+    attachments: ImmutableList<PendingAttachment>,
     onRemove: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {

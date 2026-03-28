@@ -1,5 +1,3 @@
-@file:Suppress("MagicNumber")
-
 package io.github.kroune.cumobile.presentation.profile.ui
 
 import androidx.compose.foundation.Image
@@ -28,6 +26,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TooltipAnchorPosition
 import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.rememberTooltipState
@@ -419,7 +418,7 @@ private fun InfoRow(
         )
         Spacer(modifier = Modifier.height(2.dp))
         TooltipBox(
-            positionProvider = TooltipDefaults.rememberTooltipPositionProvider(),
+            positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Above),
             tooltip = {
                 PlainTooltip(
                     containerColor = AppTheme.colors.textSecondary,
@@ -471,7 +470,7 @@ private fun InfoRowWithBadge(
         )
         Spacer(modifier = Modifier.height(2.dp))
         TooltipBox(
-            positionProvider = TooltipDefaults.rememberTooltipPositionProvider(),
+            positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Above,),
             tooltip = {
                 PlainTooltip(
                     containerColor = AppTheme.colors.textSecondary,

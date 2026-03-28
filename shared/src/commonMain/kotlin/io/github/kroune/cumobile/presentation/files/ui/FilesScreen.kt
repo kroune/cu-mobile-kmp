@@ -1,5 +1,3 @@
-@file:Suppress("TooManyFunctions", "MagicNumber")
-
 package io.github.kroune.cumobile.presentation.files.ui
 
 import androidx.compose.animation.core.Animatable

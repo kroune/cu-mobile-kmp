@@ -1,6 +1,7 @@
 package io.github.kroune.cumobile.data.local
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.cinterop.BetaInteropApi
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.ObjCObjectVar
 import kotlinx.cinterop.addressOf
@@ -36,6 +37,7 @@ private const val MillisPerSecond = 1000
 internal class IosFileStorage : FileStorage {
     private val fileManager = NSFileManager.defaultManager
 
+    @OptIn(BetaInteropApi::class)
     private val downloadsDir: String by lazy {
         val documentsUrl = memScoped {
             val errorPtr = alloc<ObjCObjectVar<NSError?>>()
@@ -72,6 +74,7 @@ internal class IosFileStorage : FileStorage {
         path
     }
 
+    @OptIn(BetaInteropApi::class)
     override fun listFiles(): List<DownloadedFileInfo> {
         val contents = memScoped {
             val errorPtr = alloc<ObjCObjectVar<NSError?>>()
@@ -91,6 +94,7 @@ internal class IosFileStorage : FileStorage {
             .sortedByDescending { it.lastModifiedMillis }
     }
 
+    @OptIn(BetaInteropApi::class)
     private fun buildFileInfo(filename: String): DownloadedFileInfo? {
         val fullPath = "$downloadsDir/$filename"
         val attributes = memScoped {
@@ -121,6 +125,7 @@ internal class IosFileStorage : FileStorage {
         )
     }
 
+    @OptIn(BetaInteropApi::class)
     override fun deleteFile(name: String): Boolean {
         val path = resolveSecure(name) ?: return false
         return memScoped {
@@ -135,6 +140,7 @@ internal class IosFileStorage : FileStorage {
         }
     }
 
+    @OptIn(BetaInteropApi::class)
     override fun deleteAllFiles(): Int {
         val contents = memScoped {
             val errorPtr = alloc<ObjCObjectVar<NSError?>>()

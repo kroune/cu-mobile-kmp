@@ -7,6 +7,10 @@ import io.github.kroune.cumobile.data.model.PickedFile
 import io.github.kroune.cumobile.data.model.TaskComment
 import io.github.kroune.cumobile.data.model.TaskDetails
 import io.github.kroune.cumobile.data.model.TaskEvent
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableMap
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -36,15 +40,15 @@ interface LongreadComponent {
         val longreadId: String = "",
         val courseId: String = "",
         val themeId: String = "",
-        val materials: List<LongreadMaterial> = emptyList(),
+        val materials: ImmutableList<LongreadMaterial> = persistentListOf(),
         val isLoading: Boolean = false,
         val error: String? = null,
         /** Task details keyed by taskId for coding materials. */
-        val taskDetails: Map<String, TaskDetails> = emptyMap(),
+        val taskDetails: ImmutableMap<String, TaskDetails> = persistentMapOf(),
         /** Events for the currently selected task. */
-        val taskEvents: List<TaskEvent> = emptyList(),
+        val taskEvents: ImmutableList<TaskEvent> = persistentListOf(),
         /** Comments for the currently selected task. */
-        val taskComments: List<TaskComment> = emptyList(),
+        val taskComments: ImmutableList<TaskComment> = persistentListOf(),
         /** Currently selected task ID (for expanded coding material). */
         val activeTaskId: String? = null,
         /** Selected tab within the active task: "solution", "comments", "info". */
@@ -56,9 +60,9 @@ interface LongreadComponent {
         /** Whether a task action is in progress. */
         val isSubmitting: Boolean = false,
         /** Pending file attachments for the solution (upload in progress or complete). */
-        val pendingSolutionAttachments: List<PendingAttachment> = emptyList(),
+        val pendingSolutionAttachments: ImmutableList<PendingAttachment> = persistentListOf(),
         /** Pending file attachments for a new comment (upload in progress or complete). */
-        val pendingCommentAttachments: List<PendingAttachment> = emptyList(),
+        val pendingCommentAttachments: ImmutableList<PendingAttachment> = persistentListOf(),
         /** Whether the search bar is visible. */
         val isSearchVisible: Boolean = false,
         /** Current search query text. */

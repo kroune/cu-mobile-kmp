@@ -1,5 +1,3 @@
-@file:Suppress("TooManyFunctions")
-
 package io.github.kroune.cumobile.presentation.scanner.ui
 
 import androidx.compose.foundation.Image

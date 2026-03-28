@@ -59,7 +59,6 @@ private fun presentImagePickerController(
     rootVc?.presentViewController(controller, animated = true, completion = null)
 }
 
-@Suppress("CONFLICTING_OVERLOADS")
 private class IosImageCaptureDelegate(
     private val onImagesCaptured: (List<PickedFile>) -> Unit,
 ) : NSObject(),

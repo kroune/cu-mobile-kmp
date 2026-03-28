@@ -3,7 +3,7 @@ package io.github.kroune.cumobile.presentation.auth.webview.ui
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.interop.UIKitView
+import androidx.compose.ui.viewinterop.UIKitView
 import io.github.kroune.cumobile.data.network.TargetCookieName
 import kotlinx.cinterop.ExperimentalForeignApi
 import platform.CoreGraphics.CGRectMake
