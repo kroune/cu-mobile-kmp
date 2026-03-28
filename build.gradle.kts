@@ -1,4 +1,4 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
 import org.jlleitschuh.gradle.ktlint.KtlintExtension
 import org.jlleitschuh.gradle.ktlint.reporter.ReporterType.HTML
 
@@ -42,7 +42,7 @@ tasks.withType<Wrapper>().configureEach {
 }
 
 allprojects {
-    tasks.withType<KotlinCompile>().configureEach {
+    tasks.withType<KotlinCompilationTask<*>>() {
         compilerOptions {
             freeCompilerArgs.add("-Xexpect-actual-classes")
         }

@@ -12,7 +12,7 @@ import io.ktor.http.encodeURLQueryComponent
 internal const val TargetCookieName = "bff.cookie"
 
 /** Default list limit for paginated API endpoints. */
-internal const val MaxListLimit = 100
+internal const val MaxListLimit = 10_000
 
 /** Max chars to read from an error response body for logging. */
 private const val ErrorBodyMaxChars = 500

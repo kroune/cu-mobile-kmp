@@ -681,7 +681,7 @@ style:
             - '**/*.kts'
             - '**/*Skeleton.kts'
             - '**/*Skeletons.kts'
-            - '**/*Rreviews.kts'
+            - '**/*Previews.kts'
         ignoreNumbers:
             - '-1'
             - '0'
