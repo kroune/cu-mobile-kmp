@@ -1,13 +1,13 @@
 package io.github.kroune.cumobile.data.network
 
 import io.github.kroune.cumobile.util.runCatchingCancellable
-import kotlin.coroutines.cancellation.CancellationException
 import io.github.oshai.kotlinlogging.KLogger
 import io.ktor.client.call.body
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.encodeURLQueryComponent
+import kotlin.coroutines.cancellation.CancellationException
 
 /** Cookie name used for authentication with the CU LMS BFF. */
 internal const val TargetCookieName = "bff.cookie"

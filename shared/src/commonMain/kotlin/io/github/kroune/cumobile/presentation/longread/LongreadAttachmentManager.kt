@@ -1,7 +1,6 @@
 package io.github.kroune.cumobile.presentation.longread
 
 import com.arkivanov.decompose.value.MutableValue
-import kotlin.coroutines.cancellation.CancellationException
 import io.github.kroune.cumobile.data.model.MaterialAttachment
 import io.github.kroune.cumobile.data.model.PendingAttachment
 import io.github.kroune.cumobile.data.model.PickedFile
@@ -11,6 +10,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import kotlin.coroutines.cancellation.CancellationException
 
 private val logger = KotlinLogging.logger {}
 
