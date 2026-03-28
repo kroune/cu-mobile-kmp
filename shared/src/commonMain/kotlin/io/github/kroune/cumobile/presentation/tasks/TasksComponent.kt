@@ -175,8 +175,8 @@ private val BottomStates = setOf(
 
 internal fun taskComparator(): Comparator<StudentTask> =
     Comparator { a, b ->
-        val aBottom = normalizeTaskState(a.state) in BottomStates
-        val bBottom = normalizeTaskState(b.state) in BottomStates
+        val aBottom = normalizeTaskState(effectiveTaskState(a)) in BottomStates
+        val bBottom = normalizeTaskState(effectiveTaskState(b)) in BottomStates
         if (aBottom != bBottom) {
             return@Comparator if (aBottom) 1 else -1
         }

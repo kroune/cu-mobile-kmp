@@ -1,6 +1,7 @@
 package io.github.kroune.cumobile.data.network
 
 import io.github.kroune.cumobile.util.runCatchingCancellable
+import kotlin.coroutines.cancellation.CancellationException
 import io.github.oshai.kotlinlogging.KLogger
 import io.ktor.client.call.body
 import io.ktor.client.statement.HttpResponse
@@ -48,7 +49,10 @@ internal suspend inline fun <reified T> safeApiCall(
         } else {
             val body = try {
                 response.bodyAsText().take(ErrorBodyMaxChars)
-            } catch (ignored: Exception) {
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                logger.warn(e) { "Failed to read error body for $description" }
                 "<unable to read body>"
             }
             logger.warn { "$description returned ${response.status}, body: $body" }

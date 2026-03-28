@@ -1,6 +1,7 @@
 package io.github.kroune.cumobile.presentation.longread
 
 import com.arkivanov.decompose.value.MutableValue
+import kotlin.coroutines.cancellation.CancellationException
 import io.github.kroune.cumobile.data.model.MaterialAttachment
 import io.github.kroune.cumobile.data.model.PendingAttachment
 import io.github.kroune.cumobile.data.model.PickedFile
@@ -56,6 +57,8 @@ internal class LongreadAttachmentManager(
                     contentType = file.contentType,
                     bytes = file.bytes,
                 )
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 logger.warn(e) { "Failed to upload attachment: ${file.name} to $directory" }
                 null
