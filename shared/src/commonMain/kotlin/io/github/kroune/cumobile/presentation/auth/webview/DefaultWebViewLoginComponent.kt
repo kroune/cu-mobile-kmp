@@ -5,6 +5,7 @@ import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.domain.repository.AuthRepository
+import io.github.kroune.cumobile.domain.repository.CookieValidationResult
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -39,14 +40,17 @@ class DefaultWebViewLoginComponent(
             logger.debug { "Saving cookie..." }
             authRepository.saveCookie(cookie)
             logger.debug { "Cookie saved, validating..." }
-            val isValid = authRepository.validateCookie()
-            logger.info { "Cookie validation result: $isValid" }
-            if (isValid) {
-                onLoginSuccess()
-            } else {
-                _state.value = _state.value.copy(
+            val result = authRepository.validateCookie()
+            logger.info { "Cookie validation result: $result" }
+            when (result) {
+                CookieValidationResult.Valid -> onLoginSuccess()
+                CookieValidationResult.Invalid -> _state.value = _state.value.copy(
                     isLoading = false,
                     error = "Не удалось авторизоваться. Попробуйте ещё раз.",
+                )
+                CookieValidationResult.NetworkError -> _state.value = _state.value.copy(
+                    isLoading = false,
+                    error = "Ошибка сети. Проверьте подключение и попробуйте снова.",
                 )
             }
         }

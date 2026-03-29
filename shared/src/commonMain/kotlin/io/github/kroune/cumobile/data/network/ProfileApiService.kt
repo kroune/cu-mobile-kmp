@@ -14,6 +14,7 @@ import io.ktor.client.statement.readRawBytes
 import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.isSuccess
 
 private val logger = KotlinLogging.logger {}
 
@@ -23,6 +24,31 @@ private val logger = KotlinLogging.logger {}
 internal class ProfileApiService(
     private val httpClient: HttpClient,
 ) {
+    /**
+     * Checks whether the given cookie is accepted by the server.
+     *
+     * Returns `true` if the server responds with a success status,
+     * `false` if it responds with 401 (Unauthorized),
+     * or `null` if the request failed due to a network error.
+     */
+    suspend fun checkAuth(cookie: String): Boolean? =
+        runCatchingCancellable {
+            val response = httpClient.get(ApiEndpoints.Profile.ME) {
+                header("Cookie", cookieHeader(cookie))
+            }
+            if (response.status.isSuccess()) {
+                true
+            } else if (response.status == HttpStatusCode.Unauthorized) {
+                false
+            } else {
+                logger.warn { "checkAuth: unexpected status ${response.status}" }
+                null
+            }
+        }.getOrElse { e ->
+            logger.error(e) { "checkAuth: network error" }
+            null
+        }
+
     /** Fetches the current student's hub profile. */
     suspend fun fetchProfile(cookie: String): StudentProfile? =
         safeApiCall(logger, "fetch profile") {

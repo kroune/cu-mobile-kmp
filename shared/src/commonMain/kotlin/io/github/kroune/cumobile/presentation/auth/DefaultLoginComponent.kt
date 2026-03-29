@@ -8,6 +8,7 @@ import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.data.network.AuthApiService
 import io.github.kroune.cumobile.data.network.AuthStepResult
 import io.github.kroune.cumobile.domain.repository.AuthRepository
+import io.github.kroune.cumobile.domain.repository.CookieValidationResult
 import io.github.kroune.cumobile.presentation.auth.LoginComponent.AuthStep
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
@@ -178,18 +179,28 @@ class DefaultLoginComponent(
         val bffCookie = api.exchangeCallback(callbackUrl)
         if (bffCookie != null) {
             authRepository.saveCookie(bffCookie)
-            val isValid = authRepository.validateCookie()
-            if (isValid) {
-                logger.info { "Native auth succeeded" }
-                api.close()
-                authApi = null
-                onLoginSuccess()
-            } else {
-                _state.update {
-                    it.copy(
-                        isLoading = false,
-                        error = "Cookie невалиден. Попробуйте через браузер.",
-                    )
+            when (authRepository.validateCookie()) {
+                CookieValidationResult.Valid -> {
+                    logger.info { "Native auth succeeded" }
+                    api.close()
+                    authApi = null
+                    onLoginSuccess()
+                }
+                CookieValidationResult.Invalid -> {
+                    _state.update {
+                        it.copy(
+                            isLoading = false,
+                            error = "Cookie невалиден. Попробуйте через браузер.",
+                        )
+                    }
+                }
+                CookieValidationResult.NetworkError -> {
+                    _state.update {
+                        it.copy(
+                            isLoading = false,
+                            error = "Ошибка сети. Проверьте подключение и попробуйте снова.",
+                        )
+                    }
                 }
             }
         } else {

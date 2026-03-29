@@ -12,6 +12,7 @@ import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.data.network.AuthApiService
 import io.github.kroune.cumobile.domain.repository.AuthRepository
+import io.github.kroune.cumobile.domain.repository.CookieValidationResult
 import io.github.kroune.cumobile.presentation.auth.DefaultLoginComponent
 import io.github.kroune.cumobile.presentation.auth.webview.DefaultWebViewLoginComponent
 import io.github.kroune.cumobile.presentation.main.DefaultMainComponent
@@ -80,9 +81,15 @@ class DefaultRootComponent(
     private fun validateCookieInBackground() {
         scope.launch {
             runCatchingCancellable {
-                if (!authRepository.validateCookie()) {
-                    logger.warn { "validateCookieInBackground: cookie invalid, redirecting to Login" }
-                    navigation.replaceAll(Config.Login)
+                when (authRepository.validateCookie()) {
+                    CookieValidationResult.Valid ->
+                        logger.info { "validateCookieInBackground: cookie valid" }
+                    CookieValidationResult.Invalid -> {
+                        logger.warn { "validateCookieInBackground: cookie invalid, redirecting to Login" }
+                        navigation.replaceAll(Config.Login)
+                    }
+                    CookieValidationResult.NetworkError ->
+                        logger.warn { "validateCookieInBackground: network error, keeping session" }
                 }
             }.onFailure { e ->
                 logger.error(e) { "validateCookieInBackground: failed to validate cookie" }
