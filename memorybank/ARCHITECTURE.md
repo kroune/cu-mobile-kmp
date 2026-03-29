@@ -25,7 +25,7 @@ debug postfix if build is a debug one
 | Library                          | Version        | Use                                   |
 |----------------------------------|----------------|---------------------------------------|
 | Compose Multiplatform            | 1.11.0-alpha02 | UI (shared)                           |
-| Decompose                        | 3.4.0          | Navigation (ChildPages + ChildStack)  |
+| Decompose                        | 3.5.0          | Navigation (ChildPages + ChildStack + ChildItems) |
 | Koin                             | —              | DI                                    |
 | Ktor                             | —              | HTTP client                           |
 | kotlinx-serialization            | —              | JSON                                  |
@@ -69,8 +69,10 @@ CuMobile/
         │       ├── courses/       # CoursesComponent + detail/CourseDetailComponent
         │       ├── files/         # FilesComponent (full file manager)
         │       ├── home/          # HomeComponent (deadlines + schedule + courses)
-        │       ├── longread/      # LongreadComponent, Screen, TaskSection, TaskInfo
-        │       │   └── htmlrender/ # HTML→Compose rendering (Ksoup parser → HtmlBlock → composables)
+        │       ├── longread/      # LongreadComponent (ChildItems), Screen, SearchHandler
+        │       │   ├── component/ # MaterialConfig, LongreadItem, CodingMaterialComponent, simple material components
+        │       │   ├── htmlrender/ # HTML→Compose rendering (Ksoup parser → HtmlBlock → composables)
+        │       │   └── ui/        # LongreadScreen, CodingMaterialCardContent, CommentsTab, InfoTab, SolutionTab, LateDaysSection
         │       ├── main/          # MainComponent (ChildPages tabs + ChildStack details)
         │       ├── notifications/ # NotificationsComponent
         │       ├── performance/   # CoursePerformanceComponent (2 tabs)
@@ -127,6 +129,14 @@ Every screen has:
 - **ChildPages** — bottom nav tabs (preserves state on tab switch)
 - **ChildStack** — detail navigation overlay (CourseDetail, Longread, Profile, Notifications,
   CoursePerformance)
+- **ChildItems** — longread materials in LazyColumn. Each material is a component with automatic
+  lifecycle managed by `ChildItemsLifecycleController`. Experimental API (`@ExperimentalDecomposeApi`).
+  Uses `MaterialConfig` (serializable sealed interface) as key, `LongreadItem` (sealed wrapper) as child.
+  `CodingMaterialComponent` has full MVI; simple materials (Markdown, File, Image, etc.) are lightweight wrappers.
+  - **material as constructor-val**: `LongreadMaterial` is immutable data fixed at creation — it stays as a
+    constructor `val` property, NOT in component State. Putting it in State would bloat every `state.copy()`.
+  - **ExternalUpdate channel**: Parent broadcasts events (e.g. search query changes) to children via
+    `MutableSharedFlow<ExternalUpdate>(replay=1)`. Children collect and store in their own state.
 - `navigation.push()` requires `@OptIn(DelicateDecomposeApi::class)`
 
 ### DI (Koin)

@@ -1,4 +1,4 @@
-package io.github.kroune.cumobile.presentation.longread
+package io.github.kroune.cumobile.presentation.longread.component.coding
 
 import com.arkivanov.decompose.value.MutableValue
 import io.github.kroune.cumobile.data.model.MaterialAttachment
@@ -15,11 +15,13 @@ import kotlin.coroutines.cancellation.CancellationException
 private val logger = KotlinLogging.logger {}
 
 /**
- * Manages file attachment upload and removal for solution
- * and comment submissions within the longread component.
+ * Manages file attachment upload and removal for a single coding task.
+ *
+ * Adapted from the former LongreadAttachmentManager but scoped to one task.
  */
-internal class LongreadAttachmentManager(
-    private val state: MutableValue<LongreadComponent.State>,
+internal class CodingAttachmentManager(
+    private val taskId: String,
+    private val state: MutableValue<CodingMaterialComponent.State>,
     private val contentRepository: ContentRepository,
     private val scope: CoroutineScope,
 ) {
@@ -27,7 +29,6 @@ internal class LongreadAttachmentManager(
         file: PickedFile,
         isSolution: Boolean,
     ) {
-        val taskId = state.value.activeTaskId ?: return
         val pending = PendingAttachment(
             name = file.name,
             size = file.size,
@@ -120,8 +121,7 @@ internal class LongreadAttachmentManager(
                 status = if (attachment != null) UploadStatus.Uploaded else UploadStatus.Failed,
                 uploadedAttachment = attachment,
             )
-            state.value =
-                state.value.copy(pendingCommentAttachments = list.toPersistentList())
+            state.value = state.value.copy(pendingCommentAttachments = list.toPersistentList())
         }
     }
 }

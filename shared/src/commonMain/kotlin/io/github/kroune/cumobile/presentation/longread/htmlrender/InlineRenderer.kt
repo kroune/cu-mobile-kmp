@@ -1,4 +1,4 @@
-package io.github.kroune.cumobile.presentation.longread.htmlrender.ui
+package io.github.kroune.cumobile.presentation.longread.htmlrender
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
@@ -11,7 +11,6 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
-import io.github.kroune.cumobile.presentation.longread.htmlrender.InlineElement
 import kotlinx.collections.immutable.ImmutableList
 
 /**

@@ -19,8 +19,9 @@ import io.github.kroune.cumobile.data.model.TaskState
 import io.github.kroune.cumobile.data.model.UploadStatus
 import io.github.kroune.cumobile.presentation.common.ui.CuMobileTheme
 import io.github.kroune.cumobile.presentation.longread.LongreadComponent
+import io.github.kroune.cumobile.presentation.longread.component.coding.CodingMaterialComponent
+import io.github.kroune.cumobile.presentation.longread.ui.coding.CodingMaterialCardContent
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.persistentMapOf
 
 private val previewCodingMaterial = LongreadMaterial(
     id = "3",
@@ -71,17 +72,18 @@ private fun previewTaskDetails(
     isLateDaysEnabled: Boolean = false,
     lateDays: Int? = null,
     lateDaysBalance: Int? = null,
-) = TaskDetails(
-    id = "42",
-    state = state,
-    score = score,
-    deadline = "2026-04-15T23:59:00Z",
-    exercise = TaskDetailsExercise(name = "Быстрая сортировка", maxScore = 10),
-    solution = solutionUrl?.let { TaskDetailsSolution(solutionUrl = it) },
-    isLateDaysEnabled = isLateDaysEnabled,
-    lateDays = lateDays,
-    student = lateDaysBalance?.let { TaskDetailsStudent(lateDaysBalance = it) },
-)
+) =
+    TaskDetails(
+        id = "42",
+        state = state,
+        score = score,
+        deadline = "2026-04-15T23:59:00Z",
+        exercise = TaskDetailsExercise(name = "Быстрая сортировка", maxScore = 10),
+        solution = solutionUrl?.let { TaskDetailsSolution(solutionUrl = it) },
+        isLateDaysEnabled = isLateDaysEnabled,
+        lateDays = lateDays,
+        student = lateDaysBalance?.let { TaskDetailsStudent(lateDaysBalance = it) },
+    )
 
 private val previewComments = persistentListOf(
     TaskComment(
@@ -128,6 +130,8 @@ private val previewEvents = persistentListOf(
         ),
     ),
 )
+
+// region Screen-level previews
 
 @Preview
 @Composable
@@ -187,78 +191,10 @@ private fun PreviewLongreadLoadErrorLight() {
 
 @Preview
 @Composable
-private fun PreviewLongreadActionErrorDark() {
+private fun PreviewLongreadEmptyMaterialsDark() {
     CuMobileTheme(darkTheme = true) {
         LongreadScreenContent(
-            state = LongreadComponent.State(
-                materials = persistentListOf(
-                    LongreadMaterial(
-                        id = "1",
-                        name = "Тестовый материал",
-                        discriminator = "markdown",
-                    ),
-                ),
-            ),
-            actionError = "Не удалось отправить решение",
-            onIntent = {},
-            onDismissError = {},
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun PreviewLongreadActionErrorLight() {
-    CuMobileTheme(darkTheme = false) {
-        LongreadScreenContent(
-            state = LongreadComponent.State(
-                materials = persistentListOf(
-                    LongreadMaterial(
-                        id = "1",
-                        name = "Тестовый материал",
-                        discriminator = "markdown",
-                    ),
-                ),
-            ),
-            actionError = "Не удалось отправить решение",
-            onIntent = {},
-            onDismissError = {},
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun PreviewLongreadLoadingDark() {
-    CuMobileTheme(darkTheme = true) {
-        LongreadScreenContent(
-            state = LongreadComponent.State(isLoading = true),
-            actionError = null,
-            onIntent = {},
-            onDismissError = {},
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun PreviewLongreadSuccessDark() {
-    CuMobileTheme(darkTheme = true) {
-        LongreadScreenContent(
-            state = previewLongreadSuccessState,
-            actionError = null,
-            onIntent = {},
-            onDismissError = {},
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun PreviewLongreadSuccessLight() {
-    CuMobileTheme(darkTheme = false) {
-        LongreadScreenContent(
-            state = previewLongreadSuccessState,
+            state = LongreadComponent.State(),
             actionError = null,
             onIntent = {},
             onDismissError = {},
@@ -284,105 +220,73 @@ private fun PreviewLongreadSearchDark() {
     }
 }
 
+// endregion
+
+// region CodingMaterialCardContent previews
+
+@Suppress("MagicNumber")
 @Preview
 @Composable
-private fun PreviewLongreadSearchNoMatchesDark() {
+private fun PreviewCodingCardBacklogDark() {
     CuMobileTheme(darkTheme = true) {
-        LongreadScreenContent(
-            state = previewLongreadSuccessState.copy(
-                isSearchVisible = true,
-                searchQuery = "несуществующий",
-                searchMatchCount = 0,
+        CodingMaterialCardContent(
+            material = previewCodingMaterial,
+            state = CodingMaterialComponent.State(
+                isExpanded = true,
+                taskDetails = previewTaskDetails(state = TaskState.Backlog),
             ),
-            actionError = null,
             onIntent = {},
-            onDismissError = {},
         )
     }
 }
 
+@Suppress("MagicNumber")
 @Preview
 @Composable
-private fun PreviewLongreadEmptyMaterialsDark() {
+private fun PreviewCodingCardSolutionTabDark() {
     CuMobileTheme(darkTheme = true) {
-        LongreadScreenContent(
-            state = LongreadComponent.State(),
-            actionError = null,
-            onIntent = {},
-            onDismissError = {},
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun PreviewLongreadTaskBacklogDark() {
-    CuMobileTheme(darkTheme = true) {
-        LongreadScreenContent(
-            state = previewLongreadSuccessState.copy(
-                activeTaskId = "42",
-                taskDetails = persistentMapOf(
-                    "42" to previewTaskDetails(state = TaskState.Backlog),
-                ),
-            ),
-            actionError = null,
-            onIntent = {},
-            onDismissError = {},
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun PreviewLongreadTaskSolutionTabDark() {
-    CuMobileTheme(darkTheme = true) {
-        LongreadScreenContent(
-            state = previewLongreadSuccessState.copy(
-                activeTaskId = "42",
-                selectedTaskTab = "solution",
-                taskDetails = persistentMapOf(
-                    "42" to previewTaskDetails(state = TaskState.InProgress),
-                ),
+        CodingMaterialCardContent(
+            material = previewCodingMaterial,
+            state = CodingMaterialComponent.State(
+                isExpanded = true,
+                selectedTab = "solution",
+                taskDetails = previewTaskDetails(state = TaskState.InProgress),
                 solutionUrl = "https://github.com/student/quicksort",
             ),
-            actionError = null,
             onIntent = {},
-            onDismissError = {},
         )
     }
 }
 
+@Suppress("MagicNumber")
 @Preview
 @Composable
-private fun PreviewLongreadTaskSolutionTabLight() {
+private fun PreviewCodingCardSolutionTabLight() {
     CuMobileTheme(darkTheme = false) {
-        LongreadScreenContent(
-            state = previewLongreadSuccessState.copy(
-                activeTaskId = "42",
-                selectedTaskTab = "solution",
-                taskDetails = persistentMapOf(
-                    "42" to previewTaskDetails(state = TaskState.InProgress),
-                ),
+        CodingMaterialCardContent(
+            material = previewCodingMaterial,
+            state = CodingMaterialComponent.State(
+                isExpanded = true,
+                selectedTab = "solution",
+                taskDetails = previewTaskDetails(state = TaskState.InProgress),
                 solutionUrl = "https://github.com/student/quicksort",
             ),
-            actionError = null,
             onIntent = {},
-            onDismissError = {},
         )
     }
 }
 
+@Suppress("MagicNumber")
 @Preview
 @Composable
-private fun PreviewLongreadTaskSolutionWithAttachmentsDark() {
+private fun PreviewCodingCardWithAttachmentsDark() {
     CuMobileTheme(darkTheme = true) {
-        LongreadScreenContent(
-            state = previewLongreadSuccessState.copy(
-                activeTaskId = "42",
-                selectedTaskTab = "solution",
-                taskDetails = persistentMapOf(
-                    "42" to previewTaskDetails(state = TaskState.InProgress),
-                ),
+        CodingMaterialCardContent(
+            material = previewCodingMaterial,
+            state = CodingMaterialComponent.State(
+                isExpanded = true,
+                selectedTab = "solution",
+                taskDetails = previewTaskDetails(state = TaskState.InProgress),
                 pendingSolutionAttachments = persistentListOf(
                     PendingAttachment(
                         name = "solution.py",
@@ -401,283 +305,167 @@ private fun PreviewLongreadTaskSolutionWithAttachmentsDark() {
                     ),
                 ),
             ),
-            actionError = null,
             onIntent = {},
-            onDismissError = {},
         )
     }
 }
 
+@Suppress("MagicNumber")
 @Preview
 @Composable
-private fun PreviewLongreadTaskHasSolutionDark() {
+private fun PreviewCodingCardEvaluatedDark() {
     CuMobileTheme(darkTheme = true) {
-        LongreadScreenContent(
-            state = previewLongreadSuccessState.copy(
-                activeTaskId = "42",
-                selectedTaskTab = "solution",
-                taskDetails = persistentMapOf(
-                    "42" to previewTaskDetails(
-                        state = TaskState.Review,
-                        solutionUrl = "https://github.com/student/quicksort",
-                    ),
+        CodingMaterialCardContent(
+            material = previewCodingMaterial,
+            state = CodingMaterialComponent.State(
+                isExpanded = true,
+                selectedTab = "solution",
+                taskDetails = previewTaskDetails(
+                    state = TaskState.Evaluated,
+                    score = 8.0,
+                    solutionUrl = "https://github.com/student/quicksort",
                 ),
             ),
-            actionError = null,
             onIntent = {},
-            onDismissError = {},
         )
     }
 }
 
+@Suppress("MagicNumber")
 @Preview
 @Composable
-private fun PreviewLongreadTaskEvaluatedDark() {
+private fun PreviewCodingCardCommentsTabDark() {
     CuMobileTheme(darkTheme = true) {
-        LongreadScreenContent(
-            state = previewLongreadSuccessState.copy(
-                activeTaskId = "42",
-                selectedTaskTab = "solution",
-                taskDetails = persistentMapOf(
-                    "42" to previewTaskDetails(
-                        state = TaskState.Evaluated,
-                        score = 8.0,
-                        solutionUrl = "https://github.com/student/quicksort",
-                    ),
-                ),
-            ),
-            actionError = null,
-            onIntent = {},
-            onDismissError = {},
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun PreviewLongreadTaskRevisionDark() {
-    CuMobileTheme(darkTheme = true) {
-        LongreadScreenContent(
-            state = previewLongreadSuccessState.copy(
-                activeTaskId = "42",
-                selectedTaskTab = "solution",
-                taskDetails = persistentMapOf(
-                    "42" to previewTaskDetails(
-                        state = TaskState.Revision,
-                        score = 4.0,
-                        solutionUrl = "https://github.com/student/quicksort-v1",
-                    ),
-                ),
-                solutionUrl = "https://github.com/student/quicksort-v2",
-            ),
-            actionError = null,
-            onIntent = {},
-            onDismissError = {},
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun PreviewLongreadTaskCommentsTabDark() {
-    CuMobileTheme(darkTheme = true) {
-        LongreadScreenContent(
-            state = previewLongreadSuccessState.copy(
-                activeTaskId = "42",
-                selectedTaskTab = "comments",
-                taskDetails = persistentMapOf(
-                    "42" to previewTaskDetails(state = TaskState.InProgress),
-                ),
+        CodingMaterialCardContent(
+            material = previewCodingMaterial,
+            state = CodingMaterialComponent.State(
+                isExpanded = true,
+                selectedTab = "comments",
+                taskDetails = previewTaskDetails(state = TaskState.InProgress),
                 taskComments = previewComments,
-                commentText = "",
             ),
-            actionError = null,
             onIntent = {},
-            onDismissError = {},
         )
     }
 }
 
+@Suppress("MagicNumber")
 @Preview
 @Composable
-private fun PreviewLongreadTaskCommentsTabLight() {
+private fun PreviewCodingCardCommentsTabLight() {
     CuMobileTheme(darkTheme = false) {
-        LongreadScreenContent(
-            state = previewLongreadSuccessState.copy(
-                activeTaskId = "42",
-                selectedTaskTab = "comments",
-                taskDetails = persistentMapOf(
-                    "42" to previewTaskDetails(state = TaskState.InProgress),
-                ),
+        CodingMaterialCardContent(
+            material = previewCodingMaterial,
+            state = CodingMaterialComponent.State(
+                isExpanded = true,
+                selectedTab = "comments",
+                taskDetails = previewTaskDetails(state = TaskState.InProgress),
                 taskComments = previewComments,
-                commentText = "",
             ),
-            actionError = null,
             onIntent = {},
-            onDismissError = {},
         )
     }
 }
 
+@Suppress("MagicNumber")
 @Preview
 @Composable
-private fun PreviewLongreadTaskCommentEditingDark() {
+private fun PreviewCodingCardCommentEditingDark() {
     CuMobileTheme(darkTheme = true) {
-        LongreadScreenContent(
-            state = previewLongreadSuccessState.copy(
-                activeTaskId = "42",
-                selectedTaskTab = "comments",
-                taskDetails = persistentMapOf(
-                    "42" to previewTaskDetails(state = TaskState.InProgress),
-                ),
+        CodingMaterialCardContent(
+            material = previewCodingMaterial,
+            state = CodingMaterialComponent.State(
+                isExpanded = true,
+                selectedTab = "comments",
+                taskDetails = previewTaskDetails(state = TaskState.InProgress),
                 taskComments = previewComments,
                 editingCommentId = "c2",
                 editCommentText = "Исправил обработку граничных случаев",
             ),
-            actionError = null,
             onIntent = {},
-            onDismissError = {},
         )
     }
 }
 
+@Suppress("MagicNumber")
 @Preview
 @Composable
-private fun PreviewLongreadTaskCommentsEmptyDark() {
+private fun PreviewCodingCardInfoTabDark() {
     CuMobileTheme(darkTheme = true) {
-        LongreadScreenContent(
-            state = previewLongreadSuccessState.copy(
-                activeTaskId = "42",
-                selectedTaskTab = "comments",
-                taskDetails = persistentMapOf(
-                    "42" to previewTaskDetails(state = TaskState.InProgress),
-                ),
-                taskComments = persistentListOf(),
-                commentText = "Вопрос по заданию...",
-            ),
-            actionError = null,
-            onIntent = {},
-            onDismissError = {},
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun PreviewLongreadTaskInfoTabDark() {
-    CuMobileTheme(darkTheme = true) {
-        LongreadScreenContent(
-            state = previewLongreadSuccessState.copy(
-                activeTaskId = "42",
-                selectedTaskTab = "info",
-                taskDetails = persistentMapOf(
-                    "42" to previewTaskDetails(
-                        state = TaskState.Evaluated,
-                        score = 8.0,
-                        isLateDaysEnabled = true,
-                        lateDays = 2,
-                        lateDaysBalance = 5,
-                    ),
+        CodingMaterialCardContent(
+            material = previewCodingMaterial,
+            state = CodingMaterialComponent.State(
+                isExpanded = true,
+                selectedTab = "info",
+                taskDetails = previewTaskDetails(
+                    state = TaskState.Evaluated,
+                    score = 8.0,
+                    isLateDaysEnabled = true,
+                    lateDays = 2,
+                    lateDaysBalance = 5,
                 ),
                 taskEvents = previewEvents,
             ),
-            actionError = null,
             onIntent = {},
-            onDismissError = {},
         )
     }
 }
 
+@Suppress("MagicNumber")
 @Preview
 @Composable
-private fun PreviewLongreadTaskInfoTabLight() {
-    CuMobileTheme(darkTheme = false) {
-        LongreadScreenContent(
-            state = previewLongreadSuccessState.copy(
-                activeTaskId = "42",
-                selectedTaskTab = "info",
-                taskDetails = persistentMapOf(
-                    "42" to previewTaskDetails(
-                        state = TaskState.Evaluated,
-                        score = 8.0,
-                        isLateDaysEnabled = true,
-                        lateDays = 2,
-                        lateDaysBalance = 5,
-                    ),
-                ),
-                taskEvents = previewEvents,
-            ),
-            actionError = null,
-            onIntent = {},
-            onDismissError = {},
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun PreviewLongreadTaskLateDaysDark() {
+private fun PreviewCodingCardLateDaysDark() {
     CuMobileTheme(darkTheme = true) {
-        LongreadScreenContent(
-            state = previewLongreadSuccessState.copy(
-                activeTaskId = "42",
-                selectedTaskTab = "solution",
-                taskDetails = persistentMapOf(
-                    "42" to previewTaskDetails(
-                        state = TaskState.InProgress,
-                        isLateDaysEnabled = true,
-                        lateDays = 3,
-                        lateDaysBalance = 4,
-                    ),
+        CodingMaterialCardContent(
+            material = previewCodingMaterial,
+            state = CodingMaterialComponent.State(
+                isExpanded = true,
+                selectedTab = "solution",
+                taskDetails = previewTaskDetails(
+                    state = TaskState.InProgress,
+                    isLateDaysEnabled = true,
+                    lateDays = 3,
+                    lateDaysBalance = 4,
                 ),
             ),
-            actionError = null,
             onIntent = {},
-            onDismissError = {},
         )
     }
 }
 
+@Suppress("MagicNumber")
 @Preview
 @Composable
-private fun PreviewLongreadTaskSubmittingDark() {
+private fun PreviewCodingCardSubmittingDark() {
     CuMobileTheme(darkTheme = true) {
-        LongreadScreenContent(
-            state = previewLongreadSuccessState.copy(
-                activeTaskId = "42",
-                selectedTaskTab = "solution",
-                taskDetails = persistentMapOf(
-                    "42" to previewTaskDetails(state = TaskState.InProgress),
-                ),
+        CodingMaterialCardContent(
+            material = previewCodingMaterial,
+            state = CodingMaterialComponent.State(
+                isExpanded = true,
+                selectedTab = "solution",
+                taskDetails = previewTaskDetails(state = TaskState.InProgress),
                 isSubmitting = true,
                 solutionUrl = "https://github.com/student/quicksort",
             ),
-            actionError = null,
             onIntent = {},
-            onDismissError = {},
         )
     }
 }
 
+@Suppress("MagicNumber")
 @Preview
 @Composable
-private fun PreviewLongreadTaskFailedDark() {
+private fun PreviewCodingCardCollapsedDark() {
     CuMobileTheme(darkTheme = true) {
-        LongreadScreenContent(
-            state = previewLongreadSuccessState.copy(
-                activeTaskId = "42",
-                selectedTaskTab = "solution",
-                taskDetails = persistentMapOf(
-                    "42" to previewTaskDetails(
-                        state = TaskState.Failed,
-                        score = 2.0,
-                        solutionUrl = "https://github.com/student/quicksort",
-                    ),
-                ),
+        CodingMaterialCardContent(
+            material = previewCodingMaterial,
+            state = CodingMaterialComponent.State(
+                isExpanded = false,
+                taskDetails = previewTaskDetails(state = TaskState.InProgress),
             ),
-            actionError = null,
             onIntent = {},
-            onDismissError = {},
         )
     }
 }
+
+// endregion

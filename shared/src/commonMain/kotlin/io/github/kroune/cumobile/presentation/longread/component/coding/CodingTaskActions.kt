@@ -1,48 +1,42 @@
-package io.github.kroune.cumobile.presentation.longread.ui
+package io.github.kroune.cumobile.presentation.longread.component.coding
 
 import com.arkivanov.decompose.value.MutableValue
 import io.github.kroune.cumobile.domain.repository.TaskRepository
-import io.github.kroune.cumobile.presentation.longread.LongreadComponent
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
-import kotlinx.collections.immutable.toPersistentMap
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 
 private val logger = KotlinLogging.logger {}
 
 /**
- * Handles task mutation operations (start, submit, comment, late days)
- * for the longread component.
+ * Handles task mutation operations for a single [CodingMaterialComponent].
+ *
+ * Adapted from the former LongreadTaskActions but scoped to one task.
  */
-internal class LongreadTaskActions(
-    private val state: MutableValue<LongreadComponent.State>,
-    private val effects: Channel<LongreadComponent.Effect>,
+internal class CodingTaskActions(
+    private val taskId: String,
+    private val state: MutableValue<CodingMaterialComponent.State>,
     private val taskRepository: TaskRepository,
     private val scope: CoroutineScope,
-    private val loadTaskEventsAndComments: (String) -> Unit,
+    private val onShowError: (String) -> Unit,
 ) {
     fun startTask() {
-        val taskId = state.value.activeTaskId ?: return
         scope.launch {
             state.value = state.value.copy(isSubmitting = true)
             val result = taskRepository.startTask(taskId)
             state.value = state.value.copy(isSubmitting = false)
             if (result != null) {
-                refreshTaskDetails(taskId)
+                refreshTaskDetails()
             } else {
                 logger.warn { "Failed to start task $taskId" }
-                effects.trySend(
-                    LongreadComponent.Effect.ShowError("Не удалось начать задание"),
-                )
+                onShowError("Не удалось начать задание")
             }
         }
     }
 
     fun submitSolution() {
-        val taskId = state.value.activeTaskId ?: return
         val url = state.value.solutionUrl.takeIf { it.isNotBlank() }
         val attachments = state.value.pendingSolutionAttachments
             .mapNotNull { it.uploadedAttachment }
@@ -55,18 +49,15 @@ internal class LongreadTaskActions(
                     solutionUrl = "",
                     pendingSolutionAttachments = persistentListOf(),
                 )
-                refreshTaskDetails(taskId)
+                refreshTaskDetails()
             } else {
                 logger.warn { "Failed to submit solution for task $taskId" }
-                effects.trySend(
-                    LongreadComponent.Effect.ShowError("Не удалось отправить решение"),
-                )
+                onShowError("Не удалось отправить решение")
             }
         }
     }
 
     fun createComment() {
-        val taskId = state.value.activeTaskId ?: return
         val text = state.value.commentText.trim()
         if (text.isEmpty()) return
         val attachments = state.value.pendingCommentAttachments
@@ -80,22 +71,16 @@ internal class LongreadTaskActions(
                     commentText = "",
                     pendingCommentAttachments = persistentListOf(),
                 )
-                val comments = taskRepository.fetchTaskComments(taskId)
-                state.value = state.value.copy(
-                    taskComments = comments.orEmpty().toPersistentList(),
-                )
+                refreshComments()
             } else {
                 logger.warn { "Failed to create comment for task $taskId" }
                 state.value = state.value.copy(isSubmitting = false)
-                effects.trySend(
-                    LongreadComponent.Effect.ShowError("Не удалось отправить комментарий"),
-                )
+                onShowError("Не удалось отправить комментарий")
             }
         }
     }
 
     fun saveEditComment() {
-        val taskId = state.value.activeTaskId ?: return
         val commentId = state.value.editingCommentId ?: return
         val text = state.value.editCommentText.trim()
         if (text.isEmpty()) return
@@ -108,82 +93,85 @@ internal class LongreadTaskActions(
                     editingCommentId = null,
                     editCommentText = "",
                 )
-                val comments = taskRepository.fetchTaskComments(taskId)
-                state.value = state.value.copy(
-                    taskComments = comments.orEmpty().toPersistentList(),
-                )
+                refreshComments()
             } else {
                 logger.warn { "Failed to edit comment $commentId" }
                 state.value = state.value.copy(isSubmitting = false)
-                effects.trySend(
-                    LongreadComponent.Effect.ShowError("Не удалось изменить комментарий"),
-                )
+                onShowError("Не удалось изменить комментарий")
             }
         }
     }
 
     fun deleteComment(commentId: String) {
-        val taskId = state.value.activeTaskId ?: return
         scope.launch {
             state.value = state.value.copy(isSubmitting = true)
             val success = taskRepository.deleteComment(commentId)
             if (success) {
                 state.value = state.value.copy(isSubmitting = false)
-                val comments = taskRepository.fetchTaskComments(taskId)
-                state.value = state.value.copy(
-                    taskComments = comments.orEmpty().toPersistentList(),
-                )
+                refreshComments()
             } else {
                 logger.warn { "Failed to delete comment $commentId" }
                 state.value = state.value.copy(isSubmitting = false)
-                effects.trySend(
-                    LongreadComponent.Effect.ShowError("Не удалось удалить комментарий"),
-                )
+                onShowError("Не удалось удалить комментарий")
             }
         }
     }
 
     fun prolongLateDays(days: Int) {
-        val taskId = state.value.activeTaskId ?: return
         scope.launch {
             state.value = state.value.copy(isSubmitting = true)
             val success = taskRepository.prolongLateDays(taskId, days)
             state.value = state.value.copy(isSubmitting = false)
             if (success) {
-                refreshTaskDetails(taskId)
+                refreshTaskDetails()
             } else {
                 logger.warn { "Failed to prolong late days for task $taskId" }
-                effects.trySend(
-                    LongreadComponent.Effect.ShowError("Не удалось продлить дедлайн"),
-                )
+                onShowError("Не удалось продлить дедлайн")
             }
         }
     }
 
     fun cancelLateDays() {
-        val taskId = state.value.activeTaskId ?: return
         scope.launch {
             state.value = state.value.copy(isSubmitting = true)
             val success = taskRepository.cancelLateDays(taskId)
             state.value = state.value.copy(isSubmitting = false)
             if (success) {
-                refreshTaskDetails(taskId)
+                refreshTaskDetails()
             } else {
                 logger.warn { "Failed to cancel late days for task $taskId" }
-                effects.trySend(
-                    LongreadComponent.Effect.ShowError("Не удалось отменить продление"),
-                )
+                onShowError("Не удалось отменить продление")
             }
         }
     }
 
-    private suspend fun refreshTaskDetails(taskId: String) {
+    private suspend fun refreshTaskDetails() {
         val details = taskRepository.fetchTaskDetails(taskId)
         if (details != null) {
-            val updated = state.value.taskDetails.toMutableMap()
-            updated[taskId] = details
-            state.value = state.value.copy(taskDetails = updated.toPersistentMap())
+            state.value = state.value.copy(taskDetails = details)
         }
-        loadTaskEventsAndComments(taskId)
+        refreshEventsAndComments()
+    }
+
+    private suspend fun refreshEventsAndComments() {
+        val events = taskRepository.fetchTaskEvents(taskId)
+        val comments = taskRepository.fetchTaskComments(taskId)
+        if (events == null) {
+            logger.warn { "Failed to load task events for taskId=$taskId" }
+        }
+        if (comments == null) {
+            logger.warn { "Failed to load task comments for taskId=$taskId" }
+        }
+        state.value = state.value.copy(
+            taskEvents = events.orEmpty().toPersistentList(),
+            taskComments = comments.orEmpty().toPersistentList(),
+        )
+    }
+
+    private suspend fun refreshComments() {
+        val comments = taskRepository.fetchTaskComments(taskId)
+        state.value = state.value.copy(
+            taskComments = comments.orEmpty().toPersistentList(),
+        )
     }
 }
