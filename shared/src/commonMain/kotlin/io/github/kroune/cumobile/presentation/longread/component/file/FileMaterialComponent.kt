@@ -7,6 +7,7 @@ import io.github.kroune.cumobile.data.model.LongreadMaterial
 import io.github.kroune.cumobile.domain.repository.ContentRepository
 import io.github.kroune.cumobile.presentation.common.RenderComponent
 import io.github.kroune.cumobile.presentation.longread.ui.file.FileMaterialCard
+import io.github.kroune.cumobile.util.runCatchingCancellable
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -43,21 +44,28 @@ class FileMaterialComponent(
         val version = material.version ?: "1"
         scope.launch {
             onDownloadResult(FileDownloadResult.Started)
-            val url = contentRepository.getDownloadLink(filename, version)
-            if (url != null) {
-                val localFilename = resolveFilename()
-                val saved = saveFile(url, localFilename)
-                if (saved) {
-                    onDownloadResult(FileDownloadResult.Success)
+            runCatchingCancellable {
+                val url = contentRepository.getDownloadLink(filename, version)
+                if (url != null) {
+                    val localFilename = resolveFilename()
+                    val saved = saveFile(url, localFilename)
+                    if (saved) {
+                        onDownloadResult(FileDownloadResult.Success)
+                    } else {
+                        onDownloadResult(
+                            FileDownloadResult.Failed("Не удалось сохранить файл"),
+                        )
+                    }
                 } else {
+                    logger.warn { "Failed to get download link for $filename" }
                     onDownloadResult(
-                        FileDownloadResult.Failed("Не удалось сохранить файл"),
+                        FileDownloadResult.Failed("Не удалось получить ссылку для скачивания"),
                     )
                 }
-            } else {
-                logger.warn { "Failed to get download link for $filename" }
+            }.onFailure { e ->
+                logger.error(e) { "Download failed for file $filename" }
                 onDownloadResult(
-                    FileDownloadResult.Failed("Не удалось получить ссылку для скачивания"),
+                    FileDownloadResult.Failed("Ошибка при скачивании файла"),
                 )
             }
         }

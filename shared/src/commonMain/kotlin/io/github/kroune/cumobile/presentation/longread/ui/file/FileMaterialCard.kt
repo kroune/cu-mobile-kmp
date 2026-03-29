@@ -25,12 +25,13 @@ import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 fun FileMaterialCard(
     material: LongreadMaterial,
     onDownload: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val filename = material.filename ?: "Файл"
     val version = material.version.orEmpty()
 
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
             .background(AppTheme.colors.surface)

@@ -153,6 +153,8 @@ internal class CodingTaskActions(
         val details = taskRepository.fetchTaskDetails(taskId)
         if (details != null) {
             state.value = state.value.copy(taskDetails = details)
+        } else {
+            logger.warn { "Failed to fetch task details for taskId=$taskId" }
         }
         refreshEventsAndComments()
     }
