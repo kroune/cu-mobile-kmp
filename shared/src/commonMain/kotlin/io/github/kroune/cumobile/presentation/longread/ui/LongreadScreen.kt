@@ -97,7 +97,7 @@ fun LongreadScreen(
                         )
                         if (result == SnackbarResult.ActionPerformed) {
                             component.onIntent(
-                                LongreadComponent.Intent.NavigateToFiles,
+                                LongreadComponent.Intent.Navigation.NavigateToFiles,
                             )
                         }
                     }
@@ -133,7 +133,7 @@ internal fun LongreadScreenContent(
     ) {
         PullToRefreshBox(
             isRefreshing = state.isLoading,
-            onRefresh = { onIntent(LongreadComponent.Intent.Refresh) },
+            onRefresh = { onIntent(LongreadComponent.Intent.Navigation.Refresh) },
             modifier = Modifier.fillMaxSize(),
         ) {
             Column(
@@ -141,11 +141,11 @@ internal fun LongreadScreenContent(
             ) {
                 DetailTopBar(
                     title = state.title,
-                    onBack = { onIntent(LongreadComponent.Intent.Back) },
+                    onBack = { onIntent(LongreadComponent.Intent.Navigation.Back) },
                     trailingContent = {
                         TextButton(
                             onClick = {
-                                onIntent(LongreadComponent.Intent.ToggleSearch)
+                                onIntent(LongreadComponent.Intent.Search.ToggleSearch)
                             },
                         ) {
                             Text(
@@ -170,7 +170,7 @@ internal fun LongreadScreenContent(
                         LongreadScreenSkeleton()
                     state.error != null && state.materials.isEmpty() -> ErrorContent(
                         error = state.error,
-                        onRetry = { onIntent(LongreadComponent.Intent.Refresh) },
+                        onRetry = { onIntent(LongreadComponent.Intent.Navigation.Refresh) },
                     )
                     !state.isLoading && state.materials.isEmpty() -> EmptyMaterialsContent()
                     else -> MaterialList(
@@ -274,9 +274,9 @@ private fun SearchBar(
         SearchInput(
             query = state.searchQuery,
             onQueryChange = {
-                onIntent(LongreadComponent.Intent.UpdateSearchQuery(it))
+                onIntent(LongreadComponent.Intent.Search.UpdateSearchQuery(it))
             },
-            onSearch = { onIntent(LongreadComponent.Intent.NextMatch) },
+            onSearch = { onIntent(LongreadComponent.Intent.Search.NextMatch) },
             modifier = Modifier.weight(1f),
         )
         if (state.searchQuery.isNotEmpty()) {
@@ -290,7 +290,7 @@ private fun SearchBar(
             modifier = Modifier
                 .size(32.dp)
                 .clip(RoundedCornerShape(4.dp))
-                .clickable { onIntent(LongreadComponent.Intent.ToggleSearch) },
+                .clickable { onIntent(LongreadComponent.Intent.Search.ToggleSearch) },
             contentAlignment = Alignment.Center,
         ) {
             Text(
@@ -356,7 +356,7 @@ private fun SearchNavigation(
             .size(32.dp)
             .clip(RoundedCornerShape(4.dp))
             .clickable(enabled = hasMatches) {
-                onIntent(LongreadComponent.Intent.PreviousMatch)
+                onIntent(LongreadComponent.Intent.Search.PreviousMatch)
             },
         contentAlignment = Alignment.Center,
     ) {
@@ -371,7 +371,7 @@ private fun SearchNavigation(
             .size(32.dp)
             .clip(RoundedCornerShape(4.dp))
             .clickable(enabled = hasMatches) {
-                onIntent(LongreadComponent.Intent.NextMatch)
+                onIntent(LongreadComponent.Intent.Search.NextMatch)
             },
         contentAlignment = Alignment.Center,
     ) {
@@ -462,7 +462,7 @@ private fun FileCard(
             TextButton(
                 onClick = {
                     onIntent(
-                        LongreadComponent.Intent.DownloadFile(material),
+                        LongreadComponent.Intent.Navigation.DownloadFile(material),
                     )
                 },
             ) {

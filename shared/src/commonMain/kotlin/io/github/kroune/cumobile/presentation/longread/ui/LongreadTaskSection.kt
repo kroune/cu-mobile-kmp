@@ -49,10 +49,10 @@ internal fun CodingMaterialCard(
     val isActive = state.activeTaskId == taskId
 
     val solutionPicker = rememberFilePicker { file ->
-        onIntent(LongreadComponent.Intent.PickSolutionAttachment(file))
+        onIntent(LongreadComponent.Intent.Attachment.PickSolutionAttachment(file))
     }
     val commentPicker = rememberFilePicker { file ->
-        onIntent(LongreadComponent.Intent.PickCommentAttachment(file))
+        onIntent(LongreadComponent.Intent.Attachment.PickCommentAttachment(file))
     }
 
     Column(
@@ -68,7 +68,7 @@ internal fun CodingMaterialCard(
             taskDetails = taskDetails,
             isActive = isActive,
             onClick = {
-                onIntent(LongreadComponent.Intent.SelectTask(taskId))
+                onIntent(LongreadComponent.Intent.Navigation.SelectTask(taskId))
             },
         )
 
@@ -164,14 +164,14 @@ private fun TaskManagementSection(
             StartTaskButton(
                 isSubmitting = state.isSubmitting,
                 onClick = {
-                    onIntent(LongreadComponent.Intent.StartTask)
+                    onIntent(LongreadComponent.Intent.Task.StartTask)
                 },
             )
         } else {
             TabSelector(
                 selectedTab = state.selectedTaskTab,
                 onTabSelected = { tab ->
-                    onIntent(LongreadComponent.Intent.SelectTaskTab(tab))
+                    onIntent(LongreadComponent.Intent.Navigation.SelectTaskTab(tab))
                 },
             )
             when (state.selectedTaskTab) {
@@ -188,6 +188,8 @@ private fun TaskManagementSection(
                     commentText = state.commentText,
                     isSubmitting = state.isSubmitting,
                     pendingAttachments = state.pendingCommentAttachments,
+                    editingCommentId = state.editingCommentId,
+                    editCommentText = state.editCommentText,
                     onIntent = onIntent,
                     onAttach = onAttachComment,
                 )

@@ -32,7 +32,7 @@ import io.github.kroune.cumobile.data.model.TaskDetails
 import io.github.kroune.cumobile.presentation.common.formatDeadline
 import io.github.kroune.cumobile.presentation.common.formatDeadlinePlusDays
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
-import io.github.kroune.cumobile.presentation.longread.LongreadComponent
+import io.github.kroune.cumobile.presentation.longread.LongreadComponent.Intent
 import kotlin.math.min
 
 private const val MaxLateDaysPerTask = 7
@@ -41,7 +41,7 @@ private const val MaxLateDaysPerTask = 7
 @Composable
 internal fun LateDaysInfo(
     taskDetails: TaskDetails,
-    onIntent: (LongreadComponent.Intent) -> Unit,
+    onIntent: (Intent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     if (!taskDetails.isLateDaysEnabled) return
@@ -60,7 +60,7 @@ internal fun LateDaysInfo(
         LateDaysActions(
             taskDetails = taskDetails,
             onProlongClick = { showDialog = true },
-            onCancelClick = { onIntent(LongreadComponent.Intent.CancelLateDays) },
+            onCancelClick = { onIntent(Intent.Task.CancelLateDays) },
         )
     }
 
@@ -69,7 +69,7 @@ internal fun LateDaysInfo(
             taskDetails = taskDetails,
             onConfirm = { days ->
                 showDialog = false
-                onIntent(LongreadComponent.Intent.ProlongLateDays(days))
+                onIntent(Intent.Task.ProlongLateDays(days))
             },
             onDismiss = { showDialog = false },
         )

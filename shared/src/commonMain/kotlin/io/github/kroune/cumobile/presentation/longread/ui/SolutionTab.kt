@@ -122,14 +122,14 @@ private fun SolutionUrlInput(
         OutlinedTextField(
             value = solutionUrl,
             onValueChange = { url ->
-                onIntent(LongreadComponent.Intent.UpdateSolutionUrl(url))
+                onIntent(LongreadComponent.Intent.Task.UpdateSolutionUrl(url))
             },
             label = { Text("URL решения") },
             singleLine = true,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(
                 onDone = {
-                    onIntent(LongreadComponent.Intent.SubmitSolution)
+                    onIntent(LongreadComponent.Intent.Task.SubmitSolution)
                 },
             ),
             modifier = Modifier.fillMaxWidth(),
@@ -149,13 +149,13 @@ private fun SolutionUrlInput(
         PendingAttachmentsList(
             attachments = pendingAttachments,
             onRemove = { index ->
-                onIntent(LongreadComponent.Intent.RemoveSolutionAttachment(index))
+                onIntent(LongreadComponent.Intent.Attachment.RemoveSolutionAttachment(index))
             },
         )
 
         Button(
             onClick = {
-                onIntent(LongreadComponent.Intent.SubmitSolution)
+                onIntent(LongreadComponent.Intent.Task.SubmitSolution)
             },
             enabled = !isSubmitting && !hasUploading(pendingAttachments),
             modifier = Modifier.fillMaxWidth(),

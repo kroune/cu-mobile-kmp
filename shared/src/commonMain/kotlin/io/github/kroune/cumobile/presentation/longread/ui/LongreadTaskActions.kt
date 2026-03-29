@@ -94,6 +94,55 @@ internal class LongreadTaskActions(
         }
     }
 
+    fun saveEditComment() {
+        val taskId = state.value.activeTaskId ?: return
+        val commentId = state.value.editingCommentId ?: return
+        val text = state.value.editCommentText.trim()
+        if (text.isEmpty()) return
+        scope.launch {
+            state.value = state.value.copy(isSubmitting = true)
+            val success = taskRepository.editComment(commentId, text)
+            if (success) {
+                state.value = state.value.copy(
+                    isSubmitting = false,
+                    editingCommentId = null,
+                    editCommentText = "",
+                )
+                val comments = taskRepository.fetchTaskComments(taskId)
+                state.value = state.value.copy(
+                    taskComments = comments.orEmpty().toPersistentList(),
+                )
+            } else {
+                logger.warn { "Failed to edit comment $commentId" }
+                state.value = state.value.copy(isSubmitting = false)
+                effects.trySend(
+                    LongreadComponent.Effect.ShowError("Не удалось изменить комментарий"),
+                )
+            }
+        }
+    }
+
+    fun deleteComment(commentId: String) {
+        val taskId = state.value.activeTaskId ?: return
+        scope.launch {
+            state.value = state.value.copy(isSubmitting = true)
+            val success = taskRepository.deleteComment(commentId)
+            if (success) {
+                state.value = state.value.copy(isSubmitting = false)
+                val comments = taskRepository.fetchTaskComments(taskId)
+                state.value = state.value.copy(
+                    taskComments = comments.orEmpty().toPersistentList(),
+                )
+            } else {
+                logger.warn { "Failed to delete comment $commentId" }
+                state.value = state.value.copy(isSubmitting = false)
+                effects.trySend(
+                    LongreadComponent.Effect.ShowError("Не удалось удалить комментарий"),
+                )
+            }
+        }
+    }
+
     fun prolongLateDays(days: Int) {
         val taskId = state.value.activeTaskId ?: return
         scope.launch {

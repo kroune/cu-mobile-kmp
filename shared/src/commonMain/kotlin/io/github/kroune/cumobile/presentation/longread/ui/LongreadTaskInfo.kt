@@ -6,18 +6,31 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -52,6 +65,8 @@ internal fun CommentsTab(
     commentText: String,
     isSubmitting: Boolean,
     pendingAttachments: ImmutableList<PendingAttachment>,
+    editingCommentId: String?,
+    editCommentText: String,
     onIntent: (LongreadComponent.Intent) -> Unit,
     onAttach: () -> Unit,
     modifier: Modifier = Modifier,
@@ -64,13 +79,13 @@ internal fun CommentsTab(
         OutlinedTextField(
             value = commentText,
             onValueChange = { text ->
-                onIntent(LongreadComponent.Intent.UpdateCommentText(text))
+                onIntent(LongreadComponent.Intent.Comment.UpdateCommentText(text))
             },
             label = { Text("Комментарий") },
             maxLines = 3,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
             keyboardActions = KeyboardActions(
-                onSend = { onIntent(LongreadComponent.Intent.CreateComment) },
+                onSend = { onIntent(LongreadComponent.Intent.Comment.CreateComment) },
             ),
             modifier = Modifier.fillMaxWidth(),
             colors = OutlinedTextFieldDefaults.colors(
@@ -89,12 +104,12 @@ internal fun CommentsTab(
         PendingAttachmentsList(
             attachments = pendingAttachments,
             onRemove = { index ->
-                onIntent(LongreadComponent.Intent.RemoveCommentAttachment(index))
+                onIntent(LongreadComponent.Intent.Attachment.RemoveCommentAttachment(index))
             },
         )
 
         Button(
-            onClick = { onIntent(LongreadComponent.Intent.CreateComment) },
+            onClick = { onIntent(LongreadComponent.Intent.Comment.CreateComment) },
             enabled = !isSubmitting &&
                 commentText.isNotBlank() &&
                 !hasUploading(pendingAttachments),
@@ -124,18 +139,42 @@ internal fun CommentsTab(
             )
         } else {
             comments.forEach { comment ->
-                CommentCard(comment)
+                CommentCard(
+                    comment = comment,
+                    isEditing = editingCommentId == comment.id,
+                    editText = if (editingCommentId == comment.id) editCommentText else "",
+                    isSubmitting = isSubmitting,
+                    onIntent = onIntent,
+                )
             }
         }
     }
 }
 
-/** Single comment card. */
+private const val ActionIconSize = 18
+
+/** Single comment card with optional edit/delete actions. */
 @Composable
 private fun CommentCard(
     comment: TaskComment,
+    isEditing: Boolean,
+    editText: String,
+    isSubmitting: Boolean,
+    onIntent: (LongreadComponent.Intent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
+    if (showDeleteDialog) {
+        DeleteCommentDialog(
+            onConfirm = {
+                showDeleteDialog = false
+                onIntent(LongreadComponent.Intent.Comment.DeleteComment(comment.id))
+            },
+            onDismiss = { showDeleteDialog = false },
+        )
+    }
+
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -147,6 +186,7 @@ private fun CommentCard(
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
                 text = comment.sender.name.ifBlank { comment.sender.email },
@@ -157,35 +197,156 @@ private fun CommentCard(
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f),
             )
-            comment.createdAt?.let { date ->
-                Text(
-                    text = formatDateTime(date),
-                    color = AppTheme.colors.textSecondary,
-                    fontSize = 11.sp,
-                )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                comment.createdAt?.let { date ->
+                    Text(
+                        text = formatDateTime(date),
+                        color = AppTheme.colors.textSecondary,
+                        fontSize = 11.sp,
+                    )
+                }
+                if (comment.isEditable && !isEditing) {
+                    IconButton(
+                        onClick = {
+                            onIntent(
+                                LongreadComponent.Intent.Comment.StartEditComment(
+                                    comment.id,
+                                    comment.content,
+                                ),
+                            )
+                        },
+                        modifier = Modifier.size(28.dp),
+                    ) {
+                        Icon(
+                            Icons.Outlined.Edit,
+                            contentDescription = "Редактировать",
+                            tint = AppTheme.colors.textSecondary,
+                            modifier = Modifier.size(ActionIconSize.dp),
+                        )
+                    }
+                }
+                if (comment.isDeletable) {
+                    IconButton(
+                        onClick = { showDeleteDialog = true },
+                        modifier = Modifier.size(28.dp),
+                    ) {
+                        Icon(
+                            Icons.Outlined.Delete,
+                            contentDescription = "Удалить",
+                            tint = AppTheme.colors.taskFailed,
+                            modifier = Modifier.size(ActionIconSize.dp),
+                        )
+                    }
+                }
             }
         }
-        val blocks = remember(comment.content) {
-            if (comment.content.isBlank()) persistentListOf() else parseHtmlToBlocks(comment.content)
-        }
-        if (blocks.isNotEmpty()) {
-            HtmlContent(blocks = blocks)
+
+        if (isEditing) {
+            EditCommentForm(
+                editText = editText,
+                isSubmitting = isSubmitting,
+                onIntent = onIntent,
+            )
         } else {
-            Text(
-                text = comment.content,
-                color = AppTheme.colors.textPrimary,
-                fontSize = 13.sp,
-            )
-        }
-        // Attachments
-        comment.attachments.forEach { attachment ->
-            Text(
-                text = "\uD83D\uDCCE ${attachment.name}",
-                color = AppTheme.colors.textSecondary,
-                fontSize = 12.sp,
-            )
+            CommentContent(comment)
         }
     }
+}
+
+/** Read-only comment body: HTML content + attachments. */
+@Composable
+private fun CommentContent(
+    comment: TaskComment,
+) {
+    val blocks = remember(comment.content) {
+        if (comment.content.isBlank()) persistentListOf() else parseHtmlToBlocks(comment.content)
+    }
+    if (blocks.isNotEmpty()) {
+        HtmlContent(blocks = blocks)
+    } else {
+        Text(
+            text = comment.content,
+            color = AppTheme.colors.textPrimary,
+            fontSize = 13.sp,
+        )
+    }
+    comment.attachments.forEach { attachment ->
+        Text(
+            text = "\uD83D\uDCCE ${attachment.name}",
+            color = AppTheme.colors.textSecondary,
+            fontSize = 12.sp,
+        )
+    }
+}
+
+/** Inline edit form shown when editing a comment. */
+@Composable
+private fun EditCommentForm(
+    editText: String,
+    isSubmitting: Boolean,
+    onIntent: (LongreadComponent.Intent) -> Unit,
+) {
+    OutlinedTextField(
+        value = editText,
+        onValueChange = { onIntent(LongreadComponent.Intent.Comment.UpdateEditCommentText(it)) },
+        maxLines = 5,
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+        keyboardActions = KeyboardActions(
+            onDone = { onIntent(LongreadComponent.Intent.Comment.SaveEditComment) },
+        ),
+        modifier = Modifier.fillMaxWidth(),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedTextColor = AppTheme.colors.textPrimary,
+            unfocusedTextColor = AppTheme.colors.textPrimary,
+            focusedBorderColor = AppTheme.colors.accent,
+            unfocusedBorderColor = AppTheme.colors.textSecondary,
+            cursorColor = AppTheme.colors.accent,
+        ),
+    )
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+    ) {
+        TextButton(onClick = { onIntent(LongreadComponent.Intent.Comment.CancelEditComment) }) {
+            Icon(
+                Icons.Outlined.Close,
+                contentDescription = null,
+                modifier = Modifier.size(ActionIconSize.dp),
+            )
+            Text("Отмена", color = AppTheme.colors.textSecondary)
+        }
+        Button(
+            onClick = { onIntent(LongreadComponent.Intent.Comment.SaveEditComment) },
+            enabled = !isSubmitting && editText.isNotBlank(),
+            colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.accent),
+            shape = RoundedCornerShape(8.dp),
+        ) {
+            Text("Сохранить", color = AppTheme.colors.background)
+        }
+    }
+}
+
+/** Confirmation dialog for deleting a comment. */
+@Composable
+private fun DeleteCommentDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Удалить комментарий?") },
+        text = { Text("Это действие нельзя отменить.") },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text("Удалить", color = AppTheme.colors.taskFailed)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Отмена")
+            }
+        },
+    )
 }
 
 /**

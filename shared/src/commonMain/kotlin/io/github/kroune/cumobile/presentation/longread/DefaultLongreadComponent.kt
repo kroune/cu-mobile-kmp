@@ -5,6 +5,7 @@ import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.data.model.LongreadMaterial
+import io.github.kroune.cumobile.presentation.longread.LongreadComponent.Intent
 import io.github.kroune.cumobile.presentation.longread.ui.LongreadTaskActions
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.collections.immutable.persistentListOf
@@ -71,90 +72,97 @@ class DefaultLongreadComponent(
 
     private val searchHandler = LongreadSearchHandler(state = _state)
 
-    override fun onIntent(intent: LongreadComponent.Intent) {
+    override fun onIntent(intent: Intent) {
         when (intent) {
-            LongreadComponent.Intent.Back -> onBack()
-            LongreadComponent.Intent.Refresh -> loadMaterials()
-            is LongreadComponent.Intent.SelectTask -> selectTask(intent.taskId)
-            is LongreadComponent.Intent.SelectTaskTab ->
+            is Intent.Navigation -> handleNavigationIntent(intent)
+            is Intent.Task -> handleTaskIntent(intent)
+            is Intent.Comment -> handleCommentIntent(intent)
+            is Intent.Attachment -> handleAttachmentIntent(intent)
+            is Intent.Search -> handleSearchIntent(intent)
+        }
+    }
+
+    private fun handleNavigationIntent(intent: Intent.Navigation) {
+        when (intent) {
+            Intent.Navigation.Back -> onBack()
+            Intent.Navigation.Refresh -> loadMaterials()
+            Intent.Navigation.NavigateToFiles -> onNavigateToFiles()
+            is Intent.Navigation.SelectTask -> selectTask(intent.taskId)
+            is Intent.Navigation.SelectTaskTab ->
                 _state.value = _state.value.copy(selectedTaskTab = intent.tab)
 
-            is LongreadComponent.Intent.UpdateSolutionUrl ->
+            is Intent.Navigation.DownloadFile ->
+                downloadFile(intent.material)
+        }
+    }
+
+    private fun handleTaskIntent(intent: Intent.Task) {
+        when (intent) {
+            Intent.Task.StartTask -> taskActions.startTask()
+            Intent.Task.SubmitSolution -> taskActions.submitSolution()
+            Intent.Task.CancelLateDays -> taskActions.cancelLateDays()
+            is Intent.Task.UpdateSolutionUrl ->
                 _state.value = _state.value.copy(solutionUrl = intent.url)
 
-            is LongreadComponent.Intent.UpdateCommentText ->
+            is Intent.Task.ProlongLateDays ->
+                taskActions.prolongLateDays(intent.days)
+        }
+    }
+
+    private fun handleCommentIntent(intent: Intent.Comment) {
+        when (intent) {
+            Intent.Comment.CreateComment -> taskActions.createComment()
+            Intent.Comment.SaveEditComment -> taskActions.saveEditComment()
+            Intent.Comment.CancelEditComment ->
+                _state.value = _state.value.copy(
+                    editingCommentId = null,
+                    editCommentText = "",
+                )
+
+            is Intent.Comment.UpdateCommentText ->
                 _state.value = _state.value.copy(commentText = intent.text)
 
-            is LongreadComponent.Intent.DownloadFile ->
-                downloadFile(intent.material)
+            is Intent.Comment.StartEditComment ->
+                _state.value = _state.value.copy(
+                    editingCommentId = intent.commentId,
+                    editCommentText = intent.currentText,
+                )
 
-            LongreadComponent.Intent.StartTask,
-            LongreadComponent.Intent.SubmitSolution,
-            LongreadComponent.Intent.CreateComment,
-            is LongreadComponent.Intent.ProlongLateDays,
-            LongreadComponent.Intent.CancelLateDays,
-            -> handleTaskActionIntent(intent)
+            is Intent.Comment.UpdateEditCommentText ->
+                _state.value = _state.value.copy(editCommentText = intent.text)
 
-            is LongreadComponent.Intent.PickSolutionAttachment,
-            is LongreadComponent.Intent.RemoveSolutionAttachment,
-            is LongreadComponent.Intent.PickCommentAttachment,
-            is LongreadComponent.Intent.RemoveCommentAttachment,
-            -> handleAttachmentIntent(intent)
-
-            LongreadComponent.Intent.ToggleSearch,
-            is LongreadComponent.Intent.UpdateSearchQuery,
-            LongreadComponent.Intent.NextMatch,
-            LongreadComponent.Intent.PreviousMatch,
-            -> handleSearchIntent(intent)
-
-            LongreadComponent.Intent.NavigateToFiles -> onNavigateToFiles()
+            is Intent.Comment.DeleteComment ->
+                taskActions.deleteComment(intent.commentId)
         }
     }
 
-    private fun handleTaskActionIntent(intent: LongreadComponent.Intent) {
+    private fun handleAttachmentIntent(intent: Intent.Attachment) {
         when (intent) {
-            LongreadComponent.Intent.StartTask -> taskActions.startTask()
-            LongreadComponent.Intent.SubmitSolution -> taskActions.submitSolution()
-            LongreadComponent.Intent.CreateComment -> taskActions.createComment()
-            is LongreadComponent.Intent.ProlongLateDays ->
-                taskActions.prolongLateDays(intent.days)
-
-            LongreadComponent.Intent.CancelLateDays -> taskActions.cancelLateDays()
-            else -> Unit
-        }
-    }
-
-    private fun handleAttachmentIntent(intent: LongreadComponent.Intent) {
-        when (intent) {
-            is LongreadComponent.Intent.PickSolutionAttachment ->
+            is Intent.Attachment.PickSolutionAttachment ->
                 attachmentManager.uploadAttachment(intent.file, isSolution = true)
 
-            is LongreadComponent.Intent.RemoveSolutionAttachment ->
+            is Intent.Attachment.RemoveSolutionAttachment ->
                 attachmentManager.removeSolutionAttachment(intent.index)
 
-            is LongreadComponent.Intent.PickCommentAttachment ->
+            is Intent.Attachment.PickCommentAttachment ->
                 attachmentManager.uploadAttachment(intent.file, isSolution = false)
 
-            is LongreadComponent.Intent.RemoveCommentAttachment ->
+            is Intent.Attachment.RemoveCommentAttachment ->
                 attachmentManager.removeCommentAttachment(intent.index)
-
-            else -> Unit
         }
     }
 
-    private fun handleSearchIntent(intent: LongreadComponent.Intent) {
+    private fun handleSearchIntent(intent: Intent.Search) {
         when (intent) {
-            LongreadComponent.Intent.ToggleSearch -> searchHandler.toggleSearch()
-            is LongreadComponent.Intent.UpdateSearchQuery ->
-                searchHandler.updateSearchQuery(intent.query)
-
-            LongreadComponent.Intent.NextMatch ->
+            Intent.Search.ToggleSearch -> searchHandler.toggleSearch()
+            Intent.Search.NextMatch ->
                 searchHandler.navigateMatch(forward = true)
 
-            LongreadComponent.Intent.PreviousMatch ->
+            Intent.Search.PreviousMatch ->
                 searchHandler.navigateMatch(forward = false)
 
-            else -> Unit
+            is Intent.Search.UpdateSearchQuery ->
+                searchHandler.updateSearchQuery(intent.query)
         }
     }
 

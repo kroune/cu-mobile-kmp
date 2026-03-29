@@ -63,6 +63,10 @@ interface LongreadComponent {
         val pendingSolutionAttachments: ImmutableList<PendingAttachment> = persistentListOf(),
         /** Pending file attachments for a new comment (upload in progress or complete). */
         val pendingCommentAttachments: ImmutableList<PendingAttachment> = persistentListOf(),
+        /** ID of the comment currently being edited, or null. */
+        val editingCommentId: String? = null,
+        /** Text for the comment being edited. */
+        val editCommentText: String = "",
         /** Whether the search bar is visible. */
         val isSearchVisible: Boolean = false,
         /** Current search query text. */
@@ -84,68 +88,92 @@ interface LongreadComponent {
     }
 
     sealed interface Intent {
-        data object Back : Intent
+        /** Navigation and general screen actions. */
+        sealed interface Navigation : Intent {
+            data object Back : Navigation
+            data object Refresh : Navigation
+            data object NavigateToFiles : Navigation
 
-        data object Refresh : Intent
+            data class SelectTask(
+                val taskId: String,
+            ) : Navigation
 
-        data class SelectTask(
-            val taskId: String,
-        ) : Intent
+            data class SelectTaskTab(
+                val tab: String,
+            ) : Navigation
 
-        data class SelectTaskTab(
-            val tab: String,
-        ) : Intent
+            data class DownloadFile(
+                val material: LongreadMaterial,
+            ) : Navigation
+        }
 
-        data class UpdateSolutionUrl(
-            val url: String,
-        ) : Intent
+        /** Task mutation actions (start, submit, late days). */
+        sealed interface Task : Intent {
+            data object StartTask : Task
+            data object SubmitSolution : Task
+            data object CancelLateDays : Task
 
-        data class UpdateCommentText(
-            val text: String,
-        ) : Intent
+            data class UpdateSolutionUrl(
+                val url: String,
+            ) : Task
 
-        data object StartTask : Intent
+            data class ProlongLateDays(
+                val days: Int,
+            ) : Task
+        }
 
-        data object SubmitSolution : Intent
+        /** Comment CRUD actions. */
+        sealed interface Comment : Intent {
+            data object CreateComment : Comment
+            data object SaveEditComment : Comment
+            data object CancelEditComment : Comment
 
-        data object CreateComment : Intent
+            data class UpdateCommentText(
+                val text: String,
+            ) : Comment
 
-        data class ProlongLateDays(
-            val days: Int,
-        ) : Intent
+            data class StartEditComment(
+                val commentId: String,
+                val currentText: String,
+            ) : Comment
 
-        data object CancelLateDays : Intent
+            data class UpdateEditCommentText(
+                val text: String,
+            ) : Comment
 
-        data class PickSolutionAttachment(
-            val file: PickedFile,
-        ) : Intent
+            data class DeleteComment(
+                val commentId: String,
+            ) : Comment
+        }
 
-        data class RemoveSolutionAttachment(
-            val index: Int,
-        ) : Intent
+        /** File attachment actions for solutions and comments. */
+        sealed interface Attachment : Intent {
+            data class PickSolutionAttachment(
+                val file: PickedFile,
+            ) : Attachment
 
-        data class PickCommentAttachment(
-            val file: PickedFile,
-        ) : Intent
+            data class RemoveSolutionAttachment(
+                val index: Int,
+            ) : Attachment
 
-        data class RemoveCommentAttachment(
-            val index: Int,
-        ) : Intent
+            data class PickCommentAttachment(
+                val file: PickedFile,
+            ) : Attachment
 
-        data class DownloadFile(
-            val material: LongreadMaterial,
-        ) : Intent
+            data class RemoveCommentAttachment(
+                val index: Int,
+            ) : Attachment
+        }
 
-        data object ToggleSearch : Intent
+        /** Search actions. */
+        sealed interface Search : Intent {
+            data object ToggleSearch : Search
+            data object NextMatch : Search
+            data object PreviousMatch : Search
 
-        data class UpdateSearchQuery(
-            val query: String,
-        ) : Intent
-
-        data object NextMatch : Intent
-
-        data object PreviousMatch : Intent
-
-        data object NavigateToFiles : Intent
+            data class UpdateSearchQuery(
+                val query: String,
+            ) : Search
+        }
     }
 }
