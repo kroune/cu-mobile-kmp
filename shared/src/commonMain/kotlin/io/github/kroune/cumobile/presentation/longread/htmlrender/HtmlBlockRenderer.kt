@@ -1,4 +1,4 @@
-package io.github.kroune.cumobile.presentation.longread.htmlrender.ui
+package io.github.kroune.cumobile.presentation.longread.htmlrender
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
@@ -24,7 +24,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
-import io.github.kroune.cumobile.presentation.longread.htmlrender.HtmlBlock
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentMapOf
 

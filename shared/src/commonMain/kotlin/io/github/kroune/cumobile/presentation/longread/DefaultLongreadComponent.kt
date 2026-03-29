@@ -1,32 +1,46 @@
 package io.github.kroune.cumobile.presentation.longread
 
+import androidx.compose.material3.SnackbarResult
 import com.arkivanov.decompose.ComponentContext
+import com.arkivanov.decompose.ExperimentalDecomposeApi
+import com.arkivanov.decompose.router.items.Items
+import com.arkivanov.decompose.router.items.ItemsNavigation
+import com.arkivanov.decompose.router.items.LazyChildItems
+import com.arkivanov.decompose.router.items.childItems
+import com.arkivanov.decompose.router.items.setItems
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.data.model.LongreadMaterial
-import io.github.kroune.cumobile.presentation.longread.ui.LongreadTaskActions
-import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.collections.immutable.persistentListOf
+import io.github.kroune.cumobile.presentation.longread.LongreadComponent.Intent
+import io.github.kroune.cumobile.presentation.longread.component.ExternalUpdate
+import io.github.kroune.cumobile.presentation.longread.component.LongreadItem
+import io.github.kroune.cumobile.presentation.longread.component.MaterialConfig
+import io.github.kroune.cumobile.presentation.longread.component.audio.AudioMaterialComponent
+import io.github.kroune.cumobile.presentation.longread.component.coding.DefaultCodingMaterialComponent
+import io.github.kroune.cumobile.presentation.longread.component.file.FileDownloadResult
+import io.github.kroune.cumobile.presentation.longread.component.file.FileMaterialComponent
+import io.github.kroune.cumobile.presentation.longread.component.image.ImageMaterialComponent
+import io.github.kroune.cumobile.presentation.longread.component.markdown.MarkdownMaterialComponent
+import io.github.kroune.cumobile.presentation.longread.component.questions.QuestionsMaterialComponent
+import io.github.kroune.cumobile.presentation.longread.component.video.VideoMaterialComponent
 import kotlinx.collections.immutable.toPersistentList
-import kotlinx.collections.immutable.toPersistentMap
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.async
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
-
-private val logger = KotlinLogging.logger {}
 
 /**
  * Default implementation of [LongreadComponent].
  *
- * Loads materials for a longread and manages task actions
- * (start, submit, comments, late days) for coding materials.
+ * Uses Decompose's ChildItems to give each material its own component
+ * with automatic lifecycle management via [ChildItemsLifecycleController].
  */
+@OptIn(ExperimentalDecomposeApi::class)
 class DefaultLongreadComponent(
     componentContext: ComponentContext,
     params: LongreadParams,
@@ -39,6 +53,7 @@ class DefaultLongreadComponent(
     private val contentRepository = deps.contentRepository
     private val taskRepository = deps.taskRepository
     private val renameRepository = deps.renameRepository
+
     private val scope = coroutineScope(
         Dispatchers.Main.immediate + SupervisorJob(),
     )
@@ -55,106 +70,57 @@ class DefaultLongreadComponent(
     private val _effects = Channel<LongreadComponent.Effect>(Channel.BUFFERED)
     override val effects: Flow<LongreadComponent.Effect> = _effects.receiveAsFlow()
 
-    private val taskActions = LongreadTaskActions(
-        state = _state,
-        effects = _effects,
-        taskRepository = taskRepository,
-        scope = scope,
-        loadTaskEventsAndComments = ::loadTaskEventsAndComments,
-    )
-
-    private val attachmentManager = LongreadAttachmentManager(
-        state = _state,
-        contentRepository = contentRepository,
-        scope = scope,
-    )
-
     private val searchHandler = LongreadSearchHandler(state = _state)
 
-    override fun onIntent(intent: LongreadComponent.Intent) {
+    /** Broadcasts [ExternalUpdate] events to material child components. */
+    private val _externalUpdates = MutableSharedFlow<ExternalUpdate>(
+        replay = 10,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST,
+    )
+    val externalUpdates: Flow<ExternalUpdate> = _externalUpdates
+
+    /** Lookup map from material ID to material data, used by the child factory. */
+    private var materialsMap: Map<String, LongreadMaterial> = emptyMap()
+
+    private val navigation = ItemsNavigation<MaterialConfig>()
+
+    override val materialItems: LazyChildItems<MaterialConfig, LongreadItem> = childItems(
+        source = navigation,
+        serializer = MaterialConfig.serializer(),
+        initialItems = { Items(items = emptyList()) },
+        key = "LongreadMaterialItems",
+        childFactory = ::createChild,
+    )
+
+    override fun onIntent(intent: Intent) {
         when (intent) {
-            LongreadComponent.Intent.Back -> onBack()
-            LongreadComponent.Intent.Refresh -> loadMaterials()
-            is LongreadComponent.Intent.SelectTask -> selectTask(intent.taskId)
-            is LongreadComponent.Intent.SelectTaskTab ->
-                _state.value = _state.value.copy(selectedTaskTab = intent.tab)
-
-            is LongreadComponent.Intent.UpdateSolutionUrl ->
-                _state.value = _state.value.copy(solutionUrl = intent.url)
-
-            is LongreadComponent.Intent.UpdateCommentText ->
-                _state.value = _state.value.copy(commentText = intent.text)
-
-            is LongreadComponent.Intent.DownloadFile ->
-                downloadFile(intent.material)
-
-            LongreadComponent.Intent.StartTask,
-            LongreadComponent.Intent.SubmitSolution,
-            LongreadComponent.Intent.CreateComment,
-            is LongreadComponent.Intent.ProlongLateDays,
-            LongreadComponent.Intent.CancelLateDays,
-            -> handleTaskActionIntent(intent)
-
-            is LongreadComponent.Intent.PickSolutionAttachment,
-            is LongreadComponent.Intent.RemoveSolutionAttachment,
-            is LongreadComponent.Intent.PickCommentAttachment,
-            is LongreadComponent.Intent.RemoveCommentAttachment,
-            -> handleAttachmentIntent(intent)
-
-            LongreadComponent.Intent.ToggleSearch,
-            is LongreadComponent.Intent.UpdateSearchQuery,
-            LongreadComponent.Intent.NextMatch,
-            LongreadComponent.Intent.PreviousMatch,
-            -> handleSearchIntent(intent)
-
-            LongreadComponent.Intent.NavigateToFiles -> onNavigateToFiles()
+            is Intent.Navigation -> handleNavigationIntent(intent)
+            is Intent.Search -> handleSearchIntent(intent)
         }
     }
 
-    private fun handleTaskActionIntent(intent: LongreadComponent.Intent) {
+    private fun handleNavigationIntent(intent: Intent.Navigation) {
         when (intent) {
-            LongreadComponent.Intent.StartTask -> taskActions.startTask()
-            LongreadComponent.Intent.SubmitSolution -> taskActions.submitSolution()
-            LongreadComponent.Intent.CreateComment -> taskActions.createComment()
-            is LongreadComponent.Intent.ProlongLateDays ->
-                taskActions.prolongLateDays(intent.days)
-
-            LongreadComponent.Intent.CancelLateDays -> taskActions.cancelLateDays()
-            else -> Unit
+            Intent.Navigation.Back -> onBack()
+            Intent.Navigation.Refresh -> loadMaterials()
+            Intent.Navigation.NavigateToFiles -> onNavigateToFiles()
         }
     }
 
-    private fun handleAttachmentIntent(intent: LongreadComponent.Intent) {
+    private fun handleSearchIntent(intent: Intent.Search) {
         when (intent) {
-            is LongreadComponent.Intent.PickSolutionAttachment ->
-                attachmentManager.uploadAttachment(intent.file, isSolution = true)
-
-            is LongreadComponent.Intent.RemoveSolutionAttachment ->
-                attachmentManager.removeSolutionAttachment(intent.index)
-
-            is LongreadComponent.Intent.PickCommentAttachment ->
-                attachmentManager.uploadAttachment(intent.file, isSolution = false)
-
-            is LongreadComponent.Intent.RemoveCommentAttachment ->
-                attachmentManager.removeCommentAttachment(intent.index)
-
-            else -> Unit
-        }
-    }
-
-    private fun handleSearchIntent(intent: LongreadComponent.Intent) {
-        when (intent) {
-            LongreadComponent.Intent.ToggleSearch -> searchHandler.toggleSearch()
-            is LongreadComponent.Intent.UpdateSearchQuery ->
+            Intent.Search.ToggleSearch -> {
+                searchHandler.toggleSearch()
+                if (!_state.value.isSearchVisible) {
+                    _externalUpdates.tryEmit(ExternalUpdate.SearchQuery(""))
+                }
+            }
+            Intent.Search.NextMatch -> searchHandler.navigateMatch(forward = true)
+            Intent.Search.PreviousMatch -> searchHandler.navigateMatch(forward = false)
+            is Intent.Search.UpdateSearchQuery -> {
                 searchHandler.updateSearchQuery(intent.query)
-
-            LongreadComponent.Intent.NextMatch ->
-                searchHandler.navigateMatch(forward = true)
-
-            LongreadComponent.Intent.PreviousMatch ->
-                searchHandler.navigateMatch(forward = false)
-
-            else -> Unit
+                _externalUpdates.tryEmit(ExternalUpdate.SearchQuery(intent.query))
+            }
         }
     }
 
@@ -165,6 +131,8 @@ class DefaultLongreadComponent(
     private fun loadMaterials() {
         scope.launch {
             _state.value = _state.value.copy(isLoading = true, error = null)
+            navigation.setItems { emptyList() }
+
             val materials = contentRepository.fetchLongreadMaterials(
                 _state.value.longreadId,
             )
@@ -173,7 +141,9 @@ class DefaultLongreadComponent(
                     materials = materials.toPersistentList(),
                     isLoading = false,
                 )
-                loadTaskDetailsForCodingMaterials(materials)
+                materialsMap = materials.associateBy { it.id }
+                val configs = materials.map { it.toConfig() }
+                navigation.setItems { configs }
             } else {
                 _state.value = _state.value.copy(
                     isLoading = false,
@@ -183,105 +153,101 @@ class DefaultLongreadComponent(
         }
     }
 
-    private suspend fun loadTaskDetailsForCodingMaterials(materials: List<LongreadMaterial>) {
-        val codingTaskIds = materials
-            .filter { it.isCoding && it.taskId != null }
-            .mapNotNull { it.taskId }
-        coroutineScope {
-            val deferredDetails = codingTaskIds.map { taskId ->
-                async { taskId to taskRepository.fetchTaskDetails(taskId) }
-            }
-            val detailsMap = _state.value.taskDetails.toMutableMap()
-            for (deferred in deferredDetails) {
-                val (taskId, details) = deferred.await()
-                if (details != null) {
-                    detailsMap[taskId] = details
-                    _state.value = _state.value.copy(taskDetails = detailsMap.toPersistentMap())
-                } else {
-                    logger.warn { "Failed to load task details for taskId=$taskId" }
-                }
-            }
-        }
-    }
-
-    private fun selectTask(taskId: String) {
-        val isToggleOff = _state.value.activeTaskId == taskId
-        _state.value = _state.value.copy(
-            activeTaskId = if (isToggleOff) null else taskId,
-            selectedTaskTab = "solution",
-            solutionUrl = "",
-            commentText = "",
-            taskEvents = persistentListOf(),
-            taskComments = persistentListOf(),
-            pendingSolutionAttachments = persistentListOf(),
-            pendingCommentAttachments = persistentListOf(),
-        )
-        if (!isToggleOff) {
-            loadTaskEventsAndComments(taskId)
-        }
-    }
-
-    private fun loadTaskEventsAndComments(taskId: String) {
-        scope.launch {
-            coroutineScope {
-                val eventsDeferred = async { taskRepository.fetchTaskEvents(taskId) }
-                val commentsDeferred = async { taskRepository.fetchTaskComments(taskId) }
-                val events = eventsDeferred.await()
-                val comments = commentsDeferred.await()
-                if (events == null) {
-                    logger.warn { "Failed to load task events for taskId=$taskId" }
-                }
-                if (comments == null) {
-                    logger.warn { "Failed to load task comments for taskId=$taskId" }
-                }
-                _state.value = _state.value.copy(
-                    taskEvents = events.orEmpty().toPersistentList(),
-                    taskComments = comments.orEmpty().toPersistentList(),
-                )
-            }
-        }
-    }
-
-    private fun downloadFile(material: LongreadMaterial) {
-        val filename = material.filename ?: return
-        val version = material.version ?: "1"
-        scope.launch {
-            _effects.trySend(
-                LongreadComponent.Effect.ShowSuccess("Скачивание..."),
+    private fun createChild(
+        config: MaterialConfig,
+        childContext: ComponentContext,
+    ): LongreadItem {
+        val material = materialsMap[config.id] ?: LongreadMaterial(id = config.id)
+        return when (config) {
+            is MaterialConfig.Markdown -> LongreadItem.Markdown(
+                MarkdownMaterialComponent(
+                    componentContext = childContext,
+                    material = material,
+                    externalUpdates = externalUpdates,
+                ),
             )
-            val url = contentRepository.getDownloadLink(filename, version)
-            if (url != null) {
-                val localFilename = buildLocalFilename(material)
-                val saved = onDownloadReady(url, localFilename)
-                if (saved) {
-                    _effects.trySend(
-                        LongreadComponent.Effect.ShowSuccess(
-                            "Файл сохранён в «Файлы»",
-                        ),
-                    )
-                } else {
-                    _effects.trySend(
-                        LongreadComponent.Effect.ShowError(
-                            "Не удалось сохранить файл",
-                        ),
-                    )
-                }
-            } else {
-                logger.warn { "Failed to get download link for $filename" }
-                _effects.trySend(
-                    LongreadComponent.Effect.ShowError(
-                        "Не удалось получить ссылку для скачивания",
-                    ),
-                )
-            }
+
+            is MaterialConfig.File -> LongreadItem.File(
+                createFileComponent(childContext, material),
+            )
+
+            is MaterialConfig.Coding -> LongreadItem.Coding(
+                DefaultCodingMaterialComponent(
+                    componentContext = childContext,
+                    material = material,
+                    taskId = config.taskId,
+                    taskRepository = taskRepository,
+                    contentRepository = contentRepository,
+                    onShowError = { msg ->
+                        _effects.trySend(LongreadComponent.Effect.SnackBarEffect(msg))
+                    },
+                ),
+            )
+
+            is MaterialConfig.Questions -> LongreadItem.Questions(
+                QuestionsMaterialComponent(
+                    componentContext = childContext,
+                    material = material,
+                ),
+            )
+
+            is MaterialConfig.Image -> LongreadItem.Image(
+                ImageMaterialComponent(
+                    componentContext = childContext,
+                    material = material,
+                ),
+            )
+
+            is MaterialConfig.Video -> LongreadItem.Video(
+                VideoMaterialComponent(
+                    componentContext = childContext,
+                    material = material,
+                ),
+            )
+
+            is MaterialConfig.Audio -> LongreadItem.Audio(
+                AudioMaterialComponent(
+                    componentContext = childContext,
+                    material = material,
+                ),
+            )
         }
     }
 
-    /**
-     * Builds a local filename for a material, applying rename templates if available.
-     *
-     * Fallback format: `{name}_{version}.{ext}`
-     */
+    private fun createFileComponent(
+        childContext: ComponentContext,
+        material: LongreadMaterial,
+    ) =
+        FileMaterialComponent(
+            componentContext = childContext,
+            material = material,
+            contentRepository = contentRepository,
+            resolveFilename = { buildLocalFilename(material) },
+            saveFile = onDownloadReady,
+            onDownloadResult = ::handleDownloadResult,
+        )
+
+    private fun handleDownloadResult(result: FileDownloadResult) {
+        val effect = when (result) {
+            FileDownloadResult.Started -> LongreadComponent.Effect.SnackBarEffect(
+                message = "Скачивание...",
+            )
+            FileDownloadResult.Success -> LongreadComponent.Effect.SnackBarEffect(
+                message = "Файл сохранён в «Файлы»",
+                actionLabel = "Перейти к файлу",
+                onSnackbarResult = { snackbarResult ->
+                    if (snackbarResult == SnackbarResult.ActionPerformed) {
+                        onNavigateToFiles()
+                    }
+                },
+            )
+            is FileDownloadResult.Failed -> LongreadComponent.Effect.SnackBarEffect(
+                message = result.message,
+            )
+        }
+        _effects.trySend(effect)
+    }
+
     private suspend fun buildLocalFilename(material: LongreadMaterial): String {
         val filename = material.filename ?: "file"
         val version = material.version ?: "1"
@@ -314,3 +280,17 @@ class DefaultLongreadComponent(
         private val UNSAFE_CHARS_REGEX = Regex("[^a-zA-Z0-9._-]")
     }
 }
+
+/**
+ * Maps a [LongreadMaterial] to its corresponding [MaterialConfig].
+ */
+private fun LongreadMaterial.toConfig(): MaterialConfig =
+    when {
+        isCoding && taskId != null -> MaterialConfig.Coding(id, taskId = taskId)
+        isFile -> MaterialConfig.File(id)
+        isQuestions -> MaterialConfig.Questions(id)
+        isImage -> MaterialConfig.Image(id)
+        isVideo || isVideoPlatform -> MaterialConfig.Video(id)
+        isAudio -> MaterialConfig.Audio(id)
+        else -> MaterialConfig.Markdown(id)
+    }

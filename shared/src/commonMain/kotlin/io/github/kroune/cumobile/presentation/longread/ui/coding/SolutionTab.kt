@@ -1,4 +1,4 @@
-package io.github.kroune.cumobile.presentation.longread.ui
+package io.github.kroune.cumobile.presentation.longread.ui.coding
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -37,7 +37,7 @@ import io.github.kroune.cumobile.data.model.TaskDetails
 import io.github.kroune.cumobile.data.model.TaskState
 import io.github.kroune.cumobile.data.model.UploadStatus
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
-import io.github.kroune.cumobile.presentation.longread.LongreadComponent
+import io.github.kroune.cumobile.presentation.longread.component.coding.CodingMaterialComponent.Intent
 import kotlinx.collections.immutable.ImmutableList
 
 /** Solution tab: URL input, file attachments, submit button, existing solution display. */
@@ -47,7 +47,7 @@ internal fun SolutionTab(
     solutionUrl: String,
     isSubmitting: Boolean,
     pendingAttachments: ImmutableList<PendingAttachment>,
-    onIntent: (LongreadComponent.Intent) -> Unit,
+    onIntent: (Intent) -> Unit,
     onAttach: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -111,7 +111,7 @@ private fun SolutionUrlInput(
     solutionUrl: String,
     isSubmitting: Boolean,
     pendingAttachments: ImmutableList<PendingAttachment>,
-    onIntent: (LongreadComponent.Intent) -> Unit,
+    onIntent: (Intent) -> Unit,
     onAttach: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -122,14 +122,14 @@ private fun SolutionUrlInput(
         OutlinedTextField(
             value = solutionUrl,
             onValueChange = { url ->
-                onIntent(LongreadComponent.Intent.UpdateSolutionUrl(url))
+                onIntent(Intent.Task.UpdateSolutionUrl(url))
             },
             label = { Text("URL решения") },
             singleLine = true,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(
                 onDone = {
-                    onIntent(LongreadComponent.Intent.SubmitSolution)
+                    onIntent(Intent.Task.SubmitSolution)
                 },
             ),
             modifier = Modifier.fillMaxWidth(),
@@ -149,13 +149,13 @@ private fun SolutionUrlInput(
         PendingAttachmentsList(
             attachments = pendingAttachments,
             onRemove = { index ->
-                onIntent(LongreadComponent.Intent.RemoveSolutionAttachment(index))
+                onIntent(Intent.Attachment.RemoveSolutionAttachment(index))
             },
         )
 
         Button(
             onClick = {
-                onIntent(LongreadComponent.Intent.SubmitSolution)
+                onIntent(Intent.Task.SubmitSolution)
             },
             enabled = !isSubmitting && !hasUploading(pendingAttachments),
             modifier = Modifier.fillMaxWidth(),

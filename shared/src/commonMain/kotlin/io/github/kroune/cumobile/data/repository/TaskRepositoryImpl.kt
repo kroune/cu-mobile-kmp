@@ -58,4 +58,14 @@ internal class TaskRepositoryImpl(
         attachments: List<MaterialAttachment>,
     ): String? =
         withCookie { taskApi.createComment(it, taskId, content, attachments) }
+
+    override suspend fun editComment(
+        commentId: String,
+        content: String,
+        attachments: List<MaterialAttachment>,
+    ): Boolean =
+        withCookieOrFalse { taskApi.editComment(it, commentId, content, attachments) }
+
+    override suspend fun deleteComment(commentId: String): Boolean =
+        withCookieOrFalse { taskApi.deleteComment(it, commentId) }
 }

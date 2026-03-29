@@ -10,6 +10,7 @@ import io.github.kroune.cumobile.util.runCatchingCancellable
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
@@ -134,6 +135,37 @@ internal class TaskApiService(
             httpClient.put(ApiEndpoints.Tasks.lateDaysCancel(taskId)) {
                 header("Cookie", cookieHeader(cookie))
                 contentType(ContentType.Application.Json)
+            }
+        }
+
+    /** Updates the text (and optionally attachments) of an existing comment. */
+    suspend fun editComment(
+        cookie: String,
+        commentId: String,
+        content: String,
+        attachments: List<MaterialAttachment> = emptyList(),
+    ): Boolean =
+        safeApiAction(logger, "edit comment commentId=$commentId") {
+            httpClient.put(ApiEndpoints.Tasks.commentById(commentId)) {
+                header("Cookie", cookieHeader(cookie))
+                contentType(ContentType.Application.Json)
+                setBody(
+                    mapOf(
+                        "content" to content,
+                        "attachments" to attachments,
+                    ),
+                )
+            }
+        }
+
+    /** Deletes a comment by its ID. */
+    suspend fun deleteComment(
+        cookie: String,
+        commentId: String,
+    ): Boolean =
+        safeApiAction(logger, "delete comment commentId=$commentId") {
+            httpClient.delete(ApiEndpoints.Tasks.commentById(commentId)) {
+                header("Cookie", cookieHeader(cookie))
             }
         }
 

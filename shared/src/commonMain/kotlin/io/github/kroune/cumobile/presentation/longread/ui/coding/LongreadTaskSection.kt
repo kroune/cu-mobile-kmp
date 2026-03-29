@@ -1,4 +1,4 @@
-package io.github.kroune.cumobile.presentation.longread.ui
+package io.github.kroune.cumobile.presentation.longread.ui.coding
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -29,30 +29,28 @@ import io.github.kroune.cumobile.presentation.common.ui.StatusBadge
 import io.github.kroune.cumobile.presentation.common.ui.rememberFilePicker
 import io.github.kroune.cumobile.presentation.common.ui.taskStateColor
 import io.github.kroune.cumobile.presentation.common.ui.taskStateLabel
-import io.github.kroune.cumobile.presentation.longread.LongreadComponent
+import io.github.kroune.cumobile.presentation.longread.component.coding.CodingMaterialComponent
 
 /**
- * Card for a coding material within the longread.
+ * Card content for a coding material within the longread.
  *
- * Shows task header with status badge. When expanded (active),
- * displays tabs for Solution, Comments, and Info.
+ * Reads state from [CodingMaterialComponent] and dispatches its intents.
+ * Called by [DefaultCodingMaterialComponent.Render].
  */
 @Composable
-internal fun CodingMaterialCard(
+internal fun CodingMaterialCardContent(
     material: LongreadMaterial,
-    state: LongreadComponent.State,
-    onIntent: (LongreadComponent.Intent) -> Unit,
+    state: CodingMaterialComponent.State,
+    onIntent: (CodingMaterialComponent.Intent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val taskId = material.taskId ?: return
-    val taskDetails = state.taskDetails[taskId]
-    val isActive = state.activeTaskId == taskId
+    val taskDetails = state.taskDetails
 
     val solutionPicker = rememberFilePicker { file ->
-        onIntent(LongreadComponent.Intent.PickSolutionAttachment(file))
+        onIntent(CodingMaterialComponent.Intent.Attachment.PickSolutionAttachment(file))
     }
     val commentPicker = rememberFilePicker { file ->
-        onIntent(LongreadComponent.Intent.PickCommentAttachment(file))
+        onIntent(CodingMaterialComponent.Intent.Attachment.PickCommentAttachment(file))
     }
 
     Column(
@@ -66,13 +64,13 @@ internal fun CodingMaterialCard(
         TaskHeader(
             material = material,
             taskDetails = taskDetails,
-            isActive = isActive,
+            isActive = state.isExpanded,
             onClick = {
-                onIntent(LongreadComponent.Intent.SelectTask(taskId))
+                onIntent(CodingMaterialComponent.Intent.ToggleExpanded)
             },
         )
 
-        if (isActive && taskDetails != null) {
+        if (state.isExpanded && taskDetails != null) {
             TaskManagementSection(
                 taskDetails = taskDetails,
                 state = state,
@@ -144,8 +142,8 @@ private fun TaskHeader(
 @Composable
 private fun TaskManagementSection(
     taskDetails: TaskDetails,
-    state: LongreadComponent.State,
-    onIntent: (LongreadComponent.Intent) -> Unit,
+    state: CodingMaterialComponent.State,
+    onIntent: (CodingMaterialComponent.Intent) -> Unit,
     onAttachSolution: () -> Unit,
     onAttachComment: () -> Unit,
     modifier: Modifier = Modifier,
@@ -164,17 +162,17 @@ private fun TaskManagementSection(
             StartTaskButton(
                 isSubmitting = state.isSubmitting,
                 onClick = {
-                    onIntent(LongreadComponent.Intent.StartTask)
+                    onIntent(CodingMaterialComponent.Intent.Task.StartTask)
                 },
             )
         } else {
             TabSelector(
-                selectedTab = state.selectedTaskTab,
+                selectedTab = state.selectedTab,
                 onTabSelected = { tab ->
-                    onIntent(LongreadComponent.Intent.SelectTaskTab(tab))
+                    onIntent(CodingMaterialComponent.Intent.SelectTab(tab))
                 },
             )
-            when (state.selectedTaskTab) {
+            when (state.selectedTab) {
                 "solution" -> SolutionTab(
                     taskDetails = taskDetails,
                     solutionUrl = state.solutionUrl,
@@ -184,10 +182,7 @@ private fun TaskManagementSection(
                     onAttach = onAttachSolution,
                 )
                 "comments" -> CommentsTab(
-                    comments = state.taskComments,
-                    commentText = state.commentText,
-                    isSubmitting = state.isSubmitting,
-                    pendingAttachments = state.pendingCommentAttachments,
+                    state = state,
                     onIntent = onIntent,
                     onAttach = onAttachComment,
                 )

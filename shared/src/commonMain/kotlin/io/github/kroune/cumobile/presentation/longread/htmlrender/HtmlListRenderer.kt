@@ -1,4 +1,4 @@
-package io.github.kroune.cumobile.presentation.longread.htmlrender.ui
+package io.github.kroune.cumobile.presentation.longread.htmlrender
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -11,8 +11,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
-import io.github.kroune.cumobile.presentation.longread.htmlrender.HtmlBlock
-import io.github.kroune.cumobile.presentation.longread.htmlrender.ListItem
 
 /** Renders an unordered (bulleted) list. */
 @Composable

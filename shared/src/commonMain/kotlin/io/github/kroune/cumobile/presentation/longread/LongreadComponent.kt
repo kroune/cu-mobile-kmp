@@ -1,38 +1,41 @@
 package io.github.kroune.cumobile.presentation.longread
 
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarResult
+import com.arkivanov.decompose.ExperimentalDecomposeApi
+import com.arkivanov.decompose.router.items.LazyChildItems
 import com.arkivanov.decompose.value.Value
 import io.github.kroune.cumobile.data.model.LongreadMaterial
-import io.github.kroune.cumobile.data.model.PendingAttachment
-import io.github.kroune.cumobile.data.model.PickedFile
-import io.github.kroune.cumobile.data.model.TaskComment
-import io.github.kroune.cumobile.data.model.TaskDetails
-import io.github.kroune.cumobile.data.model.TaskEvent
+import io.github.kroune.cumobile.presentation.longread.component.LongreadItem
+import io.github.kroune.cumobile.presentation.longread.component.MaterialConfig
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.coroutines.flow.Flow
 
 /**
  * MVI component for the longread/material viewer screen.
  *
- * Displays materials within a longread (markdown, file, coding, questions).
- * For coding materials, provides task management: start task, submit
- * solution, comments, events timeline, and late days management.
+ * Displays materials as ChildItems — each material is its own component
+ * with automatic lifecycle management. Task-specific state is owned
+ * by individual [CodingMaterialComponent][io.github.kroune.cumobile.presentation.longread.component.coding.CodingMaterialComponent]
+ * children.
  */
+@OptIn(ExperimentalDecomposeApi::class)
 interface LongreadComponent {
     val state: Value<State>
     val effects: Flow<Effect>
+    val materialItems: LazyChildItems<MaterialConfig, LongreadItem>
 
     fun onIntent(intent: Intent)
 
     sealed interface Effect {
-        data class ShowError(
+        data class SnackBarEffect(
             val message: String,
-        ) : Effect
-
-        data class ShowSuccess(
-            val message: String,
+            val actionLabel: String? = null,
+            val withDismissAction: Boolean = false,
+            val duration: SnackbarDuration =
+                if (actionLabel == null) SnackbarDuration.Short else SnackbarDuration.Indefinite,
+            val onSnackbarResult: (SnackbarResult) -> Unit = {},
         ) : Effect
     }
 
@@ -40,112 +43,39 @@ interface LongreadComponent {
         val longreadId: String = "",
         val courseId: String = "",
         val themeId: String = "",
-        val materials: ImmutableList<LongreadMaterial> = persistentListOf(),
         val isLoading: Boolean = false,
         val error: String? = null,
-        /** Task details keyed by taskId for coding materials. */
-        val taskDetails: ImmutableMap<String, TaskDetails> = persistentMapOf(),
-        /** Events for the currently selected task. */
-        val taskEvents: ImmutableList<TaskEvent> = persistentListOf(),
-        /** Comments for the currently selected task. */
-        val taskComments: ImmutableList<TaskComment> = persistentListOf(),
-        /** Currently selected task ID (for expanded coding material). */
-        val activeTaskId: String? = null,
-        /** Selected tab within the active task: "solution", "comments", "info". */
-        val selectedTaskTab: String = "solution",
-        /** Solution URL input for the active task. */
-        val solutionUrl: String = "",
-        /** Comment text input for the active task. */
-        val commentText: String = "",
-        /** Whether a task action is in progress. */
-        val isSubmitting: Boolean = false,
-        /** Pending file attachments for the solution (upload in progress or complete). */
-        val pendingSolutionAttachments: ImmutableList<PendingAttachment> = persistentListOf(),
-        /** Pending file attachments for a new comment (upload in progress or complete). */
-        val pendingCommentAttachments: ImmutableList<PendingAttachment> = persistentListOf(),
-        /** Whether the search bar is visible. */
+        val materials: ImmutableList<LongreadMaterial> = persistentListOf(),
         val isSearchVisible: Boolean = false,
-        /** Current search query text. */
         val searchQuery: String = "",
-        /** Total number of search matches across all materials. */
         val searchMatchCount: Int = 0,
-        /** Index of the currently focused match (0-based). */
         val currentMatchIndex: Int = 0,
     ) {
-        /** Title derived from the first material's name or a fallback. */
         val title: String
             get() = materials.firstOrNull()?.contentName
                 ?: materials.firstOrNull()?.name
                 ?: "Лонгрид"
-
-        /** Coding materials that have a taskId. */
-        val codingMaterials: List<LongreadMaterial>
-            get() = materials.filter { it.isCoding && it.taskId != null }
     }
 
     sealed interface Intent {
-        data object Back : Intent
+        sealed interface Navigation : Intent {
+            data object Back : Navigation
 
-        data object Refresh : Intent
+            data object Refresh : Navigation
 
-        data class SelectTask(
-            val taskId: String,
-        ) : Intent
+            data object NavigateToFiles : Navigation
+        }
 
-        data class SelectTaskTab(
-            val tab: String,
-        ) : Intent
+        sealed interface Search : Intent {
+            data object ToggleSearch : Search
 
-        data class UpdateSolutionUrl(
-            val url: String,
-        ) : Intent
+            data object NextMatch : Search
 
-        data class UpdateCommentText(
-            val text: String,
-        ) : Intent
+            data object PreviousMatch : Search
 
-        data object StartTask : Intent
-
-        data object SubmitSolution : Intent
-
-        data object CreateComment : Intent
-
-        data class ProlongLateDays(
-            val days: Int,
-        ) : Intent
-
-        data object CancelLateDays : Intent
-
-        data class PickSolutionAttachment(
-            val file: PickedFile,
-        ) : Intent
-
-        data class RemoveSolutionAttachment(
-            val index: Int,
-        ) : Intent
-
-        data class PickCommentAttachment(
-            val file: PickedFile,
-        ) : Intent
-
-        data class RemoveCommentAttachment(
-            val index: Int,
-        ) : Intent
-
-        data class DownloadFile(
-            val material: LongreadMaterial,
-        ) : Intent
-
-        data object ToggleSearch : Intent
-
-        data class UpdateSearchQuery(
-            val query: String,
-        ) : Intent
-
-        data object NextMatch : Intent
-
-        data object PreviousMatch : Intent
-
-        data object NavigateToFiles : Intent
+            data class UpdateSearchQuery(
+                val query: String,
+            ) : Search
+        }
     }
 }

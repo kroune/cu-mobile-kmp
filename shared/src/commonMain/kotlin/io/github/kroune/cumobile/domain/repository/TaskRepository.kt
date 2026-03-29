@@ -59,4 +59,14 @@ interface TaskRepository {
         content: String,
         attachments: List<MaterialAttachment> = emptyList(),
     ): String?
+
+    /** Updates an existing comment's text and attachments. */
+    suspend fun editComment(
+        commentId: String,
+        content: String,
+        attachments: List<MaterialAttachment> = emptyList(),
+    ): Boolean
+
+    /** Deletes a comment by its ID. */
+    suspend fun deleteComment(commentId: String): Boolean
 }
