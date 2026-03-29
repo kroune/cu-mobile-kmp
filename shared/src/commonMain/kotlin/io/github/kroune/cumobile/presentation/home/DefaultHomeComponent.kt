@@ -8,7 +8,6 @@ import io.github.kroune.cumobile.data.model.StudentTask
 import io.github.kroune.cumobile.data.model.TaskState
 import io.github.kroune.cumobile.presentation.common.ContentState
 import io.github.kroune.cumobile.presentation.common.DateTimeProvider
-import io.github.kroune.cumobile.presentation.common.decodeImageBitmap
 import io.github.kroune.cumobile.util.runCatchingCancellable
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
@@ -18,8 +17,6 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import kotlin.coroutines.CoroutineContext
 
 private val logger = KotlinLogging.logger {}
 
@@ -34,7 +31,6 @@ private const val MillisPerDay = 86_400_000L
 class DefaultHomeComponent(
     componentContext: ComponentContext,
     deps: HomeDependencies,
-    private val defaultDispatcher: CoroutineContext = Dispatchers.Default,
     private val onOpenTask: (StudentTask) -> Unit,
     private val onOpenCourse: (String) -> Unit,
     private val onOpenProfile: () -> Unit = {},
@@ -124,7 +120,7 @@ class DefaultHomeComponent(
             tasks = ContentState.Loading,
             courses = ContentState.Loading,
             profileInitials = ContentState.Loading,
-            avatarBitmap = ContentState.Loading,
+            avatarBytes = ContentState.Loading,
             lateDaysBalance = ContentState.Loading,
         )
 
@@ -186,20 +182,17 @@ class DefaultHomeComponent(
 
     private suspend fun loadAvatar() {
         runCatchingCancellable {
-            val avatar = profileRepository.fetchAvatar()
-            withContext(defaultDispatcher) {
-                avatar?.let { decodeImageBitmap(it) }
-            }
+            profileRepository.fetchAvatar()
         }.fold(
-            onSuccess = { bitmap ->
+            onSuccess = { bytes ->
                 _state.value = _state.value.copy(
-                    avatarBitmap = ContentState.Success(bitmap),
+                    avatarBytes = ContentState.Success(bytes),
                 )
             },
             onFailure = { e ->
                 logger.error(e) { "Failed to load avatar" }
                 _state.value = _state.value.copy(
-                    avatarBitmap = ContentState.Success(null),
+                    avatarBytes = ContentState.Success(null),
                 )
             },
         )

@@ -1,6 +1,7 @@
 package io.github.kroune.cumobile.presentation.longread.ui.coding
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -26,6 +27,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -78,17 +80,20 @@ internal fun CommentsTab(
             )
         } else {
             state.taskComments.forEach { comment ->
-                CommentCard(
-                    comment = comment,
-                    isEditing = state.editingCommentId == comment.id,
-                    editText = if (state.editingCommentId == comment.id) {
-                        state.editCommentText
-                    } else {
-                        ""
-                    },
-                    isSubmitting = state.isSubmitting,
-                    onIntent = onIntent,
-                )
+                key(comment.id) {
+                    CommentCard(
+                        comment = comment,
+                        isEditing = state.editingCommentId == comment.id,
+                        editText = if (state.editingCommentId == comment.id) {
+                            state.editCommentText
+                        } else {
+                            ""
+                        },
+                        isSubmitting = state.isSubmitting,
+                        downloadingAttachment = state.downloadingAttachment,
+                        onIntent = onIntent,
+                    )
+                }
             }
         }
     }
@@ -112,7 +117,11 @@ private fun CommentInputSection(
         maxLines = 3,
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
         keyboardActions = KeyboardActions(
-            onSend = { onIntent(CodingMaterialComponent.Intent.Comment.CreateComment) },
+            onSend = {
+                if (!isSubmitting && commentText.isNotBlank() && !hasUploading(pendingAttachments)) {
+                    onIntent(CodingMaterialComponent.Intent.Comment.CreateComment)
+                }
+            },
         ),
         modifier = Modifier.fillMaxWidth(),
         colors = OutlinedTextFieldDefaults.colors(
@@ -166,6 +175,7 @@ private fun CommentCard(
     isEditing: Boolean,
     editText: String,
     isSubmitting: Boolean,
+    downloadingAttachment: String?,
     onIntent: (CodingMaterialComponent.Intent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -210,7 +220,11 @@ private fun CommentCard(
                 onIntent = onIntent,
             )
         } else {
-            CommentContent(comment)
+            CommentContent(
+                comment = comment,
+                downloadingAttachment = downloadingAttachment,
+                onIntent = onIntent,
+            )
         }
     }
 }
@@ -277,7 +291,11 @@ private fun CommentHeader(
 
 /** Read-only comment body: HTML content + attachments. */
 @Composable
-private fun CommentContent(comment: TaskComment) {
+private fun CommentContent(
+    comment: TaskComment,
+    downloadingAttachment: String?,
+    onIntent: (CodingMaterialComponent.Intent) -> Unit,
+) {
     val blocks = remember(comment.content) {
         if (comment.content.isBlank()) persistentListOf() else parseHtmlToBlocks(comment.content)
     }
@@ -291,11 +309,34 @@ private fun CommentContent(comment: TaskComment) {
         )
     }
     comment.attachments.forEach { attachment ->
-        Text(
-            text = "\uD83D\uDCCE ${attachment.name}",
-            color = AppTheme.colors.textSecondary,
-            fontSize = 12.sp,
-        )
+        val isDownloading = downloadingAttachment == attachment.filename
+        Row(
+            modifier = Modifier
+                .clip(RoundedCornerShape(4.dp))
+                .clickable(enabled = !isDownloading) {
+                    onIntent(
+                        CodingMaterialComponent.Intent.Attachment.DownloadCommentAttachment(
+                            attachment,
+                        ),
+                    )
+                }
+                .padding(vertical = 2.dp, horizontal = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            if (isDownloading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(12.dp),
+                    color = AppTheme.colors.accent,
+                    strokeWidth = 1.5.dp,
+                )
+            }
+            Text(
+                text = "\uD83D\uDCCE ${attachment.name}",
+                color = AppTheme.colors.accent,
+                fontSize = 12.sp,
+            )
+        }
     }
 }
 
@@ -314,7 +355,11 @@ private fun EditCommentForm(
         maxLines = 5,
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
         keyboardActions = KeyboardActions(
-            onDone = { onIntent(CodingMaterialComponent.Intent.Comment.SaveEditComment) },
+            onDone = {
+                if (!isSubmitting && editText.isNotBlank()) {
+                    onIntent(CodingMaterialComponent.Intent.Comment.SaveEditComment)
+                }
+            },
         ),
         modifier = Modifier.fillMaxWidth(),
         colors = OutlinedTextFieldDefaults.colors(

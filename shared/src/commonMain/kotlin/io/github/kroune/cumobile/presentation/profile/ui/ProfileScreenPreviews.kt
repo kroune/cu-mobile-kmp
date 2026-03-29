@@ -13,7 +13,6 @@ import io.github.kroune.cumobile.presentation.common.ContentState
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 import io.github.kroune.cumobile.presentation.common.ui.CuMobileTheme
 import io.github.kroune.cumobile.presentation.common.ui.DetailTopBar
-import io.github.kroune.cumobile.presentation.profile.AvatarData
 import io.github.kroune.cumobile.presentation.profile.ProfileComponent
 
 private val previewProfileState = ProfileComponent.State(
@@ -27,7 +26,7 @@ private val previewProfileState = ProfileComponent.State(
         ),
     ),
     lmsProfile = ContentState.Success(null),
-    avatar = ContentState.Success(null),
+    avatarBytes = ContentState.Success(null),
 )
 
 private val previewProfileFullState = ProfileComponent.State(
@@ -53,7 +52,7 @@ private val previewProfileFullState = ProfileComponent.State(
         ),
     ),
     lmsProfile = ContentState.Success(null),
-    avatar = ContentState.Success(null),
+    avatarBytes = ContentState.Success(null),
 )
 
 @Preview
@@ -190,7 +189,7 @@ private fun PreviewProfileDeletingAvatarDark() {
     CuMobileTheme(darkTheme = true) {
         ProfileScreenContent(
             state = previewProfileState.copy(
-                avatar = ContentState.Success(AvatarData(bytes = ByteArray(0), bitmap = null)),
+                avatarBytes = ContentState.Success(ByteArray(0)),
                 isDeletingAvatar = true,
             ),
             onIntent = {},

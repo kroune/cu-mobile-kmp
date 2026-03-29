@@ -8,6 +8,7 @@ import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.data.model.LongreadMaterial
+import io.github.kroune.cumobile.data.model.MaterialAttachment
 import io.github.kroune.cumobile.domain.repository.ContentRepository
 import io.github.kroune.cumobile.domain.repository.TaskRepository
 import io.github.kroune.cumobile.presentation.longread.ui.coding.CodingMaterialCardContent
@@ -32,8 +33,9 @@ class DefaultCodingMaterialComponent(
     override val material: LongreadMaterial,
     private val taskId: String,
     private val taskRepository: TaskRepository,
-    contentRepository: ContentRepository,
+    private val contentRepository: ContentRepository,
     private val onShowError: (String) -> Unit,
+    private val onSaveFile: suspend (url: String, filename: String) -> Boolean = { _, _ -> false },
 ) : CodingMaterialComponent,
     ComponentContext by componentContext {
     private val scope = coroutineScope(
@@ -120,6 +122,25 @@ class DefaultCodingMaterialComponent(
                 attachmentManager.uploadAttachment(intent.file, isSolution = false)
             is CodingMaterialComponent.Intent.Attachment.RemoveCommentAttachment ->
                 attachmentManager.removeCommentAttachment(intent.index)
+            is CodingMaterialComponent.Intent.Attachment.DownloadCommentAttachment ->
+                downloadCommentAttachment(intent.attachment)
+        }
+    }
+
+    private fun downloadCommentAttachment(attachment: MaterialAttachment) {
+        scope.launch {
+            _state.value = _state.value.copy(downloadingAttachment = attachment.filename)
+            val url = contentRepository.getDownloadLink(attachment.filename, attachment.version)
+            if (url != null) {
+                val saved = onSaveFile(url, attachment.name)
+                if (!saved) {
+                    onShowError("Не удалось сохранить файл")
+                }
+            } else {
+                logger.warn { "Failed to get download link for attachment: ${attachment.filename}" }
+                onShowError("Не удалось получить ссылку для скачивания")
+            }
+            _state.value = _state.value.copy(downloadingAttachment = null)
         }
     }
 

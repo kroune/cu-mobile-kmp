@@ -1,6 +1,5 @@
 package io.github.kroune.cumobile.presentation.common.ui
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -19,12 +18,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import io.github.kroune.cumobile.presentation.common.isLoading
+import coil3.compose.AsyncImage
 
 /**
  * Top bar matching the Flutter reference app.
@@ -42,7 +40,7 @@ import io.github.kroune.cumobile.presentation.common.isLoading
 fun TopBar(
     title: String,
     profileInitials: String,
-    avatarBitmap: ImageBitmap? = null,
+    avatarBytes: ByteArray? = null,
     lateDaysBalance: Int?,
     onNotificationsClick: () -> Unit,
     onProfileClick: () -> Unit,
@@ -92,7 +90,7 @@ fun TopBar(
         // Profile avatar circle
         AvatarCircle(
             initials = profileInitials,
-            avatarBitmap = avatarBitmap,
+            avatarBytes = avatarBytes,
             onClick = onProfileClick,
         )
     }
@@ -107,11 +105,11 @@ fun TopBar(
 @Composable
 private fun AvatarCircle(
     initials: String,
-    avatarBitmap: ImageBitmap?,
+    avatarBytes: ByteArray?,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val isLoading = initials.isEmpty() && avatarBitmap == null
+    val isLoading = initials.isEmpty() && avatarBytes == null
     if (isLoading) {
         ShimmerCircle(
             size = 40.dp,
@@ -127,9 +125,9 @@ private fun AvatarCircle(
                 .clickable(onClick = onClick),
             contentAlignment = Alignment.Center,
         ) {
-            if (avatarBitmap != null) {
-                Image(
-                    bitmap = avatarBitmap,
+            if (avatarBytes != null) {
+                AsyncImage(
+                    model = avatarBytes,
                     contentDescription = "Аватар",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize(),

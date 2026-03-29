@@ -44,7 +44,7 @@ private val previewHomeState = HomeComponent.State(
     ),
     profileInitials = ContentState.Success("ИП"),
     lateDaysBalance = ContentState.Success(5),
-    avatarBitmap = ContentState.Success(null),
+    avatarBytes = ContentState.Success(null),
     selectedDateMillis = 1774051200000L,
     schedule = ContentState.Success(emptyList()),
 )
@@ -53,7 +53,7 @@ private val previewHomeEmptyState = HomeComponent.State(
     tasks = ContentState.Success(emptyList()),
     courses = ContentState.Success(emptyList()),
     profileInitials = ContentState.Success("ИП"),
-    avatarBitmap = ContentState.Success(null),
+    avatarBytes = ContentState.Success(null),
     lateDaysBalance = ContentState.Success(null),
     selectedDateMillis = 1774051200000L,
     schedule = ContentState.Success(emptyList()),

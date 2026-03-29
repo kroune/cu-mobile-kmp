@@ -25,6 +25,9 @@ internal class CodingAttachmentManager(
     private val contentRepository: ContentRepository,
     private val scope: CoroutineScope,
 ) {
+    init {
+        require(taskId.isNotBlank()) { "taskId must not be blank" }
+    }
     fun uploadAttachment(
         file: PickedFile,
         isSolution: Boolean,

@@ -7,7 +7,6 @@ import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.data.model.PickedFile
 import io.github.kroune.cumobile.domain.repository.ProfileRepository
 import io.github.kroune.cumobile.presentation.common.ContentState
-import io.github.kroune.cumobile.presentation.common.decodeImageBitmap
 import io.github.kroune.cumobile.util.runCatchingCancellable
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
@@ -17,8 +16,6 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import kotlin.coroutines.CoroutineContext
 
 private val logger = KotlinLogging.logger {}
 
@@ -31,7 +28,6 @@ private val logger = KotlinLogging.logger {}
 class DefaultProfileComponent(
     componentContext: ComponentContext,
     private val profileRepository: ProfileRepository,
-    private val defaultDispatcher: CoroutineContext = Dispatchers.Default,
     private val onBack: () -> Unit,
     private val onLogout: () -> Unit,
 ) : ProfileComponent,
@@ -66,7 +62,7 @@ class DefaultProfileComponent(
         _state.value = _state.value.copy(
             profile = ContentState.Loading,
             lmsProfile = ContentState.Loading,
-            avatar = ContentState.Loading,
+            avatarBytes = ContentState.Loading,
         )
 
         currentLoadJob = scope.launch {
@@ -90,21 +86,17 @@ class DefaultProfileComponent(
 
             launch {
                 runCatchingCancellable {
-                    val avatarBytes = profileRepository.fetchAvatar()
-                    val bitmap = withContext(defaultDispatcher) {
-                        avatarBytes?.let { decodeImageBitmap(it) }
-                    }
-                    AvatarData(avatarBytes, bitmap)
+                    profileRepository.fetchAvatar()
                 }.fold(
-                    onSuccess = { avatarData ->
+                    onSuccess = { bytes ->
                         _state.value = _state.value.copy(
-                            avatar = ContentState.Success(avatarData),
+                            avatarBytes = ContentState.Success(bytes),
                         )
                     },
                     onFailure = { e ->
                         logger.error(e) { "Failed to load avatar" }
                         _state.value = _state.value.copy(
-                            avatar = ContentState.Success(null),
+                            avatarBytes = ContentState.Success(null),
                         )
                     },
                 )
@@ -117,12 +109,9 @@ class DefaultProfileComponent(
             _state.value = _state.value.copy(isUploadingAvatar = true)
             val success = profileRepository.uploadAvatar(file.bytes, file.contentType)
             if (success) {
-                val avatarBytes = profileRepository.fetchAvatar()
-                val bitmap = withContext(defaultDispatcher) {
-                    avatarBytes?.let { decodeImageBitmap(it) }
-                }
+                val bytes = profileRepository.fetchAvatar()
                 _state.value = _state.value.copy(
-                    avatar = ContentState.Success(AvatarData(avatarBytes, bitmap)),
+                    avatarBytes = ContentState.Success(bytes),
                     isUploadingAvatar = false,
                 )
             } else {
@@ -141,7 +130,7 @@ class DefaultProfileComponent(
             val success = profileRepository.deleteAvatar()
             if (success) {
                 _state.value = _state.value.copy(
-                    avatar = ContentState.Success(null),
+                    avatarBytes = ContentState.Success(null),
                     isDeletingAvatar = false,
                 )
             } else {

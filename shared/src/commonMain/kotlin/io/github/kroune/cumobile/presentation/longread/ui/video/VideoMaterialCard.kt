@@ -36,7 +36,7 @@ fun VideoMaterialCard(
     material: LongreadMaterial,
     modifier: Modifier = Modifier,
 ) {
-    val videoUrl = material.viewContent ?: return
+    val videoUrl = material.viewContent?.takeIf { it.isNotBlank() } ?: return
     val playerState = rememberVideoPlayerState()
 
     Column(

@@ -22,6 +22,9 @@ internal class CodingTaskActions(
     private val scope: CoroutineScope,
     private val onShowError: (String) -> Unit,
 ) {
+    init {
+        require(taskId.isNotBlank()) { "taskId must not be blank" }
+    }
     fun startTask() {
         scope.launch {
             state.value = state.value.copy(isSubmitting = true)
@@ -170,6 +173,9 @@ internal class CodingTaskActions(
 
     private suspend fun refreshComments() {
         val comments = taskRepository.fetchTaskComments(taskId)
+        if (comments == null) {
+            logger.warn { "Failed to load task comments for taskId=$taskId" }
+        }
         state.value = state.value.copy(
             taskComments = comments.orEmpty().toPersistentList(),
         )

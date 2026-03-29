@@ -129,7 +129,9 @@ private fun SolutionUrlInput(
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(
                 onDone = {
-                    onIntent(Intent.Task.SubmitSolution)
+                    if (!isSubmitting && !hasUploading(pendingAttachments)) {
+                        onIntent(Intent.Task.SubmitSolution)
+                    }
                 },
             ),
             modifier = Modifier.fillMaxWidth(),

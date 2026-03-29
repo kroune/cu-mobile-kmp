@@ -1,6 +1,5 @@
 package io.github.kroune.cumobile.presentation.profile
 
-import androidx.compose.ui.graphics.ImageBitmap
 import com.arkivanov.decompose.value.Value
 import io.github.kroune.cumobile.data.model.PickedFile
 import io.github.kroune.cumobile.data.model.StudentLmsProfile
@@ -31,7 +30,7 @@ interface ProfileComponent {
     data class State(
         val profile: ContentState<StudentProfile> = ContentState.Loading,
         val lmsProfile: ContentState<StudentLmsProfile?> = ContentState.Loading,
-        val avatar: ContentState<AvatarData?> = ContentState.Loading,
+        val avatarBytes: ContentState<ByteArray?> = ContentState.Loading,
         val isDeletingAvatar: Boolean = false,
         val isUploadingAvatar: Boolean = false,
     ) {
@@ -39,13 +38,9 @@ interface ProfileComponent {
         val isContentLoading: Boolean
             get() = profile.isLoading
 
-        /** Avatar bytes for upload state tracking. */
-        val avatarBytes: ByteArray?
-            get() = avatar.dataOrNull?.bytes
-
-        /** Avatar bitmap for display. */
-        val avatarBitmap: ImageBitmap?
-            get() = avatar.dataOrNull?.bitmap
+        /** Whether the user has an avatar. */
+        val hasAvatar: Boolean
+            get() = avatarBytes.dataOrNull != null
 
         /** User initials for avatar placeholder (first char of first + last name). */
         val initials: String
@@ -87,7 +82,7 @@ interface ProfileComponent {
             if (other !is State) return false
             return profile == other.profile &&
                 lmsProfile == other.lmsProfile &&
-                avatar == other.avatar &&
+                avatarBytes == other.avatarBytes &&
                 isDeletingAvatar == other.isDeletingAvatar &&
                 isUploadingAvatar == other.isUploadingAvatar
         }
@@ -95,7 +90,7 @@ interface ProfileComponent {
         override fun hashCode(): Int {
             var result = profile.hashCode()
             result = 31 * result + lmsProfile.hashCode()
-            result = 31 * result + avatar.hashCode()
+            result = 31 * result + avatarBytes.hashCode()
             result = 31 * result + isDeletingAvatar.hashCode()
             result = 31 * result + isUploadingAvatar.hashCode()
             return result
@@ -117,23 +112,3 @@ interface ProfileComponent {
     }
 }
 
-/**
- * Container for avatar data (raw bytes + decoded bitmap).
- */
-data class AvatarData(
-    val bytes: ByteArray?,
-    val bitmap: ImageBitmap?,
-) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is AvatarData) return false
-        return bytes.contentEquals(other.bytes) &&
-            bitmap === other.bitmap
-    }
-
-    override fun hashCode(): Int {
-        var result = bytes?.contentHashCode() ?: 0
-        result = 31 * result + (bitmap?.hashCode() ?: 0)
-        return result
-    }
-}

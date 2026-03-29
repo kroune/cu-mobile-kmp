@@ -2,6 +2,7 @@ package io.github.kroune.cumobile.presentation.longread.component.coding
 
 import com.arkivanov.decompose.value.Value
 import io.github.kroune.cumobile.data.model.LongreadMaterial
+import io.github.kroune.cumobile.data.model.MaterialAttachment
 import io.github.kroune.cumobile.data.model.PendingAttachment
 import io.github.kroune.cumobile.data.model.PickedFile
 import io.github.kroune.cumobile.data.model.TaskComment
@@ -43,6 +44,7 @@ interface CodingMaterialComponent : RenderComponent {
         val pendingCommentAttachments: ImmutableList<PendingAttachment> = persistentListOf(),
         val editingCommentId: String? = null,
         val editCommentText: String = "",
+        val downloadingAttachment: String? = null,
     )
 
     sealed interface Intent {
@@ -108,6 +110,10 @@ interface CodingMaterialComponent : RenderComponent {
 
             data class RemoveCommentAttachment(
                 val index: Int,
+            ) : Attachment
+
+            data class DownloadCommentAttachment(
+                val attachment: MaterialAttachment,
             ) : Attachment
         }
     }

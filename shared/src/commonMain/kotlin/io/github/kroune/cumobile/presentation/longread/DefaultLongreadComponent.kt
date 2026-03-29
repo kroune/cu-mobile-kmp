@@ -181,6 +181,7 @@ class DefaultLongreadComponent(
                     onShowError = { msg ->
                         _effects.trySend(LongreadComponent.Effect.SnackBarEffect(msg))
                     },
+                    onSaveFile = onDownloadReady,
                 ),
             )
 

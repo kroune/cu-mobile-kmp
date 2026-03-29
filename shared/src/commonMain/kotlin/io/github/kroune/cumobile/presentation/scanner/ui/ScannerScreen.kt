@@ -1,6 +1,5 @@
 package io.github.kroune.cumobile.presentation.scanner.ui
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -44,7 +43,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
-import io.github.kroune.cumobile.presentation.common.decodeImageBitmap
+import coil3.compose.AsyncImage
 import io.github.kroune.cumobile.presentation.common.formatSizeBytes
 import io.github.kroune.cumobile.presentation.common.ui.ActionErrorBar
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
@@ -248,7 +247,6 @@ private fun PageThumbnail(
     page: ScannerComponent.ScanPage,
     index: Int,
 ) {
-    val imageBitmap = remember(page.id, page.imageBytes) { decodeImageBitmap(page.imageBytes) }
     Box(
         modifier = Modifier
             .size(width = 60.dp, height = 78.dp)
@@ -256,16 +254,12 @@ private fun PageThumbnail(
             .background(AppTheme.colors.background),
         contentAlignment = Alignment.Center,
     ) {
-        if (imageBitmap != null) {
-            Image(
-                bitmap = imageBitmap,
-                contentDescription = "Страница ${index + 1}",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize().graphicsLayer { rotationZ = page.rotationDegrees },
-            )
-        } else {
-            Text("IMG", color = AppTheme.colors.textSecondary, fontSize = 12.sp)
-        }
+        AsyncImage(
+            model = page.imageBytes,
+            contentDescription = "Страница ${index + 1}",
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize().graphicsLayer { rotationZ = page.rotationDegrees },
+        )
     }
 }
 

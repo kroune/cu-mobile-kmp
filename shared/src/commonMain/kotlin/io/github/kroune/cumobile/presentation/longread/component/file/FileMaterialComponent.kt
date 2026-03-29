@@ -34,7 +34,12 @@ class FileMaterialComponent(
     )
 
     private fun download() {
-        val filename = material.filename ?: return
+        val filename = material.filename
+        if (filename == null) {
+            logger.warn { "Download requested but material.filename is null for material id=${material.id}" }
+            onDownloadResult(FileDownloadResult.Failed("Имя файла отсутствует"))
+            return
+        }
         val version = material.version ?: "1"
         scope.launch {
             onDownloadResult(FileDownloadResult.Started)

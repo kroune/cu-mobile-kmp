@@ -88,7 +88,7 @@ fun MainScreen(component: MainComponent) {
             TopBar(
                 title = TAB_LABELS[selectedIndex],
                 profileInitials = homeState?.profileInitials?.dataOrNull.orEmpty(),
-                avatarBitmap = homeState?.avatarBitmap?.dataOrNull,
+                avatarBytes = homeState?.avatarBytes?.dataOrNull,
                 lateDaysBalance = homeState?.lateDaysBalance?.dataOrNull,
                 onNotificationsClick = { component.navigateToNotifications() },
                 onProfileClick = { component.navigateToProfile() },

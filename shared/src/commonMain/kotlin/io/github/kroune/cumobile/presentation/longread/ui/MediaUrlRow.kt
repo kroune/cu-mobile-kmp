@@ -23,6 +23,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
+import io.github.oshai.kotlinlogging.KotlinLogging
+
+private val logger = KotlinLogging.logger {}
 
 /** Row displaying a URL with copy-to-clipboard and open-in-browser actions. */
 @Composable
@@ -62,7 +65,13 @@ fun MediaUrlRow(
             )
         }
         IconButton(
-            onClick = { uriHandler.openUri(url) },
+            onClick = {
+                try {
+                    uriHandler.openUri(url)
+                } catch (@Suppress("TooGenericExceptionCaught") e: Exception) {
+                    logger.warn(e) { "Failed to open URI: $url" }
+                }
+            },
             modifier = Modifier.size(32.dp),
         ) {
             Icon(
