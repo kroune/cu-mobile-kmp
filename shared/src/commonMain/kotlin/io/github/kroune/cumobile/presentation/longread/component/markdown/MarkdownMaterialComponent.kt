@@ -19,8 +19,9 @@ import kotlinx.coroutines.launch
 /**
  * Simple material component for markdown (HTML) content.
  *
- * Collects [io.github.kroune.cumobile.presentation.longread.component.ExternalUpdate.SearchQuery] events from the parent's shared flow
- * and stores the query in its own state for reactive highlight rendering.
+ * Collects [io.github.kroune.cumobile.presentation.longread.component.ExternalUpdate.SearchQuery]
+ * events from the parent's shared flow and stores the query in its own state for
+ * reactive highlight rendering.
  *
  * [material] is immutable data fixed at creation time — it never changes
  * during the component's lifetime and is intentionally NOT in [State]
