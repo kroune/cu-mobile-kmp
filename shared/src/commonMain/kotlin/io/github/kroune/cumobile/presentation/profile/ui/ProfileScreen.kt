@@ -1,6 +1,5 @@
 package io.github.kroune.cumobile.presentation.profile.ui
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -42,7 +41,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
@@ -50,6 +48,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import coil3.compose.AsyncImage
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import io.github.kroune.cumobile.data.model.StudentProfile
 import io.github.kroune.cumobile.presentation.common.ContentState
@@ -173,16 +172,16 @@ private fun ProfileContent(
         var showAvatarDialog by remember { mutableStateOf(false) }
         AvatarSection(
             initials = state.initials,
-            avatarBitmap = state.avatarBitmap,
+            avatarBytes = state.avatarBytes.dataOrNull,
             isBusy = state.isDeletingAvatar || state.isUploadingAvatar,
             onDelete = { onIntent(ProfileComponent.Intent.DeleteAvatar) },
             onUpload = { avatarPicker.launch() },
             onAvatarClick = { showAvatarDialog = true },
         )
 
-        if (showAvatarDialog && state.avatarBitmap != null) {
+        if (showAvatarDialog && state.hasAvatar) {
             AvatarFullScreenDialog(
-                avatarBitmap = state.avatarBitmap,
+                avatarBytes = state.avatarBytes.dataOrNull,
                 onDismiss = { showAvatarDialog = false },
             )
         }
@@ -227,14 +226,14 @@ private fun ProfileContent(
 @Composable
 private fun AvatarSection(
     initials: String,
-    avatarBitmap: ImageBitmap?,
+    avatarBytes: ByteArray?,
     isBusy: Boolean,
     onDelete: () -> Unit,
     onUpload: () -> Unit,
     onAvatarClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val hasAvatar = avatarBitmap != null
+    val hasAvatar = avatarBytes != null
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
         // Main avatar circle
         Box(
@@ -243,7 +242,7 @@ private fun AvatarSection(
                 .clip(CircleShape)
                 .border(2.dp, AppTheme.colors.accent, CircleShape)
                 .background(AppTheme.colors.accent.copy(alpha = 0.2f), CircleShape)
-                .clickable(enabled = avatarBitmap != null && !isBusy, onClick = onAvatarClick),
+                .clickable(enabled = avatarBytes != null && !isBusy, onClick = onAvatarClick),
             contentAlignment = Alignment.Center,
         ) {
             if (isBusy) {
@@ -252,9 +251,9 @@ private fun AvatarSection(
                     color = AppTheme.colors.accent,
                     strokeWidth = 2.dp,
                 )
-            } else if (avatarBitmap != null) {
-                Image(
-                    bitmap = avatarBitmap,
+            } else if (avatarBytes != null) {
+                AsyncImage(
+                    model = avatarBytes,
                     contentDescription = "Аватар",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize(),
@@ -303,7 +302,7 @@ private fun AvatarSection(
 
 @Composable
 private fun AvatarFullScreenDialog(
-    avatarBitmap: ImageBitmap?,
+    avatarBytes: ByteArray?,
     onDismiss: () -> Unit,
 ) {
     Dialog(onDismissRequest = onDismiss) {
@@ -316,9 +315,9 @@ private fun AvatarFullScreenDialog(
                 .clickable(onClick = onDismiss),
             contentAlignment = Alignment.Center,
         ) {
-            if (avatarBitmap != null) {
-                Image(
-                    bitmap = avatarBitmap,
+            if (avatarBytes != null) {
+                AsyncImage(
+                    model = avatarBytes,
                     contentDescription = "Аватар",
                     contentScale = ContentScale.Fit,
                     modifier = Modifier.fillMaxSize(),

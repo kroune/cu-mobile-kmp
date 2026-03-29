@@ -1,6 +1,5 @@
 package io.github.kroune.cumobile.presentation.scanner.ui
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -27,19 +26,17 @@ import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import io.github.kroune.cumobile.presentation.common.decodeImageBitmap
+import coil3.compose.AsyncImage
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 import io.github.kroune.cumobile.presentation.scanner.ScannerComponent
 
@@ -49,13 +46,11 @@ internal fun ImageEditorOverlay(
     onUpdateRotation: (Float) -> Unit,
     onDone: () -> Unit,
 ) {
-    val imageBitmap = remember(page.id, page.imageBytes) { decodeImageBitmap(page.imageBytes) }
-
     Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.95f))) {
         Column(modifier = Modifier.fillMaxSize()) {
             EditorTopBar(onDone)
             EditorImagePreview(
-                imageBitmap = imageBitmap,
+                imageBytes = page.imageBytes,
                 rotationDegrees = page.rotationDegrees,
                 modifier = Modifier.weight(1f).fillMaxWidth(),
             )
@@ -85,19 +80,17 @@ private fun EditorTopBar(onDone: () -> Unit) {
 
 @Composable
 private fun EditorImagePreview(
-    imageBitmap: ImageBitmap?,
+    imageBytes: ByteArray,
     rotationDegrees: Float,
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier.padding(16.dp), contentAlignment = Alignment.Center) {
-        if (imageBitmap != null) {
-            Image(
-                bitmap = imageBitmap,
-                contentDescription = "Предпросмотр",
-                contentScale = ContentScale.Fit,
-                modifier = Modifier.fillMaxSize().graphicsLayer { rotationZ = rotationDegrees },
-            )
-        }
+        AsyncImage(
+            model = imageBytes,
+            contentDescription = "Предпросмотр",
+            contentScale = ContentScale.Fit,
+            modifier = Modifier.fillMaxSize().graphicsLayer { rotationZ = rotationDegrees },
+        )
     }
 }
 

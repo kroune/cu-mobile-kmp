@@ -1,6 +1,5 @@
 package io.github.kroune.cumobile.presentation.home
 
-import androidx.compose.ui.graphics.ImageBitmap
 import com.arkivanov.decompose.value.Value
 import io.github.kroune.cumobile.data.model.ClassData
 import io.github.kroune.cumobile.data.model.Course
@@ -39,7 +38,7 @@ interface HomeComponent {
         val schedule: ContentState<List<ClassData>> = ContentState.Loading,
         val selectedDateMillis: Long = 0,
         val profileInitials: ContentState<String> = ContentState.Loading,
-        val avatarBitmap: ContentState<ImageBitmap?> = ContentState.Loading,
+        val avatarBytes: ContentState<ByteArray?> = ContentState.Loading,
         val lateDaysBalance: ContentState<Int?> = ContentState.Loading,
     ) {
         /** Whether any important content is still loading. */
@@ -75,7 +74,7 @@ interface HomeComponent {
                 schedule == other.schedule &&
                 selectedDateMillis == other.selectedDateMillis &&
                 profileInitials == other.profileInitials &&
-                avatarBitmap === other.avatarBitmap &&
+                avatarBytes === other.avatarBytes &&
                 lateDaysBalance == other.lateDaysBalance
         }
 
@@ -85,7 +84,7 @@ interface HomeComponent {
             result = 31 * result + schedule.hashCode()
             result = 31 * result + selectedDateMillis.hashCode()
             result = 31 * result + profileInitials.hashCode()
-            result = 31 * result + (avatarBitmap.hashCode())
+            result = 31 * result + (avatarBytes.hashCode())
             result = 31 * result + lateDaysBalance.hashCode()
             return result
         }

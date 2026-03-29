@@ -17,6 +17,9 @@ internal object ApiEndpoints {
         const val STUDENT = "micro-lms/tasks/student"
         const val COMMENTS = "micro-lms/comments"
 
+        fun commentById(id: String): String =
+            "micro-lms/comments/$id"
+
         fun byId(id: String): String =
             "micro-lms/tasks/$id"
 

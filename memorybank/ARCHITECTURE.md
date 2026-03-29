@@ -22,20 +22,20 @@ debug postfix if build is a debug one
 
 ## Tech Stack
 
-| Library                          | Version        | Use                                   |
-|----------------------------------|----------------|---------------------------------------|
-| Compose Multiplatform            | 1.11.0-alpha02 | UI (shared)                           |
-| Decompose                        | 3.4.0          | Navigation (ChildPages + ChildStack)  |
-| Koin                             | —              | DI                                    |
-| Ktor                             | —              | HTTP client                           |
-| kotlinx-serialization            | —              | JSON                                  |
-| DataStore Preferences            | —              | Key-value local persistence           |
-| Room                             | 2.8.4          | Structured local persistence (SQLite) |
-| essenty-lifecycle-coroutines     | 2.5.0          | Auto-cancelling coroutine scopes      |
-| kotlin-logging (io.github.oshai) | 8.0.01         | Structured logging in catch blocks    |
-| kotlinx-datetime                 | —              | Date/time formatting and parsing      |
-| Ksoup (fleeksoft)                | 0.2.6          | HTML parsing (KMP Jsoup port)         |
-| ComposeMediaPlayer               | 0.8.7          | Video/audio playback (KMP)            |
+| Library                          | Version        | Use                                               |
+|----------------------------------|----------------|---------------------------------------------------|
+| Compose Multiplatform            | 1.11.0-alpha02 | UI (shared)                                       |
+| Decompose                        | 3.5.0          | Navigation (ChildPages + ChildStack + ChildItems) |
+| Koin                             | —              | DI                                                |
+| Ktor                             | —              | HTTP client                                       |
+| kotlinx-serialization            | —              | JSON                                              |
+| DataStore Preferences            | —              | Key-value local persistence                       |
+| Room                             | 2.8.4          | Structured local persistence (SQLite)             |
+| essenty-lifecycle-coroutines     | 2.5.0          | Auto-cancelling coroutine scopes                  |
+| kotlin-logging (io.github.oshai) | 8.0.01         | Structured logging in catch blocks                |
+| kotlinx-datetime                 | —              | Date/time formatting and parsing                  |
+| Ksoup (fleeksoft)                | 0.2.6          | HTML parsing (KMP Jsoup port)                     |
+| ComposeMediaPlayer               | 0.8.7          | Video/audio playback (KMP)                        |
 
 ---
 
@@ -69,8 +69,10 @@ CuMobile/
         │       ├── courses/       # CoursesComponent + detail/CourseDetailComponent
         │       ├── files/         # FilesComponent (full file manager)
         │       ├── home/          # HomeComponent (deadlines + schedule + courses)
-        │       ├── longread/      # LongreadComponent, Screen, TaskSection, TaskInfo
-        │       │   └── htmlrender/ # HTML→Compose rendering (Ksoup parser → HtmlBlock → composables)
+        │       ├── longread/      # LongreadComponent (ChildItems), Screen, SearchHandler
+        │       │   ├── component/ # MaterialConfig, LongreadItem, CodingMaterialComponent, simple material components
+        │       │   ├── htmlrender/ # HTML→Compose rendering (Ksoup parser → HtmlBlock → composables)
+        │       │   └── ui/        # LongreadScreen, CodingMaterialCardContent, CommentsTab, InfoTab, SolutionTab, LateDaysSection
         │       ├── main/          # MainComponent (ChildPages tabs + ChildStack details)
         │       ├── notifications/ # NotificationsComponent
         │       ├── performance/   # CoursePerformanceComponent (2 tabs)
@@ -92,7 +94,8 @@ Every screen has:
 
 - `XxxComponent.kt` — interface with `State`, `Intent`, `Effect`, and `stateFlow`/`effects`
 - `DefaultXxxComponent.kt` — implementation
-- `XxxScreen.kt` — Compose UI consuming state + dispatching intents + collecting effects, it can be split into multiple files depending on the complexity
+- `XxxScreen.kt` — Compose UI consuming state + dispatching intents + collecting effects, it can be
+  split into multiple files depending on the complexity
 
 ### ContentState<T> — Progressive Loading
 
@@ -127,6 +130,20 @@ Every screen has:
 - **ChildPages** — bottom nav tabs (preserves state on tab switch)
 - **ChildStack** — detail navigation overlay (CourseDetail, Longread, Profile, Notifications,
   CoursePerformance)
+- **ChildItems** — longread materials in LazyColumn. Each material is a component with automatic
+  lifecycle managed by `ChildItemsLifecycleController`. Experimental API (
+  `@ExperimentalDecomposeApi`).
+  Uses `MaterialConfig` (serializable sealed interface) as key, `LongreadItem` (sealed wrapper) as
+  child.
+  `CodingMaterialComponent` has full MVI; simple materials (Markdown, File, Image, etc.) are
+  lightweight wrappers.
+    - **material as constructor-val**: `LongreadMaterial` is immutable data fixed at creation — it
+      stays as a
+      constructor `val` property, NOT in component State. Putting it in State would bloat every
+      `state.copy()`.
+    - **ExternalUpdate channel**: Parent broadcasts events (e.g. search query changes) to children
+      via
+      `MutableSharedFlow<ExternalUpdate>(replay=1)`. Children collect and store in their own state.
 - `navigation.push()` requires `@OptIn(DelicateDecomposeApi::class)`
 
 ### DI (Koin)
@@ -258,11 +275,13 @@ Every screen has:
 ### Previews
 
 - Every `@Composable` screen function must have a `@Preview` companion (dark + light)
-- Pattern: `XxxScreen(component)` doesn't have any ui logic, it simply delegates to `XxxScreenContent(state, onIntent, ...)` which is
+- Pattern: `XxxScreen(component)` doesn't have any ui logic, it simply delegates to
+  `XxxScreenContent(state, onIntent, ...)` which is
   `internal`; previews call the content function with mock state
 - Common components (TopBar, TaskCard, etc.) have previews wrapping in `CuMobileTheme` +
   `Box(background)`
 - Import: `import androidx.compose.ui.tooling.preview.Preview`
+- Usually in a separate file `XxxScreenPreviews.kt` (detekt won't flag them for `MagicNumber`)
 
 ### Detekt
 

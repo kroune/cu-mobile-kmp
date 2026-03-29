@@ -131,6 +131,9 @@ kotlin {
             implementation(libs.kotlinx.datetime)
             implementation(libs.kotlinx.collections.immutable)
 
+            implementation(libs.coil.compose)
+            implementation(libs.coil.network.ktor3)
+
             implementation(libs.ksoup)
             implementation(libs.composemediaplayer)
         }
