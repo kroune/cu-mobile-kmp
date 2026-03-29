@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -148,13 +149,14 @@ private fun PerformanceTotalRow(
     modifier: Modifier = Modifier,
 ) {
     val color = gradeColor(total.toInt())
+    HorizontalDivider(
+        modifier = Modifier.padding(top = 8.dp),
+        color = AppTheme.colors.textSecondary.copy(alpha = 0.3f),
+    )
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(top = 8.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .background(AppTheme.colors.background.copy(alpha = 0.5f))
-            .padding(vertical = 6.dp),
+            .padding(top = 6.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Text(
