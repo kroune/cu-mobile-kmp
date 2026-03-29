@@ -152,6 +152,7 @@ private fun PerformanceTotalRow(
         modifier = modifier
             .fillMaxWidth()
             .padding(top = 8.dp)
+            .clip(RoundedCornerShape(8.dp))
             .background(AppTheme.colors.background.copy(alpha = 0.5f))
             .padding(vertical = 6.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -161,7 +162,7 @@ private fun PerformanceTotalRow(
             color = AppTheme.colors.textPrimary,
             fontSize = 13.sp,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.weight(5.3f),
+            modifier = Modifier.weight(4.9f),
         )
         Text(
             formatScore(total),
