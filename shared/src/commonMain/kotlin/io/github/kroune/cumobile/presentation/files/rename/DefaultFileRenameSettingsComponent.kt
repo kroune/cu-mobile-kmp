@@ -7,6 +7,7 @@ import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.data.local.FileRenameRule
 import io.github.kroune.cumobile.domain.repository.CourseRepository
 import io.github.kroune.cumobile.domain.repository.FileRenameRepository
+import io.github.kroune.cumobile.util.runCatchingCancellable
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -50,19 +51,23 @@ class DefaultFileRenameSettingsComponent(
     private fun loadCourses() {
         scope.launch {
             _state.value = _state.value.copy(isLoading = true, error = null)
-            try {
-                val courses = courseRepository.fetchCourses()
-                _state.value = _state.value.copy(
-                    courses = courses.orEmpty(),
-                    isLoading = false,
-                )
-            } catch (e: Exception) {
-                logger.error(e) { "Failed to load courses for rename settings" }
-                _state.value = _state.value.copy(
-                    isLoading = false,
-                    error = "Не удалось загрузить курсы",
-                )
-            }
+            runCatchingCancellable {
+                courseRepository.fetchCourses()
+            }.fold(
+                onSuccess = { courses ->
+                    _state.value = _state.value.copy(
+                        courses = courses.orEmpty(),
+                        isLoading = false,
+                    )
+                },
+                onFailure = { e ->
+                    logger.error(e) { "Failed to load courses for rename settings" }
+                    _state.value = _state.value.copy(
+                        isLoading = false,
+                        error = "Не удалось загрузить курсы",
+                    )
+                },
+            )
         }
     }
 

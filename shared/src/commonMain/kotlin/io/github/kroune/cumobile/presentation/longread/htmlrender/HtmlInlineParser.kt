@@ -3,54 +3,58 @@ package io.github.kroune.cumobile.presentation.longread.htmlrender
 import com.fleeksoft.ksoup.nodes.Element
 import com.fleeksoft.ksoup.nodes.Node
 import com.fleeksoft.ksoup.nodes.TextNode
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 
 /** Parses inline content of an element into a flat list of [InlineElement]. */
-internal fun parseInlineContent(element: Element): List<InlineElement> {
+internal fun parseInlineContent(element: Element): ImmutableList<InlineElement> {
     val result = mutableListOf<InlineElement>()
     for (node in element.childNodes()) {
         result.addAll(parseInlineNode(node))
     }
-    return result
+    return result.toImmutableList()
 }
 
-private fun parseInlineNode(node: Node): List<InlineElement> =
-    when {
-        node is TextNode -> {
+private fun parseInlineNode(node: Node): ImmutableList<InlineElement> =
+    when (node) {
+        is TextNode -> {
             val text = collapseWhitespace(node.getWholeText())
-            if (text.isNotEmpty()) listOf(InlineElement.Text(text)) else emptyList()
+            if (text.isNotEmpty()) persistentListOf(InlineElement.Text(text)) else persistentListOf()
         }
-        node is Element -> parseInlineElement(node)
-        else -> emptyList()
+
+        is Element -> parseInlineElement(node)
+        else -> persistentListOf()
     }
 
-internal fun parseInlineElement(element: Element): List<InlineElement> {
+internal fun parseInlineElement(element: Element): ImmutableList<InlineElement> {
     val tag = element.tagName().lowercase()
     return when (tag) {
-        "strong", "b" -> listOf(InlineElement.Bold(parseInlineContent(element)))
-        "em", "i" -> listOf(InlineElement.Italic(parseInlineContent(element)))
-        "code" -> listOf(InlineElement.Code(element.text()))
+        "strong", "b" -> persistentListOf(InlineElement.Bold(parseInlineContent(element)))
+        "em", "i" -> persistentListOf(InlineElement.Italic(parseInlineContent(element)))
+        "code" -> persistentListOf(InlineElement.Code(element.text()))
         "a" -> parseLink(element)
-        "br" -> listOf(InlineElement.LineBreak)
+        "br" -> persistentListOf(InlineElement.LineBreak)
         "img" -> parseInlineImage(element)
         else -> parseInlineContent(element)
     }
 }
 
-private fun parseLink(element: Element): List<InlineElement> =
-    listOf(
+private fun parseLink(element: Element): ImmutableList<InlineElement> =
+    persistentListOf(
         InlineElement.Link(
             href = element.attr("href"),
             children = parseInlineContent(element),
         ),
     )
 
-private fun parseInlineImage(element: Element): List<InlineElement> {
+private fun parseInlineImage(element: Element): ImmutableList<InlineElement> {
     val src = element.attr("src")
     val alt = element.attr("alt").ifBlank { null }
     return if (src.isNotBlank()) {
-        listOf(InlineElement.Text(alt ?: "[image]"))
+        persistentListOf(InlineElement.Text(alt ?: "[image]"))
     } else {
-        emptyList()
+        persistentListOf()
     }
 }
 
@@ -59,6 +63,7 @@ internal fun parseUnorderedList(element: Element): HtmlBlock.UnorderedList {
         .children()
         .filter { it.tagName().lowercase() == "li" }
         .map { ListItem(parseChildBlocks(it)) }
+        .toImmutableList()
     return HtmlBlock.UnorderedList(items)
 }
 
@@ -68,6 +73,7 @@ internal fun parseOrderedList(element: Element): HtmlBlock.OrderedList {
         .children()
         .filter { it.tagName().lowercase() == "li" }
         .map { ListItem(parseChildBlocks(it)) }
+        .toImmutableList()
     return HtmlBlock.OrderedList(items, start)
 }
 
@@ -77,11 +83,13 @@ internal fun parseTable(element: Element): HtmlBlock.Table {
         ?.select("th,td")
         ?.map { parseInlineContent(it) }
         .orEmpty()
+        .toImmutableList()
 
     val bodyRows = element.select("tbody tr").ifEmpty { element.select("tr") }
     val rows = bodyRows
         .filter { it != headerRow }
-        .map { row -> row.select("td,th").map { parseInlineContent(it) } }
+        .map { row -> row.select("td,th").map { parseInlineContent(it) }.toImmutableList() }
+        .toImmutableList()
 
     return HtmlBlock.Table(headers, rows)
 }

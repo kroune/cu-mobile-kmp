@@ -21,10 +21,14 @@ internal class CourseRepositoryImpl(
 ) : CookieAwareRepository(authLocal),
     CourseRepository {
     override suspend fun fetchCourses(): List<Course>? =
-        withCookie { courseApi.fetchCourses(it) }
+        withCookie {
+            courseApi.fetchCourses(it)
+        }
 
     override suspend fun fetchCourseOverview(courseId: String): CourseOverview? =
-        withCookie { courseApi.fetchCourseOverview(it, courseId) }
+        withCookie {
+            courseApi.fetchCourseOverview(it, courseId)
+        }
 
     override val courseIdOrderFlow: Flow<List<String>> = courseLocal.courseIdOrderFlow
 

@@ -129,6 +129,7 @@ kotlin {
 
             implementation(libs.kotlin.logging)
             implementation(libs.kotlinx.datetime)
+            implementation(libs.kotlinx.collections.immutable)
 
             implementation(libs.ksoup)
             implementation(libs.composemediaplayer)

@@ -1,5 +1,6 @@
 package io.github.kroune.cumobile.data.network
 
+import io.github.kroune.cumobile.util.runCatchingCancellable
 import io.github.oshai.kotlinlogging.KLogger
 import io.ktor.client.call.body
 import io.ktor.client.statement.HttpResponse
@@ -34,7 +35,6 @@ internal fun isSuccessStatus(status: HttpStatusCode): Boolean =
  * Executes an API call and deserializes the response body on HTTP 200.
  *
  * - Returns `null` on non-200 responses (with a warning log).
- * - Rethrows [CancellationException] to preserve structured concurrency.
  * - Catches and logs all other exceptions, returning `null`.
  */
 internal suspend inline fun <reified T> safeApiCall(
@@ -42,31 +42,30 @@ internal suspend inline fun <reified T> safeApiCall(
     description: String,
     crossinline block: suspend () -> HttpResponse,
 ): T? =
-    try {
+    runCatchingCancellable {
         val response = block()
         if (response.status == HttpStatusCode.OK) {
             response.body<T>()
         } else {
             val body = try {
                 response.bodyAsText().take(ErrorBodyMaxChars)
-            } catch (ignored: Exception) {
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                logger.warn(e) { "Failed to read error body for $description" }
                 "<unable to read body>"
             }
             logger.warn { "$description returned ${response.status}, body: $body" }
             null
         }
-    } catch (e: CancellationException) {
-        throw e
-    } catch (e: Exception) {
+    }.onFailure { e ->
         logger.error(e) { "Failed to $description" }
-        null
-    }
+    }.getOrNull()
 
 /**
  * Executes a mutating API call and returns whether it succeeded.
  *
  * - Returns `false` on non-success responses (with a warning log).
- * - Rethrows [CancellationException] to preserve structured concurrency.
  * - Catches and logs all other exceptions, returning `false`.
  */
 internal suspend inline fun safeApiAction(
@@ -74,7 +73,7 @@ internal suspend inline fun safeApiAction(
     description: String,
     crossinline block: suspend () -> HttpResponse,
 ): Boolean =
-    try {
+    runCatchingCancellable {
         val response = block()
         if (isSuccessStatus(response.status)) {
             true
@@ -82,12 +81,9 @@ internal suspend inline fun safeApiAction(
             logger.warn { "$description returned ${response.status}" }
             false
         }
-    } catch (e: CancellationException) {
-        throw e
-    } catch (e: Exception) {
+    }.onFailure { e ->
         logger.error(e) { "Failed to $description" }
-        false
-    }
+    }.getOrDefault(false)
 
 /** URL-encodes a string for use in query parameters. */
 internal fun String.encodeUrlParam(): String =

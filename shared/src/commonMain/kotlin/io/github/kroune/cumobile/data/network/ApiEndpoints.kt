@@ -7,16 +7,16 @@ package io.github.kroune.cumobile.data.network
  * and prepares for a future remote-config approach.
  */
 internal object ApiEndpoints {
-    // Profile / Auth
-    const val PROFILE_ME = "student-hub/students/me"
-    const val AVATAR_ME = "hub/avatars/me"
-    const val LMS_PROFILE_ME = "micro-lms/students/me"
-
-    // Tasks
-    const val TASKS_STUDENT = "micro-lms/tasks/student"
-    const val COMMENTS = "micro-lms/comments"
+    object Profile {
+        const val ME = "student-hub/students/me"
+        const val AVATAR_ME = "hub/avatars/me"
+        const val LMS_ME = "micro-lms/students/me"
+    }
 
     object Tasks {
+        const val STUDENT = "micro-lms/tasks/student"
+        const val COMMENTS = "micro-lms/comments"
+
         fun byId(id: String): String =
             "micro-lms/tasks/$id"
 
@@ -39,36 +39,40 @@ internal object ApiEndpoints {
             "micro-lms/tasks/$id/late-days-cancel"
     }
 
-    // Courses
-    const val COURSES_STUDENT = "micro-lms/courses/student"
+    object Courses {
+        const val STUDENT = "micro-lms/courses/student"
 
-    fun courseOverview(id: String): String =
-        "micro-lms/courses/$id/overview"
+        fun overview(id: String): String =
+            "micro-lms/courses/$id/overview"
 
-    // Content
-    fun longreadMaterials(longreadId: String): String =
-        "micro-lms/longreads/$longreadId/materials"
+        fun exercises(courseId: String): String =
+            "micro-lms/courses/$courseId/exercises"
+    }
 
-    fun material(materialId: String): String =
-        "micro-lms/materials/$materialId"
+    object Content {
+        const val DOWNLOAD_LINK = "micro-lms/content/download-link"
+        const val UPLOAD_LINK = "micro-lms/content/upload-link"
 
-    const val CONTENT_DOWNLOAD_LINK = "micro-lms/content/download-link"
-    const val CONTENT_UPLOAD_LINK = "micro-lms/content/upload-link"
+        fun longreadMaterials(longreadId: String): String =
+            "micro-lms/longreads/$longreadId/materials"
 
-    // Notifications
-    const val NOTIFICATIONS_IN_APP = "notification-hub/notifications/in-app"
+        fun material(materialId: String): String =
+            "micro-lms/materials/$materialId"
+    }
 
-    // Performance
-    const val PERFORMANCE_STUDENT = "micro-lms/performance/student"
+    object Notifications {
+        const val IN_APP = "notification-hub/notifications/in-app"
+    }
 
-    fun courseExercises(courseId: String): String =
-        "micro-lms/courses/$courseId/exercises"
+    object Performance {
+        const val STUDENT = "micro-lms/performance/student"
+        const val GRADEBOOK = "micro-lms/gradebook"
 
-    fun coursePerformance(courseId: String): String =
-        "micro-lms/courses/$courseId/student-performance"
+        fun coursePerformance(courseId: String): String =
+            "micro-lms/courses/$courseId/student-performance"
+    }
 
-    const val GRADEBOOK = "micro-lms/gradebook"
-
-    // Timetable
-    const val TIMETABLES_ME = "micro-lms/students/me/timetables"
+    object Timetable {
+        const val ME = "micro-lms/students/me/timetables"
+    }
 }

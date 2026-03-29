@@ -2,6 +2,7 @@ package io.github.kroune.cumobile.data.network
 
 import io.github.kroune.cumobile.data.model.StudentLmsProfile
 import io.github.kroune.cumobile.data.model.StudentProfile
+import io.github.kroune.cumobile.util.runCatchingCancellable
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.request.delete
@@ -13,7 +14,6 @@ import io.ktor.client.statement.readRawBytes
 import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
-import kotlin.coroutines.cancellation.CancellationException
 
 private val logger = KotlinLogging.logger {}
 
@@ -26,15 +26,15 @@ internal class ProfileApiService(
     /** Fetches the current student's hub profile. */
     suspend fun fetchProfile(cookie: String): StudentProfile? =
         safeApiCall(logger, "fetch profile") {
-            httpClient.get(ApiEndpoints.PROFILE_ME) {
+            httpClient.get(ApiEndpoints.Profile.ME) {
                 header("Cookie", cookieHeader(cookie))
             }
         }
 
     /** Fetches the current student's avatar as raw image bytes. */
     suspend fun fetchAvatar(cookie: String): ByteArray? =
-        try {
-            val response = httpClient.get(ApiEndpoints.AVATAR_ME) {
+        runCatchingCancellable {
+            val response = httpClient.get(ApiEndpoints.Profile.AVATAR_ME) {
                 header("Cookie", cookieHeader(cookie))
             }
             if (response.status == HttpStatusCode.OK) {
@@ -43,9 +43,7 @@ internal class ProfileApiService(
                 logger.warn { "fetch avatar returned ${response.status}" }
                 null
             }
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
+        }.getOrElse { e ->
             logger.error(e) { "Failed to fetch avatar" }
             null
         }
@@ -58,7 +56,7 @@ internal class ProfileApiService(
     ): Boolean =
         safeApiAction(logger, "upload avatar") {
             httpClient.submitFormWithBinaryData(
-                url = ApiEndpoints.AVATAR_ME,
+                url = ApiEndpoints.Profile.AVATAR_ME,
                 formData = formData {
                     append(
                         "file",
@@ -77,7 +75,7 @@ internal class ProfileApiService(
     /** Deletes the current student's avatar. */
     suspend fun deleteAvatar(cookie: String): Boolean =
         safeApiAction(logger, "delete avatar") {
-            httpClient.delete(ApiEndpoints.AVATAR_ME) {
+            httpClient.delete(ApiEndpoints.Profile.AVATAR_ME) {
                 header("Cookie", cookieHeader(cookie))
             }
         }
@@ -85,7 +83,7 @@ internal class ProfileApiService(
     /** Fetches the current student's LMS profile. */
     suspend fun fetchLmsProfile(cookie: String): StudentLmsProfile? =
         safeApiCall(logger, "fetch LMS profile") {
-            httpClient.get(ApiEndpoints.LMS_PROFILE_ME) {
+            httpClient.get(ApiEndpoints.Profile.LMS_ME) {
                 header("Cookie", cookieHeader(cookie))
             }
         }

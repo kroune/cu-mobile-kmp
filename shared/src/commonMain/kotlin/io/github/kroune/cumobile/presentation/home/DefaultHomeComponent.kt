@@ -6,12 +6,17 @@ import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.data.model.StudentTask
 import io.github.kroune.cumobile.data.model.TaskState
+import io.github.kroune.cumobile.presentation.common.ContentState
 import io.github.kroune.cumobile.presentation.common.DateTimeProvider
 import io.github.kroune.cumobile.presentation.common.decodeImageBitmap
+import io.github.kroune.cumobile.util.runCatchingCancellable
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.CoroutineContext
@@ -23,7 +28,7 @@ private const val MillisPerDay = 86_400_000L
 /**
  * Default implementation of [HomeComponent].
  *
- * Loads tasks, courses, profile, and schedule data on creation.
+ * Loads tasks, courses, profile, and schedule data in parallel on creation.
  * Delegates navigation intents to [onOpenTask] and [onOpenCourse] callbacks.
  */
 class DefaultHomeComponent(
@@ -51,7 +56,11 @@ class DefaultHomeComponent(
     )
     override val state: Value<HomeComponent.State> = _state
 
+    private val _effects = Channel<HomeComponent.Effect>(Channel.BUFFERED)
+    override val effects: Flow<HomeComponent.Effect> = _effects.receiveAsFlow()
+
     private var scheduleJob: Job? = null
+    private var currentLoadJob: Job? = null
 
     init {
         loadData()
@@ -87,60 +96,113 @@ class DefaultHomeComponent(
 
     private fun loadSchedule() {
         scheduleJob?.cancel()
-        _state.value = _state.value.copy(isScheduleLoading = true, scheduleError = null)
+        _state.value = _state.value.copy(schedule = ContentState.Loading)
         scheduleJob = scope.launch {
-            try {
-                val dateMillis = _state.value.selectedDateMillis
-                val classes = calendarRepository.getClassesForDate(dateMillis)
-                _state.value = _state.value.copy(
-                    classes = classes,
-                    isScheduleLoading = false,
-                    scheduleError = null,
-                )
-            } catch (e: Exception) {
-                logger.error(e) { "Failed to load schedule" }
-                _state.value = _state.value.copy(
-                    isScheduleLoading = false,
-                    scheduleError = "Не удалось загрузить расписание",
-                )
-            }
+            val dateMillis = _state.value.selectedDateMillis
+            runCatchingCancellable {
+                calendarRepository.getClassesForDate(dateMillis)
+            }.fold(
+                onSuccess = { classes ->
+                    _state.value = _state.value.copy(
+                        schedule = ContentState.Success(classes),
+                    )
+                },
+                onFailure = { e ->
+                    logger.error(e) { "Failed to load schedule" }
+                    _state.value = _state.value.copy(
+                        schedule = ContentState.Error("Не удалось загрузить расписание"),
+                    )
+                },
+            )
         }
     }
 
     private fun loadData() {
-        _state.value = _state.value.copy(isLoading = true, error = null)
-        scope.launch {
-            try {
-                val tasks = loadTasks()
-                val courses = courseRepository.fetchCourses()
-                val initials = loadProfileInitials()
-                val lmsProfile = profileRepository.fetchLmsProfile()
-                val avatar = profileRepository.fetchAvatar()
-                val bitmap = withContext(defaultDispatcher) {
-                    avatar?.let { decodeImageBitmap(it) }
-                }
+        currentLoadJob?.cancel()
 
+        _state.value = _state.value.copy(
+            tasks = ContentState.Loading,
+            courses = ContentState.Loading,
+            profileInitials = ContentState.Loading,
+            avatarBitmap = ContentState.Loading,
+            lateDaysBalance = ContentState.Loading,
+        )
+
+        currentLoadJob = scope.launch {
+            launch {
+                val tasks = loadTasks()
                 _state.value = _state.value.copy(
-                    tasks = tasks.orEmpty(),
-                    courses = courses.orEmpty(),
-                    profileInitials = initials,
-                    avatarBitmap = bitmap,
-                    lateDaysBalance = lmsProfile?.lateDaysBalance,
-                    isLoading = false,
-                    error = if (tasks == null && courses == null) {
-                        "Не удалось загрузить данные"
+                    tasks = if (tasks != null) {
+                        ContentState.Success(tasks)
                     } else {
-                        null
+                        ContentState.Error("Не удалось загрузить задания")
                     },
                 )
-            } catch (e: Exception) {
-                logger.error(e) { "Failed to load home data" }
+            }
+
+            launch {
+                val courses = courseRepository.fetchCourses()
                 _state.value = _state.value.copy(
-                    isLoading = false,
-                    error = "Ошибка: ${e.message}",
+                    courses = if (courses != null) {
+                        ContentState.Success(courses)
+                    } else {
+                        ContentState.Error("Не удалось загрузить курсы")
+                    },
                 )
             }
+
+            launch {
+                val initials = loadProfileInitials()
+                _state.value = _state.value.copy(
+                    profileInitials = ContentState.Success(initials),
+                )
+            }
+
+            launch { loadLateDaysBalance() }
+            launch { loadAvatar() }
         }
+    }
+
+    private suspend fun loadLateDaysBalance() {
+        runCatchingCancellable {
+            profileRepository.fetchLmsProfile()
+        }.fold(
+            onSuccess = { lmsProfile ->
+                _state.value = _state.value.copy(
+                    lateDaysBalance = ContentState.Success(lmsProfile?.lateDaysBalance),
+                )
+            },
+            onFailure = { e ->
+                logger.error(e) { "Failed to load late days balance" }
+                _state.value = _state.value.copy(
+                    lateDaysBalance = ContentState.Error("Не удалось загрузить баланс"),
+                )
+                _effects.trySend(
+                    HomeComponent.Effect.ShowError("Не удалось загрузить баланс поздних дней"),
+                )
+            },
+        )
+    }
+
+    private suspend fun loadAvatar() {
+        runCatchingCancellable {
+            val avatar = profileRepository.fetchAvatar()
+            withContext(defaultDispatcher) {
+                avatar?.let { decodeImageBitmap(it) }
+            }
+        }.fold(
+            onSuccess = { bitmap ->
+                _state.value = _state.value.copy(
+                    avatarBitmap = ContentState.Success(bitmap),
+                )
+            },
+            onFailure = { e ->
+                logger.error(e) { "Failed to load avatar" }
+                _state.value = _state.value.copy(
+                    avatarBitmap = ContentState.Success(null),
+                )
+            },
+        )
     }
 
     /**

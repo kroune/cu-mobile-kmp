@@ -20,7 +20,7 @@ internal class TimetableApiService(
      */
     suspend fun fetchTimetable(cookie: String): List<TimetableCourse>? =
         safeApiCall(logger, "fetch timetable") {
-            httpClient.get(ApiEndpoints.TIMETABLES_ME) {
+            httpClient.get(ApiEndpoints.Timetable.ME) {
                 header("Cookie", cookieHeader(cookie))
             }
         }

@@ -1,5 +1,6 @@
 package io.github.kroune.cumobile.data.network
 
+import io.github.kroune.cumobile.util.runCatchingCancellable
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.HttpTimeout
@@ -15,7 +16,6 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.TextContent
 import io.ktor.http.encodeURLParameter
-import kotlin.coroutines.cancellation.CancellationException
 
 private val logger = KotlinLogging.logger {}
 
@@ -76,12 +76,10 @@ class AuthApiService {
      * Initiates the auth flow by loading the Keycloak login page.
      */
     suspend fun startAuth(): AuthStepResult =
-        try {
+        runCatchingCancellable {
             val response = client.get(AuthOidcUrl)
             handleAuthResponse(response)
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
+        }.getOrElse { e ->
             logger.error(e) { "Failed to start auth" }
             AuthStepResult.Error("Ошибка подключения: ${e.message}")
         }
@@ -93,7 +91,10 @@ class AuthApiService {
         loginAction: String,
         username: String,
     ): AuthStepResult =
-        postForm(loginAction, "username=${username.encodeURLParameter()}")
+        postForm(
+            loginAction,
+            "username=${username.encodeURLParameter()}",
+        )
 
     /**
      * Submits the password to Keycloak.
@@ -102,7 +103,10 @@ class AuthApiService {
         loginAction: String,
         password: String,
     ): AuthStepResult =
-        postForm(loginAction, "password=${password.encodeURLParameter()}")
+        postForm(
+            loginAction,
+            "password=${password.encodeURLParameter()}",
+        )
 
     /**
      * Submits the SMS OTP code to Keycloak.
@@ -115,10 +119,8 @@ class AuthApiService {
         postForm(
             loginAction,
             buildString {
-                append("phoneNumber=")
-                append(phoneNumber.encodeURLParameter())
-                append("&code=")
-                append(code.encodeURLParameter())
+                append("phoneNumber=${phoneNumber.encodeURLParameter()}")
+                append("&code=${code.encodeURLParameter()}")
                 append("&action=verify")
                 append("&credentialId=")
             },
@@ -129,11 +131,12 @@ class AuthApiService {
      * Returns the cookie value or null on failure.
      */
     suspend fun exchangeCallback(callbackUrl: String): String? =
-        try {
+        runCatchingCancellable {
             val response = client.get(callbackUrl)
-            val setCookies = response.headers.getAll(HttpHeaders.SetCookie)
+            val setCookies = response.headers.getAll(HttpHeaders.SetCookie).orEmpty()
+
             val bffCookie = setCookies
-                ?.firstOrNull { it.startsWith("$TargetCookieName=") }
+                .firstOrNull { it.startsWith("$TargetCookieName=") }
                 ?.substringAfter("$TargetCookieName=")
                 ?.substringBefore(";")
 
@@ -143,9 +146,7 @@ class AuthApiService {
                 logger.warn { "Callback missing bff.cookie. Status=${response.status}, headers=$setCookies" }
             }
             bffCookie
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
+        }.getOrElse { e ->
             logger.error(e) { "Failed to exchange callback" }
             null
         }
@@ -161,45 +162,43 @@ class AuthApiService {
         url: String,
         formBody: String,
     ): AuthStepResult =
-        try {
+        runCatchingCancellable {
             val response = client.post(url) {
                 setBody(TextContent(formBody, ContentType.Application.FormUrlEncoded))
             }
             handleAuthResponse(response)
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
+        }.getOrElse { e ->
             logger.error(e) { "Failed to submit auth form" }
             AuthStepResult.Error("Ошибка подключения: ${e.message}")
         }
 
     private suspend fun handleAuthResponse(response: HttpResponse): AuthStepResult =
-        when {
-            response.status == HttpStatusCode.Found ||
-                response.status == HttpStatusCode.TemporaryRedirect -> {
+        when (response.status) {
+            HttpStatusCode.Found, HttpStatusCode.TemporaryRedirect -> {
                 val location = response.headers[HttpHeaders.Location]
                 when {
                     location == null -> AuthStepResult.Error("Пустой редирект")
                     location.contains("callback") ->
                         AuthStepResult.Redirect(location)
+
                     else -> {
                         // Follow internal Keycloak redirects (e.g., locale changes)
-                        try {
+                        runCatchingCancellable {
                             val next = client.get(location)
                             handleAuthResponse(next)
-                        } catch (e: CancellationException) {
-                            throw e
-                        } catch (e: Exception) {
+                        }.getOrElse { e ->
                             logger.error(e) { "Failed to follow redirect" }
                             AuthStepResult.Error("Ошибка при переходе")
                         }
                     }
                 }
             }
-            response.status == HttpStatusCode.OK -> {
+
+            HttpStatusCode.OK -> {
                 val html = response.bodyAsText()
                 parseAuthPage(html)
             }
+
             else -> {
                 logger.warn { "Unexpected auth status: ${response.status}" }
                 AuthStepResult.Error("Ошибка сервера: ${response.status}")
@@ -262,41 +261,29 @@ private const val HtmlSnippetLen = 500
  * `window.authConfiguration.urls.loginAction = "https://...";`
  * Returns the last occurrence (later script overrides take precedence).
  */
-private fun extractJsStringValue(
+internal fun extractJsStringValue(
     html: String,
     key: String,
 ): String? {
-    var result: String? = null
-    var searchFrom = 0
-    while (true) {
-        val keyIdx = html.indexOf(key, searchFrom)
-        if (keyIdx == -1) return result
-        val eqIdx = html.indexOf('=', keyIdx + key.length)
-        if (eqIdx == -1) return result
-        val afterEq = html.substring(eqIdx + 1).trimStart()
-        val quote = afterEq.firstOrNull()
-        if (quote != '"' && quote != '\'') {
-            searchFrom = eqIdx + 1
-        } else {
-            val closeIdx = afterEq.indexOf(quote, 1)
-            if (closeIdx == -1) {
-                searchFrom = eqIdx + 1
-            } else {
-                result = afterEq.substring(1, closeIdx)
-                searchFrom = keyIdx + key.length + closeIdx
-            }
-        }
-    }
+    val result = """(.*)?"""
+    val someSpaces = """\s*"""
+    val pattern = Regex("""${Regex.escape(key)}$someSpaces=$someSpaces(['"])$result\1""")
+    return pattern
+        .findAll(html)
+        .lastOrNull()
+        ?.groupValues
+        ?.get(2)
 }
 
+// Informational messages that are not errors map to null; unknown codes are returned as-is.
+private val keycloakErrorTranslations: Map<String, String?> = mapOf(
+    "phoneTokenCodeDoesNotMatch" to "Неверный код",
+    "phoneTokenCodeExpired" to "Код истёк, запросите новый",
+    "invalidUserMessage" to "Неверный логин или пароль",
+    "invalidPasswordMessage" to "Неверный пароль",
+    "accountTemporarilyDisabledMessage" to "Аккаунт временно заблокирован",
+    "codeSent" to null,
+)
+
 private fun translateKeycloakError(errorCode: String): String? =
-    when (errorCode) {
-        "phoneTokenCodeDoesNotMatch" -> "Неверный код"
-        "phoneTokenCodeExpired" -> "Код истёк, запросите новый"
-        "invalidUserMessage" -> "Неверный логин или пароль"
-        "invalidPasswordMessage" -> "Неверный пароль"
-        "accountTemporarilyDisabledMessage" -> "Аккаунт временно заблокирован"
-        // Informational messages that are not errors
-        "codeSent" -> null
-        else -> errorCode
-    }
+    keycloakErrorTranslations.getOrElse(errorCode) { errorCode }

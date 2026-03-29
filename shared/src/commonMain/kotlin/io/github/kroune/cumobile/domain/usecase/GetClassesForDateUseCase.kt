@@ -60,7 +60,7 @@ internal class GetClassesForDateUseCase {
             val start = LocalDate.parse(schedule.startDate)
             val end = LocalDate.parse(schedule.endDate)
 
-            if (targetDate < start || targetDate > end) return false
+            if (targetDate !in start..end) return false
 
             val scheduleDow = parseDayOfWeek(schedule.dayOfWeek) ?: return false
             if (targetDate.dayOfWeek != scheduleDow) return false

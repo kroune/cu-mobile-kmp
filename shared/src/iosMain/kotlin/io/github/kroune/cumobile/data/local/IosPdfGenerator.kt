@@ -1,4 +1,3 @@
-@file:Suppress("MagicNumber")
 @file:OptIn(ExperimentalForeignApi::class)
 
 package io.github.kroune.cumobile.data.local
@@ -84,11 +83,12 @@ class IosPdfGenerator(
                 }
             }
         }
-        val image = UIImage(data = nsData) ?: return null
+        val image = UIImage(data = nsData)
         if (page.rotationDegrees == 0f) return image
         return rotateImage(image, page.rotationDegrees)
     }
 
+    @Suppress("MagicNumber")
     private fun rotateImage(
         image: UIImage,
         degrees: Float,

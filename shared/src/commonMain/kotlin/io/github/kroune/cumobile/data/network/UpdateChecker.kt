@@ -2,6 +2,7 @@ package io.github.kroune.cumobile.data.network
 
 import io.github.kroune.cumobile.data.model.GithubRelease
 import io.github.kroune.cumobile.data.model.UpdateInfo
+import io.github.kroune.cumobile.util.runCatchingCancellable
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -24,7 +25,7 @@ class UpdateChecker(
      * @return [UpdateInfo] if a newer version is available, null otherwise.
      */
     suspend fun checkForUpdate(): UpdateInfo? =
-        try {
+        runCatchingCancellable {
             val release: GithubRelease =
                 httpClient.get(GithubReleasesUrl).body()
             val latestVersion = release.tagName
@@ -43,7 +44,7 @@ class UpdateChecker(
             } else {
                 null
             }
-        } catch (e: Exception) {
+        }.getOrElse { e ->
             logger.error(e) { "Failed to check for updates" }
             null
         }

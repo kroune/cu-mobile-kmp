@@ -1,11 +1,10 @@
-@file:Suppress("MagicNumber")
-
 package io.github.kroune.cumobile.data.local
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.graphics.pdf.PdfDocument
+import androidx.core.graphics.scale
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -84,16 +83,14 @@ class AndroidPdfGenerator(
     }
 
     private fun compressBitmap(bitmap: Bitmap): Bitmap {
-        val maxDimension = 1920
-        if (bitmap.width <= maxDimension && bitmap.height <= maxDimension) {
+        if (bitmap.width <= MaxDimension && bitmap.height <= MaxDimension) {
             return bitmap
         }
-        val scale = maxDimension.toFloat() / maxOf(bitmap.width, bitmap.height)
-        return Bitmap.createScaledBitmap(
-            bitmap,
-            (bitmap.width * scale).toInt(),
-            (bitmap.height * scale).toInt(),
-            true,
-        )
+        val scale = MaxDimension.toFloat() / maxOf(bitmap.width, bitmap.height)
+        return bitmap.scale((bitmap.width * scale).toInt(), (bitmap.height * scale).toInt())
+    }
+
+    companion object {
+        private const val MaxDimension = 1920
     }
 }

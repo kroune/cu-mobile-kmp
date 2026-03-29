@@ -669,7 +669,19 @@ style:
         maxJumpCount: 1
     MagicNumber:
         active: true
-        excludes: [ '**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/jsTest/**', '**/iosTest/**', '**/*.kts' ]
+        excludes:
+            - '**/test/**'
+            - '**/androidTest/**'
+            - '**/commonTest/**'
+            - '**/jvmTest/**'
+            - '**/androidUnitTest/**'
+            - '**/androidInstrumentedTest/**'
+            - '**/jsTest/**'
+            - '**/iosTest/**'
+            - '**/*.kts'
+            - '**/*Skeleton.kts'
+            - '**/*Skeletons.kts'
+            - '**/*Previews.kts'
         ignoreNumbers:
             - '-1'
             - '0'
@@ -677,6 +689,8 @@ style:
             - '2'
             - '8'
             - '16'
+        ignoreAnnotated:
+            - "Composable"
         ignoreHashCodeFunction: true
         ignorePropertyDeclaration: true
         ignoreLocalVariableDeclaration: false

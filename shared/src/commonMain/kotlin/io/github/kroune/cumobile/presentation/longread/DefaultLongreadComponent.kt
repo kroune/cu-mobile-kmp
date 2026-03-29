@@ -5,10 +5,16 @@ import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.data.model.LongreadMaterial
+import io.github.kroune.cumobile.presentation.longread.ui.LongreadTaskActions
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
+import kotlinx.collections.immutable.toPersistentMap
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
@@ -72,28 +78,35 @@ class DefaultLongreadComponent(
             is LongreadComponent.Intent.SelectTask -> selectTask(intent.taskId)
             is LongreadComponent.Intent.SelectTaskTab ->
                 _state.value = _state.value.copy(selectedTaskTab = intent.tab)
+
             is LongreadComponent.Intent.UpdateSolutionUrl ->
                 _state.value = _state.value.copy(solutionUrl = intent.url)
+
             is LongreadComponent.Intent.UpdateCommentText ->
                 _state.value = _state.value.copy(commentText = intent.text)
+
             is LongreadComponent.Intent.DownloadFile ->
                 downloadFile(intent.material)
+
             LongreadComponent.Intent.StartTask,
             LongreadComponent.Intent.SubmitSolution,
             LongreadComponent.Intent.CreateComment,
             is LongreadComponent.Intent.ProlongLateDays,
             LongreadComponent.Intent.CancelLateDays,
             -> handleTaskActionIntent(intent)
+
             is LongreadComponent.Intent.PickSolutionAttachment,
             is LongreadComponent.Intent.RemoveSolutionAttachment,
             is LongreadComponent.Intent.PickCommentAttachment,
             is LongreadComponent.Intent.RemoveCommentAttachment,
             -> handleAttachmentIntent(intent)
+
             LongreadComponent.Intent.ToggleSearch,
             is LongreadComponent.Intent.UpdateSearchQuery,
             LongreadComponent.Intent.NextMatch,
             LongreadComponent.Intent.PreviousMatch,
             -> handleSearchIntent(intent)
+
             LongreadComponent.Intent.NavigateToFiles -> onNavigateToFiles()
         }
     }
@@ -105,6 +118,7 @@ class DefaultLongreadComponent(
             LongreadComponent.Intent.CreateComment -> taskActions.createComment()
             is LongreadComponent.Intent.ProlongLateDays ->
                 taskActions.prolongLateDays(intent.days)
+
             LongreadComponent.Intent.CancelLateDays -> taskActions.cancelLateDays()
             else -> Unit
         }
@@ -114,12 +128,16 @@ class DefaultLongreadComponent(
         when (intent) {
             is LongreadComponent.Intent.PickSolutionAttachment ->
                 attachmentManager.uploadAttachment(intent.file, isSolution = true)
+
             is LongreadComponent.Intent.RemoveSolutionAttachment ->
                 attachmentManager.removeSolutionAttachment(intent.index)
+
             is LongreadComponent.Intent.PickCommentAttachment ->
                 attachmentManager.uploadAttachment(intent.file, isSolution = false)
+
             is LongreadComponent.Intent.RemoveCommentAttachment ->
                 attachmentManager.removeCommentAttachment(intent.index)
+
             else -> Unit
         }
     }
@@ -129,10 +147,13 @@ class DefaultLongreadComponent(
             LongreadComponent.Intent.ToggleSearch -> searchHandler.toggleSearch()
             is LongreadComponent.Intent.UpdateSearchQuery ->
                 searchHandler.updateSearchQuery(intent.query)
+
             LongreadComponent.Intent.NextMatch ->
                 searchHandler.navigateMatch(forward = true)
+
             LongreadComponent.Intent.PreviousMatch ->
                 searchHandler.navigateMatch(forward = false)
+
             else -> Unit
         }
     }
@@ -149,7 +170,7 @@ class DefaultLongreadComponent(
             )
             if (materials != null) {
                 _state.value = _state.value.copy(
-                    materials = materials,
+                    materials = materials.toPersistentList(),
                     isLoading = false,
                 )
                 loadTaskDetailsForCodingMaterials(materials)
@@ -166,14 +187,21 @@ class DefaultLongreadComponent(
         val codingTaskIds = materials
             .filter { it.isCoding && it.taskId != null }
             .mapNotNull { it.taskId }
-        val detailsMap = _state.value.taskDetails.toMutableMap()
-        for (taskId in codingTaskIds) {
-            val details = taskRepository.fetchTaskDetails(taskId)
-            if (details != null) {
-                detailsMap[taskId] = details
+        coroutineScope {
+            val deferredDetails = codingTaskIds.map { taskId ->
+                async { taskId to taskRepository.fetchTaskDetails(taskId) }
+            }
+            val detailsMap = _state.value.taskDetails.toMutableMap()
+            for (deferred in deferredDetails) {
+                val (taskId, details) = deferred.await()
+                if (details != null) {
+                    detailsMap[taskId] = details
+                    _state.value = _state.value.copy(taskDetails = detailsMap.toPersistentMap())
+                } else {
+                    logger.warn { "Failed to load task details for taskId=$taskId" }
+                }
             }
         }
-        _state.value = _state.value.copy(taskDetails = detailsMap)
     }
 
     private fun selectTask(taskId: String) {
@@ -183,10 +211,10 @@ class DefaultLongreadComponent(
             selectedTaskTab = "solution",
             solutionUrl = "",
             commentText = "",
-            taskEvents = emptyList(),
-            taskComments = emptyList(),
-            pendingSolutionAttachments = emptyList(),
-            pendingCommentAttachments = emptyList(),
+            taskEvents = persistentListOf(),
+            taskComments = persistentListOf(),
+            pendingSolutionAttachments = persistentListOf(),
+            pendingCommentAttachments = persistentListOf(),
         )
         if (!isToggleOff) {
             loadTaskEventsAndComments(taskId)
@@ -195,12 +223,22 @@ class DefaultLongreadComponent(
 
     private fun loadTaskEventsAndComments(taskId: String) {
         scope.launch {
-            val events = taskRepository.fetchTaskEvents(taskId)
-            val comments = taskRepository.fetchTaskComments(taskId)
-            _state.value = _state.value.copy(
-                taskEvents = events.orEmpty(),
-                taskComments = comments.orEmpty(),
-            )
+            coroutineScope {
+                val eventsDeferred = async { taskRepository.fetchTaskEvents(taskId) }
+                val commentsDeferred = async { taskRepository.fetchTaskComments(taskId) }
+                val events = eventsDeferred.await()
+                val comments = commentsDeferred.await()
+                if (events == null) {
+                    logger.warn { "Failed to load task events for taskId=$taskId" }
+                }
+                if (comments == null) {
+                    logger.warn { "Failed to load task comments for taskId=$taskId" }
+                }
+                _state.value = _state.value.copy(
+                    taskEvents = events.orEmpty().toPersistentList(),
+                    taskComments = comments.orEmpty().toPersistentList(),
+                )
+            }
         }
     }
 

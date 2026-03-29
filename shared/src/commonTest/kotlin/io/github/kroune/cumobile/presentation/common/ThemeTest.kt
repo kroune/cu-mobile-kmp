@@ -1,5 +1,6 @@
 package io.github.kroune.cumobile.presentation.common
 
+import io.github.kroune.cumobile.presentation.common.ui.stripEmojiPrefix
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

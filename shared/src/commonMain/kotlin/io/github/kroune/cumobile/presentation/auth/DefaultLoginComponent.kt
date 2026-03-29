@@ -25,6 +25,7 @@ private val logger = KotlinLogging.logger {}
 class DefaultLoginComponent(
     componentContext: ComponentContext,
     private val authRepository: AuthRepository,
+    private val authApiServiceFactory: () -> AuthApiService,
     private val onLoginSuccess: () -> Unit,
     private val onNavigateToWebView: () -> Unit,
 ) : LoginComponent,
@@ -45,10 +46,13 @@ class DefaultLoginComponent(
         when (intent) {
             is LoginComponent.Intent.UpdateEmail ->
                 _state.update { it.copy(email = intent.value) }
+
             is LoginComponent.Intent.UpdatePassword ->
                 _state.update { it.copy(password = intent.value) }
+
             is LoginComponent.Intent.UpdateOtpCode ->
                 _state.update { it.copy(otpCode = intent.value) }
+
             is LoginComponent.Intent.Submit -> handleSubmit()
             is LoginComponent.Intent.Back -> handleBack()
             is LoginComponent.Intent.FallbackToWebView -> {
@@ -62,7 +66,7 @@ class DefaultLoginComponent(
     private fun startAuthFlow() {
         scope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
-            val api = AuthApiService()
+            val api = authApiServiceFactory()
             authApi = api
             when (val result = api.startAuth()) {
                 is AuthStepResult.NextStep -> {
@@ -75,9 +79,11 @@ class DefaultLoginComponent(
                         )
                     }
                 }
+
                 is AuthStepResult.Redirect -> {
                     handleRedirect(result.callbackUrl)
                 }
+
                 is AuthStepResult.Error -> {
                     _state.update { it.copy(isLoading = false, error = result.message) }
                 }
@@ -108,6 +114,7 @@ class DefaultLoginComponent(
                     }
                     api.submitUsername(action, currentState.email.trim())
                 }
+
                 AuthStep.Password -> {
                     if (currentState.password.isBlank()) {
                         _state.update { it.copy(isLoading = false, error = "Введите пароль") }
@@ -115,6 +122,7 @@ class DefaultLoginComponent(
                     }
                     api.submitPassword(action, currentState.password)
                 }
+
                 AuthStep.Otp -> {
                     if (currentState.otpCode.isBlank()) {
                         _state.update { it.copy(isLoading = false, error = "Введите код") }
@@ -154,9 +162,11 @@ class DefaultLoginComponent(
                     )
                 }
             }
+
             is AuthStepResult.Redirect -> {
                 handleRedirect(result.callbackUrl)
             }
+
             is AuthStepResult.Error -> {
                 _state.update { it.copy(isLoading = false, error = result.message) }
             }
@@ -195,7 +205,9 @@ class DefaultLoginComponent(
     private fun handleBack() {
         val currentState = _state.value
         when (currentState.step) {
-            AuthStep.Email -> { /* nothing to go back to */ }
+            AuthStep.Email -> { // nothing to go back to
+            }
+
             AuthStep.Password -> {
                 // Restart the auth flow for email step
                 authApi?.close()
@@ -207,6 +219,7 @@ class DefaultLoginComponent(
                 }
                 startAuthFlow()
             }
+
             AuthStep.Otp -> {
                 // Restart the auth flow for email step
                 authApi?.close()
@@ -235,14 +248,15 @@ class DefaultLoginComponent(
     private fun inferErrorForSameStep(
         current: AuthStep,
         next: AuthStep,
-    ): String? =
-        if (current == next) {
-            when (current) {
-                AuthStep.Email -> "Неверный email"
-                AuthStep.Password -> "Неверный логин или пароль"
-                AuthStep.Otp -> "Неверный код"
-            }
-        } else {
-            null
+    ): String? {
+        if (current != next) {
+            return null
         }
+
+        return when (current) {
+            AuthStep.Email -> "Неверный email"
+            AuthStep.Password -> "Неверный логин или пароль"
+            AuthStep.Otp -> "Неверный код"
+        }
+    }
 }

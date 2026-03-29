@@ -7,9 +7,17 @@ import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.data.model.NotificationCategory
 import io.github.kroune.cumobile.data.model.NotificationItem
 import io.github.kroune.cumobile.domain.repository.NotificationRepository
+import io.github.kroune.cumobile.presentation.common.ContentState
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+
+private val logger = KotlinLogging.logger {}
 
 /**
  * Default implementation of [NotificationsComponent].
@@ -26,8 +34,13 @@ class DefaultNotificationsComponent(
     ComponentContext by componentContext {
     private val scope = coroutineScope(Dispatchers.Main.immediate + SupervisorJob())
 
-    private val _state = MutableValue(NotificationsComponent.State(isLoading = true))
+    private val _state = MutableValue(NotificationsComponent.State())
     override val state: Value<NotificationsComponent.State> = _state
+
+    private val _effects = Channel<NotificationsComponent.Effect>(Channel.BUFFERED)
+    override val effects: Flow<NotificationsComponent.Effect> = _effects.receiveAsFlow()
+
+    private var currentLoadJob: Job? = null
 
     init {
         loadNotifications()
@@ -62,21 +75,48 @@ class DefaultNotificationsComponent(
     }
 
     private fun loadNotifications() {
-        scope.launch {
-            _state.value = _state.value.copy(isLoading = true, error = null)
-            val education = notificationRepository.fetchNotifications(category = NotificationCategory.Education)
-            val other = notificationRepository.fetchNotifications(category = NotificationCategory.Other)
-            if (education != null || other != null) {
-                _state.value = _state.value.copy(
-                    educationNotifications = sortByDate(education.orEmpty()),
-                    otherNotifications = sortByDate(other.orEmpty()),
-                    isLoading = false,
+        currentLoadJob?.cancel()
+
+        _state.value = _state.value.copy(
+            educationNotifications = ContentState.Loading,
+            otherNotifications = ContentState.Loading,
+        )
+
+        currentLoadJob = scope.launch {
+            launch {
+                val education = notificationRepository.fetchNotifications(
+                    category = NotificationCategory.Education,
                 )
-            } else {
-                _state.value = _state.value.copy(
-                    isLoading = false,
-                    error = "Не удалось загрузить уведомления",
+                if (education != null) {
+                    _state.value = _state.value.copy(
+                        educationNotifications = ContentState.Success(sortByDate(education)),
+                    )
+                } else {
+                    logger.warn { "Failed to load education notifications" }
+                    _state.value = _state.value.copy(
+                        educationNotifications = ContentState.Error(
+                            "Не удалось загрузить уведомления",
+                        ),
+                    )
+                }
+            }
+
+            launch {
+                val other = notificationRepository.fetchNotifications(
+                    category = NotificationCategory.Other,
                 )
+                if (other != null) {
+                    _state.value = _state.value.copy(
+                        otherNotifications = ContentState.Success(sortByDate(other)),
+                    )
+                } else {
+                    logger.warn { "Failed to load other notifications" }
+                    _state.value = _state.value.copy(
+                        otherNotifications = ContentState.Error(
+                            "Не удалось загрузить уведомления",
+                        ),
+                    )
+                }
             }
         }
     }

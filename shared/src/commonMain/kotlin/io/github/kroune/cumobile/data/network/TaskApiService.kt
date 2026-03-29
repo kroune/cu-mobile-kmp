@@ -6,6 +6,7 @@ import io.github.kroune.cumobile.data.model.StudentTask
 import io.github.kroune.cumobile.data.model.TaskComment
 import io.github.kroune.cumobile.data.model.TaskDetails
 import io.github.kroune.cumobile.data.model.TaskEvent
+import io.github.kroune.cumobile.util.runCatchingCancellable
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -19,7 +20,6 @@ import io.ktor.http.contentType
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import kotlin.coroutines.cancellation.CancellationException
 
 private val logger = KotlinLogging.logger {}
 
@@ -36,7 +36,7 @@ internal class TaskApiService(
     ): List<StudentTask>? =
         safeApiCall(logger, "fetch tasks") {
             val queryString = states.joinToString("&") { "state=$it" }
-            httpClient.get("${ApiEndpoints.TASKS_STUDENT}?$queryString") {
+            httpClient.get("${ApiEndpoints.Tasks.STUDENT}?$queryString") {
                 header("Cookie", cookieHeader(cookie))
             }
         }
@@ -144,8 +144,8 @@ internal class TaskApiService(
         content: String,
         attachments: List<MaterialAttachment> = emptyList(),
     ): String? =
-        try {
-            val response = httpClient.post(ApiEndpoints.COMMENTS) {
+        runCatchingCancellable {
+            val response = httpClient.post(ApiEndpoints.Tasks.COMMENTS) {
                 header("Cookie", cookieHeader(cookie))
                 contentType(ContentType.Application.Json)
                 setBody(
@@ -166,9 +166,7 @@ internal class TaskApiService(
                 logger.warn { "create comment for taskId=$taskId returned ${response.status}" }
                 null
             }
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
+        }.getOrElse { e ->
             logger.error(e) { "Failed to create comment for taskId=$taskId" }
             null
         }

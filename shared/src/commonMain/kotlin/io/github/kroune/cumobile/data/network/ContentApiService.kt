@@ -3,6 +3,7 @@ package io.github.kroune.cumobile.data.network
 import io.github.kroune.cumobile.data.model.LongreadMaterial
 import io.github.kroune.cumobile.data.model.LongreadMaterialsResponse
 import io.github.kroune.cumobile.data.model.UploadLinkData
+import io.github.kroune.cumobile.util.runCatchingCancellable
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -16,7 +17,6 @@ import io.ktor.http.content.ByteArrayContent
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import kotlin.coroutines.cancellation.CancellationException
 
 private val logger = KotlinLogging.logger {}
 
@@ -37,7 +37,7 @@ internal class ContentApiService(
             logger,
             "fetch longread materials for longreadId=$longreadId",
         ) {
-            val url = "${ApiEndpoints.longreadMaterials(longreadId)}?limit=$MaxListLimit"
+            val url = "${ApiEndpoints.Content.longreadMaterials(longreadId)}?limit=$MaxListLimit"
             httpClient.get(url) {
                 header("Cookie", cookieHeader(cookie))
             }
@@ -49,7 +49,7 @@ internal class ContentApiService(
         materialId: String,
     ): LongreadMaterial? =
         safeApiCall(logger, "fetch material materialId=$materialId") {
-            httpClient.get(ApiEndpoints.material(materialId)) {
+            httpClient.get(ApiEndpoints.Content.material(materialId)) {
                 header("Cookie", cookieHeader(cookie))
             }
         }
@@ -60,8 +60,8 @@ internal class ContentApiService(
         filename: String,
         version: String,
     ): String? =
-        try {
-            val url = ApiEndpoints.CONTENT_DOWNLOAD_LINK +
+        runCatchingCancellable {
+            val url = ApiEndpoints.Content.DOWNLOAD_LINK +
                 "?filename=${filename.encodeUrlParam()}&version=$version"
             val response = httpClient.get(url) {
                 header("Cookie", cookieHeader(cookie))
@@ -73,9 +73,7 @@ internal class ContentApiService(
                 logger.warn { "get download link for filename=$filename returned ${response.status}" }
                 null
             }
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
+        }.getOrElse { e ->
             logger.error(e) { "Failed to get download link for filename=$filename" }
             null
         }
@@ -88,7 +86,7 @@ internal class ContentApiService(
         contentType: String,
     ): UploadLinkData? =
         safeApiCall(logger, "get upload link for filename=$filename") {
-            val url = ApiEndpoints.CONTENT_UPLOAD_LINK +
+            val url = ApiEndpoints.Content.UPLOAD_LINK +
                 "?directory=${directory.encodeUrlParam()}" +
                 "&filename=${filename.encodeUrlParam()}" +
                 "&contentType=${contentType.encodeUrlParam()}"
@@ -110,7 +108,7 @@ internal class ContentApiService(
         bytes: ByteArray,
         contentType: String,
     ): Boolean =
-        try {
+        runCatchingCancellable {
             val response = httpClient.put(presignedUrl) {
                 setBody(ByteArrayContent(bytes, ContentType.parse(contentType)))
             }
@@ -120,9 +118,7 @@ internal class ContentApiService(
                 logger.warn { "Upload to presigned URL returned ${response.status}" }
                 false
             }
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
+        }.getOrElse { e ->
             logger.error(e) { "Failed to upload file to presigned URL" }
             false
         }

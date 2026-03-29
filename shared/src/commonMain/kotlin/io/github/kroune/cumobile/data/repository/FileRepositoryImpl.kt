@@ -3,6 +3,7 @@ package io.github.kroune.cumobile.data.repository
 import io.github.kroune.cumobile.data.local.DownloadedFileInfo
 import io.github.kroune.cumobile.data.local.FileStorage
 import io.github.kroune.cumobile.domain.repository.FileRepository
+import io.github.kroune.cumobile.util.runCatchingCancellable
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
@@ -12,7 +13,6 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
-import kotlin.coroutines.cancellation.CancellationException
 
 private val logger = KotlinLogging.logger {}
 
@@ -46,7 +46,7 @@ internal class FileRepositoryImpl(
         url: String,
         filename: String,
     ): Boolean =
-        try {
+        runCatchingCancellable {
             val response = httpClient.get(url)
             if (response.status == HttpStatusCode.OK) {
                 val bytes = response.readRawBytes()
@@ -57,9 +57,7 @@ internal class FileRepositoryImpl(
                 logger.warn { "downloadAndSave: unexpected status ${response.status}" }
                 false
             }
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
+        }.getOrElse { e ->
             logger.error(e) { "Failed to download and save file: $filename" }
             false
         }

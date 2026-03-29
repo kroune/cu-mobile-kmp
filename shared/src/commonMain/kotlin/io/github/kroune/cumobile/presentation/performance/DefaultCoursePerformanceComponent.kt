@@ -7,14 +7,17 @@ import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.data.model.CourseExercise
 import io.github.kroune.cumobile.data.model.TaskScore
 import io.github.kroune.cumobile.domain.repository.PerformanceRepository
+import io.github.kroune.cumobile.presentation.common.ContentState
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 
 /**
  * Default implementation of [CoursePerformanceComponent].
  *
- * Loads course exercises and per-task scores, then joins
+ * Loads course exercises and per-task scores in parallel, then joins
  * them into [ExerciseWithScore] items and computes
  * [ActivitySummary] aggregates.
  */
@@ -58,18 +61,22 @@ class DefaultCoursePerformanceComponent(
     }
 
     private fun loadData() {
-        scope.launch {
-            _state.value = _state.value.copy(isLoading = true, error = null)
+        _state.value = _state.value.copy(content = ContentState.Loading)
 
-            val exercisesResponse =
+        scope.launch {
+            val exercisesDeferred = async {
                 performanceRepository.fetchCourseExercises(courseId)
-            val performanceResponse =
+            }
+            val performanceDeferred = async {
                 performanceRepository.fetchCoursePerformance(courseId)
+            }
+
+            val exercisesResponse = exercisesDeferred.await()
+            val performanceResponse = performanceDeferred.await()
 
             if (exercisesResponse == null && performanceResponse == null) {
                 _state.value = _state.value.copy(
-                    isLoading = false,
-                    error = "Не удалось загрузить успеваемость",
+                    content = ContentState.Error("Не удалось загрузить успеваемость"),
                 )
                 return@launch
             }
@@ -81,9 +88,12 @@ class DefaultCoursePerformanceComponent(
             val summaries = buildActivitySummaries(tasks)
 
             _state.value = _state.value.copy(
-                exercises = exercisesWithScores,
-                activitySummaries = summaries,
-                isLoading = false,
+                content = ContentState.Success(
+                    PerformanceData(
+                        exercises = exercisesWithScores.toImmutableList(),
+                        activitySummaries = summaries.toImmutableList(),
+                    ),
+                ),
             )
         }
     }

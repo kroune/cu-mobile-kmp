@@ -1,9 +1,9 @@
 package io.github.kroune.cumobile
 
 import androidx.compose.runtime.Composable
-import io.github.kroune.cumobile.presentation.common.CuMobileTheme
+import io.github.kroune.cumobile.presentation.common.ui.CuMobileTheme
 import io.github.kroune.cumobile.presentation.root.RootComponent
-import io.github.kroune.cumobile.presentation.root.RootScreen
+import io.github.kroune.cumobile.presentation.root.ui.RootScreen
 
 /**
  * App entry point composable.
