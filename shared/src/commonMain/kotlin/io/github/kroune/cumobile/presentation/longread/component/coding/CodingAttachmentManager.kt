@@ -28,6 +28,7 @@ internal class CodingAttachmentManager(
     init {
         require(taskId.isNotBlank()) { "taskId must not be blank" }
     }
+
     fun uploadAttachment(
         file: PickedFile,
         isSolution: Boolean,

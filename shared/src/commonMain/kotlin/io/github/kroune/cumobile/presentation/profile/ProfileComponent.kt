@@ -111,4 +111,3 @@ interface ProfileComponent {
         data object Logout : Intent
     }
 }
-

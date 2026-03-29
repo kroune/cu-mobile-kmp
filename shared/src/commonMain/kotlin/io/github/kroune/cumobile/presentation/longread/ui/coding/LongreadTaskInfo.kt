@@ -319,8 +319,7 @@ private fun CommentContent(
                             attachment,
                         ),
                     )
-                }
-                .padding(vertical = 2.dp, horizontal = 4.dp),
+                }.padding(vertical = 2.dp, horizontal = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {

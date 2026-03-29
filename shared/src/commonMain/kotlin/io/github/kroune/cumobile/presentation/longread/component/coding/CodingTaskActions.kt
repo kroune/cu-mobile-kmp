@@ -25,6 +25,7 @@ internal class CodingTaskActions(
     init {
         require(taskId.isNotBlank()) { "taskId must not be blank" }
     }
+
     fun startTask() {
         scope.launch {
             state.value = state.value.copy(isSubmitting = true)

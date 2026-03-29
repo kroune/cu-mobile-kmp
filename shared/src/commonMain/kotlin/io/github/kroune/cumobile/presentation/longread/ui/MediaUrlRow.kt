@@ -68,7 +68,9 @@ fun MediaUrlRow(
             onClick = {
                 try {
                     uriHandler.openUri(url)
-                } catch (@Suppress("TooGenericExceptionCaught") e: Exception) {
+                } catch (
+                    @Suppress("TooGenericExceptionCaught") e: Exception,
+                ) {
                     logger.warn(e) { "Failed to open URI: $url" }
                 }
             },
