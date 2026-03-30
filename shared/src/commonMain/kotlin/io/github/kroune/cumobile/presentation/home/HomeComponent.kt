@@ -11,13 +11,14 @@ import io.github.kroune.cumobile.presentation.common.isLoading
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
+import kotlinx.datetime.LocalDate
 
 /**
  * MVI component for the Home tab ("Главная").
  *
  * Displays three sections:
  * - **Deadlines**: horizontally scrollable cards of active tasks.
- * - **Schedule**: daily class schedule with date navigation.
+ * - **Schedule**: weekly class schedule with week navigation.
  * - **Courses**: grid of active (non-archived) courses.
  */
 interface HomeComponent {
@@ -36,7 +37,8 @@ interface HomeComponent {
         val tasks: ContentState<List<StudentTask>> = ContentState.Loading,
         val courses: ContentState<List<Course>> = ContentState.Loading,
         val schedule: ContentState<List<ClassData>> = ContentState.Loading,
-        val selectedDateMillis: Long = 0,
+        val selectedDate: LocalDate = PLACEHOLDER_DATE,
+        val weekStart: LocalDate = PLACEHOLDER_DATE,
         val profileInitials: ContentState<String> = ContentState.Loading,
         val avatarBytes: ContentState<ByteArray?> = ContentState.Loading,
         val lateDaysBalance: ContentState<Int?> = ContentState.Loading,
@@ -72,7 +74,8 @@ interface HomeComponent {
             return tasks == other.tasks &&
                 courses == other.courses &&
                 schedule == other.schedule &&
-                selectedDateMillis == other.selectedDateMillis &&
+                selectedDate == other.selectedDate &&
+                weekStart == other.weekStart &&
                 profileInitials == other.profileInitials &&
                 avatarBytes === other.avatarBytes &&
                 lateDaysBalance == other.lateDaysBalance
@@ -82,7 +85,8 @@ interface HomeComponent {
             var result = tasks.hashCode()
             result = 31 * result + courses.hashCode()
             result = 31 * result + schedule.hashCode()
-            result = 31 * result + selectedDateMillis.hashCode()
+            result = 31 * result + selectedDate.hashCode()
+            result = 31 * result + weekStart.hashCode()
             result = 31 * result + profileInitials.hashCode()
             result = 31 * result + (avatarBytes.hashCode())
             result = 31 * result + lateDaysBalance.hashCode()
@@ -104,20 +108,25 @@ interface HomeComponent {
         /** Pull-to-refresh triggered. */
         data object Refresh : Intent
 
-        /** Navigate to previous day in schedule. */
-        data object PreviousDay : Intent
+        /** Navigate to previous week in schedule. */
+        data object PreviousWeek : Intent
 
-        /** Navigate to next day in schedule. */
-        data object NextDay : Intent
+        /** Navigate to next week in schedule. */
+        data object NextWeek : Intent
 
-        /** Navigate to today in schedule. */
-        data object Today : Intent
+        /** Select a specific date in the week picker. */
+        data class SelectDate(
+            val date: LocalDate,
+        ) : Intent
 
         /** Navigate to profile screen. */
         data object OpenProfile : Intent
     }
 
     companion object {
+        /** Placeholder date used as default before real date is set from DateTimeProvider. */
+        private val PLACEHOLDER_DATE = LocalDate.fromEpochDays(0)
+
         /** Task states shown in the deadlines section. */
         val ACTIVE_TASK_STATES = setOf(
             TaskState.Backlog,

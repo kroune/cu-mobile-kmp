@@ -68,42 +68,93 @@ internal fun CourseCardSkeleton(modifier: Modifier = Modifier) {
 }
 
 /**
- * Skeleton placeholder for ClassCard on the Home screen.
+ * Skeleton placeholder for the week picker navigation.
  *
- * Matches: fullWidth row with time column, vertical separator, and content column.
+ * Matches: navigation header shimmer + 7 day pill shimmers.
  */
 @Composable
-internal fun ClassCardSkeleton(modifier: Modifier = Modifier) {
+internal fun WeekPickerSkeleton(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+    ) {
+        // Navigation header
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
+        ) {
+            ShimmerBox(Modifier.width(140.dp), height = 14.dp)
+        }
+
+        Spacer(Modifier.height(6.dp))
+
+        // Day pills row
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            repeat(WeekDaysCount) {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(AppTheme.colors.surface)
+                        .padding(vertical = 8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    ShimmerBox(Modifier.width(20.dp), height = 11.dp)
+                    ShimmerBox(Modifier.width(16.dp), height = 13.dp)
+                }
+            }
+        }
+
+        Spacer(Modifier.height(20.dp))
+    }
+}
+
+/**
+ * Skeleton placeholder for [ScheduleCard].
+ *
+ * Matches: row with info column on left and time badge on right.
+ */
+@Composable
+internal fun FloatingBadgeCardSkeleton(modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(10.dp))
             .background(AppTheme.colors.surface)
-            .padding(12.dp),
+            .padding(vertical = 10.dp, horizontal = 12.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // Time column
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            ShimmerBox(Modifier.width(40.dp), height = 14.dp)
-            Spacer(Modifier.height(4.dp))
-            ShimmerBox(Modifier.width(40.dp), height = 12.dp)
+        // Info column
+        Column(
+            modifier = Modifier.weight(1f).padding(4.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            ShimmerBox(Modifier.fillMaxWidth(0.7f), height = 13.dp)
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                ShimmerBox(Modifier.width(40.dp), height = 11.dp)
+                ShimmerBox(Modifier.width(50.dp), height = 11.dp)
+            }
         }
 
-        Spacer(Modifier.width(16.dp))
-
-        // Separator
-        ShimmerBox(
-            Modifier.width(2.dp).height(40.dp),
-            height = 40.dp,
-        )
-
-        Spacer(Modifier.width(16.dp))
-
-        // Content column
-        Column(Modifier.weight(1f)) {
-            ShimmerBox(Modifier.fillMaxWidth(0.7f), height = 14.dp)
-            Spacer(Modifier.height(4.dp))
-            ShimmerBox(Modifier.fillMaxWidth(0.5f), height = 12.dp)
+        // Time badge
+        Column(
+            modifier = Modifier
+                .clip(RoundedCornerShape(8.dp))
+                .background(AppTheme.colors.background.copy(alpha = 0.8f))
+                .padding(horizontal = 8.dp, vertical = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            ShimmerBox(Modifier.width(36.dp), height = 14.dp)
+            Spacer(Modifier.height(2.dp))
+            ShimmerBox(Modifier.width(36.dp), height = 12.dp)
         }
     }
 }
+
+private const val WeekDaysCount = 7

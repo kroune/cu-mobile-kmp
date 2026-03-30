@@ -1,7 +1,6 @@
 package io.github.kroune.cumobile.presentation.home.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -23,14 +21,8 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ChevronLeft
-import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -41,17 +33,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
-import io.github.kroune.cumobile.data.model.ClassData
 import io.github.kroune.cumobile.data.model.Course
 import io.github.kroune.cumobile.data.model.StudentTask
 import io.github.kroune.cumobile.presentation.common.ContentState
-import io.github.kroune.cumobile.presentation.common.formatEpochDate
 import io.github.kroune.cumobile.presentation.common.isError
 import io.github.kroune.cumobile.presentation.common.ui.ActionErrorBar
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
@@ -64,9 +52,10 @@ import kotlinx.collections.immutable.ImmutableList
 /**
  * Home screen composable for the "Главная" tab.
  *
- * Renders two scrollable sections:
+ * Renders three scrollable sections:
  * 1. **Deadlines** — horizontal row of task cards.
- * 2. **Courses** — 2-column grid of course cards.
+ * 2. **Schedule** — weekly class schedule with week navigation.
+ * 3. **Courses** — 2-column grid of course cards.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -99,6 +88,7 @@ fun HomeScreen(
                 error = "Не удалось загрузить данные",
                 onRetry = { component.onIntent(HomeComponent.Intent.Refresh) },
             )
+
             state.isContentLoading -> HomeScreenSkeleton()
             else -> Column(modifier = Modifier.fillMaxSize()) {
                 ActionErrorBar(
@@ -188,6 +178,7 @@ private fun DeadlinesSection(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .padding(top = 16.dp)
                         .padding(horizontal = 16.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
@@ -196,12 +187,14 @@ private fun DeadlinesSection(
                     }
                 }
             }
+
             is ContentState.Error -> EmptySection(text = "Не удалось загрузить задания")
             is ContentState.Success -> {
                 if (deadlineTasks.isEmpty()) {
                     EmptySection(text = "Нет активных заданий")
                 } else {
                     LazyRow(
+                        modifier = Modifier.padding(top = 16.dp),
                         contentPadding = PaddingValues(horizontal = 16.dp),
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
@@ -243,7 +236,9 @@ private fun CoursesSection(
         when (coursesState) {
             is ContentState.Loading -> {
                 Row(
-                    modifier = Modifier.padding(horizontal = 16.dp),
+                    modifier = Modifier
+                        .padding(top = 16.dp)
+                        .padding(horizontal = 16.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     repeat(2) {
@@ -253,6 +248,7 @@ private fun CoursesSection(
                     }
                 }
             }
+
             is ContentState.Error -> EmptySection(text = "Не удалось загрузить курсы")
             is ContentState.Success -> {
                 if (activeCourses.isEmpty()) {
@@ -270,7 +266,7 @@ private fun CoursesSection(
                         horizontalArrangement = Arrangement.spacedBy(spacing),
                         verticalArrangement = Arrangement.spacedBy(spacing),
                         userScrollEnabled = false,
-                        modifier = Modifier.height(gridHeight),
+                        modifier = Modifier.height(gridHeight).padding(top = 16.dp),
                     ) {
                         items(
                             items = activeCourses,
@@ -290,7 +286,7 @@ private fun CoursesSection(
 }
 
 /**
- * Schedule section: date navigation + list of classes.
+ * Schedule section: week picker + list of class cards.
  */
 @Composable
 private fun ScheduleSection(
@@ -302,131 +298,45 @@ private fun ScheduleSection(
         SectionHeader(
             title = "Расписание",
             count = 0,
+            modifier = Modifier.padding(top = 16.dp),
         )
 
-        DateNavigationRow(
-            selectedDateMillis = state.selectedDateMillis,
-            onIntent = onIntent,
+        WeekPicker(
+            weekStart = state.weekStart,
+            selectedDate = state.selectedDate,
+            onDateSelected = { onIntent(HomeComponent.Intent.SelectDate(it)) },
+            onPreviousWeek = { onIntent(HomeComponent.Intent.PreviousWeek) },
+            onNextWeek = { onIntent(HomeComponent.Intent.NextWeek) },
         )
 
         when (val schedule = state.schedule) {
-            is ContentState.Loading ->
-                EmptySection(text = "Загрузка расписания…")
+            is ContentState.Loading -> {
+                Column(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    repeat(SkeletonClassCardCount) {
+                        FloatingBadgeCardSkeleton()
+                    }
+                }
+            }
+
             is ContentState.Error ->
                 EmptySection(text = schedule.message)
+
             is ContentState.Success -> {
                 if (schedule.data.isEmpty()) {
                     EmptySection(text = "Нет занятий на этот день")
                 } else {
                     Column(
                         modifier = Modifier.padding(horizontal = 16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
                         schedule.data.forEach { classData ->
-                            ClassCard(classData)
+                            ScheduleCard(classData)
                         }
                     }
                 }
-            }
-        }
-    }
-}
-
-@Composable
-private fun DateNavigationRow(
-    selectedDateMillis: Long,
-    onIntent: (HomeComponent.Intent) -> Unit,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        IconButton(onClick = { onIntent(HomeComponent.Intent.PreviousDay) }) {
-            Icon(
-                imageVector = Icons.Default.ChevronLeft,
-                contentDescription = "Предыдущий день",
-                tint = AppTheme.colors.accent,
-            )
-        }
-
-        Text(
-            text = formatEpochDate(selectedDateMillis),
-            color = AppTheme.colors.textPrimary,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Medium,
-            modifier = Modifier.clickable { onIntent(HomeComponent.Intent.Today) },
-        )
-
-        IconButton(onClick = { onIntent(HomeComponent.Intent.NextDay) }) {
-            Icon(
-                imageVector = Icons.Default.ChevronRight,
-                contentDescription = "Следующий день",
-                tint = AppTheme.colors.accent,
-            )
-        }
-    }
-}
-
-@Composable
-private fun ClassCard(classData: ClassData) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(AppTheme.colors.surface)
-            .padding(12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                text = classData.startTime,
-                color = AppTheme.colors.textPrimary,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
-            )
-            Text(
-                text = classData.endTime,
-                color = AppTheme.colors.textSecondary,
-                fontSize = 12.sp,
-            )
-        }
-
-        Spacer(modifier = Modifier.width(16.dp))
-
-        Box(
-            modifier = Modifier
-                .width(2.dp)
-                .height(40.dp)
-                .background(AppTheme.colors.accent),
-        )
-
-        Spacer(modifier = Modifier.width(16.dp))
-
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = classData.title,
-                color = AppTheme.colors.textPrimary,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (classData.room.isNotEmpty()) {
-                    Text(
-                        text = "📍 ${classData.room}",
-                        color = AppTheme.colors.textSecondary,
-                        fontSize = 12.sp,
-                    )
-                }
-                Text(
-                    text = "🏷️ ${classData.type}",
-                    color = AppTheme.colors.textSecondary,
-                    fontSize = 12.sp,
-                )
             }
         }
     }
@@ -441,7 +351,7 @@ private fun SectionHeader(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
@@ -514,6 +424,7 @@ internal fun HomeScreenSkeleton(modifier: Modifier = Modifier) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .padding(top = 16.dp)
                 .padding(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
@@ -525,13 +436,18 @@ internal fun HomeScreenSkeleton(modifier: Modifier = Modifier) {
         Spacer(Modifier.height(16.dp))
 
         // Schedule section
-        SectionHeader(title = "Расписание", count = 0)
+        SectionHeader(
+            title = "Расписание",
+            count = 0,
+            modifier = Modifier.padding(top = 16.dp),
+        )
+        WeekPickerSkeleton()
         Column(
             modifier = Modifier.padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             repeat(SkeletonClassCardCount) {
-                ClassCardSkeleton()
+                FloatingBadgeCardSkeleton()
             }
         }
 
@@ -540,7 +456,9 @@ internal fun HomeScreenSkeleton(modifier: Modifier = Modifier) {
         // Courses section
         SectionHeader(title = "Курсы", count = 0)
         Row(
-            modifier = Modifier.padding(horizontal = 16.dp),
+            modifier = Modifier
+                .padding(top = 16.dp)
+                .padding(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             repeat(2) {
