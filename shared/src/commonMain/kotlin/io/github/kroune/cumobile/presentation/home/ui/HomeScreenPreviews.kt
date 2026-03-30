@@ -17,6 +17,10 @@ import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 import io.github.kroune.cumobile.presentation.common.ui.CuMobileTheme
 import io.github.kroune.cumobile.presentation.common.ui.ErrorContent
 import io.github.kroune.cumobile.presentation.home.HomeComponent
+import kotlinx.datetime.LocalDate
+
+private val previewMonday = LocalDate(2026, 3, 23)
+private val previewToday = LocalDate(2026, 3, 30)
 
 private val previewHomeState = HomeComponent.State(
     tasks = ContentState.Success(
@@ -45,7 +49,8 @@ private val previewHomeState = HomeComponent.State(
     profileInitials = ContentState.Success("ИП"),
     lateDaysBalance = ContentState.Success(5),
     avatarBytes = ContentState.Success(null),
-    selectedDateMillis = 1774051200000L,
+    selectedDate = previewToday,
+    weekStart = previewMonday,
     schedule = ContentState.Success(emptyList()),
 )
 
@@ -55,17 +60,25 @@ private val previewHomeEmptyState = HomeComponent.State(
     profileInitials = ContentState.Success("ИП"),
     avatarBytes = ContentState.Success(null),
     lateDaysBalance = ContentState.Success(null),
-    selectedDateMillis = 1774051200000L,
+    selectedDate = previewToday,
+    weekStart = previewMonday,
     schedule = ContentState.Success(emptyList()),
 )
 
-private val previewHomeWithScheduleState = previewHomeState.copy(
+val previewHomeWithScheduleState = previewHomeState.copy(
     schedule = ContentState.Success(
         listOf(
             ClassData(
                 startTime = "09:00",
                 endTime = "10:30",
                 title = "Математический анализ",
+                room = "А-301",
+                type = "Лекция",
+            ),
+            ClassData(
+                startTime = "09:00",
+                endTime = "10:30",
+                title = "Основы математического анализа и линейной алгебры 2",
                 room = "А-301",
                 type = "Лекция",
             ),
@@ -180,19 +193,6 @@ private fun PreviewHomeScreenEmptyLight() {
     CuMobileTheme(darkTheme = false) {
         HomeContent(
             state = previewHomeEmptyState,
-            onIntent = {},
-            onTaskClick = {},
-            onCourseClick = {},
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun PreviewHomeWithScheduleDark() {
-    CuMobileTheme(darkTheme = true) {
-        HomeContent(
-            state = previewHomeWithScheduleState,
             onIntent = {},
             onTaskClick = {},
             onCourseClick = {},

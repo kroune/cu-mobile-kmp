@@ -1,5 +1,6 @@
 package io.github.kroune.cumobile.presentation.common
 
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
@@ -15,6 +16,12 @@ class DateTimeProvider {
     /** Returns the current time in milliseconds since epoch. */
     fun nowMillis(): Long =
         System.now().toEpochMilliseconds()
+
+    /** Returns today's [LocalDate] in the system default timezone. */
+    fun today(): LocalDate {
+        val now = System.now()
+        return now.toLocalDateTime(TimeZone.currentSystemDefault()).date
+    }
 
     /** Returns milliseconds for today at 00:00:00 in the system default timezone. */
     fun todayMillis(): Long {

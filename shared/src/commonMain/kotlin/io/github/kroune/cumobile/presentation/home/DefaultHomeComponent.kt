@@ -17,10 +17,15 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.DayOfWeek
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
+import kotlinx.datetime.minus
+import kotlinx.datetime.plus
 
 private val logger = KotlinLogging.logger {}
-
-private const val MillisPerDay = 86_400_000L
 
 /**
  * Default implementation of [HomeComponent].
@@ -45,9 +50,11 @@ class DefaultHomeComponent(
     )
 
     private val dateTimeProvider = DateTimeProvider()
+    private val today = dateTimeProvider.today()
     private val _state = MutableValue(
         HomeComponent.State(
-            selectedDateMillis = dateTimeProvider.todayMillis(),
+            selectedDate = today,
+            weekStart = computeWeekStart(today),
         ),
     )
     override val state: Value<HomeComponent.State> = _state
@@ -71,22 +78,29 @@ class DefaultHomeComponent(
                 loadData()
                 loadSchedule()
             }
-            HomeComponent.Intent.PreviousDay -> changeDate(-1)
-            HomeComponent.Intent.NextDay -> changeDate(1)
-            HomeComponent.Intent.Today -> setToday()
+            HomeComponent.Intent.PreviousWeek -> changeWeek(-1)
+            HomeComponent.Intent.NextWeek -> changeWeek(1)
+            is HomeComponent.Intent.SelectDate -> selectDate(intent.date)
             HomeComponent.Intent.OpenProfile -> onOpenProfile()
         }
     }
 
-    private fun changeDate(days: Int) {
-        val current = _state.value.selectedDateMillis
-        val updated = current + (days * MillisPerDay)
-        _state.value = _state.value.copy(selectedDateMillis = updated)
+    private fun changeWeek(weeks: Int) {
+        val currentWeekStart = _state.value.weekStart
+        val newWeekStart = currentWeekStart.plus(DatePeriod(days = weeks * DAYS_IN_WEEK))
+        val newSelectedDate = newWeekStart
+        _state.value = _state.value.copy(
+            selectedDate = newSelectedDate,
+            weekStart = newWeekStart,
+        )
         loadSchedule()
     }
 
-    private fun setToday() {
-        _state.value = _state.value.copy(selectedDateMillis = dateTimeProvider.todayMillis())
+    private fun selectDate(date: LocalDate) {
+        _state.value = _state.value.copy(
+            selectedDate = date,
+            weekStart = computeWeekStart(date),
+        )
         loadSchedule()
     }
 
@@ -94,7 +108,9 @@ class DefaultHomeComponent(
         scheduleJob?.cancel()
         _state.value = _state.value.copy(schedule = ContentState.Loading)
         scheduleJob = scope.launch {
-            val dateMillis = _state.value.selectedDateMillis
+            val dateMillis = _state.value.selectedDate
+                .atStartOfDayIn(TimeZone.currentSystemDefault())
+                .toEpochMilliseconds()
             runCatchingCancellable {
                 calendarRepository.getClassesForDate(dateMillis)
             }.fold(
@@ -229,5 +245,17 @@ class DefaultHomeComponent(
             ?.uppercase()
             .orEmpty()
         return "$first$last"
+    }
+
+    companion object {
+        private const val DAYS_IN_WEEK = 7
+
+        /**
+         * Computes the Monday of the week containing [date].
+         */
+        fun computeWeekStart(date: LocalDate): LocalDate {
+            val daysFromMonday = date.dayOfWeek.ordinal - DayOfWeek.MONDAY.ordinal
+            return date.minus(DatePeriod(days = daysFromMonday))
+        }
     }
 }
