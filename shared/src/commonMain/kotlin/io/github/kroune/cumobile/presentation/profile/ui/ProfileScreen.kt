@@ -275,8 +275,11 @@ private fun AvatarSection(
 
         if (hasAvatar && !isBusy) {
             Box(
-                modifier = Modifier.align(Alignment.BottomStart).size(28.dp)
-                    .clip(CircleShape).background(AppTheme.colors.error, CircleShape)
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .size(28.dp)
+                    .clip(CircleShape)
+                    .background(AppTheme.colors.error, CircleShape)
                     .clickable(onClick = onDelete),
                 contentAlignment = Alignment.Center,
             ) {
@@ -286,8 +289,11 @@ private fun AvatarSection(
 
         if (!isBusy) {
             Box(
-                modifier = Modifier.align(Alignment.BottomEnd).size(28.dp)
-                    .clip(CircleShape).background(AppTheme.colors.accent, CircleShape)
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .size(28.dp)
+                    .clip(CircleShape)
+                    .background(AppTheme.colors.accent, CircleShape)
                     .clickable(onClick = onUpload),
                 contentAlignment = Alignment.Center,
             ) {
