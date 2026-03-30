@@ -103,11 +103,11 @@ class DefaultMainComponent(
 
     init {
         val tabBackCallback = BackCallback(isEnabled = false) {
-            tabNavigation.select(index = 0)
+            tabNavigation.select(index = HOME_TAB_INDEX)
         }
         backHandler.register(tabBackCallback)
         tabPages.subscribe { pages ->
-            tabBackCallback.isEnabled = pages.selectedIndex != 0
+            tabBackCallback.isEnabled = pages.selectedIndex != HOME_TAB_INDEX
         }
     }
 
@@ -258,4 +258,8 @@ class DefaultMainComponent(
     }
 
     // endregion
+
+    private companion object {
+        const val HOME_TAB_INDEX = 0
+    }
 }
