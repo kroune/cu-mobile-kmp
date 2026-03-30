@@ -16,6 +16,7 @@ import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.pushNew
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
+import com.arkivanov.essenty.backhandler.BackCallback
 import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.data.model.UpdateInfo
 import kotlinx.coroutines.Dispatchers
@@ -178,6 +179,36 @@ class DefaultMainComponent(
 
     override fun navigateDetailBack() {
         detailNavigation.pop()
+    }
+
+    // endregion
+
+    // region Tab back navigation
+
+    private val tabBackCallback = BackCallback(isEnabled = false) {
+        selectTab(0)
+    }
+
+    init {
+        backHandler.register(tabBackCallback)
+
+        tabPages.subscribe { pages ->
+            updateTabBackCallbackEnabled(
+                selectedTabIndex = pages.selectedIndex,
+                detailStackSize = detailStack.value.items.size,
+            )
+        }
+
+        detailStack.subscribe { stack ->
+            updateTabBackCallbackEnabled(
+                selectedTabIndex = tabPages.value.selectedIndex,
+                detailStackSize = stack.items.size,
+            )
+        }
+    }
+
+    private fun updateTabBackCallbackEnabled(selectedTabIndex: Int, detailStackSize: Int) {
+        tabBackCallback.isEnabled = selectedTabIndex != 0 && detailStackSize <= 1
     }
 
     // endregion
