@@ -295,18 +295,17 @@ private data class DayData(
     val date: LocalDate,
 )
 
-private fun generateWeekDays(weekStart: LocalDate): List<DayData> {
-    val dayNames = listOf("Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс")
+private val DayNames = listOf("Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс")
 
-    return dayNames.indices.map { index ->
+private fun generateWeekDays(weekStart: LocalDate): List<DayData> =
+    DayNames.indices.map { index ->
         val currentDate = weekStart.plus(DatePeriod(days = index))
         DayData(
-            dayName = dayNames[index],
+            dayName = DayNames[index],
             dateString = currentDate.day.toString(),
             date = currentDate,
         )
     }
-}
 
 @Preview
 @Composable

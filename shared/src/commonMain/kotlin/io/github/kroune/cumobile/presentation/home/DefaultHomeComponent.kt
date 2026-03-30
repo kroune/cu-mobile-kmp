@@ -88,7 +88,8 @@ class DefaultHomeComponent(
     private fun changeWeek(weeks: Int) {
         val currentWeekStart = _state.value.weekStart
         val newWeekStart = currentWeekStart.plus(DatePeriod(days = weeks * DAYS_IN_WEEK))
-        val newSelectedDate = newWeekStart
+        val dayOffset = _state.value.selectedDate.toEpochDays() - currentWeekStart.toEpochDays()
+        val newSelectedDate = newWeekStart.plus(DatePeriod(days = dayOffset.toInt()))
         _state.value = _state.value.copy(
             selectedDate = newSelectedDate,
             weekStart = newWeekStart,
