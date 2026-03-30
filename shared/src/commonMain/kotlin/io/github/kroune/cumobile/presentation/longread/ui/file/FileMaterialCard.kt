@@ -4,9 +4,15 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.InsertDriveFile
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -40,14 +46,23 @@ fun FileMaterialCard(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = "\uD83D\uDCC4 $filename",
-                color = AppTheme.colors.textPrimary,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Outlined.InsertDriveFile,
+                    contentDescription = null,
+                    tint = AppTheme.colors.textSecondary,
+                    modifier = Modifier.size(18.dp),
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = filename,
+                    color = AppTheme.colors.textPrimary,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
             material.length?.let { size ->
                 Text(
                     text = formatSizeBytes(size.toLong()),

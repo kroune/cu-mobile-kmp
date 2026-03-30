@@ -23,7 +23,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -133,9 +139,11 @@ internal fun LongreadScreenContent(
                                 onIntent(LongreadComponent.Intent.Search.ToggleSearch)
                             },
                         ) {
-                            Text(
-                                text = "\uD83D\uDD0D",
-                                fontSize = 18.sp,
+                            Icon(
+                                imageVector = Icons.Filled.Search,
+                                contentDescription = "Поиск",
+                                tint = AppTheme.colors.textPrimary,
+                                modifier = Modifier.size(22.dp),
                             )
                         }
                     },
@@ -269,10 +277,11 @@ private fun SearchBar(
                 .clickable { onIntent(LongreadComponent.Intent.Search.ToggleSearch) },
             contentAlignment = Alignment.Center,
         ) {
-            Text(
-                text = "\u2715",
-                fontSize = 16.sp,
-                color = AppTheme.colors.textSecondary,
+            Icon(
+                imageVector = Icons.Filled.Close,
+                contentDescription = "Закрыть поиск",
+                tint = AppTheme.colors.textSecondary,
+                modifier = Modifier.size(18.dp),
             )
         }
     }
@@ -336,10 +345,11 @@ private fun SearchNavigation(
             },
         contentAlignment = Alignment.Center,
     ) {
-        Text(
-            text = "\u25B2",
-            fontSize = 14.sp,
-            color = if (hasMatches) enabledColor else disabledColor,
+        Icon(
+            imageVector = Icons.Filled.KeyboardArrowUp,
+            contentDescription = "Предыдущее совпадение",
+            tint = if (hasMatches) enabledColor else disabledColor,
+            modifier = Modifier.size(18.dp),
         )
     }
     Box(
@@ -351,10 +361,11 @@ private fun SearchNavigation(
             },
         contentAlignment = Alignment.Center,
     ) {
-        Text(
-            text = "\u25BC",
-            fontSize = 14.sp,
-            color = if (hasMatches) enabledColor else disabledColor,
+        Icon(
+            imageVector = Icons.Filled.KeyboardArrowDown,
+            contentDescription = "Следующее совпадение",
+            tint = if (hasMatches) enabledColor else disabledColor,
+            modifier = Modifier.size(18.dp),
         )
     }
 }

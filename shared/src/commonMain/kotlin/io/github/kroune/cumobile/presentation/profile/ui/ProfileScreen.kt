@@ -20,8 +20,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -45,6 +49,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -194,6 +199,7 @@ private fun ProfileContent(
             color = AppTheme.colors.textPrimary,
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center,
         )
 
         // Course + education level
@@ -235,14 +241,13 @@ private fun AvatarSection(
 ) {
     val hasAvatar = avatarBytes != null
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
-        // Main avatar circle
         Box(
             modifier = Modifier
                 .size(80.dp)
                 .clip(CircleShape)
                 .border(2.dp, AppTheme.colors.accent, CircleShape)
                 .background(AppTheme.colors.accent.copy(alpha = 0.2f), CircleShape)
-                .clickable(enabled = avatarBytes != null && !isBusy, onClick = onAvatarClick),
+                .clickable(enabled = hasAvatar && !isBusy, onClick = onAvatarClick),
             contentAlignment = Alignment.Center,
         ) {
             if (isBusy) {
@@ -268,7 +273,6 @@ private fun AvatarSection(
             }
         }
 
-        // Delete button (bottom-left of avatar)
         if (hasAvatar && !isBusy) {
             Box(
                 modifier = Modifier
@@ -279,11 +283,10 @@ private fun AvatarSection(
                     .clickable(onClick = onDelete),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(text = "\u2715", fontSize = 14.sp, color = AppTheme.colors.textPrimary)
+                Icon(Icons.Filled.Close, "Удалить аватар", Modifier.size(16.dp), AppTheme.colors.textPrimary)
             }
         }
 
-        // Upload button (bottom-right of avatar)
         if (!isBusy) {
             Box(
                 modifier = Modifier
@@ -294,7 +297,7 @@ private fun AvatarSection(
                     .clickable(onClick = onUpload),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(text = "+", fontSize = 16.sp, color = AppTheme.colors.background)
+                Icon(Icons.Filled.Add, "Загрузить аватар", Modifier.size(18.dp), AppTheme.colors.background)
             }
         }
     }

@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -63,34 +64,7 @@ fun WebViewLoginScreen(component: WebViewLoginComponent) {
             ),
         )
 
-        AnimatedVisibility(
-            visible = state.error != null,
-            enter = slideInVertically() + fadeIn(),
-            exit = slideOutVertically() + fadeOut(),
-        ) {
-            state.error?.let { error ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(colorScheme.error.copy(alpha = 0.15f))
-                        .padding(12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = "\u26A0",
-                        modifier = Modifier.size(20.dp),
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        text = error,
-                        color = colorScheme.error,
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                }
-            }
-        }
+        WebViewErrorBanner(error = state.error)
 
         Box(modifier = Modifier.fillMaxSize()) {
             PlatformWebView(
@@ -108,6 +82,41 @@ fun WebViewLoginScreen(component: WebViewLoginComponent) {
                 ) {
                     CircularProgressIndicator(color = colorScheme.primary)
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun WebViewErrorBanner(error: String?) {
+    val colorScheme = MaterialTheme.colorScheme
+    AnimatedVisibility(
+        visible = error != null,
+        enter = slideInVertically() + fadeIn(),
+        exit = slideOutVertically() + fadeOut(),
+    ) {
+        error?.let { errorText ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(colorScheme.error.copy(alpha = 0.15f))
+                    .padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Warning,
+                    contentDescription = null,
+                    tint = colorScheme.error,
+                    modifier = Modifier.size(20.dp),
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    text = errorText,
+                    color = colorScheme.error,
+                    style = MaterialTheme.typography.bodyMedium,
+                )
             }
         }
     }

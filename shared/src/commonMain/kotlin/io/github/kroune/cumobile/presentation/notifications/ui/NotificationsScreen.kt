@@ -18,7 +18,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.MenuBook
+import androidx.compose.material.icons.outlined.Headset
+import androidx.compose.material.icons.outlined.Newspaper
+import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -330,7 +336,7 @@ private fun NotificationIcon(
     category: String,
     modifier: Modifier = Modifier,
 ) {
-    val emoji = notificationIconEmoji(icon, category)
+    val iconVector = notificationIconVector(icon, category)
     Box(
         modifier = modifier
             .size(36.dp)
@@ -338,28 +344,32 @@ private fun NotificationIcon(
             .background(AppTheme.colors.accent.copy(alpha = 0.15f), CircleShape),
         contentAlignment = Alignment.Center,
     ) {
-        Text(text = emoji, fontSize = 16.sp)
+        Icon(
+            imageVector = iconVector,
+            contentDescription = null,
+            tint = AppTheme.colors.accent,
+            modifier = Modifier.size(20.dp),
+        )
     }
 }
 
 /**
- * Maps notification icon/category to an emoji.
+ * Maps notification icon/category to a Material icon.
  *
- * Matches the Flutter reference: ServiceDesk → headphones,
- * News → newspaper, Education → book, default → bell.
+ * ServiceDesk → headset, News → newspaper, Education → book, default → bell.
  */
-private fun notificationIconEmoji(
+private fun notificationIconVector(
     icon: String,
     category: String,
-): String =
+): androidx.compose.ui.graphics.vector.ImageVector =
     when (icon.lowercase()) {
-        "servicedesk" -> "\uD83C\uDFA7" // 🎧
-        "news" -> "\uD83D\uDCF0" // 📰
-        "education" -> "\uD83D\uDCDA" // 📚
+        "servicedesk" -> Icons.Outlined.Headset
+        "news" -> Icons.Outlined.Newspaper
+        "education" -> Icons.AutoMirrored.Outlined.MenuBook
         else -> if (category.lowercase().contains("education") || category == "1") {
-            "\uD83D\uDCDA" // 📚
+            Icons.AutoMirrored.Outlined.MenuBook
         } else {
-            "\uD83D\uDD14" // 🔔
+            Icons.Outlined.Notifications
         }
     }
 
