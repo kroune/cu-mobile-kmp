@@ -8,9 +8,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.Text
@@ -228,16 +232,14 @@ private fun DayStepper(
                 containerColor = AppTheme.colors.background,
             ),
         ) {
-            Text(
-                text = "\u2212",
-                color = if (value > min) {
+            Icon(
+                imageVector = Icons.Filled.Remove,
+                contentDescription = "Уменьшить",
+                tint = if (value > min) {
                     AppTheme.colors.textPrimary
                 } else {
                     AppTheme.colors.textSecondary
                 },
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center,
             )
         }
 
@@ -256,16 +258,14 @@ private fun DayStepper(
                 containerColor = AppTheme.colors.background,
             ),
         ) {
-            Text(
-                text = "+",
-                color = if (value < max) {
+            Icon(
+                imageVector = Icons.Filled.Add,
+                contentDescription = "Увеличить",
+                tint = if (value < max) {
                     AppTheme.colors.textPrimary
                 } else {
                     AppTheme.colors.textSecondary
                 },
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center,
             )
         }
     }

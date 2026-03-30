@@ -14,6 +14,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Folder
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.automirrored.outlined.ListAlt
+import androidx.compose.material.icons.outlined.School
+import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -148,9 +154,9 @@ private fun BottomNavBar(
                 selected = selectedIndex == index,
                 onClick = { onTabSelected(index) },
                 icon = {
-                    Text(
-                        text = TAB_ICONS[index],
-                        fontSize = 20.sp,
+                    Icon(
+                        imageVector = TAB_ICONS[index],
+                        contentDescription = label,
                         modifier = Modifier.size(24.dp),
                     )
                 },
@@ -300,5 +306,10 @@ private fun UpdateDialog(
 /** Bottom nav tab labels. */
 private val TAB_LABELS = listOf("Главная", "Задания", "Обучение", "Файлы")
 
-/** Unicode icons for the bottom nav tabs. */
-private val TAB_ICONS = listOf("\uD83C\uDFE0", "\uD83D\uDCCB", "\uD83C\uDF93", "\uD83D\uDCC1")
+/** Material icons for the bottom nav tabs. */
+private val TAB_ICONS = listOf(
+    Icons.Outlined.Home,
+    Icons.AutoMirrored.Outlined.ListAlt,
+    Icons.Outlined.School,
+    Icons.Outlined.Folder,
+)

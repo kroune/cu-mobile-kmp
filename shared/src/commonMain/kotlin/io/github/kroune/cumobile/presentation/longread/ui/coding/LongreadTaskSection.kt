@@ -7,8 +7,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
@@ -123,11 +129,11 @@ private fun TaskHeader(
                 label = taskStateLabel(taskState),
                 color = taskStateColor(taskState),
             )
-            Text(
-                text = if (isActive) "\u25B2" else "\u25BC",
-                color = AppTheme.colors.textSecondary,
-                fontSize = 12.sp,
-                modifier = Modifier.padding(top = 4.dp),
+            Icon(
+                imageVector = if (isActive) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
+                contentDescription = if (isActive) "Свернуть" else "Развернуть",
+                tint = AppTheme.colors.textSecondary,
+                modifier = Modifier.size(18.dp).padding(top = 4.dp),
             )
         }
     }
@@ -152,11 +158,22 @@ private fun TaskManagementSection(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Text(
-            text = "\u23F0 ${formatDeadline(taskDetails.deadline)}",
-            color = AppTheme.colors.textSecondary,
-            fontSize = 12.sp,
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Schedule,
+                contentDescription = null,
+                tint = AppTheme.colors.textSecondary,
+                modifier = Modifier.size(14.dp),
+            )
+            Text(
+                text = formatDeadline(taskDetails.deadline),
+                color = AppTheme.colors.textSecondary,
+                fontSize = 12.sp,
+            )
+        }
 
         if (taskDetails.state == TaskState.Backlog) {
             StartTaskButton(

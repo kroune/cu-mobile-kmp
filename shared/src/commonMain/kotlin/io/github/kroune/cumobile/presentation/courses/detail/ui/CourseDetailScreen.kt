@@ -17,6 +17,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.outlined.Description
+import androidx.compose.material.icons.outlined.EditNote
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -294,10 +301,11 @@ private fun ThemeHeader(
             }
         }
 
-        Text(
-            text = if (isExpanded) "\u25B2" else "\u25BC",
-            color = AppTheme.colors.textSecondary,
-            fontSize = 12.sp,
+        Icon(
+            imageVector = if (isExpanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
+            contentDescription = if (isExpanded) "Свернуть" else "Развернуть",
+            tint = AppTheme.colors.textSecondary,
+            modifier = Modifier.size(18.dp),
         )
     }
 }
@@ -321,13 +329,15 @@ private fun LongreadRow(
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             // Icon based on whether longread has exercises
-            Text(
-                text = if (longread.exercises.isNotEmpty()) {
-                    "\uD83D\uDCDD"
+            Icon(
+                imageVector = if (longread.exercises.isNotEmpty()) {
+                    Icons.Outlined.EditNote
                 } else {
-                    "\uD83D\uDCC4"
+                    Icons.Outlined.Description
                 },
-                fontSize = 14.sp,
+                contentDescription = null,
+                tint = AppTheme.colors.textSecondary,
+                modifier = Modifier.size(18.dp),
             )
 
             Spacer(modifier = Modifier.width(8.dp))
@@ -341,10 +351,11 @@ private fun LongreadRow(
                 modifier = Modifier.weight(1f),
             )
 
-            Text(
-                text = "\u203A",
-                color = AppTheme.colors.textSecondary,
-                fontSize = 18.sp,
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null,
+                tint = AppTheme.colors.textSecondary,
+                modifier = Modifier.size(18.dp),
             )
         }
 

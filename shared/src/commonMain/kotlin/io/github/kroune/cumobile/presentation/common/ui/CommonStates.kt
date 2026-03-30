@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.Inbox
 import androidx.compose.material3.CircularProgressIndicator
@@ -141,10 +142,11 @@ internal fun ActionErrorBar(
             modifier = Modifier.weight(1f),
         )
         TextButton(onClick = onDismiss) {
-            Text(
-                text = "\u2715",
-                color = AppTheme.colors.error,
-                fontSize = 14.sp,
+            Icon(
+                imageVector = Icons.Filled.Close,
+                contentDescription = "Закрыть",
+                tint = AppTheme.colors.error,
+                modifier = Modifier.size(18.dp),
             )
         }
     }

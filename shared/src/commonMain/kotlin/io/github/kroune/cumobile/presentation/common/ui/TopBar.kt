@@ -13,6 +13,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -73,7 +76,7 @@ fun TopBar(
             Spacer(modifier = Modifier.width(12.dp))
         }
 
-        // Notification bell (text icon – Material Icons Extended unavailable)
+        // Notification bell
         Box(
             modifier = Modifier
                 .size(40.dp)
@@ -81,9 +84,11 @@ fun TopBar(
                 .clickable(onClick = onNotificationsClick),
             contentAlignment = Alignment.Center,
         ) {
-            Text(
-                text = "\uD83D\uDD14", // 🔔
-                fontSize = 20.sp,
+            Icon(
+                imageVector = Icons.Outlined.Notifications,
+                contentDescription = "Уведомления",
+                tint = AppTheme.colors.textPrimary,
+                modifier = Modifier.size(24.dp),
             )
         }
 

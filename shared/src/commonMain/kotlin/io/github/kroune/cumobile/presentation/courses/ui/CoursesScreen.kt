@@ -25,7 +25,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.DragHandle
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -423,7 +426,12 @@ private fun DraggableCourseItem(
             )
         }
 
-        Text(text = "\u203A", color = AppTheme.colors.textSecondary, fontSize = 20.sp)
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            contentDescription = null,
+            tint = AppTheme.colors.textSecondary,
+            modifier = Modifier.size(20.dp),
+        )
     }
 }
 
@@ -462,7 +470,12 @@ private fun CourseListTile(
             )
         }
 
-        Text(text = "\u203A", color = AppTheme.colors.textSecondary, fontSize = 20.sp)
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            contentDescription = null,
+            tint = AppTheme.colors.textSecondary,
+            modifier = Modifier.size(20.dp),
+        )
     }
 }
 
@@ -505,10 +518,11 @@ private fun SectionHeader(
 
         Spacer(modifier = Modifier.weight(1f))
 
-        Text(
-            text = if (expanded) "\u25B2" else "\u25BC",
-            color = AppTheme.colors.textSecondary,
-            fontSize = 12.sp,
+        Icon(
+            imageVector = if (expanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
+            contentDescription = if (expanded) "Свернуть" else "Развернуть",
+            tint = AppTheme.colors.textSecondary,
+            modifier = Modifier.size(18.dp),
         )
     }
 }
