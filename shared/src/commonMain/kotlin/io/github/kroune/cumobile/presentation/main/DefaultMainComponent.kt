@@ -16,6 +16,7 @@ import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.pushNew
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
+import com.arkivanov.essenty.backhandler.BackCallback
 import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.data.model.UpdateInfo
 import kotlinx.coroutines.Dispatchers
@@ -98,6 +99,16 @@ class DefaultMainComponent(
 
     override fun selectTab(index: Int) {
         tabNavigation.select(index)
+    }
+
+    init {
+        val tabBackCallback = BackCallback(isEnabled = false) {
+            tabNavigation.select(index = HOME_TAB_INDEX)
+        }
+        backHandler.register(tabBackCallback)
+        tabPages.subscribe { pages ->
+            tabBackCallback.isEnabled = pages.selectedIndex != HOME_TAB_INDEX
+        }
     }
 
     // endregion
@@ -247,4 +258,8 @@ class DefaultMainComponent(
     }
 
     // endregion
+
+    private companion object {
+        const val HOME_TAB_INDEX = 0
+    }
 }
