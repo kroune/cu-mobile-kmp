@@ -143,11 +143,11 @@ internal fun NotificationsScreenContent(
                 onBack = onBack,
             )
 
-            val pagerState = rememberPagerState { 2 }
+            val pagerState = rememberPagerState(initialPage = state.selectedTab) { 2 }
             val scope = rememberCoroutineScope()
 
             LaunchedEffect(state.selectedTab) {
-                scope.launch {
+                if (pagerState.currentPage != state.selectedTab) {
                     pagerState.animateScrollToPage(state.selectedTab)
                 }
             }
@@ -302,7 +302,8 @@ private fun NotificationCardContent(
         val link = item.link
         val linkText = link?.label?.ifBlank { link.uri }
         val linkOverflows = remember(linkText, maxWidthPx) {
-            linkText != null &&
+            link?.uri?.isNotBlank() == true &&
+                linkText != null &&
                 linkText.isNotBlank() &&
                 textMeasurer
                     .measure(

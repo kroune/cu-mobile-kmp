@@ -90,11 +90,11 @@ internal fun TasksScreenContent(
                 .fillMaxSize()
                 .padding(horizontal = 16.dp),
         ) {
-            val pagerState = rememberPagerState { 2 }
+            val pagerState = rememberPagerState(initialPage = state.segment) { 2 }
             val scope = rememberCoroutineScope()
 
             LaunchedEffect(state.segment) {
-                scope.launch {
+                if (pagerState.currentPage != state.segment) {
                     pagerState.animateScrollToPage(state.segment)
                 }
             }

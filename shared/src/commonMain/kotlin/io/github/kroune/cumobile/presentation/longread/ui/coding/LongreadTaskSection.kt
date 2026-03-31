@@ -211,11 +211,11 @@ private fun TaskTabbedContent(
     val tabKeys = listOf("solution", "comments", "info")
     val tabLabels = listOf("решение", "комментарии", "инфо")
     val currentIndex = tabKeys.indexOf(state.selectedTab).coerceAtLeast(0)
-    val pagerState = rememberPagerState { 3 }
+    val pagerState = rememberPagerState(initialPage = currentIndex) { 3 }
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(currentIndex) {
-        scope.launch {
+        if (pagerState.currentPage != currentIndex) {
             pagerState.animateScrollToPage(currentIndex)
         }
     }

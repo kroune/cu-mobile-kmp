@@ -111,11 +111,11 @@ private fun PerformanceContent(
     modifier: Modifier = Modifier,
 ) {
     val tabLabels = persistentListOf("набранные баллы", "успеваемость")
-    val pagerState = rememberPagerState { 2 }
+    val pagerState = rememberPagerState(initialPage = state.selectedTab) { 2 }
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(state.selectedTab) {
-        scope.launch {
+        if (pagerState.currentPage != state.selectedTab) {
             pagerState.animateScrollToPage(state.selectedTab)
         }
     }

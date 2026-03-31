@@ -70,6 +70,13 @@ private fun ActivityFilterChips(
     onFilterActivity: (String?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val chipColors = FilterChipDefaults.filterChipColors(
+        containerColor = AppTheme.colors.surface,
+        labelColor = AppTheme.colors.textSecondary,
+        selectedContainerColor = AppTheme.colors.accent.copy(alpha = 0.2f),
+        selectedLabelColor = AppTheme.colors.accent,
+    )
+
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -82,24 +89,14 @@ private fun ActivityFilterChips(
             selected = activeFilter == null,
             onClick = { onFilterActivity(null) },
             label = { Text("Все активности") },
-            colors = FilterChipDefaults.filterChipColors(
-                containerColor = AppTheme.colors.surface,
-                labelColor = AppTheme.colors.textSecondary,
-                selectedContainerColor = AppTheme.colors.accent.copy(alpha = 0.2f),
-                selectedLabelColor = AppTheme.colors.accent,
-            ),
+            colors = chipColors,
         )
         activityNames.forEach { name ->
             FilterChip(
                 selected = activeFilter == name,
                 onClick = { onFilterActivity(name) },
                 label = { Text(name) },
-                colors = FilterChipDefaults.filterChipColors(
-                    containerColor = AppTheme.colors.surface,
-                    labelColor = AppTheme.colors.textSecondary,
-                    selectedContainerColor = AppTheme.colors.accent.copy(alpha = 0.2f),
-                    selectedLabelColor = AppTheme.colors.accent,
-                ),
+                colors = chipColors,
             )
         }
     }

@@ -126,11 +126,11 @@ internal fun CoursesScreenContent(
                 .fillMaxSize()
                 .padding(horizontal = 16.dp),
         ) {
-            val pagerState = rememberPagerState { 3 }
+            val pagerState = rememberPagerState(initialPage = state.segment) { 3 }
             val scope = rememberCoroutineScope()
 
             LaunchedEffect(state.segment) {
-                scope.launch {
+                if (pagerState.currentPage != state.segment) {
                     pagerState.animateScrollToPage(state.segment)
                 }
             }

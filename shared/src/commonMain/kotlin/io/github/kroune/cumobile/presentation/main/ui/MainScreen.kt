@@ -327,6 +327,7 @@ private fun noSwipePager(): ChildPagesPager =
             state = state,
             key = key,
             userScrollEnabled = false,
+            verticalAlignment = Alignment.Top,
             pageContent = pageContent,
         )
     }
