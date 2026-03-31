@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ListAlt
@@ -35,7 +36,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.arkivanov.decompose.extensions.compose.pages.ChildPages
+import com.arkivanov.decompose.extensions.compose.pages.ChildPagesPager
+import com.arkivanov.decompose.extensions.compose.pages.PagesScrollAnimation
 import com.arkivanov.decompose.extensions.compose.stack.Children
+import com.arkivanov.decompose.extensions.compose.stack.animation.fade
+import com.arkivanov.decompose.extensions.compose.stack.animation.plus
+import com.arkivanov.decompose.extensions.compose.stack.animation.scale
+import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import io.github.kroune.cumobile.presentation.common.dataOrNull
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
@@ -66,11 +73,8 @@ import com.arkivanov.decompose.router.pages.ChildPages as PagesState
 @Composable
 fun MainScreen(component: MainComponent) {
     val pages by component.tabPages.subscribeAsState()
-    val detailStack by component.detailStack.subscribeAsState()
     val updateInfo by component.updateInfo.subscribeAsState()
     val selectedIndex = pages.selectedIndex
-    val hasDetail =
-        detailStack.active.instance !is MainComponent.DetailChild.None
 
     // Extract profile initials and late days from the Home tab (observed reactively)
     val homeState = extractHomeState(pages)
@@ -106,6 +110,8 @@ fun MainScreen(component: MainComponent) {
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth(),
+                scrollAnimation = PagesScrollAnimation.Default,
+                pager = noSwipePager(),
             ) { _, tabChild ->
                 TabContent(tabChild)
             }
@@ -116,10 +122,8 @@ fun MainScreen(component: MainComponent) {
             )
         }
 
-        // Detail overlay (renders on top of everything)
-        if (hasDetail) {
-            DetailOverlay(component = component)
-        }
+        // Detail overlay (always composed so exit animations can play)
+        DetailOverlay(component = component)
     }
 }
 
@@ -188,6 +192,7 @@ private fun DetailOverlay(
         modifier = modifier
             .fillMaxSize()
             .windowInsetsPadding(WindowInsets.statusBars),
+        animation = stackAnimation(scale(frontFactor = 0.9f, backFactor = 1f) + fade()),
     ) { child ->
         when (val instance = child.instance) {
             MainComponent.DetailChild.None -> {
@@ -313,3 +318,15 @@ private val TAB_ICONS = listOf(
     Icons.Outlined.School,
     Icons.Outlined.Folder,
 )
+
+/** Pager that disables user swiping between tabs. */
+private fun noSwipePager(): ChildPagesPager =
+    { modifier, state, key, pageContent ->
+        HorizontalPager(
+            modifier = modifier,
+            state = state,
+            key = key,
+            userScrollEnabled = false,
+            pageContent = pageContent,
+        )
+    }

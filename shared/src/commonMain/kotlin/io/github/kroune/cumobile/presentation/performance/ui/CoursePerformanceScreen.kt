@@ -11,12 +11,16 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -27,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import io.github.kroune.cumobile.presentation.common.ContentState
+import io.github.kroune.cumobile.presentation.common.ui.AppTabRow
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 import io.github.kroune.cumobile.presentation.common.ui.DetailTopBar
 import io.github.kroune.cumobile.presentation.common.ui.ErrorContent
@@ -35,6 +40,7 @@ import io.github.kroune.cumobile.presentation.common.ui.gradeColor
 import io.github.kroune.cumobile.presentation.common.ui.gradeDescription
 import io.github.kroune.cumobile.presentation.performance.CoursePerformanceComponent
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.coroutines.launch
 
 /**
  * Course performance screen with two tabs:
@@ -88,6 +94,7 @@ internal fun CoursePerformanceScreenContent(
                         onIntent(CoursePerformanceComponent.Intent.Refresh)
                     },
                 )
+
                 is ContentState.Success -> PerformanceContent(
                     state = state,
                     onIntent = onIntent,
@@ -103,35 +110,54 @@ private fun PerformanceContent(
     onIntent: (CoursePerformanceComponent.Intent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val tabLabels = persistentListOf("Набранные баллы", "Успеваемость")
+    val tabLabels = persistentListOf("набранные баллы", "успеваемость")
+    val pagerState = rememberPagerState { 2 }
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(state.selectedTab) {
+        scope.launch {
+            pagerState.animateScrollToPage(state.selectedTab)
+        }
+    }
+
     Column(modifier = modifier.fillMaxSize()) {
         TotalGradeCard(
             grade = state.totalGrade,
             courseName = state.courseName,
         )
-        SegmentedControl(
+        AppTabRow(
+            currentPage = pagerState.currentPage,
             labels = tabLabels,
-            selectedIndex = state.selectedTab,
-            onSelect = {
-                onIntent(CoursePerformanceComponent.Intent.SelectTab(it))
+            onPageSelected = { page ->
+                scope.launch { pagerState.animateScrollToPage(page) }
+                onIntent(CoursePerformanceComponent.Intent.SelectTab(page))
             },
             modifier = Modifier.padding(horizontal = 16.dp),
         )
-        when (state.selectedTab) {
-            0 -> ScoresTab(
-                exercises = state.filteredExercises,
-                activityNames = state.activityNames,
-                activeFilter = state.activityFilter,
-                onFilterActivity = {
-                    onIntent(
-                        CoursePerformanceComponent.Intent.FilterByActivity(it),
-                    )
-                },
-            )
-            1 -> PerformanceTab(
-                summaries = state.activitySummaries,
-                totalContribution = state.totalContribution,
-            )
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth(),
+            userScrollEnabled = false,
+        ) { page ->
+            when (page) {
+                0 -> ScoresTab(
+                    exercises = state.filteredExercises,
+                    activityNames = state.activityNames,
+                    activeFilter = state.activityFilter,
+                    onFilterActivity = {
+                        onIntent(
+                            CoursePerformanceComponent.Intent.FilterByActivity(it),
+                        )
+                    },
+                )
+
+                1 -> PerformanceTab(
+                    summaries = state.activitySummaries,
+                    totalContribution = state.totalContribution,
+                )
+            }
         }
     }
 }
@@ -236,7 +262,7 @@ private fun CoursePerformanceScreenSkeleton(modifier: Modifier = Modifier) {
     Column(modifier = modifier.fillMaxSize()) {
         TotalGradeCardSkeleton()
         SegmentedControl(
-            labels = persistentListOf("Набранные баллы", "Успеваемость"),
+            labels = persistentListOf("набранные баллы", "успеваемость"),
             selectedIndex = 0,
             onSelect = {},
             modifier = Modifier.padding(horizontal = 16.dp),
