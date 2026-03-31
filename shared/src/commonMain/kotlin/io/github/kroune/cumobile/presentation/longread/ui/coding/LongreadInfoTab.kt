@@ -224,7 +224,7 @@ private val eventTypeColorAccessors: Map<String, (AppColorScheme) -> Color> = ma
     "solutionAttached" to { it.taskHasSolution },
     "taskEvaluated" to { it.taskEvaluated },
     "taskExtraScoreGranted" to { it.taskEvaluated },
-    "taskRejected" to { it.taskInProgress },
+    "taskRejected" to { it.taskFailed },
     "taskFailed" to { it.taskFailed },
     "taskReset" to { it.taskBacklog },
     "exerciseEstimated" to { it.taskBacklog },
