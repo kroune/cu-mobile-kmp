@@ -34,22 +34,13 @@ class DefaultTasksComponent(
     override fun onIntent(intent: TasksComponent.Intent) {
         when (intent) {
             is TasksComponent.Intent.SelectSegment ->
-                _state.value = _state.value.copy(
-                    segment = intent.index,
-                    statusFilter = null,
-                )
+                updateState { copy(segment = intent.index, statusFilter = null) }
             is TasksComponent.Intent.FilterByStatus ->
-                _state.value = _state.value.copy(
-                    statusFilter = intent.status,
-                )
+                updateState { copy(statusFilter = intent.status) }
             is TasksComponent.Intent.FilterByCourse ->
-                _state.value = _state.value.copy(
-                    courseFilter = intent.courseId,
-                )
+                updateState { copy(courseFilter = intent.courseId) }
             is TasksComponent.Intent.Search ->
-                _state.value = _state.value.copy(
-                    searchQuery = intent.query,
-                )
+                updateState { copy(searchQuery = intent.query) }
             is TasksComponent.Intent.OpenTask ->
                 onOpenTask(intent.task)
             TasksComponent.Intent.Refresh ->
@@ -63,22 +54,21 @@ class DefaultTasksComponent(
 
     private fun loadTasks() {
         scope.launch {
-            _state.value = _state.value.copy(
-                isLoading = true,
-                error = null,
-            )
+            updateState { copy(isLoading = true, error = null) }
             val result = taskRepository.fetchTasks(AllApiStates)
             if (result != null) {
-                _state.value = _state.value.copy(
-                    allTasks = result.toImmutableList(),
-                    isLoading = false,
-                )
+                updateState {
+                    copy(allTasks = result.toImmutableList(), isLoading = false)
+                }
             } else {
-                _state.value = _state.value.copy(
-                    isLoading = false,
-                    error = "Не удалось загрузить задания",
-                )
+                updateState {
+                    copy(isLoading = false, error = "Не удалось загрузить задания")
+                }
             }
         }
+    }
+
+    private fun updateState(block: TasksComponent.State.() -> TasksComponent.State) {
+        _state.value = _state.value.block().recomputeDerived()
     }
 }

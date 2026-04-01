@@ -117,6 +117,10 @@ internal fun TasksScreenContent(
                 verticalAlignment = Alignment.Top,
                 userScrollEnabled = false,
             ) { page ->
+                val pageTasks = when (page) {
+                    0 -> state.activeFilteredTasks
+                    else -> state.archiveFilteredTasks
+                }
                 Column(modifier = Modifier.fillMaxSize()) {
                     Spacer(modifier = Modifier.height(8.dp))
 
@@ -129,7 +133,7 @@ internal fun TasksScreenContent(
 
                     TasksContentArea(
                         state = state,
-                        tasks = state.filteredTasks,
+                        tasks = pageTasks,
                         onIntent = onIntent,
                         modifier = Modifier.weight(1f),
                     )
