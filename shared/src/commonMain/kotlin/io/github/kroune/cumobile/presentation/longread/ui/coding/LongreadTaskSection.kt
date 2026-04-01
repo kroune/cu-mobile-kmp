@@ -238,6 +238,7 @@ private fun TaskTabbedContent(
             .fillMaxWidth()
             .padding(top = 8.dp),
         userScrollEnabled = false,
+        verticalAlignment = Alignment.Top,
     ) { page ->
         when (tabKeys[page]) {
             "solution" -> SolutionTab(

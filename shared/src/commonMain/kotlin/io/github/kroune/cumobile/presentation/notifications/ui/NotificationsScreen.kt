@@ -171,7 +171,11 @@ internal fun NotificationsScreenContent(
                     .fillMaxWidth(),
                 userScrollEnabled = false,
             ) { page ->
-                when (val current = state.currentNotifications) {
+                val pageNotifications = when (page) {
+                    0 -> state.educationNotifications
+                    else -> state.otherNotifications
+                }
+                when (val current = pageNotifications) {
                     is ContentState.Loading -> NotificationsScreenSkeleton()
                     is ContentState.Error -> ErrorContent(
                         error = current.message,
@@ -301,7 +305,7 @@ private fun NotificationCardContent(
 
         val link = item.link
         val linkText = link?.label?.ifBlank { link.uri }
-        val linkOverflows = remember(linkText, maxWidthPx) {
+        val linkOverflows = remember(linkText, link?.uri, maxWidthPx) {
             link?.uri?.isNotBlank() == true &&
                 linkText != null &&
                 linkText.isNotBlank() &&
