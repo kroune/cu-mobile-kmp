@@ -216,7 +216,7 @@ private fun MaterialList(
         state = lazyListState,
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = 8.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
         contentPadding = androidx.compose.foundation.layout.PaddingValues(
             top = 12.dp,

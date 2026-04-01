@@ -35,49 +35,14 @@ interface TasksComponent {
         val courseFilter: String? = null,
         /** Search query (matches against exercise name). */
         val searchQuery: String = "",
-    ) {
-        val filteredTasks: ImmutableList<StudentTask>
-            get() {
-                val segmentFilter = if (segment == 0) ActiveStates else ArchiveStates
-                return allTasks
-                    .filter { task ->
-                        val effectiveState = normalizeTaskState(effectiveTaskState(task))
-                        effectiveState in segmentFilter &&
-                            (statusFilter == null || effectiveState == statusFilter) &&
-                            (courseFilter == null || task.course.id == courseFilter) &&
-                            (searchQuery.isEmpty() || task.exercise.name.contains(searchQuery, ignoreCase = true))
-                    }.sortedWith(taskComparator())
-                    .toImmutableList()
-            }
-
-        val activeCount: Int
-            get() = allTasks.count {
-                normalizeTaskState(effectiveTaskState(it)) in ActiveStates
-            }
-
-        val archiveCount: Int
-            get() = allTasks.count {
-                normalizeTaskState(effectiveTaskState(it)) in ArchiveStates
-            }
-
-        val availableCourses: ImmutableList<Pair<String, String>>
-            get() = allTasks
-                .map { it.course.id to it.course.name }
-                .distinctBy { it.first }
-                .sortedBy { it.second }
-                .toImmutableList()
-
-        val availableStatuses: ImmutableList<String>
-            get() {
-                val presentStatuses = allTasks
-                    .map { normalizeTaskState(effectiveTaskState(it)) }
-                    .toSet()
-                val segmentFilter = (if (segment == 0) ActiveStates else ArchiveStates)
-                return segmentFilter
-                    .filter { it in presentStatuses }
-                    .toImmutableList()
-            }
-    }
+        /** Pre-computed filtered + sorted tasks per segment. */
+        val activeFilteredTasks: ImmutableList<StudentTask> = persistentListOf(),
+        val archiveFilteredTasks: ImmutableList<StudentTask> = persistentListOf(),
+        val activeCount: Int = 0,
+        val archiveCount: Int = 0,
+        val availableCourses: ImmutableList<Pair<String, String>> = persistentListOf(),
+        val availableStatuses: ImmutableList<String> = persistentListOf(),
+    )
 
     sealed interface Intent {
         /** Switch between Active (0) and Archive (1) segments. */
@@ -108,6 +73,50 @@ interface TasksComponent {
         /** Refresh the task list from the API. */
         data object Refresh : Intent
     }
+}
+
+/**
+ * Recomputes all derived UI fields from the raw state fields.
+ * Must be called after every mutation of [TasksComponent.State].
+ */
+internal fun TasksComponent.State.recomputeDerived(): TasksComponent.State {
+    fun filterForSegment(segmentStates: Set<String>): ImmutableList<StudentTask> =
+        allTasks
+            .filter { task ->
+                val effectiveState = normalizeTaskState(effectiveTaskState(task))
+                effectiveState in segmentStates &&
+                    (statusFilter == null || effectiveState == statusFilter) &&
+                    (courseFilter == null || task.course.id == courseFilter) &&
+                    (
+                        searchQuery.isEmpty() ||
+                            task.exercise.name.contains(searchQuery, ignoreCase = true)
+                    )
+            }.sortedWith(taskComparator())
+            .toImmutableList()
+
+    val presentStatuses = allTasks
+        .map { normalizeTaskState(effectiveTaskState(it)) }
+        .toSet()
+    val segmentStates = if (segment == 0) ActiveStates else ArchiveStates
+
+    return copy(
+        activeFilteredTasks = filterForSegment(ActiveStates),
+        archiveFilteredTasks = filterForSegment(ArchiveStates),
+        activeCount = allTasks.count {
+            normalizeTaskState(effectiveTaskState(it)) in ActiveStates
+        },
+        archiveCount = allTasks.count {
+            normalizeTaskState(effectiveTaskState(it)) in ArchiveStates
+        },
+        availableCourses = allTasks
+            .map { it.course.id to it.course.name }
+            .distinctBy { it.first }
+            .sortedBy { it.second }
+            .toImmutableList(),
+        availableStatuses = segmentStates
+            .filter { it in presentStatuses }
+            .toImmutableList(),
+    )
 }
 
 /**

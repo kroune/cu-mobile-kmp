@@ -5,7 +5,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,6 +18,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -37,9 +41,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
@@ -47,13 +54,12 @@ import io.github.kroune.cumobile.data.model.NotificationItem
 import io.github.kroune.cumobile.presentation.common.ContentState
 import io.github.kroune.cumobile.presentation.common.formatDateTimeFull
 import io.github.kroune.cumobile.presentation.common.ui.ActionErrorBar
+import io.github.kroune.cumobile.presentation.common.ui.AppTabRow
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 import io.github.kroune.cumobile.presentation.common.ui.DetailTopBar
 import io.github.kroune.cumobile.presentation.common.ui.EmptyContent
 import io.github.kroune.cumobile.presentation.common.ui.ErrorContent
-import io.github.kroune.cumobile.presentation.common.ui.SegmentedControl
 import io.github.kroune.cumobile.presentation.notifications.NotificationsComponent
-import kotlinx.collections.immutable.persistentListOf
 
 /**
  * Notifications screen with two tabs: "Учеба" and "Другое".
@@ -135,35 +141,57 @@ internal fun NotificationsScreenContent(
                 onBack = onBack,
             )
 
-            SegmentedControl(
-                labels = persistentListOf("Учеба", "Другое"),
-                selectedIndex = state.selectedTab,
-                onSelect = { onIntent(NotificationsComponent.Intent.SelectTab(it)) },
+            val pagerState = rememberPagerState(initialPage = state.selectedTab) { 2 }
+
+            LaunchedEffect(state.selectedTab) {
+                if (pagerState.currentPage != state.selectedTab) {
+                    pagerState.animateScrollToPage(state.selectedTab)
+                }
+            }
+
+            AppTabRow(
+                currentPage = pagerState.currentPage,
+                labels = listOf("учеба", "другое"),
+                onPageSelected = { page ->
+                    onIntent(NotificationsComponent.Intent.SelectTab(page))
+                },
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             )
 
             ActionErrorBar(error = actionError, onDismiss = onDismissError)
 
-            when (val current = state.currentNotifications) {
-                is ContentState.Loading -> NotificationsScreenSkeleton()
-                is ContentState.Error -> ErrorContent(
-                    error = current.message,
-                    onRetry = { onIntent(NotificationsComponent.Intent.Refresh) },
-                )
-                is ContentState.Success -> {
-                    if (current.data.isEmpty()) {
-                        EmptyContent(text = "Нет уведомлений")
-                    } else {
-                        NotificationsList(
-                            notifications = current.data,
-                            expandedIds = state.expandedNotificationIds,
-                            onToggleExpand = { id ->
-                                onIntent(NotificationsComponent.Intent.ToggleExpand(id))
-                            },
-                            onLinkClick = { uri ->
-                                onIntent(NotificationsComponent.Intent.OpenLink(uri))
-                            },
-                        )
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                userScrollEnabled = false,
+            ) { page ->
+                val pageNotifications = when (page) {
+                    0 -> state.educationNotifications
+                    else -> state.otherNotifications
+                }
+                when (val current = pageNotifications) {
+                    is ContentState.Loading -> NotificationsScreenSkeleton()
+                    is ContentState.Error -> ErrorContent(
+                        error = current.message,
+                        onRetry = { onIntent(NotificationsComponent.Intent.Refresh) },
+                    )
+                    is ContentState.Success -> {
+                        if (current.data.isEmpty()) {
+                            EmptyContent(text = "Нет уведомлений")
+                        } else {
+                            NotificationsList(
+                                notifications = current.data,
+                                expandedIds = state.expandedNotificationIds,
+                                onToggleExpand = { id ->
+                                    onIntent(NotificationsComponent.Intent.ToggleExpand(id))
+                                },
+                                onLinkClick = { uri ->
+                                    onIntent(NotificationsComponent.Intent.OpenLink(uri))
+                                },
+                            )
+                        }
                     }
                 }
             }
@@ -183,6 +211,7 @@ private fun NotificationsList(
         modifier = modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp),
+        contentPadding = PaddingValues(vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         items(notifications, key = { it.id }) { item ->
@@ -193,7 +222,6 @@ private fun NotificationsList(
                 onLinkClick = onLinkClick,
             )
         }
-        item { Spacer(modifier = Modifier.height(16.dp)) }
     }
 }
 
@@ -209,9 +237,6 @@ private fun NotificationCard(
     onLinkClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var hasOverflow by remember(item.id) { mutableStateOf(false) }
-    val onOverflowDetected = { hasOverflow = true }
-
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -225,8 +250,6 @@ private fun NotificationCard(
         NotificationCardContent(
             item = item,
             isExpanded = isExpanded,
-            hasOverflow = hasOverflow,
-            onOverflowDetected = onOverflowDetected,
             onLinkClick = onLinkClick,
             modifier = Modifier.weight(1f),
         )
@@ -237,31 +260,79 @@ private fun NotificationCard(
 private fun NotificationCardContent(
     item: NotificationItem,
     isExpanded: Boolean,
-    hasOverflow: Boolean,
-    onOverflowDetected: () -> Unit,
     onLinkClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier = modifier) {
-        NotificationCardHeader(
-            item = item,
-            isExpanded = isExpanded,
-            onOverflowDetected = onOverflowDetected,
+    // Measure text synchronously during composition to detect overflow
+    // without a second layout pass / recomposition.
+    BoxWithConstraints(modifier = modifier) {
+        val textMeasurer = rememberTextMeasurer()
+        val maxWidthPx = constraints.maxWidth
+
+        val titleStyle = TextStyle(
+            fontSize = 14.sp,
+            fontWeight = FontWeight.SemiBold,
         )
-        NotificationCardBody(
-            item = item,
-            isExpanded = isExpanded,
-            onOverflowDetected = onOverflowDetected,
-            onLinkClick = onLinkClick,
-        )
-        if (hasOverflow || isExpanded) {
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = if (isExpanded) "Свернуть" else "Читать полностью",
-                color = AppTheme.colors.accent,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Medium,
+        val bodyStyle = TextStyle(fontSize = 12.sp)
+
+        val titleOverflows = remember(item.title, maxWidthPx) {
+            textMeasurer
+                .measure(
+                    text = item.title,
+                    style = titleStyle,
+                    constraints = Constraints(maxWidth = maxWidthPx),
+                    maxLines = CollapsedTitleMaxLines,
+                ).hasVisualOverflow
+        }
+
+        val descriptionText = remember(item.description) {
+            normalizeWhitespace(item.description)
+        }
+        val descOverflows = remember(descriptionText, maxWidthPx) {
+            descriptionText.isNotBlank() &&
+                textMeasurer
+                    .measure(
+                        text = descriptionText,
+                        style = bodyStyle,
+                        constraints = Constraints(maxWidth = maxWidthPx),
+                        maxLines = CollapsedDescriptionMaxLines,
+                    ).hasVisualOverflow
+        }
+
+        val link = item.link
+        val linkText = link?.label?.ifBlank { link.uri }
+        val linkOverflows = remember(linkText, link?.uri, maxWidthPx) {
+            link?.uri?.isNotBlank() == true &&
+                linkText != null &&
+                linkText.isNotBlank() &&
+                textMeasurer
+                    .measure(
+                        text = linkText,
+                        style = bodyStyle,
+                        constraints = Constraints(maxWidth = maxWidthPx),
+                        maxLines = CollapsedLinkMaxLines,
+                    ).hasVisualOverflow
+        }
+
+        val hasOverflow = titleOverflows || descOverflows || linkOverflows
+
+        Column {
+            NotificationCardHeader(item = item, isExpanded = isExpanded)
+            NotificationCardBody(
+                item = item,
+                descriptionText = descriptionText,
+                isExpanded = isExpanded,
+                onLinkClick = onLinkClick,
             )
+            if (hasOverflow || isExpanded) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = if (isExpanded) "Свернуть" else "Читать полностью",
+                    color = AppTheme.colors.accent,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                )
+            }
         }
     }
 }
@@ -270,7 +341,6 @@ private fun NotificationCardContent(
 private fun NotificationCardHeader(
     item: NotificationItem,
     isExpanded: Boolean,
-    onOverflowDetected: () -> Unit,
 ) {
     Text(
         text = item.title,
@@ -279,7 +349,6 @@ private fun NotificationCardHeader(
         fontWeight = FontWeight.SemiBold,
         maxLines = if (isExpanded) Int.MAX_VALUE else CollapsedTitleMaxLines,
         overflow = TextOverflow.Ellipsis,
-        onTextLayout = { if (!isExpanded && it.hasVisualOverflow) onOverflowDetected() },
     )
     Spacer(modifier = Modifier.height(4.dp))
     Text(
@@ -292,11 +361,10 @@ private fun NotificationCardHeader(
 @Composable
 private fun NotificationCardBody(
     item: NotificationItem,
+    descriptionText: String,
     isExpanded: Boolean,
-    onOverflowDetected: () -> Unit,
     onLinkClick: (String) -> Unit,
 ) {
-    val descriptionText = normalizeWhitespace(item.description)
     if (descriptionText.isNotBlank()) {
         Spacer(modifier = Modifier.height(4.dp))
         Text(
@@ -305,7 +373,6 @@ private fun NotificationCardBody(
             fontSize = 12.sp,
             maxLines = if (isExpanded) Int.MAX_VALUE else CollapsedDescriptionMaxLines,
             overflow = TextOverflow.Ellipsis,
-            onTextLayout = { if (!isExpanded && it.hasVisualOverflow) onOverflowDetected() },
         )
     }
     val link = item.link
@@ -319,7 +386,6 @@ private fun NotificationCardBody(
             modifier = Modifier.clickable { onLinkClick(link.uri) },
             maxLines = if (isExpanded) Int.MAX_VALUE else CollapsedLinkMaxLines,
             overflow = TextOverflow.Ellipsis,
-            onTextLayout = { if (!isExpanded && it.hasVisualOverflow) onOverflowDetected() },
         )
     }
 }

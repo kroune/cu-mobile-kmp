@@ -23,6 +23,8 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -58,6 +60,7 @@ import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import io.github.kroune.cumobile.data.model.Course
 import io.github.kroune.cumobile.presentation.common.isError
 import io.github.kroune.cumobile.presentation.common.ui.ActionErrorBar
+import io.github.kroune.cumobile.presentation.common.ui.AppTabRow
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 import io.github.kroune.cumobile.presentation.common.ui.EmptyContent
 import io.github.kroune.cumobile.presentation.common.ui.ErrorContent
@@ -68,7 +71,6 @@ import io.github.kroune.cumobile.presentation.common.ui.stripEmojiPrefix
 import io.github.kroune.cumobile.presentation.courses.CoursesComponent
 import io.github.kroune.cumobile.presentation.courses.activeCourses
 import io.github.kroune.cumobile.presentation.courses.archivedCourses
-import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -124,12 +126,22 @@ internal fun CoursesScreenContent(
                 .fillMaxSize()
                 .padding(horizontal = 16.dp),
         ) {
+            val pagerState = rememberPagerState(initialPage = state.segment) { 3 }
+
+            LaunchedEffect(state.segment) {
+                if (pagerState.currentPage != state.segment) {
+                    pagerState.animateScrollToPage(state.segment)
+                }
+            }
+
             Spacer(modifier = Modifier.height(8.dp))
 
-            SegmentedControl(
-                labels = persistentListOf("Курсы", "Ведомость", "Зачетка"),
-                selectedIndex = state.segment,
-                onSelect = { onIntent(CoursesComponent.Intent.SelectSegment(it)) },
+            AppTabRow(
+                currentPage = pagerState.currentPage,
+                labels = listOf("курсы", "ведомость", "зачетка"),
+                onPageSelected = { page ->
+                    onIntent(CoursesComponent.Intent.SelectSegment(page))
+                },
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -142,10 +154,16 @@ internal fun CoursesScreenContent(
                     onRetry = { onIntent(CoursesComponent.Intent.Refresh) },
                 )
                 state.isContentLoading -> CoursesScreenSkeleton()
-                else -> when (state.segment) {
-                    0 -> CoursesListContent(state = state, onIntent = onIntent)
-                    1 -> GradeSheetContent(state = state, onIntent = onIntent)
-                    2 -> GradebookContent(state = state, onIntent = onIntent)
+                else -> HorizontalPager(
+                    state = pagerState,
+                    modifier = Modifier.fillMaxSize(),
+                    userScrollEnabled = false,
+                ) { page ->
+                    when (page) {
+                        0 -> CoursesListContent(state = state, onIntent = onIntent)
+                        1 -> GradeSheetContent(state = state, onIntent = onIntent)
+                        2 -> GradebookContent(state = state, onIntent = onIntent)
+                    }
                 }
             }
         }

@@ -1,7 +1,6 @@
 package io.github.kroune.cumobile.presentation.performance.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,6 +15,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -69,55 +70,35 @@ private fun ActivityFilterChips(
     onFilterActivity: (String?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val chipColors = FilterChipDefaults.filterChipColors(
+        containerColor = AppTheme.colors.surface,
+        labelColor = AppTheme.colors.textSecondary,
+        selectedContainerColor = AppTheme.colors.accent.copy(alpha = 0.2f),
+        selectedLabelColor = AppTheme.colors.accent,
+    )
+
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .padding(start = 16.dp)
+            .padding(vertical = 8.dp)
             .horizontalScroll(rememberScrollState()),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         FilterChip(
-            label = "Все активности",
-            isSelected = activeFilter == null,
+            selected = activeFilter == null,
             onClick = { onFilterActivity(null) },
+            label = { Text("Все активности") },
+            colors = chipColors,
         )
         activityNames.forEach { name ->
             FilterChip(
-                label = name,
-                isSelected = activeFilter == name,
+                selected = activeFilter == name,
                 onClick = { onFilterActivity(name) },
+                label = { Text(name) },
+                colors = chipColors,
             )
         }
-    }
-}
-
-@Composable
-private fun FilterChip(
-    label: String,
-    isSelected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val bgColor = if (isSelected) {
-        AppTheme.colors.accent.copy(alpha = 0.2f)
-    } else {
-        AppTheme.colors.surface
-    }
-    val textColor = if (isSelected) {
-        AppTheme.colors.accent
-    } else {
-        AppTheme.colors.textSecondary
-    }
-    Box(
-        modifier = modifier
-            .height(36.dp)
-            .clip(RoundedCornerShape(18.dp))
-            .background(bgColor)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(text = label, color = textColor, fontSize = 13.sp)
     }
 }
 

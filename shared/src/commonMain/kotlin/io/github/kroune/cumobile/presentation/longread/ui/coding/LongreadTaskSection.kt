@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -19,6 +21,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -30,6 +33,7 @@ import io.github.kroune.cumobile.data.model.LongreadMaterial
 import io.github.kroune.cumobile.data.model.TaskDetails
 import io.github.kroune.cumobile.data.model.TaskState
 import io.github.kroune.cumobile.presentation.common.formatDeadline
+import io.github.kroune.cumobile.presentation.common.ui.AppTabRow
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 import io.github.kroune.cumobile.presentation.common.ui.StatusBadge
 import io.github.kroune.cumobile.presentation.common.ui.rememberFilePicker
@@ -64,7 +68,7 @@ internal fun CodingMaterialCardContent(
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
             .background(AppTheme.colors.surface)
-            .padding(16.dp),
+            .padding(8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         TaskHeader(
@@ -183,31 +187,75 @@ private fun TaskManagementSection(
                 },
             )
         } else {
-            TabSelector(
-                selectedTab = state.selectedTab,
-                onTabSelected = { tab ->
-                    onIntent(CodingMaterialComponent.Intent.SelectTab(tab))
-                },
+            TaskTabbedContent(
+                taskDetails = taskDetails,
+                state = state,
+                onIntent = onIntent,
+                onAttachSolution = onAttachSolution,
+                onAttachComment = onAttachComment,
             )
-            when (state.selectedTab) {
-                "solution" -> SolutionTab(
-                    taskDetails = taskDetails,
-                    solutionUrl = state.solutionUrl,
-                    isSubmitting = state.isSubmitting,
-                    pendingAttachments = state.pendingSolutionAttachments,
-                    onIntent = onIntent,
-                    onAttach = onAttachSolution,
-                )
-                "comments" -> CommentsTab(
-                    state = state,
-                    onIntent = onIntent,
-                    onAttach = onAttachComment,
-                )
-                "info" -> InfoTab(
-                    taskDetails = taskDetails,
-                    events = state.taskEvents,
-                )
-            }
+        }
+    }
+}
+
+@Composable
+private fun TaskTabbedContent(
+    taskDetails: TaskDetails,
+    state: CodingMaterialComponent.State,
+    onIntent: (CodingMaterialComponent.Intent) -> Unit,
+    onAttachSolution: () -> Unit,
+    onAttachComment: () -> Unit,
+) {
+    val tabKeys = listOf("solution", "comments", "info")
+    val tabLabels = listOf("решение", "комментарии", "инфо")
+    val currentIndex = tabKeys.indexOf(state.selectedTab).coerceAtLeast(0)
+    val pagerState = rememberPagerState(initialPage = currentIndex) { 3 }
+
+    LaunchedEffect(currentIndex) {
+        if (pagerState.currentPage != currentIndex) {
+            pagerState.animateScrollToPage(currentIndex)
+        }
+    }
+
+    AppTabRow(
+        currentPage = pagerState.currentPage,
+        labels = tabLabels,
+        onPageSelected = { index ->
+            onIntent(
+                CodingMaterialComponent.Intent.SelectTab(tabKeys[index]),
+            )
+        },
+        containerColor = AppTheme.colors.background,
+    )
+
+    HorizontalPager(
+        state = pagerState,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 8.dp),
+        userScrollEnabled = false,
+        verticalAlignment = Alignment.Top,
+    ) { page ->
+        when (tabKeys[page]) {
+            "solution" -> SolutionTab(
+                taskDetails = taskDetails,
+                solutionUrl = state.solutionUrl,
+                isSubmitting = state.isSubmitting,
+                pendingAttachments = state.pendingSolutionAttachments,
+                onIntent = onIntent,
+                onAttach = onAttachSolution,
+            )
+
+            "comments" -> CommentsTab(
+                state = state,
+                onIntent = onIntent,
+                onAttach = onAttachComment,
+            )
+
+            "info" -> InfoTab(
+                taskDetails = taskDetails,
+                events = state.taskEvents,
+            )
         }
     }
 }
@@ -235,40 +283,6 @@ private fun StartTaskButton(
             )
         } else {
             Text(text = "Начать задание", color = AppTheme.colors.background)
-        }
-    }
-}
-
-/** Tab selector for Solution / Comments / Info. */
-@Composable
-private fun TabSelector(
-    selectedTab: String,
-    onTabSelected: (String) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val tabs = listOf(
-        "solution" to "Решение",
-        "comments" to "Комментарии",
-        "info" to "Инфо",
-    )
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
-            .background(AppTheme.colors.background),
-        horizontalArrangement = Arrangement.SpaceEvenly,
-    ) {
-        tabs.forEach { (key, label) ->
-            val isSelected = selectedTab == key
-            Text(
-                text = label,
-                color = if (isSelected) AppTheme.colors.accent else AppTheme.colors.textSecondary,
-                fontSize = 13.sp,
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                modifier = Modifier
-                    .clickable { onTabSelected(key) }
-                    .padding(horizontal = 12.dp, vertical = 8.dp),
-            )
         }
     }
 }

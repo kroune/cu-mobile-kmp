@@ -16,6 +16,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -24,6 +26,7 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
@@ -32,16 +35,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import io.github.kroune.cumobile.data.model.StudentTask
+import io.github.kroune.cumobile.presentation.common.ui.AppTabRow
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 import io.github.kroune.cumobile.presentation.common.ui.EmptyContent
 import io.github.kroune.cumobile.presentation.common.ui.ErrorContent
 import io.github.kroune.cumobile.presentation.common.ui.LoadingContent
-import io.github.kroune.cumobile.presentation.common.ui.SegmentedControl
 import io.github.kroune.cumobile.presentation.common.ui.stripEmojiPrefix
 import io.github.kroune.cumobile.presentation.common.ui.taskStateLabel
 import io.github.kroune.cumobile.presentation.tasks.TasksComponent
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.persistentListOf
 
 /**
  * Tasks tab screen with segment control, filters, search, and task list.
@@ -86,31 +88,57 @@ internal fun TasksScreenContent(
                 .fillMaxSize()
                 .padding(horizontal = 16.dp),
         ) {
+            val pagerState = rememberPagerState(initialPage = state.segment) { 2 }
+
+            LaunchedEffect(state.segment) {
+                if (pagerState.currentPage != state.segment) {
+                    pagerState.animateScrollToPage(state.segment)
+                }
+            }
+
             Spacer(modifier = Modifier.height(8.dp))
 
-            SegmentedControl(
-                labels = persistentListOf(
-                    "Активные (${state.activeCount})",
-                    "Архив (${state.archiveCount})",
+            AppTabRow(
+                currentPage = pagerState.currentPage,
+                labels = listOf(
+                    "активные (${state.activeCount})",
+                    "архив (${state.archiveCount})",
                 ),
-                selectedIndex = state.segment,
-                onSelect = { onIntent(TasksComponent.Intent.SelectSegment(it)) },
+                onPageSelected = { page ->
+                    onIntent(TasksComponent.Intent.SelectSegment(page))
+                },
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.Top,
+                userScrollEnabled = false,
+            ) { page ->
+                val pageTasks = when (page) {
+                    0 -> state.activeFilteredTasks
+                    else -> state.archiveFilteredTasks
+                }
+                Column(modifier = Modifier.fillMaxSize()) {
+                    Spacer(modifier = Modifier.height(8.dp))
 
-            FiltersRow(
-                state = state,
-                onIntent = onIntent,
-            )
+                    FiltersRow(
+                        state = state,
+                        onIntent = onIntent,
+                    )
 
-            Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
-            TasksContentArea(
-                state = state,
-                tasks = state.filteredTasks,
-                onIntent = onIntent,
-            )
+                    TasksContentArea(
+                        state = state,
+                        tasks = pageTasks,
+                        onIntent = onIntent,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+            }
         }
     }
 }

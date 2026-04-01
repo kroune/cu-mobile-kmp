@@ -74,20 +74,6 @@ android {
         textReport = true
     }
 
-    packaging {
-        resources {
-            excludes +=
-                listOf(
-                    "**/*.kotlin_module",
-                    "**/*.version",
-                    "**/kotlin/**",
-                    "**/*.txt",
-                    "**/*.xml",
-                    "**/*.properties",
-                )
-        }
-    }
-
     buildTypes {
         debug {
             applicationIdSuffix = ".debug"
@@ -135,9 +121,6 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.compose.ui)
-    implementation(libs.compose.uiTooling)
-    implementation(libs.compose.uiToolingPreview)
-    implementation(libs.androidx.ui.test.junit4)
 
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)
@@ -145,7 +128,11 @@ dependencies {
     testImplementation(libs.roborazzi.compose)
     testImplementation(libs.composable.preview.scanner)
 
+    debugImplementation(libs.compose.uiTooling)
+    debugImplementation(libs.compose.uiToolingPreview)
     debugImplementation(libs.compose.ui.test.manifest)
+
+    testImplementation(libs.androidx.ui.test.junit4)
 }
 
 java {
