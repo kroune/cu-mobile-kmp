@@ -36,7 +36,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -61,7 +60,6 @@ import io.github.kroune.cumobile.presentation.common.ui.DetailTopBar
 import io.github.kroune.cumobile.presentation.common.ui.EmptyContent
 import io.github.kroune.cumobile.presentation.common.ui.ErrorContent
 import io.github.kroune.cumobile.presentation.notifications.NotificationsComponent
-import kotlinx.coroutines.launch
 
 /**
  * Notifications screen with two tabs: "Учеба" and "Другое".
@@ -144,7 +142,6 @@ internal fun NotificationsScreenContent(
             )
 
             val pagerState = rememberPagerState(initialPage = state.selectedTab) { 2 }
-            val scope = rememberCoroutineScope()
 
             LaunchedEffect(state.selectedTab) {
                 if (pagerState.currentPage != state.selectedTab) {
@@ -156,7 +153,6 @@ internal fun NotificationsScreenContent(
                 currentPage = pagerState.currentPage,
                 labels = listOf("учеба", "другое"),
                 onPageSelected = { page ->
-                    scope.launch { pagerState.animateScrollToPage(page) }
                     onIntent(NotificationsComponent.Intent.SelectTab(page))
                 },
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),

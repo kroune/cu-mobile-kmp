@@ -127,7 +127,6 @@ internal fun CoursesScreenContent(
                 .padding(horizontal = 16.dp),
         ) {
             val pagerState = rememberPagerState(initialPage = state.segment) { 3 }
-            val scope = rememberCoroutineScope()
 
             LaunchedEffect(state.segment) {
                 if (pagerState.currentPage != state.segment) {
@@ -141,7 +140,6 @@ internal fun CoursesScreenContent(
                 currentPage = pagerState.currentPage,
                 labels = listOf("курсы", "ведомость", "зачетка"),
                 onPageSelected = { page ->
-                    scope.launch { pagerState.animateScrollToPage(page) }
                     onIntent(CoursesComponent.Intent.SelectSegment(page))
                 },
             )

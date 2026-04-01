@@ -26,7 +26,6 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -45,7 +44,6 @@ import io.github.kroune.cumobile.presentation.common.ui.stripEmojiPrefix
 import io.github.kroune.cumobile.presentation.common.ui.taskStateLabel
 import io.github.kroune.cumobile.presentation.tasks.TasksComponent
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.coroutines.launch
 
 /**
  * Tasks tab screen with segment control, filters, search, and task list.
@@ -91,7 +89,6 @@ internal fun TasksScreenContent(
                 .padding(horizontal = 16.dp),
         ) {
             val pagerState = rememberPagerState(initialPage = state.segment) { 2 }
-            val scope = rememberCoroutineScope()
 
             LaunchedEffect(state.segment) {
                 if (pagerState.currentPage != state.segment) {
@@ -108,7 +105,6 @@ internal fun TasksScreenContent(
                     "архив (${state.archiveCount})",
                 ),
                 onPageSelected = { page ->
-                    scope.launch { pagerState.animateScrollToPage(page) }
                     onIntent(TasksComponent.Intent.SelectSegment(page))
                 },
             )

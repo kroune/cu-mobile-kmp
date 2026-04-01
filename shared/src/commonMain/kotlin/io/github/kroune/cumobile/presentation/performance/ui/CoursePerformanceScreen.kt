@@ -20,7 +20,6 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,7 +39,6 @@ import io.github.kroune.cumobile.presentation.common.ui.gradeColor
 import io.github.kroune.cumobile.presentation.common.ui.gradeDescription
 import io.github.kroune.cumobile.presentation.performance.CoursePerformanceComponent
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.coroutines.launch
 
 /**
  * Course performance screen with two tabs:
@@ -112,7 +110,6 @@ private fun PerformanceContent(
 ) {
     val tabLabels = persistentListOf("набранные баллы", "успеваемость")
     val pagerState = rememberPagerState(initialPage = state.selectedTab) { 2 }
-    val scope = rememberCoroutineScope()
 
     LaunchedEffect(state.selectedTab) {
         if (pagerState.currentPage != state.selectedTab) {
@@ -129,7 +126,6 @@ private fun PerformanceContent(
             currentPage = pagerState.currentPage,
             labels = tabLabels,
             onPageSelected = { page ->
-                scope.launch { pagerState.animateScrollToPage(page) }
                 onIntent(CoursePerformanceComponent.Intent.SelectTab(page))
             },
             modifier = Modifier.padding(horizontal = 16.dp),

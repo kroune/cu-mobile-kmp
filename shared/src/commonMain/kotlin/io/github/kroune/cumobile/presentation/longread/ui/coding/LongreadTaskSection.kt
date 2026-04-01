@@ -22,7 +22,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,7 +40,6 @@ import io.github.kroune.cumobile.presentation.common.ui.rememberFilePicker
 import io.github.kroune.cumobile.presentation.common.ui.taskStateColor
 import io.github.kroune.cumobile.presentation.common.ui.taskStateLabel
 import io.github.kroune.cumobile.presentation.longread.component.coding.CodingMaterialComponent
-import kotlinx.coroutines.launch
 
 /**
  * Card content for a coding material within the longread.
@@ -212,7 +210,6 @@ private fun TaskTabbedContent(
     val tabLabels = listOf("решение", "комментарии", "инфо")
     val currentIndex = tabKeys.indexOf(state.selectedTab).coerceAtLeast(0)
     val pagerState = rememberPagerState(initialPage = currentIndex) { 3 }
-    val scope = rememberCoroutineScope()
 
     LaunchedEffect(currentIndex) {
         if (pagerState.currentPage != currentIndex) {
@@ -224,7 +221,6 @@ private fun TaskTabbedContent(
         currentPage = pagerState.currentPage,
         labels = tabLabels,
         onPageSelected = { index ->
-            scope.launch { pagerState.animateScrollToPage(index) }
             onIntent(
                 CodingMaterialComponent.Intent.SelectTab(tabKeys[index]),
             )
