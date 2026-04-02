@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -31,8 +32,10 @@ private val previewTaskWithOffset = StudentTask(
 @Composable
 private fun PreviewDeadlineTaskCardDark() {
     CuMobileTheme(darkTheme = true) {
-        Box(Modifier.background(AppTheme.colors.background).padding(16.dp)) {
-            DeadlineTaskCard(task = previewTask, onClick = {})
+        CompositionLocalProvider(LocalClock provides previewClock) {
+            Box(Modifier.background(AppTheme.colors.background).padding(16.dp)) {
+                DeadlineTaskCard(task = previewTask, onClick = {})
+            }
         }
     }
 }
@@ -41,8 +44,10 @@ private fun PreviewDeadlineTaskCardDark() {
 @Composable
 private fun PreviewDeadlineTaskCardLight() {
     CuMobileTheme(darkTheme = false) {
-        Box(Modifier.background(AppTheme.colors.background).padding(16.dp)) {
-            DeadlineTaskCard(task = previewTask, onClick = {})
+        CompositionLocalProvider(LocalClock provides previewClock) {
+            Box(Modifier.background(AppTheme.colors.background).padding(16.dp)) {
+                DeadlineTaskCard(task = previewTask, onClick = {})
+            }
         }
     }
 }
@@ -51,8 +56,10 @@ private fun PreviewDeadlineTaskCardLight() {
 @Composable
 private fun PreviewDeadlineTaskCardWithOffsetDark() {
     CuMobileTheme(darkTheme = true) {
-        Box(Modifier.background(AppTheme.colors.background).padding(16.dp)) {
-            DeadlineTaskCard(task = previewTaskWithOffset, onClick = {})
+        CompositionLocalProvider(LocalClock provides previewClock) {
+            Box(Modifier.background(AppTheme.colors.background).padding(16.dp)) {
+                DeadlineTaskCard(task = previewTaskWithOffset, onClick = {})
+            }
         }
     }
 }
@@ -61,8 +68,10 @@ private fun PreviewDeadlineTaskCardWithOffsetDark() {
 @Composable
 private fun PreviewDeadlineTaskCardWithOffsetLight() {
     CuMobileTheme(darkTheme = false) {
-        Box(Modifier.background(AppTheme.colors.background).padding(16.dp)) {
-            DeadlineTaskCard(task = previewTaskWithOffset, onClick = {})
+        CompositionLocalProvider(LocalClock provides previewClock) {
+            Box(Modifier.background(AppTheme.colors.background).padding(16.dp)) {
+                DeadlineTaskCard(task = previewTaskWithOffset, onClick = {})
+            }
         }
     }
 }
