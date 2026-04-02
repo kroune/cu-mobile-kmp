@@ -1,6 +1,7 @@
 package io.github.kroune.cumobile.di
 
 import android.content.Context
+import androidx.sqlite.driver.AndroidSQLiteDriver
 import io.github.kroune.cumobile.data.local.AndroidFileOpener
 import io.github.kroune.cumobile.data.local.AndroidFileStorage
 import io.github.kroune.cumobile.data.local.AndroidPdfGenerator
@@ -20,7 +21,7 @@ import org.koin.dsl.module
 fun initKoinAndroid(context: Context) {
     val platformModule = module {
         single { createDataStore { dataStorePath(context) } }
-        single { buildAppDatabase(getDatabaseBuilder(context)) }
+        single { buildAppDatabase(getDatabaseBuilder(context), AndroidSQLiteDriver()) }
         single<FileStorage> { AndroidFileStorage(context) }
         single<FileOpener> { AndroidFileOpener(context) }
         single<PdfGenerator> { AndroidPdfGenerator() }

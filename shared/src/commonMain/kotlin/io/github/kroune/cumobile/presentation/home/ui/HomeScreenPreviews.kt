@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import io.github.kroune.cumobile.data.model.ClassData
@@ -16,6 +17,8 @@ import io.github.kroune.cumobile.presentation.common.ContentState
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 import io.github.kroune.cumobile.presentation.common.ui.CuMobileTheme
 import io.github.kroune.cumobile.presentation.common.ui.ErrorContent
+import io.github.kroune.cumobile.presentation.common.ui.LocalClock
+import io.github.kroune.cumobile.presentation.common.ui.previewClock
 import io.github.kroune.cumobile.presentation.home.HomeComponent
 import kotlinx.datetime.LocalDate
 
@@ -120,7 +123,9 @@ private fun PreviewHomeScreenSkeletonLight() {
 @Composable
 private fun PreviewHomeScreenDark() {
     CuMobileTheme(darkTheme = true) {
-        HomeContent(state = previewHomeState, onIntent = {}, onTaskClick = {}, onCourseClick = {})
+        CompositionLocalProvider(LocalClock provides previewClock) {
+            HomeContent(state = previewHomeState, onIntent = {}, onTaskClick = {}, onCourseClick = {})
+        }
     }
 }
 
@@ -128,7 +133,9 @@ private fun PreviewHomeScreenDark() {
 @Composable
 private fun PreviewHomeScreenLight() {
     CuMobileTheme(darkTheme = false) {
-        HomeContent(state = previewHomeState, onIntent = {}, onTaskClick = {}, onCourseClick = {})
+        CompositionLocalProvider(LocalClock provides previewClock) {
+            HomeContent(state = previewHomeState, onIntent = {}, onTaskClick = {}, onCourseClick = {})
+        }
     }
 }
 
@@ -178,12 +185,14 @@ private fun PreviewHomeScreenLoadingDark() {
 @Composable
 private fun PreviewHomeScreenEmptyDark() {
     CuMobileTheme(darkTheme = true) {
-        HomeContent(
-            state = previewHomeEmptyState,
-            onIntent = {},
-            onTaskClick = {},
-            onCourseClick = {},
-        )
+        CompositionLocalProvider(LocalClock provides previewClock) {
+            HomeContent(
+                state = previewHomeEmptyState,
+                onIntent = {},
+                onTaskClick = {},
+                onCourseClick = {},
+            )
+        }
     }
 }
 
@@ -191,12 +200,14 @@ private fun PreviewHomeScreenEmptyDark() {
 @Composable
 private fun PreviewHomeScreenEmptyLight() {
     CuMobileTheme(darkTheme = false) {
-        HomeContent(
-            state = previewHomeEmptyState,
-            onIntent = {},
-            onTaskClick = {},
-            onCourseClick = {},
-        )
+        CompositionLocalProvider(LocalClock provides previewClock) {
+            HomeContent(
+                state = previewHomeEmptyState,
+                onIntent = {},
+                onTaskClick = {},
+                onCourseClick = {},
+            )
+        }
     }
 }
 
@@ -204,11 +215,13 @@ private fun PreviewHomeScreenEmptyLight() {
 @Composable
 private fun PreviewHomeWithScheduleLight() {
     CuMobileTheme(darkTheme = false) {
-        HomeContent(
-            state = previewHomeWithScheduleState,
-            onIntent = {},
-            onTaskClick = {},
-            onCourseClick = {},
-        )
+        CompositionLocalProvider(LocalClock provides previewClock) {
+            HomeContent(
+                state = previewHomeWithScheduleState,
+                onIntent = {},
+                onTaskClick = {},
+                onCourseClick = {},
+            )
+        }
     }
 }

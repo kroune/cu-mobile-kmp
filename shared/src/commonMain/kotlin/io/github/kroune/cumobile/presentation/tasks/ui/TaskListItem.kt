@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.sp
 import io.github.kroune.cumobile.data.model.StudentTask
 import io.github.kroune.cumobile.presentation.common.formatDeadline
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
+import io.github.kroune.cumobile.presentation.common.ui.LocalClock
 import io.github.kroune.cumobile.presentation.common.ui.StatusBadge
 import io.github.kroune.cumobile.presentation.common.ui.isOverdue
 import io.github.kroune.cumobile.presentation.common.ui.stripEmojiPrefix
@@ -115,7 +116,7 @@ private fun DeadlineText(
 ) {
     val deadline = task.deadline ?: task.exercise.deadline
     if (deadline != null) {
-        val overdue = isOverdue(deadline)
+        val overdue = isOverdue(deadline, LocalClock.current.now())
         Row(
             modifier = modifier,
             verticalAlignment = Alignment.CenterVertically,

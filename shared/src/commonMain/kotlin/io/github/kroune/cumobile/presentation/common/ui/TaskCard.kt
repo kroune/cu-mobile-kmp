@@ -105,7 +105,7 @@ private fun DeadlineDateRow(
     modifier: Modifier = Modifier,
 ) {
     val displayText = formatDeadline(deadline)
-    val overdue = isOverdue(deadline)
+    val overdue = isOverdue(deadline, LocalClock.current.now())
 
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -174,7 +174,10 @@ private fun taskStateBadgeLabel(
  */
 private val timezoneOffsetRegex = Regex("[+-]\\d{2}:\\d{2}$")
 
-internal fun isOverdue(deadline: String?): Boolean {
+internal fun isOverdue(
+    deadline: String?,
+    now: kotlin.time.Instant,
+): Boolean {
     if (deadline == null) return false
     return try {
         var normalized = deadline.trim()
@@ -194,9 +197,7 @@ internal fun isOverdue(deadline: String?): Boolean {
         }
         val deadlineDateTime = LocalDateTime.parse(isoString)
         val deadlineInstant = deadlineDateTime.toInstant(TimeZone.currentSystemDefault())
-        val now = kotlin.time.Clock.System
-            .now()
-        deadlineInstant < now
+        deadlineInstant.toEpochMilliseconds() < now.toEpochMilliseconds()
     } catch (e: Exception) {
         logger.error(e) { "Failed to parse deadline for overdue check: $deadline" }
         false

@@ -1,5 +1,6 @@
 package io.github.kroune.cumobile.di
 
+import androidx.sqlite.driver.NativeSQLiteDriver
 import io.github.kroune.cumobile.data.local.FileOpener
 import io.github.kroune.cumobile.data.local.FileStorage
 import io.github.kroune.cumobile.data.local.IosFileOpener
@@ -20,7 +21,7 @@ import org.koin.dsl.module
 fun iosKoinModule(): Module =
     module {
         single { createDataStore { dataStorePath() } }
-        single { buildAppDatabase(getDatabaseBuilder()) }
+        single { buildAppDatabase(getDatabaseBuilder(), NativeSQLiteDriver()) }
         single<FileStorage> { IosFileStorage() }
         single<FileOpener> { IosFileOpener() }
         single<PdfGenerator> { IosPdfGenerator() }

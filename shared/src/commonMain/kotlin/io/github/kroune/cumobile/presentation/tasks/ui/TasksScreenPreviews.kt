@@ -1,12 +1,15 @@
 package io.github.kroune.cumobile.presentation.tasks.ui
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.tooling.preview.Preview
 import io.github.kroune.cumobile.data.model.StudentTask
 import io.github.kroune.cumobile.data.model.TaskCourse
 import io.github.kroune.cumobile.data.model.TaskExercise
 import io.github.kroune.cumobile.data.model.TaskState
 import io.github.kroune.cumobile.presentation.common.ui.CuMobileTheme
+import io.github.kroune.cumobile.presentation.common.ui.LocalClock
+import io.github.kroune.cumobile.presentation.common.ui.previewClock
 import io.github.kroune.cumobile.presentation.tasks.TasksComponent
 import io.github.kroune.cumobile.presentation.tasks.recomputeDerived
 import kotlinx.collections.immutable.persistentListOf
@@ -60,7 +63,9 @@ private val previewTasksArchiveState = TasksComponent
 @Composable
 private fun PreviewTasksScreenDark() {
     CuMobileTheme(darkTheme = true) {
-        TasksScreenContent(state = previewTasksState, onIntent = {})
+        CompositionLocalProvider(LocalClock provides previewClock) {
+            TasksScreenContent(state = previewTasksState, onIntent = {})
+        }
     }
 }
 
@@ -68,7 +73,9 @@ private fun PreviewTasksScreenDark() {
 @Composable
 private fun PreviewTasksScreenLight() {
     CuMobileTheme(darkTheme = false) {
-        TasksScreenContent(state = previewTasksState, onIntent = {})
+        CompositionLocalProvider(LocalClock provides previewClock) {
+            TasksScreenContent(state = previewTasksState, onIntent = {})
+        }
     }
 }
 
@@ -109,13 +116,15 @@ private fun PreviewTasksErrorLight() {
 @Composable
 private fun PreviewTasksEmptyFiltersDark() {
     CuMobileTheme(darkTheme = true) {
-        TasksScreenContent(
-            state = previewTasksState
-                .copy(
-                    searchQuery = "несуществующий запрос",
-                ).recomputeDerived(),
-            onIntent = {},
-        )
+        CompositionLocalProvider(LocalClock provides previewClock) {
+            TasksScreenContent(
+                state = previewTasksState
+                    .copy(
+                        searchQuery = "несуществующий запрос",
+                    ).recomputeDerived(),
+                onIntent = {},
+            )
+        }
     }
 }
 
@@ -131,13 +140,15 @@ private fun PreviewTasksArchiveDark() {
 @Composable
 private fun PreviewTasksWithFiltersDark() {
     CuMobileTheme(darkTheme = true) {
-        TasksScreenContent(
-            state = previewTasksState
-                .copy(
-                    statusFilter = TaskState.InProgress,
-                    courseFilter = "1",
-                ).recomputeDerived(),
-            onIntent = {},
-        )
+        CompositionLocalProvider(LocalClock provides previewClock) {
+            TasksScreenContent(
+                state = previewTasksState
+                    .copy(
+                        statusFilter = TaskState.InProgress,
+                        courseFilter = "1",
+                    ).recomputeDerived(),
+                onIntent = {},
+            )
+        }
     }
 }
