@@ -68,7 +68,7 @@ kotlin {
     }
 
     // Android
-    androidLibrary {
+    android {
         namespace = "com.thirdparty.cumobile.shared"
         compileSdk = libs.versions.android.max.sdk
             .get()
@@ -98,17 +98,17 @@ kotlin {
     // Common
     sourceSets {
         commonMain.dependencies {
-            api(libs.compose.runtime)
-            api(libs.compose.foundation)
-            api(libs.compose.material3)
+            implementation(libs.compose.runtime)
+            implementation(libs.compose.foundation)
+            implementation(libs.compose.material3)
             implementation(libs.compose.material.icons.extended)
-            api(libs.compose.ui)
+            implementation(libs.compose.ui)
 
-            api(libs.compose.components.resources)
-            api(libs.compose.uiToolingPreview)
+            implementation(libs.compose.components.resources)
+            implementation(libs.compose.uiToolingPreview)
 
-            api(libs.androidx.lifecycle.viewmodelCompose)
-            api(libs.androidx.lifecycle.runtimeCompose)
+            implementation(libs.androidx.lifecycle.viewmodelCompose)
+            implementation(libs.androidx.lifecycle.runtimeCompose)
 
             api(libs.decompose)
             implementation(libs.decompose.animations)
@@ -146,6 +146,7 @@ kotlin {
         androidMain.dependencies {
             implementation(libs.androidx.activity.compose)
             implementation(libs.ktor.client.cio)
+            implementation(libs.compose.uiTooling)
         }
     }
 }
