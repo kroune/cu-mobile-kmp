@@ -18,6 +18,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -30,6 +31,8 @@ import androidx.compose.ui.unit.sp
 import io.github.kroune.cumobile.data.model.ClassData
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 import io.github.kroune.cumobile.presentation.common.ui.CuMobileTheme
+import io.github.kroune.cumobile.presentation.common.ui.LocalClock
+import io.github.kroune.cumobile.presentation.common.ui.previewClock
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.format.MonthNames
@@ -311,11 +314,13 @@ private fun generateWeekDays(weekStart: LocalDate): List<DayData> =
 @Composable
 private fun PreviewHomeWithScheduleDark() {
     CuMobileTheme(darkTheme = true) {
-        HomeContent(
-            state = previewHomeWithScheduleState,
-            onIntent = {},
-            onTaskClick = {},
-            onCourseClick = {},
-        )
+        CompositionLocalProvider(LocalClock provides previewClock) {
+            HomeContent(
+                state = previewHomeWithScheduleState,
+                onIntent = {},
+                onTaskClick = {},
+                onCourseClick = {},
+            )
+        }
     }
 }
