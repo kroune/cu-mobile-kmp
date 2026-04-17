@@ -1,20 +1,17 @@
 package io.github.kroune.cumobile.presentation.common.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Schedule
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -27,23 +24,22 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.kroune.cumobile.data.model.StudentTask
 import io.github.kroune.cumobile.data.model.TaskState
-import io.github.kroune.cumobile.presentation.common.formatDeadline
-import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toInstant
+import io.github.kroune.cumobile.presentation.common.formatDeadlineDayShortMonth
+import io.github.kroune.cumobile.presentation.common.formatDeadlineTime
+import io.github.kroune.cumobile.presentation.common.parseDeadlineInstant
 
-private val logger = KotlinLogging.logger {}
+private const val MillisPerHour = 3_600_000L
+private const val MillisPerDay = 86_400_000L
+private const val HoursPerDay = 24
+private const val UrgencyRedHours = 24L
+private const val UrgencyOrangeHours = 72L
 
 /**
- * Compact task card for the deadlines section on the Home screen.
+ * Compact task card for the Дедлайны row on the Home screen.
  *
- * Shows exercise name, course name, deadline, and status badge.
- * Matches the Flutter reference: 200dp wide, rounded corners,
- * border color matching task state.
- *
- * @param task The student task to display.
- * @param onClick Called when the card is tapped.
+ * Layout favours temporal scanning:
+ *  - Right column: large time (primary) and urgency-colored date beneath it.
+ *  - Left column: state chip, accent-colored course name, secondary task title.
  */
 @Composable
 fun DeadlineTaskCard(
@@ -52,84 +48,90 @@ fun DeadlineTaskCard(
     modifier: Modifier = Modifier,
 ) {
     val stateColor = taskStateColor(task.state)
-    val shape = RoundedCornerShape(12.dp)
-
-    Column(
-        modifier = modifier
-            .width(200.dp)
-            .clip(shape)
-            .border(1.dp, stateColor, shape)
-            .background(AppTheme.colors.surface, shape)
-            .clickable(onClick = onClick)
-            .padding(12.dp),
-        verticalArrangement = Arrangement.spacedBy(6.dp),
-    ) {
-        // Exercise name
-        Text(
-            text = stripEmojiPrefix(task.exercise.name),
-            color = AppTheme.colors.textPrimary,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Bold,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-
-        // Course name
-        Text(
-            text = stripEmojiPrefix(task.course.name),
-            color = AppTheme.colors.textSecondary,
-            fontSize = 12.sp,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-
-        // Deadline row
-        DeadlineDateRow(deadline = task.exercise.deadline)
-
-        // Status badge with score
-        StatusBadge(
-            label = taskStateBadgeLabel(task.state, task.score),
-            color = stateColor,
-        )
-    }
-}
-
-/**
- * Displays the deadline date with a clock emoji.
- *
- * Shows the date in a short format. Text turns red if overdue.
- */
-@Composable
-private fun DeadlineDateRow(
-    deadline: String?,
-    modifier: Modifier = Modifier,
-) {
-    val displayText = formatDeadline(deadline)
-    val overdue = isOverdue(deadline, LocalClock.current.now())
+    val urgency = deadlineUrgencyColor(task.exercise.deadline, stateColor)
 
     Row(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .width(240.dp)
+            .height(IntrinsicSize.Min)
+            .clip(RoundedCornerShape(12.dp))
+            .background(AppTheme.colors.surface)
+            .clickable(onClick = onClick)
+            .padding(8.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        Icon(
-            imageVector = Icons.Outlined.Schedule,
-            contentDescription = null,
-            tint = AppTheme.colors.textSecondary,
-            modifier = Modifier.size(14.dp),
-        )
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(end = 10.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            DeadlineStateChip(task = task, stateColor = stateColor)
+            Text(
+                text = stripEmojiPrefix(task.course.name),
+                color = AppTheme.colors.accent,
+                fontSize = 13.sp,
+                lineHeight = 15.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 5,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = stripEmojiPrefix(task.exercise.name),
+                color = AppTheme.colors.textSecondary,
+                fontSize = 11.sp,
+                lineHeight = 13.sp,
+                fontWeight = FontWeight.Medium,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        Column(
+            modifier = Modifier.fillMaxHeight(),
+            horizontalAlignment = Alignment.End,
+            verticalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(
+                text = formatDeadlineTime(task.exercise.deadline),
+                fontSize = 22.sp,
+                fontWeight = FontWeight.ExtraBold,
+                color = AppTheme.colors.textPrimary,
+                modifier = Modifier.weight(1f),
+            )
+            Text(
+                text = formatDeadlineDayShortMonth(task.exercise.deadline),
+                fontSize = 15.sp,
+                lineHeight = 15.sp,
+                fontWeight = FontWeight.Bold,
+                color = urgency,
+            )
+        }
+    }
+}
+
+@Composable
+private fun DeadlineStateChip(
+    task: StudentTask,
+    stateColor: Color,
+) {
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(6.dp))
+            .background(stateColor.copy(alpha = 0.2f))
+            .padding(horizontal = 6.dp, vertical = 2.dp),
+    ) {
         Text(
-            text = displayText,
-            color = if (overdue) AppTheme.colors.error else AppTheme.colors.textSecondary,
-            fontSize = 12.sp,
+            text = deadlineBadgeLabel(task.state, task.score),
+            color = stateColor,
+            fontSize = 10.sp,
+            lineHeight = 10.sp,
+            fontWeight = FontWeight.Bold,
         )
     }
 }
 
 /**
- * Colored badge showing a label on a tinted background.
- *
- * Used by both the DeadlineTaskCard and TaskListItem.
+ * Colored pill used for state badges in list items and detail screens.
  */
 @Composable
 fun StatusBadge(
@@ -152,11 +154,7 @@ fun StatusBadge(
     }
 }
 
-/**
- * Returns the badge label for a task state, optionally showing
- * the score for evaluated tasks.
- */
-private fun taskStateBadgeLabel(
+private fun deadlineBadgeLabel(
     state: String,
     score: Double?,
 ): String =
@@ -166,40 +164,19 @@ private fun taskStateBadgeLabel(
         taskStateLabel(state)
     }
 
-/**
- * Checks if an ISO 8601 deadline string is in the past.
- *
- * Parses the deadline and compares it with the current time
- * using kotlinx-datetime for cross-platform compatibility.
- */
-private val timezoneOffsetRegex = Regex("[+-]\\d{2}:\\d{2}$")
-
-internal fun isOverdue(
+@Composable
+private fun deadlineUrgencyColor(
     deadline: String?,
-    now: kotlin.time.Instant,
-): Boolean {
-    if (deadline == null) return false
-    return try {
-        var normalized = deadline.trim()
-        // Strip timezone offset (+HH:MM / -HH:MM)
-        val offsetMatch = timezoneOffsetRegex.find(normalized)
-        if (offsetMatch != null) {
-            normalized = normalized.substring(0, offsetMatch.range.first)
-        }
-        // Strip Z suffix
-        if (normalized.endsWith("Z")) {
-            normalized = normalized.removeSuffix("Z")
-        }
-        val isoString = if (!normalized.contains("T")) {
-            "${normalized}T23:59:59"
-        } else {
-            normalized
-        }
-        val deadlineDateTime = LocalDateTime.parse(isoString)
-        val deadlineInstant = deadlineDateTime.toInstant(TimeZone.currentSystemDefault())
-        deadlineInstant.toEpochMilliseconds() < now.toEpochMilliseconds()
-    } catch (e: Exception) {
-        logger.error(e) { "Failed to parse deadline for overdue check: $deadline" }
-        false
+    stateColor: Color,
+): Color {
+    val instant = parseDeadlineInstant(deadline) ?: return stateColor
+    val diffMs = instant.toEpochMilliseconds() - LocalClock.current.now().toEpochMilliseconds()
+    if (diffMs <= 0) return AppTheme.colors.error
+    val totalHours = diffMs / MillisPerHour
+    val totalDaysCeil = (diffMs + MillisPerDay - 1) / MillisPerDay
+    return when {
+        totalHours < UrgencyRedHours -> AppTheme.colors.error
+        totalDaysCeil <= UrgencyOrangeHours / HoursPerDay -> AppTheme.colors.taskReview
+        else -> stateColor
     }
 }

@@ -177,6 +177,13 @@ Every screen has:
 ### Formatting Utilities
 
 - All date/time/size formatting in `presentation/common/FormatUtils.kt`
+- Deadline-specific helpers in `presentation/common/DeadlineFormat.kt`:
+  `parseDeadlineInstant`, `isOverdue`, `formatDeadlineTime` ("HH:mm"),
+  `formatDeadlineDayShortMonth` ("5 апр"). Reuse these — don't duplicate ISO parsing.
+- Shared month names in FormatUtils: `russianMonthsShort` ("янв", "фев"),
+  `russianMonthsFull` ("января", "февраля"). Import these; don't redeclare locally.
+- Internal helper `parseIsoDateTime(iso)` handles the full suite (with offset, with Z,
+  date-only → end-of-day). Use via the public `format*` / `parseDeadlineInstant` wrappers.
 - Uses `kotlinx-datetime` — no JVM-only APIs
 - `DateTimeProvider` in `commonMain` for "today" and date-to-millis
 
@@ -287,3 +294,8 @@ Every screen has:
 
 - Run `./gradlew detektAll` — fix violations, never suppress
 - 6 "compiler errors" in detektMainAndroid are false positives (cross-module resolution)
+- `MagicNumber` rule is configured with `ignoreAnnotated: ["Composable"]` — numbers inside
+  `@Composable` functions (dp/sp/alpha literals, etc.) are exempt. Don't extract UI pixel
+  values into `private const val` constants just to satisfy the rule; inline them.
+  Still extract numbers when they carry non-obvious semantic meaning (e.g. `MillisPerHour`,
+  thresholds like `UrgencyRedHours`) — that's about readability, not detekt.

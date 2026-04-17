@@ -21,23 +21,33 @@ import io.github.kroune.cumobile.presentation.common.ui.ShimmerBox
 /**
  * Skeleton placeholder for [DeadlineTaskCard].
  *
- * Matches: 200dp wide, 12dp corner radius, 12dp padding,
- * 4 shimmer lines (title, subtitle, deadline, badge).
+ * Matches the N3 layout: 240dp wide, 12dp corner radius, 8dp padding,
+ * two columns — left (chip + course + title) and right (time + date).
  */
 @Composable
 internal fun DeadlineTaskCardSkeleton(modifier: Modifier = Modifier) {
-    Column(
+    Row(
         modifier = modifier
-            .width(200.dp)
+            .width(240.dp)
             .clip(RoundedCornerShape(12.dp))
             .background(AppTheme.colors.surface)
-            .padding(12.dp),
-        verticalArrangement = Arrangement.spacedBy(6.dp),
+            .padding(8.dp),
     ) {
-        ShimmerBox(Modifier.fillMaxWidth(0.8f), height = 14.dp)
-        ShimmerBox(Modifier.fillMaxWidth(0.6f), height = 12.dp)
-        ShimmerBox(Modifier.fillMaxWidth(0.5f), height = 12.dp)
-        ShimmerBox(Modifier.width(80.dp), height = 20.dp, cornerRadius = 8.dp)
+        Column(
+            modifier = Modifier.weight(1f).padding(end = 10.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            ShimmerBox(Modifier.width(56.dp), height = 14.dp, cornerRadius = 6.dp)
+            ShimmerBox(Modifier.fillMaxWidth(0.8f), height = 15.dp)
+            ShimmerBox(Modifier.fillMaxWidth(0.6f), height = 13.dp)
+        }
+        Column(
+            horizontalAlignment = Alignment.End,
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            ShimmerBox(Modifier.width(52.dp), height = 22.dp)
+            ShimmerBox(Modifier.width(44.dp), height = 15.dp)
+        }
     }
 }
 

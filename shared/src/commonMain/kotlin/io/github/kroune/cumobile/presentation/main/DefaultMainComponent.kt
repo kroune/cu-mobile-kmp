@@ -67,13 +67,23 @@ class DefaultMainComponent(
 
     private val tabNavigation = PagesNavigation<TabConfig>()
 
+    private val taskNavigator = TaskNavigator(
+        scope = scope,
+        courseRepository = mainDependencies.courseRepository,
+        navigateToLongread = ::navigateToLongread,
+        navigateToCourseDetail = ::navigateToCourseDetail,
+    )
+
     private val tabChildFactory = TabChildFactory(
         deps = mainDependencies,
-        navigateToCourseDetail = ::navigateToCourseDetail,
-        navigateToProfile = ::navigateToProfile,
-        navigateToCoursePerformance = ::navigateToCoursePerformance,
-        navigateToFileRenameSettings = ::navigateToFileRenameSettings,
-        navigateToScanner = ::navigateToScanner,
+        nav = TabNavigationCallbacks(
+            toCourseDetail = ::navigateToCourseDetail,
+            toTask = taskNavigator::navigate,
+            toProfile = ::navigateToProfile,
+            toCoursePerformance = ::navigateToCoursePerformance,
+            toFileRenameSettings = ::navigateToFileRenameSettings,
+            toScanner = ::navigateToScanner,
+        ),
     )
 
     override val tabPages: Value<ChildPages<*, MainComponent.TabChild>> =

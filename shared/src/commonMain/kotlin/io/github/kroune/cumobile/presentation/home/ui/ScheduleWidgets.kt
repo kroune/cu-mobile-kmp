@@ -29,13 +29,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.kroune.cumobile.data.model.ClassData
+import io.github.kroune.cumobile.presentation.common.russianMonthsFull
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 import io.github.kroune.cumobile.presentation.common.ui.CuMobileTheme
 import io.github.kroune.cumobile.presentation.common.ui.LocalClock
 import io.github.kroune.cumobile.presentation.common.ui.previewClock
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.format.MonthNames
 import kotlinx.datetime.format.Padding
 import kotlinx.datetime.format.char
 import kotlinx.datetime.plus
@@ -255,25 +255,10 @@ internal fun ScheduleCard(
 // WEEK FORMATTING
 // ════════════════════════════════════════════════════════════════════════════════════
 
-private val russianMonthNames = MonthNames(
-    "января",
-    "февраля",
-    "марта",
-    "апреля",
-    "мая",
-    "июня",
-    "июля",
-    "августа",
-    "сентября",
-    "октября",
-    "ноября",
-    "декабря",
-)
-
 private val dayAndMonthFormat = LocalDate.Format {
     day(Padding.NONE)
     char(' ')
-    monthName(russianMonthNames)
+    monthName(russianMonthsFull)
 }
 
 private fun formatWeekRange(weekStart: LocalDate): String {
