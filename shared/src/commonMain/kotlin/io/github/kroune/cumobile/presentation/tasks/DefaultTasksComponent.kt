@@ -4,6 +4,7 @@ import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
+import com.arkivanov.essenty.lifecycle.doOnStart
 import io.github.kroune.cumobile.data.model.StudentTask
 import io.github.kroune.cumobile.domain.repository.TaskRepository
 import kotlinx.collections.immutable.toImmutableList
@@ -49,7 +50,9 @@ class DefaultTasksComponent(
     }
 
     init {
-        loadTasks()
+        lifecycle.doOnStart(isOneTime = true) {
+            loadTasks()
+        }
     }
 
     private fun loadTasks() {

@@ -4,6 +4,7 @@ import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
+import com.arkivanov.essenty.lifecycle.doOnStart
 import io.github.kroune.cumobile.domain.repository.CourseRepository
 import io.github.kroune.cumobile.domain.repository.PerformanceRepository
 import io.github.kroune.cumobile.presentation.common.ContentState
@@ -75,8 +76,10 @@ class DefaultCoursesComponent(
     }
 
     init {
-        loadAllData()
         observeOrder()
+        lifecycle.doOnStart(isOneTime = true) {
+            loadAllData()
+        }
     }
 
     private fun observeOrder() {

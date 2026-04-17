@@ -174,6 +174,28 @@ Every screen has:
 - Use `coroutineScope()` from `essenty-lifecycle-coroutines` in all components
 - Do NOT manually create `CoroutineScope` + `onDestroy` cleanup
 
+### Lazy Tab Loading (ChildPages)
+
+- `DefaultMainComponent` wires tabs via `ChildPages`. Non-active tabs sit in `Status.CREATED`,
+  so their constructors (and `init {}` blocks) run at app start.
+- **Do NOT call network-loading functions directly from `init {}`** in tab components —
+  every tab would fetch at startup even though only one is visible.
+- Gate the initial load on the lifecycle transition instead:
+  ```kotlin
+  init {
+      lifecycle.doOnStart(isOneTime = true) {
+          loadData()
+      }
+  }
+  ```
+- `doOnStart(isOneTime = true)` fires the block only on the first `CREATED → STARTED`
+  transition — i.e. the first time the user opens that tab. Subsequent tab re-entries
+  do not re-fetch (user refreshes manually via pull-to-refresh).
+- Cheap local observers (DataStore flows, etc.) can stay in `init {}` directly —
+  they don't hit the network.
+- Detail-stack destinations (profile, longread, course detail, etc.) are naturally
+  lazy — they're created only when navigated to — so `init { load() }` is fine there.
+
 ### Formatting Utilities
 
 - All date/time/size formatting in `presentation/common/FormatUtils.kt`

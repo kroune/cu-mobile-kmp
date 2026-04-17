@@ -4,6 +4,7 @@ import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
+import com.arkivanov.essenty.lifecycle.doOnStart
 import io.github.kroune.cumobile.data.model.StudentTask
 import io.github.kroune.cumobile.data.model.TaskState
 import io.github.kroune.cumobile.presentation.common.ContentState
@@ -66,8 +67,10 @@ class DefaultHomeComponent(
     private var currentLoadJob: Job? = null
 
     init {
-        loadData()
-        loadSchedule()
+        lifecycle.doOnStart(isOneTime = true) {
+            loadData()
+            loadSchedule()
+        }
     }
 
     override fun onIntent(intent: HomeComponent.Intent) {
