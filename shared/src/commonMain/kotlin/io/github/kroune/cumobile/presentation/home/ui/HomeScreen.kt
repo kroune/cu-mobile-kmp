@@ -419,8 +419,11 @@ internal fun HomeScreenSkeleton(modifier: Modifier = Modifier) {
             .background(AppTheme.colors.background)
             .verticalScroll(rememberScrollState()),
     ) {
-        // Deadlines section
-        SectionHeader(title = "Дедлайны", count = 0)
+        SectionHeader(
+            title = "Дедлайны",
+            count = 0,
+            modifier = Modifier.padding(top = 8.dp),
+        )
         Row(
             modifier = Modifier
                 .fillMaxWidth()
