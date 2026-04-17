@@ -272,6 +272,20 @@ Usage:
 and `settings.saveFormData = true` so Google / password-manager autofill
 services can offer saved credentials inside the auth WebView.
 
+### Native form autofill
+
+Native Keycloak fields in `LoginStepContent.kt` tag their `OutlinedTextField`s
+via `Modifier.contentType(...)` from `androidx.compose.ui.autofill`:
+- Email step → `ContentType.EmailAddress`
+- Password step → `ContentType.Password`
+- OTP step → `ContentType.SmsOtpCode`
+
+This lets password managers (Google, 1Password, etc.) offer saved credentials
+on both Android and iOS via the common Compose semantics API. `AuthTextField`
+accepts an optional `contentType: ContentType?` parameter — pass it from each
+step composable when adding new fields. Email and password are on separate
+steps (AnimatedContent), so each is an independent autofill session.
+
 ---
 
 ## ApiService Endpoints (25 total)
