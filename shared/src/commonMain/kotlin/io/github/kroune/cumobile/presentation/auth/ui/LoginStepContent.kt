@@ -19,6 +19,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.autofill.ContentType
+import androidx.compose.ui.autofill.contentType
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -43,6 +45,7 @@ internal fun EmailStepContent(
         onValueChange = { onIntent(LoginComponent.Intent.UpdateEmail(it)) },
         label = "Email",
         keyboardType = KeyboardType.Email,
+        contentType = ContentType.EmailAddress,
         onDone = { onIntent(LoginComponent.Intent.Submit) },
     )
     Spacer(modifier = Modifier.height(24.dp))
@@ -63,6 +66,7 @@ internal fun PasswordStepContent(
         onValueChange = { onIntent(LoginComponent.Intent.UpdatePassword(it)) },
         label = "Пароль",
         isPassword = true,
+        contentType = ContentType.Password,
         onDone = { onIntent(LoginComponent.Intent.Submit) },
     )
     Spacer(modifier = Modifier.height(24.dp))
@@ -86,6 +90,7 @@ internal fun OtpStepContent(
         onValueChange = { onIntent(LoginComponent.Intent.UpdateOtpCode(it)) },
         label = "Код подтверждения",
         keyboardType = KeyboardType.Number,
+        contentType = ContentType.SmsOtpCode,
         onDone = { onIntent(LoginComponent.Intent.Submit) },
     )
     SmsCodeObserver(enabled = !state.isLoading) { code ->
@@ -149,14 +154,18 @@ private fun AuthTextField(
     label: String,
     isPassword: Boolean = false,
     keyboardType: KeyboardType = KeyboardType.Text,
+    contentType: ContentType? = null,
     onDone: () -> Unit = {},
 ) {
+    val fieldModifier = Modifier
+        .fillMaxWidth()
+        .then(if (contentType != null) Modifier.contentType(contentType) else Modifier)
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
         label = { Text(label) },
         singleLine = true,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = fieldModifier,
         visualTransformation = if (isPassword) {
             PasswordVisualTransformation()
         } else {
