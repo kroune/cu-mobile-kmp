@@ -36,6 +36,7 @@ debug postfix if build is a debug one
 | kotlinx-datetime                 | —              | Date/time formatting and parsing                  |
 | Ksoup (fleeksoft)                | 0.2.6          | HTML parsing (KMP Jsoup port)                     |
 | ComposeMediaPlayer               | 0.8.7          | Video/audio playback (KMP)                        |
+| play-services-auth-api-phone     | 18.2.0         | SMS User Consent API (Android only)               |
 
 ---
 
@@ -63,7 +64,8 @@ CuMobile/
         │   ├── domain/
         │   │   └── repository/    # 8 repository interfaces
         │   └── presentation/
-        │       ├── auth/          # LoginComponent, LoginScreen
+        │       ├── auth/          # LoginComponent, LoginScreen, LoginStepContent
+        │       │   ├── sms/       # SmsCodeObserver (expect) — OTP autofill
         │       │   └── webview/   # WebViewLoginComponent, PlatformWebView (expect/actual)
         │       ├── common/        # Theme, TopBar, TaskCard, CourseCard, FormatUtils
         │       ├── courses/       # CoursesComponent + detail/CourseDetailComponent
@@ -226,6 +228,49 @@ Every screen has:
 10. Logout → clear cookie → back to `LoginChild`
 11. Android native splash: removed via `setKeepOnScreenCondition` — stays visible while active child
     is `SplashChild`
+
+### Login Entry Points (LoginComponent)
+
+`LoginComponent.AuthStep` has four branches:
+- `Email` / `Password` / `Otp` — native Keycloak flow via `AuthApiService`
+- `BffCookie` — direct paste of `bff.cookie` value. Skips Keycloak entirely,
+  calls `authRepository.saveCookie()` + `validateCookie()`. Intended for
+  testing and manual recovery, not hidden behind a flag.
+- `FallbackToWebView` intent escapes to the full WebView login.
+
+Errors are one-time events, not state: `LoginComponent.Effect.ShowError` is
+emitted via a buffered Channel and collected in `LoginScreen` into a local
+`mutableStateOf<String?>`, cleared on step change.
+
+### SMS OTP Autofill
+
+`presentation/auth/sms/SmsCodeObserver` is an `expect @Composable` that delivers
+a detected OTP string to its callback.
+
+- **Android**: uses Google's SMS User Consent API
+  (`com.google.android.gms:play-services-auth-api-phone`). No runtime
+  permissions; the system shows a one-tap consent dialog, then delivers the
+  SMS body via an ActivityResult. The receiver is registered with
+  `SmsRetriever.SEND_PERMISSION` via `ContextCompat.registerReceiver`
+  (RECEIVER_EXPORTED on API 33+).
+- **iOS**: no API to read SMS, so falls back to the pasteboard. Listens for
+  `UIPasteboardChangedNotification` and `UIApplicationDidBecomeActiveNotification`
+  and extracts a code from the clipboard string. Catches the "Copy code"
+  banner + manual copies from Messages.
+
+Usage:
+- Native OTP step (`OtpStepContent`): calls `SmsCodeObserver` — on code, fills
+  `otpCode` via intent and auto-submits.
+- WebView login (`PlatformWebView.android.kt`): calls `SmsCodeObserver` — on
+  code, writes to the Android clipboard. The keyboard's clipboard suggestion
+  lets the user fill the WebView's own input. Clipboard is preferred over JS
+  DOM injection — robust across site layout changes.
+
+### Android WebView form autofill
+
+`PlatformWebView.android.kt` sets `importantForAutofill = IMPORTANT_FOR_AUTOFILL_YES`
+and `settings.saveFormData = true` so Google / password-manager autofill
+services can offer saved credentials inside the auth WebView.
 
 ---
 

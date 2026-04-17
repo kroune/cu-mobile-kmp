@@ -1,6 +1,7 @@
 package io.github.kroune.cumobile.presentation.auth
 
 import com.arkivanov.decompose.value.Value
+import kotlinx.coroutines.flow.Flow
 
 /**
  * Component managing the native login flow.
@@ -9,6 +10,8 @@ import com.arkivanov.decompose.value.Value
  */
 interface LoginComponent {
     val state: Value<State>
+
+    val effects: Flow<Effect>
 
     fun onIntent(intent: Intent)
 
@@ -24,18 +27,28 @@ interface LoginComponent {
 
         /** SMS OTP code input after password was accepted. */
         Otp,
+
+        /** Direct BFF cookie input — for testing / debugging. */
+        BffCookie,
     }
 
     data class State(
         val step: AuthStep = AuthStep.Email,
         val isLoading: Boolean = false,
-        val error: String? = null,
         val email: String = "",
         val password: String = "",
         val otpCode: String = "",
+        /** Raw bff.cookie value pasted in BffCookie step. */
+        val bffCookie: String = "",
         /** Masked phone number shown on OTP step (e.g. "+7 *** *** 76 24"). */
         val phoneNumber: String? = null,
     )
+
+    sealed interface Effect {
+        data class ShowError(
+            val message: String,
+        ) : Effect
+    }
 
     sealed interface Intent {
         data class UpdateEmail(
@@ -50,7 +63,11 @@ interface LoginComponent {
             val value: String,
         ) : Intent
 
-        /** Submit the current step (email, password, or OTP). */
+        data class UpdateBffCookie(
+            val value: String,
+        ) : Intent
+
+        /** Submit the current step (email, password, OTP, or bff cookie). */
         data object Submit : Intent
 
         /** Go back to previous step. */
@@ -58,5 +75,8 @@ interface LoginComponent {
 
         /** Fall back to WebView-based authentication. */
         data object FallbackToWebView : Intent
+
+        /** Switch to direct bff.cookie entry step. */
+        data object OpenBffCookieLogin : Intent
     }
 }

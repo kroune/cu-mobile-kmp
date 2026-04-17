@@ -147,6 +147,7 @@ kotlin {
             implementation(libs.androidx.activity.compose)
             implementation(libs.ktor.client.cio)
             implementation(libs.compose.uiTooling)
+            implementation(libs.play.services.auth.api.phone)
         }
     }
 }

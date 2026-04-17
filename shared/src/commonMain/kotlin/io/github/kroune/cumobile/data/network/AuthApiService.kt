@@ -243,7 +243,7 @@ internal fun parseAuthPage(html: String): AuthStepResult {
         return AuthStepResult.Error("Не удалось разобрать страницу авторизации")
     }
 
-    val translatedError = errorMessage?.let { translateKeycloakError(it) }
+    val translatedError = errorMessage?.let { translateKeycloakMessage(it, errorLevel) }
 
     return AuthStepResult.NextStep(
         activePage = activePage,
@@ -275,15 +275,26 @@ internal fun extractJsStringValue(
         ?.get(2)
 }
 
-// Informational messages that are not errors map to null; unknown codes are returned as-is.
-private val keycloakErrorTranslations: Map<String, String?> = mapOf(
+private val keycloakErrorTranslations: Map<String, String> = mapOf(
     "phoneTokenCodeDoesNotMatch" to "Неверный код",
     "phoneTokenCodeExpired" to "Код истёк, запросите новый",
     "invalidUserMessage" to "Неверный логин или пароль",
     "invalidPasswordMessage" to "Неверный пароль",
     "accountTemporarilyDisabledMessage" to "Аккаунт временно заблокирован",
-    "codeSent" to null,
 )
 
-private fun translateKeycloakError(errorCode: String): String? =
-    keycloakErrorTranslations.getOrElse(errorCode) { errorCode }
+/** Keycloak `systemMessage.level` values for messages the user shouldn't see as errors. */
+private val nonErrorLevels = setOf("success", "info")
+
+/**
+ * Maps Keycloak's `systemMessage` payload to a user-facing error, or `null` if the
+ * payload is informational (e.g. `codeSent` with level `success`) and should not
+ * be surfaced as an error at all.
+ */
+private fun translateKeycloakMessage(
+    errorCode: String,
+    errorLevel: String?,
+): String? {
+    if (errorLevel in nonErrorLevels) return null
+    return keycloakErrorTranslations[errorCode] ?: errorCode
+}

@@ -41,10 +41,12 @@ coil = "3.4.0"
 ksoup = "0.2.6"
 composemediaplayer = "0.8.7"
 
+playServicesAuthApiPhone = "18.3.0"
+
 screenshot = "0.0.1-alpha13"
 
 roborazzi = "1.59.0"
-composable-preview-scanner = "0.8.1"
+composable-preview-scanner = "0.8.2"
 robolectric = "4.16.1"
 uiTestJunit4 = "1.10.5"
 
@@ -104,6 +106,8 @@ coil-network-ktor3 = { group = "io.coil-kt.coil3", name = "coil-network-ktor3", 
 
 ksoup = { group = "com.fleeksoft.ksoup", name = "ksoup", version.ref = "ksoup" }
 composemediaplayer = { group = "io.github.kdroidfilter", name = "composemediaplayer", version.ref = "composemediaplayer" }
+
+play-services-auth-api-phone = { group = "com.google.android.gms", name = "play-services-auth-api-phone", version.ref = "playServicesAuthApiPhone" }
 
 roborazzi = { group = "io.github.takahirom.roborazzi", name = "roborazzi", version.ref = "roborazzi" }
 roborazzi-compose = { group = "io.github.takahirom.roborazzi", name = "roborazzi-compose", version.ref = "roborazzi" }
