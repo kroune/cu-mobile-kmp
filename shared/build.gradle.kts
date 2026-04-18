@@ -136,6 +136,8 @@ kotlin {
 
             implementation(libs.ksoup)
             implementation(libs.composemediaplayer)
+
+            implementation(projects.baselineProfileTags)
         }
         commonTest.dependencies {
             api(libs.kotlin.test)

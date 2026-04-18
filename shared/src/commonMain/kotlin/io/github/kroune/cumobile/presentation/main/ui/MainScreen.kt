@@ -31,6 +31,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -44,6 +45,7 @@ import com.arkivanov.decompose.extensions.compose.stack.animation.plus
 import com.arkivanov.decompose.extensions.compose.stack.animation.scale
 import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
+import io.github.kroune.cumobile.baseline.BaselineTestTags
 import io.github.kroune.cumobile.presentation.common.dataOrNull
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 import io.github.kroune.cumobile.presentation.common.ui.TopBar
@@ -155,6 +157,7 @@ private fun BottomNavBar(
     ) {
         TAB_LABELS.forEachIndexed { index, label ->
             NavigationBarItem(
+                modifier = Modifier.testTag(TAB_TAGS[index]),
                 selected = selectedIndex == index,
                 onClick = { onTabSelected(index) },
                 icon = {
@@ -317,6 +320,14 @@ private val TAB_ICONS = listOf(
     Icons.AutoMirrored.Outlined.ListAlt,
     Icons.Outlined.School,
     Icons.Outlined.Folder,
+)
+
+/** Baseline-profile anchor tags, parallel to [TAB_LABELS]. */
+private val TAB_TAGS = listOf(
+    BaselineTestTags.TAB_HOME,
+    BaselineTestTags.TAB_TASKS,
+    BaselineTestTags.TAB_COURSES,
+    BaselineTestTags.TAB_FILES,
 )
 
 /** Pager that disables user swiping between tabs. */

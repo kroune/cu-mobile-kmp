@@ -33,10 +33,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
+import io.github.kroune.cumobile.baseline.BaselineTestTags
 import io.github.kroune.cumobile.data.model.Course
 import io.github.kroune.cumobile.data.model.StudentTask
 import io.github.kroune.cumobile.presentation.common.ContentState
@@ -193,6 +195,7 @@ private fun DeadlinesSection(
                 if (deadlineTasks.isEmpty()) {
                     EmptySection(text = "Нет активных заданий")
                 } else {
+                    val firstTaskId = deadlineTasks.firstOrNull()?.id
                     LazyRow(
                         modifier = Modifier.padding(top = 16.dp),
                         contentPadding = PaddingValues(horizontal = 16.dp),
@@ -202,9 +205,15 @@ private fun DeadlinesSection(
                             items = deadlineTasks,
                             key = { it.id },
                         ) { task ->
+                            val cardModifier = if (task.id == firstTaskId) {
+                                Modifier.testTag(BaselineTestTags.FIRST_TASK_CARD)
+                            } else {
+                                Modifier
+                            }
                             DeadlineTaskCard(
                                 task = task,
                                 onClick = { onTaskClick(task) },
+                                modifier = cardModifier,
                             )
                         }
                     }

@@ -30,10 +30,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
+import io.github.kroune.cumobile.baseline.BaselineTestTags
 import io.github.kroune.cumobile.presentation.auth.LoginComponent
 import io.github.kroune.cumobile.presentation.auth.LoginComponent.AuthStep
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
@@ -153,7 +155,10 @@ private fun SecondaryLoginActions(
         )
     }
     if (step != AuthStep.BffCookie) {
-        TextButton(onClick = { onIntent(LoginComponent.Intent.OpenBffCookieLogin) }) {
+        TextButton(
+            onClick = { onIntent(LoginComponent.Intent.OpenBffCookieLogin) },
+            modifier = Modifier.testTag(BaselineTestTags.LOGIN_SWITCH_BFF),
+        ) {
             Text(
                 text = "Войти по bff.cookie",
                 color = AppTheme.colors.textSecondary,

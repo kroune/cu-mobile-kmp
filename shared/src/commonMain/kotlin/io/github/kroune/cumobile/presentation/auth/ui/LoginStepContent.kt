@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.autofill.contentType
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -29,6 +30,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import io.github.kroune.cumobile.baseline.BaselineTestTags
 import io.github.kroune.cumobile.presentation.auth.LoginComponent
 import io.github.kroune.cumobile.presentation.auth.sms.SmsCodeObserver
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
@@ -119,9 +121,14 @@ internal fun BffCookieStepContent(
         label = "bff.cookie",
         keyboardType = KeyboardType.Password,
         onDone = { onIntent(LoginComponent.Intent.Submit) },
+        modifier = Modifier.testTag(BaselineTestTags.LOGIN_BFF_COOKIE_FIELD),
     )
     Spacer(modifier = Modifier.height(24.dp))
-    SubmitButton(text = "Войти", isLoading = state.isLoading) {
+    SubmitButton(
+        text = "Войти",
+        isLoading = state.isLoading,
+        modifier = Modifier.testTag(BaselineTestTags.LOGIN_BFF_COOKIE_SUBMIT),
+    ) {
         onIntent(LoginComponent.Intent.Submit)
     }
 }
@@ -156,8 +163,9 @@ private fun AuthTextField(
     keyboardType: KeyboardType = KeyboardType.Text,
     contentType: ContentType? = null,
     onDone: () -> Unit = {},
+    modifier: Modifier = Modifier,
 ) {
-    val fieldModifier = Modifier
+    val fieldModifier = modifier
         .fillMaxWidth()
         .then(if (contentType != null) Modifier.contentType(contentType) else Modifier)
     OutlinedTextField(
@@ -195,11 +203,12 @@ private fun AuthTextField(
 private fun SubmitButton(
     text: String,
     isLoading: Boolean,
+    modifier: Modifier = Modifier,
     onClick: () -> Unit,
 ) {
     OutlinedButton(
         onClick = { if (!isLoading) onClick() },
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .height(48.dp)
             .border(1.dp, AppTheme.colors.accent, RoundedCornerShape(24.dp)),

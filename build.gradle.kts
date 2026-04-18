@@ -17,6 +17,8 @@ plugins {
     alias(libs.plugins.androidx.room) apply false
     alias(libs.plugins.roborazziPlugin) apply false
     alias(libs.plugins.vkompose) apply false
+    alias(libs.plugins.androidTest) apply false
+    alias(libs.plugins.androidxBaselineprofile) apply false
     idea
 }
 

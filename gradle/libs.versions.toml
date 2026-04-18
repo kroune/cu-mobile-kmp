@@ -50,6 +50,12 @@ composable-preview-scanner = "0.8.2"
 robolectric = "4.16.1"
 uiTestJunit4 = "1.10.5"
 
+androidx-benchmark = "1.5.0-alpha05"
+androidx-profileinstaller = "1.4.1"
+androidx-baselineprofile = "1.5.0-alpha05"
+androidx-test-runner = "1.7.0"
+androidx-uiautomator = "2.3.0"
+
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlin-testJunit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
@@ -116,6 +122,11 @@ robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "
 androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4", version.ref = "uiTestJunit4" }
 compose-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest", version.ref = "composeMultiplatform" }
 
+androidx-benchmark-macro-junit4 = { group = "androidx.benchmark", name = "benchmark-macro-junit4", version.ref = "androidx-benchmark" }
+androidx-profileinstaller = { group = "androidx.profileinstaller", name = "profileinstaller", version.ref = "androidx-profileinstaller" }
+androidx-test-runner = { group = "androidx.test", name = "runner", version.ref = "androidx-test-runner" }
+androidx-uiautomator = { group = "androidx.test.uiautomator", name = "uiautomator", version.ref = "androidx-uiautomator" }
+
 [plugins]
 kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 
@@ -136,3 +147,7 @@ kotlinCocoapods = { id = "org.jetbrains.kotlin.native.cocoapods", version.ref = 
 
 roborazziPlugin = { id = "io.github.takahirom.roborazzi", version.ref = "roborazzi" }
 vkompose = { id = "com.vk.vkompose", version.ref = "vkompose" }
+
+androidTest = { id = "com.android.test", version.ref = "agp" }
+androidxBaselineprofile = { id = "androidx.baselineprofile", version.ref = "androidx-baselineprofile" }
+kotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }

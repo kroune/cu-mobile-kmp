@@ -51,12 +51,14 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
+import io.github.kroune.cumobile.baseline.BaselineTestTags
 import io.github.kroune.cumobile.data.model.Course
 import io.github.kroune.cumobile.presentation.common.isError
 import io.github.kroune.cumobile.presentation.common.ui.ActionErrorBar
@@ -270,8 +272,15 @@ private fun LazyListScope.activeCoursesSection(
         }
     }
     if (state.showActive) {
+        val firstActiveId = localActive.firstOrNull()?.id
         items(items = localActive, key = { it.id }) { course ->
             val isDragged = course.id == drag.draggedId
+            val baseModifier = if (isDragged) Modifier.zIndex(1f) else Modifier.animateItem()
+            val itemModifier = if (course.id == firstActiveId) {
+                baseModifier.testTag(BaselineTestTags.FIRST_COURSE_CARD)
+            } else {
+                baseModifier
+            }
             DraggableCourseItem(
                 course = course,
                 dragOffset = if (isDragged) drag.dragOffsetY else null,
@@ -279,7 +288,7 @@ private fun LazyListScope.activeCoursesSection(
                 onDragStart = { drag.onDragStart(course.id) },
                 onDrag = drag.onDrag,
                 onDragEnd = drag.onDragEnd,
-                modifier = if (isDragged) Modifier.zIndex(1f) else Modifier.animateItem(),
+                modifier = itemModifier,
             )
         }
     }

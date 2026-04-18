@@ -47,8 +47,12 @@ CuMobile/
 ├── androidApp/                    # Android shell (Kotlin)
 │   └── src/main/
 │       ├── AndroidManifest.xml    # android:name=".AndroidApplication"
-│       ├── MainActivity.kt        # Uses createRootComponent() from DI
+│       ├── MainActivity.kt        # Uses createRootComponent() from DI; wraps App in testTagsAsResourceId
 │       └── AndroidApplication.kt  # Koin init
+│   └── src/release/generated/baselineProfiles/  # Committed baseline-prof.txt (consumed by R8 at release time)
+├── baselineprofile/               # com.android.test module, androidx.baselineprofile generator
+│   └── src/main/kotlin/           # Startup/UnauthUi/LoggedInTour generators (UiAutomator)
+├── baseline-profile-tags/         # KMP library, just const val testTag strings (shared contract)
 ├── iosApp/                        # iOS shell (Swift)
 │   └── iOSApp.swift               # Uses MainViewControllerKt.createRootComponent()
 └── shared/
@@ -380,3 +384,32 @@ steps (AnimatedContent), so each is an independent autofill session.
   values into `private const val` constants just to satisfy the rule; inline them.
   Still extract numbers when they carry non-obvious semantic meaning (e.g. `MillisPerHour`,
   thresholds like `UrgencyRedHours`) — that's about readability, not detekt.
+
+---
+
+## Baseline Profile (Android)
+
+- Module layout: `:baselineprofile` (com.android.test + `androidx.baselineprofile`) produces
+  profiles; `:baseline-profile-tags` holds the `testTag` constants shared between the generator
+  and shared-UI — changing the UI does **not** invalidate the tags module's build cache.
+- `androidApp` applies `androidx.baselineprofile` as consumer, adds `androidx.profileinstaller`
+  (required for API 28-30 to apply profiles), and has `baselineProfile { saveInSrc = true; mergeIntoMain = true }`.
+  MainActivity wraps `App(...)` in a `Box.semantics { testTagsAsResourceId = true }` so UiAutomator
+  can query Compose tags via `By.res("...")`.
+- testTag anchors (in `BaselineTestTags`): 4 bottom-nav tabs, 3 login/BffCookie anchors,
+  first course card, first task card. Nothing else — keep the surface tiny.
+- Three independent generator classes (order = most-resilient → most-complete):
+  1. `StartupBaselineProfileGenerator` — cold start only. No testTag lookups → always passes.
+  2. `UnauthUiBaselineProfileGenerator` — exercises the login screen composition (Email → BffCookie step).
+  3. `LoggedInTourBaselineProfileGenerator` — gated on the `bffCookie` instrumentation arg
+     (`Assume.assumeTrue`); performs full login + tab tour + one course detail.
+- GMD: `pixel6Api31` (AOSP system image) defined in `:baselineprofile`. Reuses the
+  locally-cached `android-31/default` image (no emulator download needed).
+- Generation: `./gradlew :androidApp:generateBaselineProfile` (add
+  `-Pandroid.testInstrumentationRunnerArguments.bffCookie=$BFF_COOKIE` for the logged-in tour).
+  Output is committed at `androidApp/src/main/generated/baselineProfiles/baseline-prof.txt`
+  (with `mergeIntoMain = true`) and automatically bundled by `assembleRelease`.
+- Verification: `./scripts/verify-baseline-profile.sh <path-to-apk>` checks for
+  `assets/dexopt/baseline.prof{,m}` in the APK/AAB.
+- CI does not regenerate profiles (no emulator); the committed txt is consumed by every
+  release build as source-of-truth.
