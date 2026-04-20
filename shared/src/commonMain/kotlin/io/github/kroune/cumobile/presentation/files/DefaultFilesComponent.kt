@@ -4,12 +4,11 @@ import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.Lifecycle
-import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.domain.repository.FileRepository
+import io.github.kroune.cumobile.presentation.common.componentScope
+import io.github.kroune.cumobile.presentation.common.invoke
 import io.github.kroune.cumobile.util.runCatchingCancellable
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -28,15 +27,13 @@ private val logger = KotlinLogging.logger {}
  */
 class DefaultFilesComponent(
     componentContext: ComponentContext,
-    private val fileRepository: FileRepository,
+    private val fileRepository: Lazy<FileRepository>,
     private val onOpenFile: (path: String) -> Unit = {},
     private val onOpenRenameSettings: () -> Unit = {},
     private val onOpenScanner: () -> Unit = {},
 ) : FilesComponent,
     ComponentContext by componentContext {
-    private val scope = coroutineScope(
-        Dispatchers.Main.immediate + SupervisorJob(),
-    )
+    private val scope = componentScope()
 
     private val _state = MutableValue(FilesComponent.State())
     override val state: Value<FilesComponent.State> = _state
@@ -76,7 +73,7 @@ class DefaultFilesComponent(
             _state.value = _state.value.copy(isLoading = true, error = null)
             val start = TimeSource.Monotonic.markNow()
             runCatchingCancellable {
-                fileRepository.listDownloadedFiles()
+                fileRepository().listDownloadedFiles()
             }.fold(
                 onSuccess = { files ->
                     val remaining = MIN_LOADING_DURATION_MS - start.elapsedNow().inWholeMilliseconds
@@ -100,7 +97,7 @@ class DefaultFilesComponent(
     private fun deleteFile(name: String) {
         scope.launch {
             runCatchingCancellable {
-                fileRepository.deleteFile(name)
+                fileRepository().deleteFile(name)
             }.onSuccess {
                 removeFileFromState(name)
             }.onFailure { e ->
@@ -115,7 +112,7 @@ class DefaultFilesComponent(
     private fun deleteAllFiles() {
         scope.launch {
             runCatchingCancellable {
-                fileRepository.deleteAllFiles()
+                fileRepository().deleteAllFiles()
             }.onSuccess {
                 _state.value = _state.value.copy(
                     files = emptyList(),
@@ -135,7 +132,7 @@ class DefaultFilesComponent(
             runCatchingCancellable {
                 val toDelete = _state.value.selectedFiles.toList()
                 for (name in toDelete) {
-                    fileRepository.deleteFile(name)
+                    fileRepository().deleteFile(name)
                 }
                 toDelete
             }.fold(

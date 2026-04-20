@@ -2,15 +2,13 @@ package io.github.kroune.cumobile.presentation.longread.component.file
 
 import androidx.compose.runtime.Composable
 import com.arkivanov.decompose.ComponentContext
-import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.data.model.LongreadMaterial
 import io.github.kroune.cumobile.domain.repository.ContentRepository
 import io.github.kroune.cumobile.presentation.common.RenderComponent
+import io.github.kroune.cumobile.presentation.common.componentScope
 import io.github.kroune.cumobile.presentation.longread.ui.file.FileMaterialCard
 import io.github.kroune.cumobile.util.runCatchingCancellable
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
 private val logger = KotlinLogging.logger {}
@@ -30,9 +28,7 @@ class FileMaterialComponent(
     private val onDownloadResult: (FileDownloadResult) -> Unit,
 ) : ComponentContext by componentContext,
     RenderComponent {
-    private val scope = coroutineScope(
-        Dispatchers.Main.immediate + SupervisorJob(),
-    )
+    private val scope = componentScope()
 
     private fun download() {
         val filename = material.filename

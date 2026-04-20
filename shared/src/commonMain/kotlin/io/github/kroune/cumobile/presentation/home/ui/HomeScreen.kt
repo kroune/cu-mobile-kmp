@@ -126,30 +126,24 @@ internal fun HomeContent(
             .background(AppTheme.colors.background),
         contentPadding = PaddingValues(bottom = 16.dp),
     ) {
-        item {
+        item(key = "deadlines") {
             DeadlinesSection(
                 tasksState = state.tasks,
                 deadlineTasks = state.deadlineTasks,
                 onTaskClick = onTaskClick,
             )
-        }
-
-        item {
             Spacer(modifier = Modifier.height(16.dp))
         }
 
-        item {
+        item(key = "schedule") {
             ScheduleSection(
                 state = state,
                 onIntent = onIntent,
             )
-        }
-
-        item {
             Spacer(modifier = Modifier.height(16.dp))
         }
 
-        item {
+        item("courses") {
             CoursesSection(
                 coursesState = state.courses,
                 activeCourses = state.activeCourses,
@@ -284,7 +278,6 @@ private fun CoursesSection(
                             CourseCard(
                                 course = course,
                                 onClick = { onCourseClick(course.id) },
-                                modifier = Modifier.aspectRatio(1.4f),
                             )
                         }
                     }

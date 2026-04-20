@@ -34,9 +34,9 @@ interface HomeComponent {
     }
 
     data class State(
-        val tasks: ContentState<List<StudentTask>> = ContentState.Loading,
-        val courses: ContentState<List<Course>> = ContentState.Loading,
-        val schedule: ContentState<List<ClassData>> = ContentState.Loading,
+        val tasks: ContentState<ImmutableList<StudentTask>> = ContentState.Loading,
+        val courses: ContentState<ImmutableList<Course>> = ContentState.Loading,
+        val schedule: ContentState<ImmutableList<ClassData>> = ContentState.Loading,
         val selectedDate: LocalDate = PLACEHOLDER_DATE,
         val weekStart: LocalDate = PLACEHOLDER_DATE,
         val profileInitials: ContentState<String> = ContentState.Loading,

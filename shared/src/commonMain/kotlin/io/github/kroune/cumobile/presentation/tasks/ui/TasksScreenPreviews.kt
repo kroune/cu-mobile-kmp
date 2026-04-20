@@ -7,64 +7,81 @@ import io.github.kroune.cumobile.data.model.StudentTask
 import io.github.kroune.cumobile.data.model.TaskCourse
 import io.github.kroune.cumobile.data.model.TaskExercise
 import io.github.kroune.cumobile.data.model.TaskState
+import io.github.kroune.cumobile.presentation.common.ContentState
 import io.github.kroune.cumobile.presentation.common.ui.CuMobileTheme
 import io.github.kroune.cumobile.presentation.common.ui.LocalClock
 import io.github.kroune.cumobile.presentation.common.ui.previewClock
 import io.github.kroune.cumobile.presentation.tasks.TasksComponent
-import io.github.kroune.cumobile.presentation.tasks.recomputeDerived
+import io.github.kroune.cumobile.presentation.tasks.buildTasksContent
 import kotlinx.collections.immutable.persistentListOf
 
-private val previewTasksState = TasksComponent
-    .State(
-        allTasks = persistentListOf(
-            StudentTask(
-                id = "1",
-                state = TaskState.InProgress,
-                exercise = TaskExercise(name = "ДЗ: Деревья и графы", deadline = "2026-04-01T23:59:00"),
-                course = TaskCourse(id = "1", name = "Алгоритмы"),
-            ),
-            StudentTask(
-                id = "2",
-                state = TaskState.Backlog,
-                exercise = TaskExercise(name = "Лабораторная 3", deadline = "2026-04-05T23:59:00"),
-                course = TaskCourse(id = "2", name = "Линейная алгебра"),
-            ),
-            StudentTask(
-                id = "3",
-                state = TaskState.Review,
-                exercise = TaskExercise(name = "Эссе по менеджменту"),
-                course = TaskCourse(id = "3", name = "Менеджмент"),
+private fun previewState(
+    tasks: List<StudentTask>,
+    segment: Int = 0,
+    statusFilter: String? = null,
+    courseFilter: String? = null,
+    searchQuery: String = "",
+) =
+    TasksComponent.State(
+        content = ContentState.Success(
+            buildTasksContent(
+                allTasks = tasks,
+                segment = segment,
+                statusFilter = statusFilter,
+                courseFilter = courseFilter,
+                searchQuery = searchQuery,
             ),
         ),
-    ).recomputeDerived()
+        segment = segment,
+        statusFilter = statusFilter,
+        courseFilter = courseFilter,
+        searchQuery = searchQuery,
+    )
 
-private val previewTasksArchiveState = TasksComponent
-    .State(
-        segment = 1,
-        allTasks = persistentListOf(
-            StudentTask(
-                id = "10",
-                state = TaskState.Evaluated,
-                score = 8.0,
-                exercise = TaskExercise(name = "ДЗ: Сортировки"),
-                course = TaskCourse(id = "1", name = "Алгоритмы"),
-            ),
-            StudentTask(
-                id = "11",
-                state = TaskState.Failed,
-                score = 2.0,
-                exercise = TaskExercise(name = "Контрольная: Матрицы"),
-                course = TaskCourse(id = "2", name = "Линейная алгебра"),
-            ),
-        ),
-    ).recomputeDerived()
+private val previewActiveTasks = persistentListOf(
+    StudentTask(
+        id = "1",
+        state = TaskState.InProgress,
+        exercise = TaskExercise(name = "ДЗ: Деревья и графы", deadline = "2026-04-01T23:59:00"),
+        course = TaskCourse(id = "1", name = "Алгоритмы"),
+    ),
+    StudentTask(
+        id = "2",
+        state = TaskState.Backlog,
+        exercise = TaskExercise(name = "Лабораторная 3", deadline = "2026-04-05T23:59:00"),
+        course = TaskCourse(id = "2", name = "Линейная алгебра"),
+    ),
+    StudentTask(
+        id = "3",
+        state = TaskState.Review,
+        exercise = TaskExercise(name = "Эссе по менеджменту"),
+        course = TaskCourse(id = "3", name = "Менеджмент"),
+    ),
+)
+
+private val previewArchiveTasks = persistentListOf(
+    StudentTask(
+        id = "10",
+        state = TaskState.Evaluated,
+        score = 8.0,
+        exercise = TaskExercise(name = "ДЗ: Сортировки"),
+        course = TaskCourse(id = "1", name = "Алгоритмы"),
+    ),
+    StudentTask(
+        id = "11",
+        state = TaskState.Failed,
+        score = 2.0,
+        exercise = TaskExercise(name = "Контрольная: Матрицы"),
+        course = TaskCourse(id = "2", name = "Линейная алгебра"),
+    ),
+)
 
 @Preview
 @Composable
 private fun PreviewTasksScreenDark() {
     CuMobileTheme(darkTheme = true) {
         CompositionLocalProvider(LocalClock provides previewClock) {
-            TasksScreenContent(state = previewTasksState, onIntent = {})
+            TasksScreenContent(state = previewState(previewActiveTasks), onIntent = {})
         }
     }
 }
@@ -74,7 +91,7 @@ private fun PreviewTasksScreenDark() {
 private fun PreviewTasksScreenLight() {
     CuMobileTheme(darkTheme = false) {
         CompositionLocalProvider(LocalClock provides previewClock) {
-            TasksScreenContent(state = previewTasksState, onIntent = {})
+            TasksScreenContent(state = previewState(previewActiveTasks), onIntent = {})
         }
     }
 }
@@ -84,7 +101,7 @@ private fun PreviewTasksScreenLight() {
 private fun PreviewTasksLoadingDark() {
     CuMobileTheme(darkTheme = true) {
         TasksScreenContent(
-            state = TasksComponent.State(isLoading = true),
+            state = TasksComponent.State(content = ContentState.Loading),
             onIntent = {},
         )
     }
@@ -95,7 +112,9 @@ private fun PreviewTasksLoadingDark() {
 private fun PreviewTasksErrorDark() {
     CuMobileTheme(darkTheme = true) {
         TasksScreenContent(
-            state = TasksComponent.State(error = "Не удалось загрузить задания"),
+            state = TasksComponent.State(
+                content = ContentState.Error("Не удалось загрузить задания"),
+            ),
             onIntent = {},
         )
     }
@@ -106,7 +125,9 @@ private fun PreviewTasksErrorDark() {
 private fun PreviewTasksErrorLight() {
     CuMobileTheme(darkTheme = false) {
         TasksScreenContent(
-            state = TasksComponent.State(error = "Не удалось загрузить задания"),
+            state = TasksComponent.State(
+                content = ContentState.Error("Не удалось загрузить задания"),
+            ),
             onIntent = {},
         )
     }
@@ -118,10 +139,10 @@ private fun PreviewTasksEmptyFiltersDark() {
     CuMobileTheme(darkTheme = true) {
         CompositionLocalProvider(LocalClock provides previewClock) {
             TasksScreenContent(
-                state = previewTasksState
-                    .copy(
-                        searchQuery = "несуществующий запрос",
-                    ).recomputeDerived(),
+                state = previewState(
+                    tasks = previewActiveTasks,
+                    searchQuery = "несуществующий запрос",
+                ),
                 onIntent = {},
             )
         }
@@ -132,7 +153,10 @@ private fun PreviewTasksEmptyFiltersDark() {
 @Composable
 private fun PreviewTasksArchiveDark() {
     CuMobileTheme(darkTheme = true) {
-        TasksScreenContent(state = previewTasksArchiveState, onIntent = {})
+        TasksScreenContent(
+            state = previewState(tasks = previewArchiveTasks, segment = 1),
+            onIntent = {},
+        )
     }
 }
 
@@ -142,11 +166,11 @@ private fun PreviewTasksWithFiltersDark() {
     CuMobileTheme(darkTheme = true) {
         CompositionLocalProvider(LocalClock provides previewClock) {
             TasksScreenContent(
-                state = previewTasksState
-                    .copy(
-                        statusFilter = TaskState.InProgress,
-                        courseFilter = "1",
-                    ).recomputeDerived(),
+                state = previewState(
+                    tasks = previewActiveTasks,
+                    statusFilter = TaskState.InProgress,
+                    courseFilter = "1",
+                ),
                 onIntent = {},
             )
         }

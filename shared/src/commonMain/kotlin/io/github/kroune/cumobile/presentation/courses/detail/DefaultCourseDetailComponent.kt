@@ -3,10 +3,8 @@ package io.github.kroune.cumobile.presentation.courses.detail
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
-import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.domain.repository.CourseRepository
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
+import io.github.kroune.cumobile.presentation.common.componentScope
 import kotlinx.coroutines.launch
 
 /**
@@ -18,14 +16,14 @@ import kotlinx.coroutines.launch
 class DefaultCourseDetailComponent(
     componentContext: ComponentContext,
     private val courseId: String,
-    private val courseRepository: CourseRepository,
+    courseRepository: Lazy<CourseRepository>,
     private val onOpenLongread: (longreadId: String, courseId: String, themeId: String) -> Unit,
     private val onBack: () -> Unit,
 ) : CourseDetailComponent,
     ComponentContext by componentContext {
-    private val scope = coroutineScope(
-        Dispatchers.Main.immediate + SupervisorJob(),
-    )
+    private val courseRepository by courseRepository
+
+    private val scope = componentScope()
 
     private val _state = MutableValue(
         CourseDetailComponent.State(courseId = courseId),

@@ -9,6 +9,7 @@ import io.github.kroune.cumobile.data.model.TaskDetails
 import io.github.kroune.cumobile.data.model.TaskEvent
 import io.github.kroune.cumobile.data.network.TaskApiService
 import io.github.kroune.cumobile.domain.repository.TaskRepository
+import io.github.kroune.cumobile.util.AppDispatchers
 
 /**
  * Implementation of [TaskRepository].
@@ -17,10 +18,13 @@ import io.github.kroune.cumobile.domain.repository.TaskRepository
  * all network calls to [TaskApiService].
  */
 internal class TaskRepositoryImpl(
-    authLocal: AuthLocalDataSource,
-    private val taskApi: TaskApiService,
-) : CookieAwareRepository(authLocal),
+    authLocal: Lazy<AuthLocalDataSource>,
+    taskApi: Lazy<TaskApiService>,
+    dispatchers: Lazy<AppDispatchers>,
+) : CookieAwareRepository(authLocal, dispatchers),
     TaskRepository {
+    private val taskApi by taskApi
+
     override suspend fun fetchTasks(states: List<String>): List<StudentTask>? =
         withCookie { taskApi.fetchTasks(it, states) }
 

@@ -3,15 +3,14 @@ package io.github.kroune.cumobile.presentation.profile
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
-import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.data.model.PickedFile
 import io.github.kroune.cumobile.domain.repository.ProfileRepository
 import io.github.kroune.cumobile.presentation.common.ContentState
+import io.github.kroune.cumobile.presentation.common.componentScope
+import io.github.kroune.cumobile.presentation.common.invoke
 import io.github.kroune.cumobile.util.runCatchingCancellable
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -27,12 +26,12 @@ private val logger = KotlinLogging.logger {}
  */
 class DefaultProfileComponent(
     componentContext: ComponentContext,
-    private val profileRepository: ProfileRepository,
+    private val profileRepository: Lazy<ProfileRepository>,
     private val onBack: () -> Unit,
     private val onLogout: () -> Unit,
 ) : ProfileComponent,
     ComponentContext by componentContext {
-    private val scope = coroutineScope(Dispatchers.Main.immediate + SupervisorJob())
+    private val scope = componentScope()
 
     private val _state = MutableValue(ProfileComponent.State())
     override val state: Value<ProfileComponent.State> = _state
@@ -67,7 +66,7 @@ class DefaultProfileComponent(
 
         currentLoadJob = scope.launch {
             launch {
-                val profile = profileRepository.fetchProfile()
+                val profile = profileRepository().fetchProfile()
                 _state.value = _state.value.copy(
                     profile = if (profile != null) {
                         ContentState.Success(profile)
@@ -78,7 +77,7 @@ class DefaultProfileComponent(
             }
 
             launch {
-                val lmsProfile = profileRepository.fetchLmsProfile()
+                val lmsProfile = profileRepository().fetchLmsProfile()
                 _state.value = _state.value.copy(
                     lmsProfile = ContentState.Success(lmsProfile),
                 )
@@ -86,7 +85,7 @@ class DefaultProfileComponent(
 
             launch {
                 runCatchingCancellable {
-                    profileRepository.fetchAvatar()
+                    profileRepository().fetchAvatar()
                 }.fold(
                     onSuccess = { bytes ->
                         _state.value = _state.value.copy(
@@ -107,9 +106,9 @@ class DefaultProfileComponent(
     private fun uploadAvatar(file: PickedFile) {
         scope.launch {
             _state.value = _state.value.copy(isUploadingAvatar = true)
-            val success = profileRepository.uploadAvatar(file.bytes, file.contentType)
+            val success = profileRepository().uploadAvatar(file.bytes, file.contentType)
             if (success) {
-                val bytes = profileRepository.fetchAvatar()
+                val bytes = profileRepository().fetchAvatar()
                 _state.value = _state.value.copy(
                     avatarBytes = ContentState.Success(bytes),
                     isUploadingAvatar = false,
@@ -127,7 +126,7 @@ class DefaultProfileComponent(
     private fun deleteAvatar() {
         scope.launch {
             _state.value = _state.value.copy(isDeletingAvatar = true)
-            val success = profileRepository.deleteAvatar()
+            val success = profileRepository().deleteAvatar()
             if (success) {
                 _state.value = _state.value.copy(
                     avatarBytes = ContentState.Success(null),

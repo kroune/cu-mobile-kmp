@@ -12,8 +12,10 @@ private val logger = KotlinLogging.logger {}
  * API service for fetching the student timetable from the LMS API.
  */
 internal class TimetableApiService(
-    private val httpClient: HttpClient,
+    httpClient: Lazy<HttpClient>,
 ) {
+    private val httpClient by httpClient
+
     /**
      * Fetches the current student's full timetable.
      * Returns `null` on failure.

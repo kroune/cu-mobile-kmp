@@ -17,8 +17,10 @@ private val logger = KotlinLogging.logger {}
  * tag and returns [UpdateInfo] if a newer version is available.
  */
 class UpdateChecker(
-    private val httpClient: HttpClient,
+    httpClient: Lazy<HttpClient>,
 ) {
+    private val httpClient by httpClient
+
     /**
      * Checks for an available update.
      *

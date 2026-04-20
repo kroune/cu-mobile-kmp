@@ -4,15 +4,14 @@ import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.decompose.value.update
-import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.data.network.AuthApiService
 import io.github.kroune.cumobile.data.network.AuthStepResult
 import io.github.kroune.cumobile.domain.repository.AuthRepository
 import io.github.kroune.cumobile.domain.repository.CookieValidationResult
 import io.github.kroune.cumobile.presentation.auth.LoginComponent.AuthStep
+import io.github.kroune.cumobile.presentation.common.componentScope
+import io.github.kroune.cumobile.presentation.common.invoke
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -28,13 +27,13 @@ private val logger = KotlinLogging.logger {}
  */
 class DefaultLoginComponent(
     componentContext: ComponentContext,
-    private val authRepository: AuthRepository,
-    private val authApiServiceFactory: () -> AuthApiService,
+    private val authRepository: Lazy<AuthRepository>,
+    private val authApiService: Lazy<AuthApiService>,
     private val onLoginSuccess: () -> Unit,
     private val onNavigateToWebView: () -> Unit,
 ) : LoginComponent,
     ComponentContext by componentContext {
-    private val scope = coroutineScope(Dispatchers.Main.immediate + SupervisorJob())
+    private val scope = componentScope()
     private val _state = MutableValue(LoginComponent.State())
     override val state: Value<LoginComponent.State> = _state
 
@@ -87,7 +86,7 @@ class DefaultLoginComponent(
     private fun startAuthFlow() {
         scope.launch {
             _state.update { it.copy(isLoading = true) }
-            val api = authApiServiceFactory()
+            val api = authApiService()
             authApi = api
             when (val result = api.startAuth()) {
                 is AuthStepResult.NextStep -> {
@@ -214,8 +213,8 @@ class DefaultLoginComponent(
         val api = authApi ?: return
         val bffCookie = api.exchangeCallback(callbackUrl)
         if (bffCookie != null) {
-            authRepository.saveCookie(bffCookie)
-            when (authRepository.validateCookie()) {
+            authRepository().saveCookie(bffCookie)
+            when (authRepository().validateCookie()) {
                 CookieValidationResult.Valid -> {
                     logger.info { "Native auth succeeded" }
                     api.close()
@@ -265,8 +264,8 @@ class DefaultLoginComponent(
         logger.info { "submitBffCookie: length=${cookie.length}" }
         scope.launch {
             _state.update { it.copy(isLoading = true) }
-            authRepository.saveCookie(cookie)
-            when (authRepository.validateCookie()) {
+            authRepository().saveCookie(cookie)
+            when (authRepository().validateCookie()) {
                 CookieValidationResult.Valid -> {
                     logger.info { "BFF cookie auth succeeded" }
                     onLoginSuccess()

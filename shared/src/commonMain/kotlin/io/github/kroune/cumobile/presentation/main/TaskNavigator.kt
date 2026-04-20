@@ -16,10 +16,12 @@ private val logger = KotlinLogging.logger {}
  */
 internal class TaskNavigator(
     private val scope: CoroutineScope,
-    private val courseRepository: CourseRepository,
+    courseRepository: Lazy<CourseRepository>,
     private val navigateToLongread: (longreadId: String, courseId: String, themeId: String) -> Unit,
     private val navigateToCourseDetail: (courseId: String) -> Unit,
 ) {
+    private val courseRepository by courseRepository
+
     fun navigate(
         courseId: String,
         exerciseId: String,

@@ -35,6 +35,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import io.github.kroune.cumobile.data.model.StudentTask
+import io.github.kroune.cumobile.presentation.common.ContentState
+import io.github.kroune.cumobile.presentation.common.dataOrNull
+import io.github.kroune.cumobile.presentation.common.errorOrNull
+import io.github.kroune.cumobile.presentation.common.isLoading
 import io.github.kroune.cumobile.presentation.common.ui.AppTabRow
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 import io.github.kroune.cumobile.presentation.common.ui.EmptyContent
@@ -44,6 +48,7 @@ import io.github.kroune.cumobile.presentation.common.ui.stripEmojiPrefix
 import io.github.kroune.cumobile.presentation.common.ui.taskStateLabel
 import io.github.kroune.cumobile.presentation.tasks.TasksComponent
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 /**
  * Tasks tab screen with segment control, filters, search, and task list.
@@ -76,8 +81,9 @@ internal fun TasksScreenContent(
     onIntent: (TasksComponent.Intent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val content = state.content.dataOrNull
     PullToRefreshBox(
-        isRefreshing = state.isLoading,
+        isRefreshing = state.content.isLoading,
         onRefresh = { onIntent(TasksComponent.Intent.Refresh) },
         modifier = modifier
             .fillMaxSize()
@@ -101,8 +107,8 @@ internal fun TasksScreenContent(
             AppTabRow(
                 currentPage = pagerState.currentPage,
                 labels = listOf(
-                    "активные (${state.activeCount})",
-                    "архив (${state.archiveCount})",
+                    "активные (${content?.activeCount ?: 0})",
+                    "архив (${content?.archiveCount ?: 0})",
                 ),
                 onPageSelected = { page ->
                     onIntent(TasksComponent.Intent.SelectSegment(page))
@@ -118,21 +124,22 @@ internal fun TasksScreenContent(
                 userScrollEnabled = false,
             ) { page ->
                 val pageTasks = when (page) {
-                    0 -> state.activeFilteredTasks
-                    else -> state.archiveFilteredTasks
+                    0 -> content?.activeFilteredTasks ?: persistentListOf()
+                    else -> content?.archiveFilteredTasks ?: persistentListOf()
                 }
                 Column(modifier = Modifier.fillMaxSize()) {
                     Spacer(modifier = Modifier.height(8.dp))
 
                     FiltersRow(
                         state = state,
+                        content = content,
                         onIntent = onIntent,
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
 
                     TasksContentArea(
-                        state = state,
+                        contentState = state.content,
                         tasks = pageTasks,
                         onIntent = onIntent,
                         modifier = Modifier.weight(1f),
@@ -148,15 +155,16 @@ internal fun TasksScreenContent(
  */
 @Composable
 private fun TasksContentArea(
-    state: TasksComponent.State,
+    contentState: ContentState<TasksComponent.Content>,
     tasks: ImmutableList<StudentTask>,
     onIntent: (TasksComponent.Intent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val error = contentState.errorOrNull
     when {
-        state.isLoading && tasks.isEmpty() -> LoadingContent(modifier)
-        state.error != null && tasks.isEmpty() -> ErrorContent(
-            error = state.error,
+        contentState.isLoading && tasks.isEmpty() -> LoadingContent(modifier)
+        error != null && tasks.isEmpty() -> ErrorContent(
+            error = error,
             onRetry = { onIntent(TasksComponent.Intent.Refresh) },
             modifier = modifier,
         )
@@ -192,6 +200,7 @@ private fun TasksContentArea(
 @Composable
 private fun FiltersRow(
     state: TasksComponent.State,
+    content: TasksComponent.Content?,
     onIntent: (TasksComponent.Intent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -226,13 +235,13 @@ private fun FiltersRow(
         )
 
         StatusFilterChips(
-            availableStatuses = state.availableStatuses,
+            availableStatuses = content?.availableStatuses ?: persistentListOf(),
             statusFilter = state.statusFilter,
             onIntent = onIntent,
         )
 
         CourseFilterChips(
-            availableCourses = state.availableCourses,
+            availableCourses = content?.availableCourses ?: persistentListOf(),
             courseFilter = state.courseFilter,
             onIntent = onIntent,
         )

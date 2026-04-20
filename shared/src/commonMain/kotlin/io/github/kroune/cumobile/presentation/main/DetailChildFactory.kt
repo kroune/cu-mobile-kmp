@@ -1,12 +1,14 @@
 package io.github.kroune.cumobile.presentation.main
 
 import com.arkivanov.decompose.ComponentContext
+import io.github.kroune.cumobile.presentation.common.invoke
 import io.github.kroune.cumobile.presentation.courses.detail.DefaultCourseDetailComponent
 import io.github.kroune.cumobile.presentation.files.rename.DefaultFileRenameSettingsComponent
 import io.github.kroune.cumobile.presentation.longread.DefaultLongreadComponent
 import io.github.kroune.cumobile.presentation.longread.LongreadDependencies
 import io.github.kroune.cumobile.presentation.longread.LongreadParams
 import io.github.kroune.cumobile.presentation.notifications.DefaultNotificationsComponent
+import io.github.kroune.cumobile.presentation.performance.CoursePerformanceParams
 import io.github.kroune.cumobile.presentation.performance.DefaultCoursePerformanceComponent
 import io.github.kroune.cumobile.presentation.profile.DefaultProfileComponent
 import io.github.kroune.cumobile.presentation.scanner.DefaultScannerComponent
@@ -85,11 +87,12 @@ internal class DetailChildFactory(
                     contentRepository = deps.contentRepository,
                     taskRepository = deps.taskRepository,
                     renameRepository = deps.fileRenameRepository,
+                    dispatchers = deps.dispatchers,
                 ),
                 onBack = navigateBack,
                 onDownloadReady = { url, filename ->
                     downloadCallbacks.notifyStart(filename)
-                    val saved = deps.fileRepository.downloadAndSave(url, filename)
+                    val saved = deps.fileRepository().downloadAndSave(url, filename)
                     downloadCallbacks.notifyComplete(filename)
                     if (saved) downloadCallbacks.refreshFiles()
                     saved
@@ -105,10 +108,13 @@ internal class DetailChildFactory(
         MainComponent.DetailChild.CoursePerformanceChild(
             DefaultCoursePerformanceComponent(
                 componentContext = childContext,
-                courseId = config.courseId,
-                courseName = config.courseName,
-                totalGrade = config.totalGrade,
+                params = CoursePerformanceParams(
+                    courseId = config.courseId,
+                    courseName = config.courseName,
+                    totalGrade = config.totalGrade,
+                ),
                 performanceRepository = deps.performanceRepository,
+                dispatchers = deps.dispatchers,
                 onBack = navigateBack,
             ),
         )
@@ -128,6 +134,7 @@ internal class DetailChildFactory(
             DefaultNotificationsComponent(
                 componentContext = childContext,
                 notificationRepository = deps.notificationRepository,
+                dispatchers = deps.dispatchers,
                 onBack = navigateBack,
                 onOpenLongread = navigateToLongread,
             ),

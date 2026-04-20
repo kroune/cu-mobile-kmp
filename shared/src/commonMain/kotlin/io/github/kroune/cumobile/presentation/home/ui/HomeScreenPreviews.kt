@@ -20,6 +20,7 @@ import io.github.kroune.cumobile.presentation.common.ui.ErrorContent
 import io.github.kroune.cumobile.presentation.common.ui.LocalClock
 import io.github.kroune.cumobile.presentation.common.ui.previewClock
 import io.github.kroune.cumobile.presentation.home.HomeComponent
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.datetime.LocalDate
 
 private val previewMonday = LocalDate(2026, 3, 23)
@@ -27,7 +28,7 @@ private val previewToday = LocalDate(2026, 3, 30)
 
 private val previewHomeState = HomeComponent.State(
     tasks = ContentState.Success(
-        listOf(
+        persistentListOf(
             StudentTask(
                 id = "1",
                 state = TaskState.InProgress,
@@ -43,7 +44,7 @@ private val previewHomeState = HomeComponent.State(
         ),
     ),
     courses = ContentState.Success(
-        listOf(
+        persistentListOf(
             Course(id = "1", name = "Алгоритмы", category = "development"),
             Course(id = "2", name = "Линейная алгебра", category = "mathematics"),
             Course(id = "3", name = "Менеджмент", category = "business"),
@@ -54,23 +55,23 @@ private val previewHomeState = HomeComponent.State(
     avatarBytes = ContentState.Success(null),
     selectedDate = previewToday,
     weekStart = previewMonday,
-    schedule = ContentState.Success(emptyList()),
+    schedule = ContentState.Success(persistentListOf()),
 )
 
 private val previewHomeEmptyState = HomeComponent.State(
-    tasks = ContentState.Success(emptyList()),
-    courses = ContentState.Success(emptyList()),
+    tasks = ContentState.Success(persistentListOf()),
+    courses = ContentState.Success(persistentListOf()),
     profileInitials = ContentState.Success("ИП"),
     avatarBytes = ContentState.Success(null),
     lateDaysBalance = ContentState.Success(null),
     selectedDate = previewToday,
     weekStart = previewMonday,
-    schedule = ContentState.Success(emptyList()),
+    schedule = ContentState.Success(persistentListOf()),
 )
 
 val previewHomeWithScheduleState = previewHomeState.copy(
     schedule = ContentState.Success(
-        listOf(
+        persistentListOf(
             ClassData(
                 startTime = "09:00",
                 endTime = "10:30",

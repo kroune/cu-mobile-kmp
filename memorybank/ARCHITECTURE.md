@@ -150,14 +150,34 @@ Every screen has:
     - **ExternalUpdate channel**: Parent broadcasts events (e.g. search query changes) to children
       via
       `MutableSharedFlow<ExternalUpdate>(replay=1)`. Children collect and store in their own state.
+    - **Longread search pipeline**: `DefaultLongreadComponent` pre-extracts plain text from
+      every material's HTML once on load (`buildPlainTextIndex` → `Map<String, String>`,
+      on `dispatchers.default`). Keystrokes feed a `MutableStateFlow<String>`, debounced
+      180 ms; downstream counts matches against the cached index on `dispatchers.default`
+      and only then emits `ExternalUpdate.SearchQuery` to child material components.
+      Avoids re-parsing HTML per keystroke per material. `LongreadSearchHandler` is a
+      pure state mutator (toggle/query-text/match-count/nav); the component owns the
+      pipeline and applies results back via `applyMatchCount(forQuery = ..., ...)`,
+      ignoring stale results.
 - `navigation.push()` requires `@OptIn(DelicateDecomposeApi::class)`
 
 ### DI (Koin)
 
-- `di/Koin.kt` — common modules (network, local, repository)
+- `di/Koin.kt` — common modules (core, network, data, repository)
 - `androidMain/di/AndroidKoin.kt` — Android-specific bindings + `createRootComponent()` factory
 - `iosMain/di/IosKoin.kt` — iOS-specific bindings
 - `iosMain/MainViewController.kt` — `createRootComponent()` for iOS
+- `coreModule` provides the singleton `AppDispatchers`
+
+### Lazy Main Dependencies
+
+- `DefaultRootComponent` takes `mainDependenciesFactory: () -> MainDependencies`
+  (not an already-constructed bundle). Held behind `by lazy(mainDependenciesFactory)` so
+  the 13 repositories / services are only resolved from Koin when the user lands on
+  `Config.Main` for the first time. Unauthenticated launches (splash → Login) don't
+  instantiate main-flow singletons.
+- `createRootComponent()` in `Koin.kt` passes the lambda; the first `Config.Main`
+  navigation triggers `koin.get<X>()` for each repository.
 
 ### Repositories
 
@@ -177,8 +197,29 @@ Every screen has:
 
 ### Coroutine Scopes
 
-- Use `coroutineScope()` from `essenty-lifecycle-coroutines` in all components
-- Do NOT manually create `CoroutineScope` + `onDestroy` cleanup
+- Use `componentScope()` (in `presentation/common/ComponentScope.kt`) in every `Default*Component`:
+  `private val scope = componentScope()`. Wraps the essenty
+  `lifecycle.coroutineScope(Dispatchers.Main.immediate + SupervisorJob())` so it's not
+  duplicated 18 times.
+- Do NOT manually create `CoroutineScope` + `onDestroy` cleanup.
+
+### Dispatcher Injection (AppDispatchers)
+
+- `util/AppDispatchers.kt` — class with `io`, `default`, `main` `CoroutineDispatcher` fields.
+  Registered as a Koin singleton in `coreModule`, injected into every class that needs to
+  switch dispatchers (detekt's `InjectDispatcher` rule is enforced).
+- Repositories that do network / DataStore / file I/O extend `CookieAwareRepository(authLocal, dispatchers)`
+  which wraps `withCookie { }` / `withCookieOrFalse { }` in `withContext(dispatchers.io)` —
+  callers can safely invoke from `Dispatchers.Main.immediate` without blocking the UI.
+- `AuthRepositoryImpl`, `CalendarRepositoryImpl`, `FileRepositoryImpl` take `AppDispatchers`
+  (or just the `io` dispatcher) directly.
+- CPU-bound state computations in components (TasksComponent filter/sort, CoursePerformance
+  joins+aggregates, Notifications sort, Longread match count) run on `dispatchers.default`
+  via `withContext(dispatchers.default) { ... }`.
+- Room's `queryDispatcher` already uses `Dispatchers.IO` internally — don't re-wrap.
+- `MainDependencies.dispatchers` piped through `TabChildFactory` / `DetailChildFactory` so
+  all tab and detail components receive the same `AppDispatchers` instance.
+- `LongreadDependencies` also carries `dispatchers`.
 
 ### Lazy Tab Loading (ChildPages)
 
@@ -331,6 +372,16 @@ steps (AnimatedContent), so each is an independent autofill session.
 - Active: backlog, inProgress, hasSolution, revision, rework, review
 - Archive: evaluated, failed, rejected
 - Sort: evaluated/failed/review at bottom; rest by deadline ascending (null last)
+- **State shape:** raw inputs (`segment`, `statusFilter`, `courseFilter`, `searchQuery`)
+  in `State` alongside `content: ContentState<Content>` where `Content` holds the
+  filtered/sorted lists + counts + available filter values. No more `isLoading`/`error`
+  booleans and no `recomputeDerived()` extension.
+- **Derivation:** `DefaultTasksComponent` keeps raw fields in a private `RawState` and
+  launches `scheduleDerive()` after each mutation (and after `loadTasks`). Cancels any
+  in-flight derivation (`deriveJob?.cancel()`) so only the latest snapshot reaches `state`.
+  `buildTasksContent(...)` (in `TasksContentBuilder.kt`) runs on `dispatchers.default`,
+  precomputes effective state per task once, and sweeps `allTasks` in a single pass to
+  bucket active/archive + collect courses.
 
 ### Late Days System
 

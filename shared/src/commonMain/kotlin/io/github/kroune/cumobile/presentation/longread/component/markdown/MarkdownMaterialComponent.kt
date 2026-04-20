@@ -6,13 +6,11 @@ import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
-import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.data.model.LongreadMaterial
 import io.github.kroune.cumobile.presentation.common.RenderComponent
+import io.github.kroune.cumobile.presentation.common.componentScope
 import io.github.kroune.cumobile.presentation.longread.component.ExternalUpdate
 import io.github.kroune.cumobile.presentation.longread.ui.markdown.MarkdownMaterialCard
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
@@ -33,9 +31,7 @@ class MarkdownMaterialComponent(
     externalUpdates: Flow<ExternalUpdate>,
 ) : ComponentContext by componentContext,
     RenderComponent {
-    private val scope = coroutineScope(
-        Dispatchers.Main.immediate + SupervisorJob(),
-    )
+    private val scope = componentScope()
 
     private val _state = MutableValue(State())
     val state: Value<State> = _state

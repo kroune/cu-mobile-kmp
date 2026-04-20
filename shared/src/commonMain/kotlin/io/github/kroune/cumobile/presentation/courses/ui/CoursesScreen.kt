@@ -350,7 +350,7 @@ private fun trySwapDraggedItem(
         }
     } ?: return null
 
-    val toIdx = currentItems.indexOfFirst { it.id == targetItem.key as String }
+    val toIdx = currentItems.indexOfFirst { it.id == targetItem.key as? String }
     val newItems = currentItems.toMutableList().apply { add(toIdx, removeAt(fromIdx)) }
     return newItems to (draggedInfo.offset - targetItem.offset).toFloat()
 }

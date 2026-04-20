@@ -1,6 +1,7 @@
 package io.github.kroune.cumobile.presentation.main
 
 import com.arkivanov.decompose.ComponentContext
+import io.github.kroune.cumobile.presentation.common.invoke
 import io.github.kroune.cumobile.presentation.courses.DefaultCoursesComponent
 import io.github.kroune.cumobile.presentation.files.DefaultFilesComponent
 import io.github.kroune.cumobile.presentation.home.DefaultHomeComponent
@@ -51,6 +52,7 @@ internal class TabChildFactory(
                 DefaultTasksComponent(
                     componentContext = childContext,
                     taskRepository = deps.taskRepository,
+                    dispatchers = deps.dispatchers,
                     onOpenTask = { nav.toTask(it.course.id, it.exercise.id) },
                 ),
             )
@@ -67,7 +69,7 @@ internal class TabChildFactory(
                 DefaultFilesComponent(
                     componentContext = childContext,
                     fileRepository = deps.fileRepository,
-                    onOpenFile = { path -> deps.fileOpener.openFile(path) },
+                    onOpenFile = { path -> deps.fileOpener().openFile(path) },
                     onOpenRenameSettings = nav.toFileRenameSettings,
                     onOpenScanner = nav.toScanner,
                 ),

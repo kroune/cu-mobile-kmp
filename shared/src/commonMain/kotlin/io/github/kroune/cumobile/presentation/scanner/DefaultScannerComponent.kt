@@ -3,15 +3,14 @@ package io.github.kroune.cumobile.presentation.scanner
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
-import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.data.local.FileStorage
 import io.github.kroune.cumobile.data.local.PdfGenerator
 import io.github.kroune.cumobile.data.local.PdfPageInput
 import io.github.kroune.cumobile.data.model.PickedFile
+import io.github.kroune.cumobile.presentation.common.componentScope
+import io.github.kroune.cumobile.presentation.common.invoke
 import io.github.kroune.cumobile.util.runCatchingCancellable
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -30,15 +29,13 @@ private val logger = KotlinLogging.logger {}
  */
 class DefaultScannerComponent(
     componentContext: ComponentContext,
-    private val pdfGenerator: PdfGenerator,
-    private val fileStorage: FileStorage,
+    private val pdfGenerator: Lazy<PdfGenerator>,
+    private val fileStorage: Lazy<FileStorage>,
     private val onBack: () -> Unit,
     private val onFileSaved: () -> Unit = {},
 ) : ScannerComponent,
     ComponentContext by componentContext {
-    private val scope = coroutineScope(
-        Dispatchers.Main.immediate + SupervisorJob(),
-    )
+    private val scope = componentScope()
 
     private var pageCounter = 0
 
@@ -171,7 +168,7 @@ class DefaultScannerComponent(
                         rotationDegrees = page.rotationDegrees,
                     )
                 }
-                pdfGenerator.generatePdf(
+                pdfGenerator().generatePdf(
                     pages = pdfPages,
                     compress = currentState.compressImages,
                 ) to currentState.fileName
@@ -186,7 +183,7 @@ class DefaultScannerComponent(
                     }
 
                     val filename = buildUniqueFilename(fileName)
-                    val saved = fileStorage.saveFile(pdfBytes, filename)
+                    val saved = fileStorage().saveFile(pdfBytes, filename)
 
                     _state.value = _state.value.copy(isSaving = false)
 
@@ -214,12 +211,12 @@ class DefaultScannerComponent(
     private fun buildUniqueFilename(rawName: String): String {
         val normalized = normalizeFileName(rawName)
         val base = "$normalized.pdf"
-        if (!fileStorage.fileExists(base)) return base
+        if (!fileStorage().fileExists(base)) return base
 
         var counter = 1
         while (true) {
             val candidate = "${normalized}__dup$counter.pdf"
-            if (!fileStorage.fileExists(candidate)) return candidate
+            if (!fileStorage().fileExists(candidate)) return candidate
             counter++
         }
     }

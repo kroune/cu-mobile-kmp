@@ -22,8 +22,10 @@ private val logger = KotlinLogging.logger {}
  * API service for user profile endpoints.
  */
 internal class ProfileApiService(
-    private val httpClient: HttpClient,
+    httpClient: Lazy<HttpClient>,
 ) {
+    private val httpClient by httpClient
+
     /**
      * Checks whether the given cookie is accepted by the server.
      *

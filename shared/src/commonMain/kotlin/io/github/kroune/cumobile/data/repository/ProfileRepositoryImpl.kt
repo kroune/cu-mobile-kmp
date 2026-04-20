@@ -5,6 +5,7 @@ import io.github.kroune.cumobile.data.model.StudentLmsProfile
 import io.github.kroune.cumobile.data.model.StudentProfile
 import io.github.kroune.cumobile.data.network.ProfileApiService
 import io.github.kroune.cumobile.domain.repository.ProfileRepository
+import io.github.kroune.cumobile.util.AppDispatchers
 
 /**
  * Implementation of [ProfileRepository].
@@ -13,10 +14,13 @@ import io.github.kroune.cumobile.domain.repository.ProfileRepository
  * all network calls to [ProfileApiService].
  */
 internal class ProfileRepositoryImpl(
-    authLocal: AuthLocalDataSource,
-    private val profileApi: ProfileApiService,
-) : CookieAwareRepository(authLocal),
+    authLocal: Lazy<AuthLocalDataSource>,
+    profileApi: Lazy<ProfileApiService>,
+    dispatchers: Lazy<AppDispatchers>,
+) : CookieAwareRepository(authLocal, dispatchers),
     ProfileRepository {
+    private val profileApi by profileApi
+
     override suspend fun fetchProfile(): StudentProfile? =
         withCookie { profileApi.fetchProfile(it) }
 

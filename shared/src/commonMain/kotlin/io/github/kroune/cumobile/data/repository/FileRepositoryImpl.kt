@@ -3,15 +3,14 @@ package io.github.kroune.cumobile.data.repository
 import io.github.kroune.cumobile.data.local.DownloadedFileInfo
 import io.github.kroune.cumobile.data.local.FileStorage
 import io.github.kroune.cumobile.domain.repository.FileRepository
+import io.github.kroune.cumobile.presentation.common.invoke
+import io.github.kroune.cumobile.util.AppDispatchers
 import io.github.kroune.cumobile.util.runCatchingCancellable
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.statement.readRawBytes
 import io.ktor.http.HttpStatusCode
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
 
 private val logger = KotlinLogging.logger {}
@@ -23,22 +22,25 @@ private val logger = KotlinLogging.logger {}
  * for downloading files from pre-signed URLs.
  */
 internal class FileRepositoryImpl(
-    private val fileStorage: FileStorage,
-    private val httpClient: HttpClient,
-    private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
+    fileStorage: Lazy<FileStorage>,
+    httpClient: Lazy<HttpClient>,
+    private val dispatchers: Lazy<AppDispatchers>,
 ) : FileRepository {
+    private val fileStorage by fileStorage
+    private val httpClient by httpClient
+
     override suspend fun listDownloadedFiles(): List<DownloadedFileInfo> =
-        withContext(dispatcher) {
+        withContext(dispatchers().io) {
             fileStorage.listFiles()
         }
 
     override suspend fun deleteFile(name: String): Boolean =
-        withContext(dispatcher) {
+        withContext(dispatchers().io) {
             fileStorage.deleteFile(name)
         }
 
     override suspend fun deleteAllFiles(): Int =
-        withContext(dispatcher) {
+        withContext(dispatchers().io) {
             fileStorage.deleteAllFiles()
         }
 
@@ -50,7 +52,7 @@ internal class FileRepositoryImpl(
             val response = httpClient.get(url)
             if (response.status == HttpStatusCode.OK) {
                 val bytes = response.readRawBytes()
-                withContext(dispatcher) {
+                withContext(dispatchers().io) {
                     fileStorage.saveFile(bytes, filename)
                 }
             } else {
@@ -63,7 +65,7 @@ internal class FileRepositoryImpl(
         }
 
     override suspend fun fileExists(name: String): Boolean =
-        withContext(dispatcher) {
+        withContext(dispatchers().io) {
             fileStorage.fileExists(name)
         }
 }

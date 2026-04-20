@@ -7,6 +7,7 @@ import io.github.kroune.cumobile.data.model.GradebookResponse
 import io.github.kroune.cumobile.data.model.StudentPerformanceResponse
 import io.github.kroune.cumobile.data.network.PerformanceApiService
 import io.github.kroune.cumobile.domain.repository.PerformanceRepository
+import io.github.kroune.cumobile.util.AppDispatchers
 
 /**
  * Implementation of [PerformanceRepository].
@@ -15,10 +16,13 @@ import io.github.kroune.cumobile.domain.repository.PerformanceRepository
  * all network calls to [PerformanceApiService].
  */
 internal class PerformanceRepositoryImpl(
-    authLocal: AuthLocalDataSource,
-    private val performanceApi: PerformanceApiService,
-) : CookieAwareRepository(authLocal),
+    authLocal: Lazy<AuthLocalDataSource>,
+    performanceApi: Lazy<PerformanceApiService>,
+    dispatchers: Lazy<AppDispatchers>,
+) : CookieAwareRepository(authLocal, dispatchers),
     PerformanceRepository {
+    private val performanceApi by performanceApi
+
     override suspend fun fetchPerformance(): StudentPerformanceResponse? =
         withCookie { performanceApi.fetchPerformance(it) }
 

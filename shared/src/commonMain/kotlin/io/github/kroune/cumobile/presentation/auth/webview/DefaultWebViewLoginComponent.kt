@@ -3,24 +3,24 @@ package io.github.kroune.cumobile.presentation.auth.webview
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
-import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.domain.repository.AuthRepository
 import io.github.kroune.cumobile.domain.repository.CookieValidationResult
+import io.github.kroune.cumobile.presentation.common.componentScope
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
 private val logger = KotlinLogging.logger {}
 
 class DefaultWebViewLoginComponent(
     componentContext: ComponentContext,
-    private val authRepository: AuthRepository,
+    authRepository: Lazy<AuthRepository>,
     private val onLoginSuccess: () -> Unit,
     private val onBack: () -> Unit,
 ) : WebViewLoginComponent,
     ComponentContext by componentContext {
-    private val scope = coroutineScope(Dispatchers.Main.immediate + SupervisorJob())
+    private val authRepository by authRepository
+
+    private val scope = componentScope()
 
     private val _state = MutableValue(WebViewLoginComponent.State())
     override val state: Value<WebViewLoginComponent.State> = _state

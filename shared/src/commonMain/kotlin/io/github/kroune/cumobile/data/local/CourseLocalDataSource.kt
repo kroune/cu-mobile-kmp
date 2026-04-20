@@ -4,6 +4,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
+import io.github.kroune.cumobile.presentation.common.invoke
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -12,21 +13,23 @@ import kotlinx.coroutines.flow.map
  * such as manual order of courses.
  */
 internal class CourseLocalDataSource(
-    private val dataStore: DataStore<Preferences>,
+    private val dataStoreLazy: Lazy<DataStore<Preferences>>,
 ) {
     /**
      * Flow emitting the list of course IDs in the preferred order.
      * Empty if no custom order is set.
      */
-    val courseIdOrderFlow: Flow<List<String>> = dataStore.data.map { preferences ->
-        val orderString = preferences[COURSE_ORDER_KEY] ?: ""
-        if (orderString.isBlank()) return@map emptyList()
-        orderString.split(",").map { it.trim() }
+    val courseIdOrderFlow: Flow<List<String>> by lazy {
+        dataStoreLazy().data.map { preferences ->
+            val orderString = preferences[COURSE_ORDER_KEY] ?: ""
+            if (orderString.isBlank()) return@map emptyList()
+            orderString.split(",").map { it.trim() }
+        }
     }
 
     /** Saves a new course ID list to represent the manual order. */
     suspend fun saveCourseIdOrder(ids: List<String>) {
-        dataStore.edit { preferences ->
+        dataStoreLazy().edit { preferences ->
             preferences[COURSE_ORDER_KEY] = ids.joinToString(",")
         }
     }

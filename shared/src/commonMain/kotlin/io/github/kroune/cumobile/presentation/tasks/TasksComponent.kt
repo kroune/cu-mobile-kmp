@@ -3,9 +3,9 @@ package io.github.kroune.cumobile.presentation.tasks
 import com.arkivanov.decompose.value.Value
 import io.github.kroune.cumobile.data.model.StudentTask
 import io.github.kroune.cumobile.data.model.TaskState
+import io.github.kroune.cumobile.presentation.common.ContentState
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.toImmutableList
 
 /**
  * MVI component for the Tasks tab ("Задания").
@@ -22,11 +22,15 @@ interface TasksComponent {
 
     fun onIntent(intent: Intent)
 
+    /**
+     * Observable state exposed to the UI. Raw user-controlled fields
+     * (segment, filters, searchQuery) sit alongside a [content] value
+     * that wraps the filtered/sorted/aggregated data in [ContentState].
+     *
+     * Derivation runs off the Main thread; see [DefaultTasksComponent].
+     */
     data class State(
-        /** All tasks loaded from the API (unfiltered). */
-        val allTasks: ImmutableList<StudentTask> = persistentListOf(),
-        val isLoading: Boolean = false,
-        val error: String? = null,
+        val content: ContentState<Content> = ContentState.Loading,
         /** Currently selected segment: 0 = Active, 1 = Archive. */
         val segment: Int = 0,
         /** Status filter (null = all statuses in current segment). */
@@ -35,7 +39,15 @@ interface TasksComponent {
         val courseFilter: String? = null,
         /** Search query (matches against exercise name). */
         val searchQuery: String = "",
-        /** Pre-computed filtered + sorted tasks per segment. */
+    )
+
+    /**
+     * Derived view of the task list: filtered/sorted per segment,
+     * plus the aggregates the UI needs (counts, available filter values).
+     *
+     * Produced once per raw-state mutation on [kotlinx.coroutines.Dispatchers.Default].
+     */
+    data class Content(
         val activeFilteredTasks: ImmutableList<StudentTask> = persistentListOf(),
         val archiveFilteredTasks: ImmutableList<StudentTask> = persistentListOf(),
         val activeCount: Int = 0,
@@ -73,50 +85,6 @@ interface TasksComponent {
         /** Refresh the task list from the API. */
         data object Refresh : Intent
     }
-}
-
-/**
- * Recomputes all derived UI fields from the raw state fields.
- * Must be called after every mutation of [TasksComponent.State].
- */
-internal fun TasksComponent.State.recomputeDerived(): TasksComponent.State {
-    fun filterForSegment(segmentStates: Set<String>): ImmutableList<StudentTask> =
-        allTasks
-            .filter { task ->
-                val effectiveState = normalizeTaskState(effectiveTaskState(task))
-                effectiveState in segmentStates &&
-                    (statusFilter == null || effectiveState == statusFilter) &&
-                    (courseFilter == null || task.course.id == courseFilter) &&
-                    (
-                        searchQuery.isEmpty() ||
-                            task.exercise.name.contains(searchQuery, ignoreCase = true)
-                    )
-            }.sortedWith(taskComparator())
-            .toImmutableList()
-
-    val presentStatuses = allTasks
-        .map { normalizeTaskState(effectiveTaskState(it)) }
-        .toSet()
-    val segmentStates = if (segment == 0) ActiveStates else ArchiveStates
-
-    return copy(
-        activeFilteredTasks = filterForSegment(ActiveStates),
-        archiveFilteredTasks = filterForSegment(ArchiveStates),
-        activeCount = allTasks.count {
-            normalizeTaskState(effectiveTaskState(it)) in ActiveStates
-        },
-        archiveCount = allTasks.count {
-            normalizeTaskState(effectiveTaskState(it)) in ArchiveStates
-        },
-        availableCourses = allTasks
-            .map { it.course.id to it.course.name }
-            .distinctBy { it.first }
-            .sortedBy { it.second }
-            .toImmutableList(),
-        availableStatuses = segmentStates
-            .filter { it in presentStatuses }
-            .toImmutableList(),
-    )
 }
 
 /**
@@ -173,28 +141,4 @@ internal fun effectiveTaskState(task: StudentTask): String =
         TaskState.HasSolution
     } else {
         task.state
-    }
-
-private val BottomStates = setOf(
-    TaskState.Evaluated,
-    TaskState.Failed,
-    TaskState.Rejected,
-    TaskState.Review,
-)
-
-internal fun taskComparator(): Comparator<StudentTask> =
-    Comparator { a, b ->
-        val aBottom = normalizeTaskState(effectiveTaskState(a)) in BottomStates
-        val bBottom = normalizeTaskState(effectiveTaskState(b)) in BottomStates
-        if (aBottom != bBottom) {
-            return@Comparator if (aBottom) 1 else -1
-        }
-        val deadlineA = a.deadline ?: a.exercise.deadline
-        val deadlineB = b.deadline ?: b.exercise.deadline
-        when {
-            deadlineA == null && deadlineB == null -> 0
-            deadlineA == null -> 1
-            deadlineB == null -> -1
-            else -> deadlineA.compareTo(deadlineB)
-        }
     }

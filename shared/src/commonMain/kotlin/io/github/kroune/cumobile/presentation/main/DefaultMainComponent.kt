@@ -17,10 +17,9 @@ import com.arkivanov.decompose.router.stack.pushNew
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.backhandler.BackCallback
-import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.data.model.UpdateInfo
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
+import io.github.kroune.cumobile.presentation.common.componentScope
+import io.github.kroune.cumobile.presentation.common.invoke
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
@@ -34,13 +33,11 @@ import kotlinx.serialization.Serializable
 @OptIn(DelicateDecomposeApi::class)
 class DefaultMainComponent(
     componentContext: ComponentContext,
-    private val mainDependencies: MainDependencies,
+    private val mainDependenciesLazy: Lazy<MainDependencies>,
     private val onLogout: () -> Unit,
 ) : MainComponent,
     ComponentContext by componentContext {
-    private val scope = coroutineScope(
-        Dispatchers.Main.immediate + SupervisorJob(),
-    )
+    private val scope = componentScope()
 
     // region Update check
 
@@ -54,7 +51,7 @@ class DefaultMainComponent(
 
     init {
         scope.launch {
-            val info = mainDependencies.updateChecker.checkForUpdate()
+            val info = mainDependenciesLazy().updateChecker().checkForUpdate()
             if (info != null) {
                 _updateInfo.value = info
             }
@@ -69,13 +66,13 @@ class DefaultMainComponent(
 
     private val taskNavigator = TaskNavigator(
         scope = scope,
-        courseRepository = mainDependencies.courseRepository,
+        courseRepository = mainDependenciesLazy().courseRepository,
         navigateToLongread = ::navigateToLongread,
         navigateToCourseDetail = ::navigateToCourseDetail,
     )
 
     private val tabChildFactory = TabChildFactory(
-        deps = mainDependencies,
+        deps = mainDependenciesLazy(),
         nav = TabNavigationCallbacks(
             toCourseDetail = ::navigateToCourseDetail,
             toTask = taskNavigator::navigate,
@@ -102,7 +99,7 @@ class DefaultMainComponent(
                 )
             },
             pageStatus = { index, pages ->
-                if (index == pages.selectedIndex) Status.RESUMED else Status.CREATED
+                if (index == pages.selectedIndex) Status.RESUMED else Status.DESTROYED
             },
             childFactory = tabChildFactory::create,
         )
@@ -135,7 +132,7 @@ class DefaultMainComponent(
     )
 
     private val detailChildFactory = DetailChildFactory(
-        deps = mainDependencies,
+        deps = mainDependenciesLazy(),
         navigateBack = ::navigateDetailBack,
         navigateToLongread = ::navigateToLongread,
         onLogout = onLogout,
