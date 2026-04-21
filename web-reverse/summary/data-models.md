@@ -59,7 +59,7 @@ enum UserRole {
 
 ### Task Object
 
-Source: `learn/chunk-PODCHSSJ.js` (student task UI)
+Source: `learn/chunk-PODCHSSJ.js` (student task detail UI), `learn/chunk-QOQGSUZU.js` (student task list)
 
 ```typescript
 interface Task {
@@ -81,10 +81,15 @@ interface Task {
 
   solution: Solution | null;
   exercise: Exercise;
-  course: { id: string; name: string };
-  theme: { name: string };
+  course: { id: string; name: string; isArchived: boolean };
+  theme: { id: string; name: string };   // id confirmed from StudentTasksComponent.taskToRouterLink
+  longread: { id: string };              // confirmed from StudentTasksComponent.taskToRouterLink; used to navigate directly to the lesson
 }
 ```
+
+> **Navigation note**: `GET /tasks` (list) returns `theme.id`, `longread.id`, and `course.isArchived` — enough to
+> navigate directly to the longread without extra API calls. The task detail UI (`chunk-PODCHSSJ.js`) only used
+> `theme.name` for display, so earlier analysis missed `theme.id` and the `longread` field entirely.
 
 ### TaskState
 
