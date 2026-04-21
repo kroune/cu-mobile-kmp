@@ -58,7 +58,7 @@ private val coreModule = module {
 }
 
 private val networkModule = module {
-    single { createHttpClient() }
+    single { createHttpClient(get()) }
     single { ResettableCookieStorage() }
     single(named("auth")) { createAuthHttpClient(get()) }
     single { AuthApiService(inject(named("auth")), inject()) }

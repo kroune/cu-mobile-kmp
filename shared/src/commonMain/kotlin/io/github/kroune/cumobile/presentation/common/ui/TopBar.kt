@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,28 +26,16 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil3.compose.AsyncImage
+import coil3.compose.SubcomposeAsyncImage
 
-/**
- * Top bar matching the Flutter reference app.
- *
- * Shows the current tab title, optional Late Days balance,
- * a notification bell, and a profile avatar circle.
- *
- * @param title Current tab label ("Главная", "Задания", etc.)
- * @param profileInitials User's initials (e.g. "ИП") for the avatar.
- * @param lateDaysBalance Late Days balance, shown when non-null.
- * @param onNotificationsClick Navigates to the notifications screen.
- * @param onProfileClick Navigates to the profile screen.
- */
 @Composable
 fun TopBar(
     title: String,
-    profileInitials: String,
-    avatarBytes: ByteArray? = null,
+    avatarUrl: String,
     lateDaysBalance: Int?,
     onNotificationsClick: () -> Unit,
     onProfileClick: () -> Unit,
+    onAvatarRetry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -57,7 +46,6 @@ fun TopBar(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        // Title (left-aligned, takes available space)
         Text(
             text = title,
             color = AppTheme.colors.textPrimary,
@@ -66,7 +54,6 @@ fun TopBar(
             modifier = Modifier.weight(1f),
         )
 
-        // Late Days balance (optional)
         if (lateDaysBalance != null) {
             Text(
                 text = "Late Days: $lateDaysBalance",
@@ -76,7 +63,6 @@ fun TopBar(
             Spacer(modifier = Modifier.width(12.dp))
         }
 
-        // Notification bell
         Box(
             modifier = Modifier
                 .size(40.dp)
@@ -92,59 +78,60 @@ fun TopBar(
             )
         }
 
-        // Profile avatar circle
         AvatarCircle(
-            initials = profileInitials,
-            avatarBytes = avatarBytes,
+            avatarUrl = avatarUrl,
             onClick = onProfileClick,
+            onRetry = onAvatarRetry,
         )
     }
 }
 
-/**
- * Circular avatar showing user initials with a green border.
- *
- * Matches the Flutter reference: 40x40 circle, 2px green border,
- * initials in green on dark background.
- */
 @Composable
 private fun AvatarCircle(
-    initials: String,
-    avatarBytes: ByteArray?,
+    avatarUrl: String,
     onClick: () -> Unit,
+    onRetry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val isLoading = initials.isEmpty() && avatarBytes == null
-    if (isLoading) {
+    if (avatarUrl.isEmpty()) {
         ShimmerCircle(
             size = 40.dp,
             modifier = modifier.clickable(onClick = onClick),
         )
-    } else {
-        Box(
-            modifier = modifier
-                .size(40.dp)
-                .clip(CircleShape)
-                .border(2.dp, AppTheme.colors.accent, CircleShape)
-                .background(AppTheme.colors.surface, CircleShape)
-                .clickable(onClick = onClick),
-            contentAlignment = Alignment.Center,
-        ) {
-            if (avatarBytes != null) {
-                AsyncImage(
-                    model = avatarBytes,
-                    contentDescription = "Аватар",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize(),
-                )
-            } else {
-                Text(
-                    text = initials.ifEmpty { "?" },
-                    color = AppTheme.colors.accent,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                )
-            }
-        }
+        return
+    }
+    Box(
+        modifier = modifier
+            .size(40.dp)
+            .clip(CircleShape)
+            .border(2.dp, AppTheme.colors.accent, CircleShape)
+            .background(AppTheme.colors.surface, CircleShape)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        SubcomposeAsyncImage(
+            model = avatarUrl,
+            contentDescription = "Аватар",
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize(),
+            loading = {
+                ShimmerCircle(size = 40.dp)
+            },
+            error = {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clickable(onClick = onRetry),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Refresh,
+                        contentDescription = "Повторить",
+                        tint = AppTheme.colors.textSecondary,
+                        modifier = Modifier.size(20.dp),
+                    )
+                }
+            },
+        )
     }
 }

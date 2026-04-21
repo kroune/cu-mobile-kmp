@@ -43,8 +43,14 @@ interface MainComponent {
     /** Detail navigation stack (overlays tabs when non-empty). */
     val detailStack: Value<ChildStack<*, DetailChild>>
 
+    /** Profile header data displayed in the top bar across all tabs. */
+    val topBarState: Value<TopBarState>
+
     /** Available update info (empty latestVersion if none). */
     val updateInfo: Value<UpdateInfo>
+
+    /** Called when the avatar has been changed (uploaded/deleted) in ProfileScreen. */
+    fun onAvatarChanged()
 
     /** Dismiss the update dialog. */
     fun dismissUpdate()

@@ -2,7 +2,6 @@ package io.github.kroune.cumobile.presentation.home
 
 import io.github.kroune.cumobile.domain.repository.CalendarRepository
 import io.github.kroune.cumobile.domain.repository.CourseRepository
-import io.github.kroune.cumobile.domain.repository.ProfileRepository
 import io.github.kroune.cumobile.domain.repository.TaskRepository
 
 /**
@@ -15,6 +14,5 @@ import io.github.kroune.cumobile.domain.repository.TaskRepository
 class HomeDependencies(
     val taskRepository: Lazy<TaskRepository>,
     val courseRepository: Lazy<CourseRepository>,
-    val profileRepository: Lazy<ProfileRepository>,
     val calendarRepository: Lazy<CalendarRepository>,
 )

@@ -26,8 +26,9 @@ internal class ProfileRepositoryImpl(
     override suspend fun fetchLmsProfile(): StudentLmsProfile? =
         withCookie { profileApi().fetchLmsProfile(it) }
 
-    override suspend fun fetchAvatar(): ByteArray? =
+    override suspend fun fetchAvatar(): ByteArray =
         withCookie { profileApi().fetchAvatar(it) }
+            ?: error("Cannot fetch avatar: no auth cookie")
 
     override suspend fun uploadAvatar(
         bytes: ByteArray,

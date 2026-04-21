@@ -26,7 +26,7 @@ private val previewProfileState = ProfileComponent.State(
         ),
     ),
     lmsProfile = ContentState.Success(null),
-    avatarBytes = ContentState.Success(null),
+    avatarUrl = "https://example.com/avatar.png",
 )
 
 private val previewProfileFullState = ProfileComponent.State(
@@ -52,7 +52,7 @@ private val previewProfileFullState = ProfileComponent.State(
         ),
     ),
     lmsProfile = ContentState.Success(null),
-    avatarBytes = ContentState.Success(null),
+    avatarUrl = "https://example.com/avatar.png",
 )
 
 @Preview
@@ -189,7 +189,6 @@ private fun PreviewProfileDeletingAvatarDark() {
     CuMobileTheme(darkTheme = true) {
         ProfileScreenContent(
             state = previewProfileState.copy(
-                avatarBytes = ContentState.Success(ByteArray(0)),
                 isDeletingAvatar = true,
             ),
             onIntent = {},

@@ -38,12 +38,10 @@ class DefaultHomeComponent(
     deps: HomeDependencies,
     private val onOpenTask: (StudentTask) -> Unit,
     private val onOpenCourse: (String) -> Unit,
-    private val onOpenProfile: () -> Unit = {},
 ) : HomeComponent,
     ComponentContext by componentContext {
     private val taskRepository by deps.taskRepository
     private val courseRepository by deps.courseRepository
-    private val profileRepository by deps.profileRepository
     private val calendarRepository by deps.calendarRepository
     private val scope = componentScope()
 
@@ -81,7 +79,6 @@ class DefaultHomeComponent(
             HomeComponent.Intent.PreviousWeek -> changeWeek(-1)
             HomeComponent.Intent.NextWeek -> changeWeek(1)
             is HomeComponent.Intent.SelectDate -> selectDate(intent.date)
-            HomeComponent.Intent.OpenProfile -> onOpenProfile()
         }
     }
 
@@ -136,9 +133,6 @@ class DefaultHomeComponent(
         _state.value = _state.value.copy(
             tasks = ContentState.Loading,
             courses = ContentState.Loading,
-            profileInitials = ContentState.Loading,
-            avatarBytes = ContentState.Loading,
-            lateDaysBalance = ContentState.Loading,
         )
 
         currentLoadJob = scope.launch {
@@ -163,56 +157,7 @@ class DefaultHomeComponent(
                     },
                 )
             }
-
-            launch {
-                val initials = loadProfileInitials()
-                _state.value = _state.value.copy(
-                    profileInitials = ContentState.Success(initials),
-                )
-            }
-
-            launch { loadLateDaysBalance() }
-            launch { loadAvatar() }
         }
-    }
-
-    private suspend fun loadLateDaysBalance() {
-        runCatchingCancellable {
-            profileRepository.fetchLmsProfile()
-        }.fold(
-            onSuccess = { lmsProfile ->
-                _state.value = _state.value.copy(
-                    lateDaysBalance = ContentState.Success(lmsProfile?.lateDaysBalance),
-                )
-            },
-            onFailure = { e ->
-                logger.error(e) { "Failed to load late days balance" }
-                _state.value = _state.value.copy(
-                    lateDaysBalance = ContentState.Error("Не удалось загрузить баланс"),
-                )
-                _effects.trySend(
-                    HomeComponent.Effect.ShowError("Не удалось загрузить баланс поздних дней"),
-                )
-            },
-        )
-    }
-
-    private suspend fun loadAvatar() {
-        runCatchingCancellable {
-            profileRepository.fetchAvatar()
-        }.fold(
-            onSuccess = { bytes ->
-                _state.value = _state.value.copy(
-                    avatarBytes = ContentState.Success(bytes),
-                )
-            },
-            onFailure = { e ->
-                logger.error(e) { "Failed to load avatar" }
-                _state.value = _state.value.copy(
-                    avatarBytes = ContentState.Success(null),
-                )
-            },
-        )
     }
 
     /**
@@ -229,23 +174,6 @@ class DefaultHomeComponent(
             TaskState.Evaluated,
         )
         return taskRepository.fetchTasks(states)
-    }
-
-    /**
-     * Computes user initials from the profile (first letters of
-     * first name and last name).
-     */
-    private suspend fun loadProfileInitials(): String {
-        val profile = profileRepository.fetchProfile() ?: return ""
-        val first = profile.firstName
-            .firstOrNull()
-            ?.uppercase()
-            .orEmpty()
-        val last = profile.lastName
-            .firstOrNull()
-            ?.uppercase()
-            .orEmpty()
-        return "$first$last"
     }
 
     companion object {

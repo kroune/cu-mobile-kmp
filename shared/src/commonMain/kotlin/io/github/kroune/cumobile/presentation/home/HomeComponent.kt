@@ -39,9 +39,6 @@ interface HomeComponent {
         val schedule: ContentState<ImmutableList<ClassData>> = ContentState.Loading,
         val selectedDate: LocalDate = PLACEHOLDER_DATE,
         val weekStart: LocalDate = PLACEHOLDER_DATE,
-        val profileInitials: ContentState<String> = ContentState.Loading,
-        val avatarBytes: ContentState<ByteArray?> = ContentState.Loading,
-        val lateDaysBalance: ContentState<Int?> = ContentState.Loading,
     ) {
         /** Whether any important content is still loading. */
         val isContentLoading: Boolean
@@ -67,31 +64,6 @@ interface HomeComponent {
                 .orEmpty()
                 .filter { !it.isArchived }
                 .toImmutableList()
-
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (other !is State) return false
-            return tasks == other.tasks &&
-                courses == other.courses &&
-                schedule == other.schedule &&
-                selectedDate == other.selectedDate &&
-                weekStart == other.weekStart &&
-                profileInitials == other.profileInitials &&
-                avatarBytes === other.avatarBytes &&
-                lateDaysBalance == other.lateDaysBalance
-        }
-
-        override fun hashCode(): Int {
-            var result = tasks.hashCode()
-            result = 31 * result + courses.hashCode()
-            result = 31 * result + schedule.hashCode()
-            result = 31 * result + selectedDate.hashCode()
-            result = 31 * result + weekStart.hashCode()
-            result = 31 * result + profileInitials.hashCode()
-            result = 31 * result + (avatarBytes.hashCode())
-            result = 31 * result + lateDaysBalance.hashCode()
-            return result
-        }
     }
 
     sealed interface Intent {
@@ -118,9 +90,6 @@ interface HomeComponent {
         data class SelectDate(
             val date: LocalDate,
         ) : Intent
-
-        /** Navigate to profile screen. */
-        data object OpenProfile : Intent
     }
 
     companion object {

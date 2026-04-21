@@ -32,6 +32,7 @@ internal class DetailChildFactory(
     private val navigateBack: () -> Unit,
     private val navigateToLongread: (String, String, String) -> Unit,
     private val onLogout: () -> Unit,
+    private val onAvatarChanged: () -> Unit,
     private val downloadCallbacks: DownloadCallbacks,
 ) {
     fun create(
@@ -126,6 +127,7 @@ internal class DetailChildFactory(
                 profileRepository = deps.profileRepository,
                 onBack = navigateBack,
                 onLogout = onLogout,
+                onAvatarChanged = onAvatarChanged,
             ),
         )
 

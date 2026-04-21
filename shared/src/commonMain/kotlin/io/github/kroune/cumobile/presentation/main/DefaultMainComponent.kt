@@ -18,10 +18,18 @@ import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.backhandler.BackCallback
 import io.github.kroune.cumobile.data.model.UpdateInfo
+import io.github.kroune.cumobile.data.network.ApiEndpoints
+import io.github.kroune.cumobile.data.network.BaseUrl
+import io.github.kroune.cumobile.presentation.common.ContentState
 import io.github.kroune.cumobile.presentation.common.componentScope
 import io.github.kroune.cumobile.presentation.common.invoke
+import io.github.kroune.cumobile.util.runCatchingCancellable
+import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlin.time.Clock.System
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
+
+private val logger = KotlinLogging.logger {}
 
 /**
  * Default implementation of [MainComponent].
@@ -60,6 +68,49 @@ class DefaultMainComponent(
 
     // endregion
 
+    // region Top bar state (profile header shared across all tabs)
+
+    private var avatarVersion = System.now().toEpochMilliseconds()
+
+    private val _topBarState = MutableValue(
+        TopBarState(avatarUrl = buildAvatarUrl()),
+    )
+    override val topBarState: Value<TopBarState> = _topBarState
+
+    init {
+        scope.launch {
+            loadLateDaysBalance()
+        }
+    }
+
+    private suspend fun loadLateDaysBalance() {
+        runCatchingCancellable {
+            mainDependenciesLazy().profileRepository().fetchLmsProfile()
+        }.fold(
+            onSuccess = { lmsProfile ->
+                _topBarState.value = _topBarState.value.copy(
+                    lateDaysBalance = ContentState.Success(lmsProfile?.lateDaysBalance),
+                )
+            },
+            onFailure = { e ->
+                logger.error(e) { "Failed to load late days balance" }
+                _topBarState.value = _topBarState.value.copy(
+                    lateDaysBalance = ContentState.Error("Не удалось загрузить баланс"),
+                )
+            },
+        )
+    }
+
+    private fun buildAvatarUrl(): String =
+        "${BaseUrl}${ApiEndpoints.Profile.AVATAR_ME}?v=$avatarVersion"
+
+    override fun onAvatarChanged() {
+        avatarVersion = System.now().toEpochMilliseconds()
+        _topBarState.value = _topBarState.value.copy(avatarUrl = buildAvatarUrl())
+    }
+
+    // endregion
+
     // region Tab navigation (ChildPages)
 
     private val tabNavigation = PagesNavigation<TabConfig>()
@@ -76,7 +127,6 @@ class DefaultMainComponent(
         nav = TabNavigationCallbacks(
             toCourseDetail = ::navigateToCourseDetail,
             toTask = taskNavigator::navigate,
-            toProfile = ::navigateToProfile,
             toCoursePerformance = ::navigateToCoursePerformance,
             toFileRenameSettings = ::navigateToFileRenameSettings,
             toScanner = ::navigateToScanner,
@@ -136,6 +186,7 @@ class DefaultMainComponent(
         navigateBack = ::navigateDetailBack,
         navigateToLongread = ::navigateToLongread,
         onLogout = onLogout,
+        onAvatarChanged = ::onAvatarChanged,
         downloadCallbacks = DownloadCallbacks(
             refreshFiles = filesCoordinator::refreshFiles,
             navigateToFiles = filesCoordinator::navigateToFilesWithHighlight,

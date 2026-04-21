@@ -9,10 +9,11 @@ private fun PreviewTopBarDark() {
     CuMobileTheme(darkTheme = true) {
         TopBar(
             title = "Главная",
-            profileInitials = "ИП",
+            avatarUrl = "https://example.com/avatar.png",
             lateDaysBalance = 5,
             onNotificationsClick = {},
             onProfileClick = {},
+            onAvatarRetry = {},
         )
     }
 }
@@ -23,10 +24,11 @@ private fun PreviewTopBarLight() {
     CuMobileTheme(darkTheme = false) {
         TopBar(
             title = "Главная",
-            profileInitials = "ИП",
+            avatarUrl = "https://example.com/avatar.png",
             lateDaysBalance = 5,
             onNotificationsClick = {},
             onProfileClick = {},
+            onAvatarRetry = {},
         )
     }
 }
@@ -37,10 +39,11 @@ private fun PreviewTopBarAvatarLoadingDark() {
     CuMobileTheme(darkTheme = true) {
         TopBar(
             title = "Главная",
-            profileInitials = "",
+            avatarUrl = "",
             lateDaysBalance = null,
             onNotificationsClick = {},
             onProfileClick = {},
+            onAvatarRetry = {},
         )
     }
 }
@@ -51,10 +54,11 @@ private fun PreviewTopBarAvatarLoadingLight() {
     CuMobileTheme(darkTheme = false) {
         TopBar(
             title = "Главная",
-            profileInitials = "",
+            avatarUrl = "",
             lateDaysBalance = null,
             onNotificationsClick = {},
             onProfileClick = {},
+            onAvatarRetry = {},
         )
     }
 }

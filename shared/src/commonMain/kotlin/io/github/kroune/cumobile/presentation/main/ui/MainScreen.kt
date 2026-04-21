@@ -52,7 +52,6 @@ import io.github.kroune.cumobile.presentation.common.ui.TopBar
 import io.github.kroune.cumobile.presentation.courses.detail.ui.CourseDetailScreen
 import io.github.kroune.cumobile.presentation.courses.ui.CoursesScreen
 import io.github.kroune.cumobile.presentation.files.ui.FilesScreen
-import io.github.kroune.cumobile.presentation.home.HomeComponent
 import io.github.kroune.cumobile.presentation.home.ui.HomeScreen
 import io.github.kroune.cumobile.presentation.longread.ui.LongreadScreen
 import io.github.kroune.cumobile.presentation.main.MainComponent
@@ -61,7 +60,6 @@ import io.github.kroune.cumobile.presentation.performance.ui.CoursePerformanceSc
 import io.github.kroune.cumobile.presentation.profile.ui.ProfileScreen
 import io.github.kroune.cumobile.presentation.scanner.ui.ScannerScreen
 import io.github.kroune.cumobile.presentation.tasks.ui.TasksScreen
-import com.arkivanov.decompose.router.pages.ChildPages as PagesState
 
 /**
  * Main screen with bottom navigation and top bar.
@@ -76,10 +74,8 @@ import com.arkivanov.decompose.router.pages.ChildPages as PagesState
 fun MainScreen(component: MainComponent) {
     val pages by component.tabPages.subscribeAsState()
     val updateInfo by component.updateInfo.subscribeAsState()
+    val topBarState by component.topBarState.subscribeAsState()
     val selectedIndex = pages.selectedIndex
-
-    // Extract profile initials and late days from the Home tab (observed reactively)
-    val homeState = extractHomeState(pages)
 
     if (updateInfo.latestVersion.isNotEmpty()) {
         UpdateDialog(
@@ -99,11 +95,11 @@ fun MainScreen(component: MainComponent) {
         ) {
             TopBar(
                 title = TAB_LABELS[selectedIndex],
-                profileInitials = homeState?.profileInitials?.dataOrNull.orEmpty(),
-                avatarBytes = homeState?.avatarBytes?.dataOrNull,
-                lateDaysBalance = homeState?.lateDaysBalance?.dataOrNull,
+                avatarUrl = topBarState.avatarUrl,
+                lateDaysBalance = topBarState.lateDaysBalance.dataOrNull,
                 onNotificationsClick = { component.navigateToNotifications() },
                 onProfileClick = { component.navigateToProfile() },
+                onAvatarRetry = { component.onAvatarChanged() },
             )
 
             ChildPages(
@@ -246,21 +242,6 @@ private fun DetailOverlay(
     }
 }
 
-/**
- * Extracts the HomeComponent state from the tab pages
- * for displaying profile initials and late days in the top bar.
- *
- * Uses [subscribeAsState] to observe changes reactively so the
- * top bar updates when profile data finishes loading.
- */
-@Composable
-private fun extractHomeState(pages: PagesState<*, MainComponent.TabChild>): HomeComponent.State? {
-    val homeChild = pages.items.firstOrNull()?.instance
-    if (homeChild !is MainComponent.TabChild.HomeChild) return null
-    return homeChild.component.state
-        .subscribeAsState()
-        .value
-}
 
 /** Update available dialog. */
 @Composable

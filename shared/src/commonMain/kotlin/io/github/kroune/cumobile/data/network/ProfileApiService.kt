@@ -60,21 +60,12 @@ internal class ProfileApiService(
         }
 
     /** Fetches the current student's avatar as raw image bytes. */
-    suspend fun fetchAvatar(cookie: String): ByteArray? =
-        runCatchingCancellable {
-            val response = httpClient.get(ApiEndpoints.Profile.AVATAR_ME) {
-                header("Cookie", cookieHeader(cookie))
-            }
-            if (response.status == HttpStatusCode.OK) {
-                response.readRawBytes()
-            } else {
-                logger.warn { "fetch avatar returned ${response.status}" }
-                null
-            }
-        }.getOrElse { e ->
-            logger.error(e) { "Failed to fetch avatar" }
-            null
+    suspend fun fetchAvatar(cookie: String): ByteArray {
+        val response = httpClient.get(ApiEndpoints.Profile.AVATAR_ME) {
+            header("Cookie", cookieHeader(cookie))
         }
+        return response.readRawBytes()
+    }
 
     /** Uploads a new avatar image as multipart. */
     suspend fun uploadAvatar(

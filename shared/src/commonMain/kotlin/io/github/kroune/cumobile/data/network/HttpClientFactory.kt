@@ -1,11 +1,15 @@
 package io.github.kroune.cumobile.data.network
 
+import io.github.kroune.cumobile.data.local.AuthLocalDataSource
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.cookies.HttpCookies
 import io.ktor.client.plugins.defaultRequest
+import io.ktor.client.request.HttpRequestPipeline
+import io.ktor.client.request.header
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.coroutines.flow.first
 import kotlinx.serialization.json.Json
 
 private const val RequestTimeoutMs = 30_000L
@@ -16,21 +20,19 @@ private const val AuthTimeoutMs = 30_000L
 /**
  * Creates a configured [HttpClient] for communicating with the CU LMS API.
  *
- * Cookie attachment is handled separately by individual API services
- * using the stored auth cookie.
+ * Automatically injects the auth cookie from [AuthLocalDataSource] into every
+ * request, so consumers (API services, Coil image loader) don't need to
+ * attach it manually.
  */
-internal fun createHttpClient(): HttpClient =
+internal fun createHttpClient(authLocal: AuthLocalDataSource): HttpClient =
     HttpClient {
         followRedirects = true
         install(ContentNegotiation) {
             json(
                 Json {
                     ignoreUnknownKeys = true
-                    // lenient parsing is required because the CU LMS API
-                    // occasionally returns unquoted or single-quoted JSON values
                     isLenient = true
                     encodeDefaults = true
-                    // API may return null for fields with defaults (e.g. maxScore)
                     coerceInputValues = true
                 },
             )
@@ -42,6 +44,14 @@ internal fun createHttpClient(): HttpClient =
         }
         defaultRequest {
             url(BaseUrl)
+        }
+    }.also { client ->
+        client.requestPipeline.intercept(HttpRequestPipeline.State) {
+            val cookie = authLocal.cookieFlow.first()
+            if (cookie != null) {
+                context.header("Cookie", cookieHeader(cookie))
+            }
+            proceed()
         }
     }
 
