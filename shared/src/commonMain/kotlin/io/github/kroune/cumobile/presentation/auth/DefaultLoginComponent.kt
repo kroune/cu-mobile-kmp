@@ -40,7 +40,7 @@ class DefaultLoginComponent(
     private val _effects = Channel<LoginComponent.Effect>(Channel.BUFFERED)
     override val effects: Flow<LoginComponent.Effect> = _effects.receiveAsFlow()
 
-    private var authApi: AuthApiService? = null
+    private val authApi by authApiService
     private var currentLoginAction: String? = null
     private var currentPhoneNumber: String? = null
 
@@ -65,13 +65,9 @@ class DefaultLoginComponent(
             is LoginComponent.Intent.Submit -> handleSubmit()
             is LoginComponent.Intent.Back -> handleBack()
             is LoginComponent.Intent.FallbackToWebView -> {
-                authApi?.close()
-                authApi = null
                 onNavigateToWebView()
             }
             is LoginComponent.Intent.OpenBffCookieLogin -> {
-                authApi?.close()
-                authApi = null
                 _state.update {
                     LoginComponent.State(step = AuthStep.BffCookie)
                 }
@@ -86,9 +82,8 @@ class DefaultLoginComponent(
     private fun startAuthFlow() {
         scope.launch {
             _state.update { it.copy(isLoading = true) }
-            val api = authApiService()
-            authApi = api
-            when (val result = api.startAuth()) {
+            authApi.resetSession()
+            when (val result = authApi.startAuth()) {
                 is AuthStepResult.NextStep -> {
                     currentLoginAction = result.loginAction
                     _state.update {
@@ -131,7 +126,6 @@ class DefaultLoginComponent(
 
         scope.launch {
             _state.update { it.copy(isLoading = true) }
-            val api = authApi ?: return@launch
 
             val result = when (currentState.step) {
                 AuthStep.BffCookie -> return@launch // handled above
@@ -141,7 +135,7 @@ class DefaultLoginComponent(
                         emitError("Введите email")
                         return@launch
                     }
-                    api.submitUsername(action, currentState.email.trim())
+                    authApi.submitUsername(action, currentState.email.trim())
                 }
 
                 AuthStep.Password -> {
@@ -150,7 +144,7 @@ class DefaultLoginComponent(
                         emitError("Введите пароль")
                         return@launch
                     }
-                    api.submitPassword(action, currentState.password)
+                    authApi.submitPassword(action, currentState.password)
                 }
 
                 AuthStep.Otp -> {
@@ -159,7 +153,7 @@ class DefaultLoginComponent(
                         emitError("Введите код")
                         return@launch
                     }
-                    api.submitOtp(
+                    authApi.submitOtp(
                         loginAction = action,
                         code = currentState.otpCode.trim(),
                         phoneNumber = currentPhoneNumber.orEmpty(),
@@ -210,15 +204,12 @@ class DefaultLoginComponent(
     }
 
     private suspend fun handleRedirect(callbackUrl: String) {
-        val api = authApi ?: return
-        val bffCookie = api.exchangeCallback(callbackUrl)
+        val bffCookie = authApi.exchangeCallback(callbackUrl)
         if (bffCookie != null) {
             authRepository().saveCookie(bffCookie)
             when (authRepository().validateCookie()) {
                 CookieValidationResult.Valid -> {
                     logger.info { "Native auth succeeded" }
-                    api.close()
-                    authApi = null
                     onLoginSuccess()
                 }
                 CookieValidationResult.Invalid -> {
@@ -243,7 +234,6 @@ class DefaultLoginComponent(
             }
 
             AuthStep.Password, AuthStep.Otp, AuthStep.BffCookie -> {
-                authApi?.close()
                 _state.update {
                     LoginComponent.State(
                         step = AuthStep.Email,

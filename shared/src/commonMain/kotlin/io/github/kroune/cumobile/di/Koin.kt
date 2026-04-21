@@ -11,9 +11,11 @@ import io.github.kroune.cumobile.data.network.CourseApiService
 import io.github.kroune.cumobile.data.network.NotificationApiService
 import io.github.kroune.cumobile.data.network.PerformanceApiService
 import io.github.kroune.cumobile.data.network.ProfileApiService
+import io.github.kroune.cumobile.data.network.ResettableCookieStorage
 import io.github.kroune.cumobile.data.network.TaskApiService
 import io.github.kroune.cumobile.data.network.TimetableApiService
 import io.github.kroune.cumobile.data.network.UpdateChecker
+import io.github.kroune.cumobile.data.network.createAuthHttpClient
 import io.github.kroune.cumobile.data.network.createHttpClient
 import io.github.kroune.cumobile.data.repository.AuthRepositoryImpl
 import io.github.kroune.cumobile.data.repository.CalendarRepositoryImpl
@@ -44,6 +46,7 @@ import org.koin.core.component.get
 import org.koin.core.component.inject
 import org.koin.core.context.startKoin
 import org.koin.core.module.Module
+import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
 /**
@@ -56,7 +59,9 @@ private val coreModule = module {
 
 private val networkModule = module {
     single { createHttpClient() }
-    factory { AuthApiService() }
+    single { ResettableCookieStorage() }
+    single(named("auth")) { createAuthHttpClient(get()) }
+    single { AuthApiService(inject(named("auth")), inject()) }
     single { ProfileApiService(inject()) }
     single { TaskApiService(inject()) }
     single { CourseApiService(inject()) }
