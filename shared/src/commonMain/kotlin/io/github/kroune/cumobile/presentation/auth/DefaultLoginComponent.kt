@@ -40,7 +40,6 @@ class DefaultLoginComponent(
     private val _effects = Channel<LoginComponent.Effect>(Channel.BUFFERED)
     override val effects: Flow<LoginComponent.Effect> = _effects.receiveAsFlow()
 
-    private val authApi by authApiService
     private var currentLoginAction: String? = null
     private var currentPhoneNumber: String? = null
 
@@ -82,8 +81,8 @@ class DefaultLoginComponent(
     private fun startAuthFlow() {
         scope.launch {
             _state.update { it.copy(isLoading = true) }
-            authApi.resetSession()
-            when (val result = authApi.startAuth()) {
+            authApiService().resetSession()
+            when (val result = authApiService().startAuth()) {
                 is AuthStepResult.NextStep -> {
                     currentLoginAction = result.loginAction
                     _state.update {
@@ -135,7 +134,7 @@ class DefaultLoginComponent(
                         emitError("Введите email")
                         return@launch
                     }
-                    authApi.submitUsername(action, currentState.email.trim())
+                    authApiService().submitUsername(action, currentState.email.trim())
                 }
 
                 AuthStep.Password -> {
@@ -144,7 +143,7 @@ class DefaultLoginComponent(
                         emitError("Введите пароль")
                         return@launch
                     }
-                    authApi.submitPassword(action, currentState.password)
+                    authApiService().submitPassword(action, currentState.password)
                 }
 
                 AuthStep.Otp -> {
@@ -153,7 +152,7 @@ class DefaultLoginComponent(
                         emitError("Введите код")
                         return@launch
                     }
-                    authApi.submitOtp(
+                    authApiService().submitOtp(
                         loginAction = action,
                         code = currentState.otpCode.trim(),
                         phoneNumber = currentPhoneNumber.orEmpty(),
@@ -204,7 +203,7 @@ class DefaultLoginComponent(
     }
 
     private suspend fun handleRedirect(callbackUrl: String) {
-        val bffCookie = authApi.exchangeCallback(callbackUrl)
+        val bffCookie = authApiService().exchangeCallback(callbackUrl)
         if (bffCookie != null) {
             authRepository().saveCookie(bffCookie)
             when (authRepository().validateCookie()) {
