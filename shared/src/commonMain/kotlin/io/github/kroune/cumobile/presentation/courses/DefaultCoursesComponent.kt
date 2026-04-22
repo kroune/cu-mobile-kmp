@@ -86,7 +86,8 @@ class DefaultCoursesComponent(
     }
 
     private fun observeOrder() {
-        courseRepository().courseIdOrderFlow
+        courseRepository()
+            .courseIdOrderFlow
             .onEach { order ->
                 _state.value = _state.value.copy(courseOrder = order)
             }.launchIn(scope)

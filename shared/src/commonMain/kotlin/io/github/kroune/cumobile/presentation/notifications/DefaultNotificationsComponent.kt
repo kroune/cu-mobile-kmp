@@ -34,7 +34,6 @@ class DefaultNotificationsComponent(
     private val onOpenLongread: ((longreadId: String, courseId: String, themeId: String) -> Unit)? = null,
 ) : NotificationsComponent,
     ComponentContext by componentContext {
-
     private val scope = componentScope()
 
     private val _state = MutableValue(NotificationsComponent.State())

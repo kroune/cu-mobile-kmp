@@ -41,8 +41,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.kroune.cumobile.data.model.PendingAttachment
 import io.github.kroune.cumobile.data.model.TaskComment
+import io.github.kroune.cumobile.presentation.common.ContentState
 import io.github.kroune.cumobile.presentation.common.formatDateTime
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
+import io.github.kroune.cumobile.presentation.common.ui.ShimmerBox
 import io.github.kroune.cumobile.presentation.longread.component.coding.CodingMaterialComponent
 import io.github.kroune.cumobile.presentation.longread.htmlrender.HtmlContent
 import io.github.kroune.cumobile.presentation.longread.htmlrender.parseHtmlToBlocks
@@ -71,32 +73,81 @@ internal fun CommentsTab(
             onAttach = onAttach,
         )
 
-        if (state.taskComments.isEmpty()) {
-            Text(
-                text = "Нет комментариев",
-                color = AppTheme.colors.textSecondary,
-                fontSize = 13.sp,
-                modifier = Modifier.padding(vertical = 8.dp),
-            )
-        } else {
-            state.taskComments.forEach { comment ->
+        CommentsList(
+            comments = state.taskComments,
+            editingCommentId = state.editingCommentId,
+            editCommentText = state.editCommentText,
+            isSubmitting = state.isSubmitting,
+            downloadingAttachment = state.downloadingAttachment,
+            onIntent = onIntent,
+        )
+    }
+}
+
+@Composable
+private fun CommentsList(
+    comments: ContentState<ImmutableList<TaskComment>>,
+    editingCommentId: String?,
+    editCommentText: String,
+    isSubmitting: Boolean,
+    downloadingAttachment: String?,
+    onIntent: (CodingMaterialComponent.Intent) -> Unit,
+) {
+    when (comments) {
+        is ContentState.Loading -> CommentsListSkeleton()
+        is ContentState.Error -> CommentsListErrorText(comments.message)
+        is ContentState.Success -> {
+            val list = comments.data
+            if (list.isEmpty()) {
+                Text(
+                    text = "Нет комментариев",
+                    color = AppTheme.colors.textSecondary,
+                    fontSize = 13.sp,
+                    modifier = Modifier.padding(vertical = 8.dp),
+                )
+                return
+            }
+            list.forEach { comment ->
                 key(comment.id) {
                     CommentCard(
                         comment = comment,
-                        isEditing = state.editingCommentId == comment.id,
-                        editText = if (state.editingCommentId == comment.id) {
-                            state.editCommentText
+                        isEditing = editingCommentId == comment.id,
+                        editText = if (editingCommentId == comment.id) {
+                            editCommentText
                         } else {
                             ""
                         },
-                        isSubmitting = state.isSubmitting,
-                        downloadingAttachment = state.downloadingAttachment,
+                        isSubmitting = isSubmitting,
+                        downloadingAttachment = downloadingAttachment,
                         onIntent = onIntent,
                     )
                 }
             }
         }
     }
+}
+
+@Composable
+private fun CommentsListSkeleton() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        ShimmerBox(Modifier.fillMaxWidth(), height = 48.dp, cornerRadius = 8.dp)
+        ShimmerBox(Modifier.fillMaxWidth(), height = 48.dp, cornerRadius = 8.dp)
+    }
+}
+
+@Composable
+private fun CommentsListErrorText(message: String) {
+    Text(
+        text = message,
+        color = AppTheme.colors.textSecondary,
+        fontSize = 13.sp,
+        modifier = Modifier.padding(vertical = 8.dp),
+    )
 }
 
 /** Comment text field, attach button, pending files, and send button. */

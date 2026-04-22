@@ -43,7 +43,7 @@ interface LongreadComponent {
         val longreadId: String = "",
         val courseId: String = "",
         val themeId: String = "",
-        val isLoading: Boolean = false,
+        val isLoading: Boolean = true,
         val error: String? = null,
         val materials: ImmutableList<LongreadMaterial> = persistentListOf(),
         val isSearchVisible: Boolean = false,

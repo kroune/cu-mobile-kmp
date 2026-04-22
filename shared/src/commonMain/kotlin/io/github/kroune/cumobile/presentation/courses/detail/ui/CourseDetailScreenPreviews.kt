@@ -12,6 +12,7 @@ import io.github.kroune.cumobile.presentation.courses.detail.CourseDetailCompone
 private val previewCourseDetailState =
     CourseDetailComponent.State(
         courseId = "1",
+        isLoading = false,
         overview = CourseOverview(
             id = "1",
             name = "Алгоритмы и структуры данных",
@@ -117,6 +118,7 @@ private fun PreviewCourseDetailErrorDark() {
     CuMobileTheme(darkTheme = true) {
         CourseDetailScreenContent(
             state = CourseDetailComponent.State(
+                isLoading = false,
                 error = "Не удалось загрузить курс",
             ),
             onIntent = {},
@@ -131,6 +133,7 @@ private fun PreviewCourseDetailErrorLight() {
     CuMobileTheme(darkTheme = false) {
         CourseDetailScreenContent(
             state = CourseDetailComponent.State(
+                isLoading = false,
                 error = "Не удалось загрузить курс",
             ),
             onIntent = {},

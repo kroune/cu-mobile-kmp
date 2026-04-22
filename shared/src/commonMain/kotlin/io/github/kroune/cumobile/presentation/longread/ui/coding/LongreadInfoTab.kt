@@ -19,13 +19,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.kroune.cumobile.data.model.TaskDetails
 import io.github.kroune.cumobile.data.model.TaskEvent
+import io.github.kroune.cumobile.presentation.common.ContentState
 import io.github.kroune.cumobile.presentation.common.formatDateTime
 import io.github.kroune.cumobile.presentation.common.formatDeadline
 import io.github.kroune.cumobile.presentation.common.ui.AppColorScheme
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
+import io.github.kroune.cumobile.presentation.common.ui.ShimmerBox
 import io.github.kroune.cumobile.presentation.common.ui.StatusBadge
 import io.github.kroune.cumobile.presentation.common.ui.taskStateColor
 import io.github.kroune.cumobile.presentation.common.ui.taskStateLabel
+import kotlinx.collections.immutable.ImmutableList
 
 /**
  * Info tab: task summary and events timeline.
@@ -33,7 +36,7 @@ import io.github.kroune.cumobile.presentation.common.ui.taskStateLabel
 @Composable
 internal fun InfoTab(
     taskDetails: TaskDetails,
-    events: List<TaskEvent>,
+    events: ContentState<ImmutableList<TaskEvent>>,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -42,7 +45,18 @@ internal fun InfoTab(
     ) {
         TaskInfoSummary(taskDetails)
 
-        if (events.isNotEmpty()) {
+        EventsTimeline(events)
+    }
+}
+
+@Composable
+private fun EventsTimeline(events: ContentState<ImmutableList<TaskEvent>>) {
+    when (events) {
+        is ContentState.Loading -> EventsTimelineSkeleton()
+        is ContentState.Error -> TimelineErrorText(events.message)
+        is ContentState.Success -> {
+            val list = events.data
+            if (list.isEmpty()) return
             Text(
                 text = "История",
                 color = AppTheme.colors.textPrimary,
@@ -50,7 +64,7 @@ internal fun InfoTab(
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(top = 4.dp),
             )
-            events.forEach { event ->
+            list.forEach { event ->
                 EventCard(event)
                 HorizontalDivider(
                     color = AppTheme.colors.textSecondary.copy(alpha = 0.2f),
@@ -58,6 +72,30 @@ internal fun InfoTab(
             }
         }
     }
+}
+
+@Composable
+private fun EventsTimelineSkeleton() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 4.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        ShimmerBox(Modifier.fillMaxWidth(), height = 12.dp)
+        ShimmerBox(Modifier.fillMaxWidth(), height = 12.dp)
+        ShimmerBox(Modifier.fillMaxWidth(), height = 12.dp)
+    }
+}
+
+@Composable
+private fun TimelineErrorText(message: String) {
+    Text(
+        text = message,
+        color = AppTheme.colors.textSecondary,
+        fontSize = 13.sp,
+        modifier = Modifier.padding(vertical = 8.dp),
+    )
 }
 
 /** Task info summary: status, score, deadline, late days. */

@@ -20,7 +20,6 @@ internal class CalendarRepositoryImpl(
     private val getClassesForDate: Lazy<GetClassesForDateUseCase>,
     private val dispatchers: Lazy<AppDispatchers>,
 ) : CalendarRepository {
-
     override suspend fun fetchTimetable(): List<TimetableCourse>? =
         withContext(dispatchers().io) {
             val cookie = authLocal().cookieFlow.first() ?: return@withContext null

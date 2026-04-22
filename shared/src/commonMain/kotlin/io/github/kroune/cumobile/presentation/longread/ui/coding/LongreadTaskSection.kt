@@ -5,9 +5,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -20,6 +23,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
@@ -32,9 +36,11 @@ import androidx.compose.ui.unit.sp
 import io.github.kroune.cumobile.data.model.LongreadMaterial
 import io.github.kroune.cumobile.data.model.TaskDetails
 import io.github.kroune.cumobile.data.model.TaskState
+import io.github.kroune.cumobile.presentation.common.ContentState
 import io.github.kroune.cumobile.presentation.common.formatDeadline
 import io.github.kroune.cumobile.presentation.common.ui.AppTabRow
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
+import io.github.kroune.cumobile.presentation.common.ui.ShimmerBox
 import io.github.kroune.cumobile.presentation.common.ui.StatusBadge
 import io.github.kroune.cumobile.presentation.common.ui.rememberFilePicker
 import io.github.kroune.cumobile.presentation.common.ui.taskStateColor
@@ -54,8 +60,6 @@ internal fun CodingMaterialCardContent(
     onIntent: (CodingMaterialComponent.Intent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val taskDetails = state.taskDetails
-
     val solutionPicker = rememberFilePicker { file ->
         onIntent(CodingMaterialComponent.Intent.Attachment.PickSolutionAttachment(file))
     }
@@ -73,21 +77,30 @@ internal fun CodingMaterialCardContent(
     ) {
         TaskHeader(
             material = material,
-            taskDetails = taskDetails,
+            taskDetailsState = state.taskDetails,
             isActive = state.isExpanded,
             onClick = {
                 onIntent(CodingMaterialComponent.Intent.ToggleExpanded)
             },
         )
 
-        if (state.isExpanded && taskDetails != null) {
-            TaskManagementSection(
-                taskDetails = taskDetails,
-                state = state,
-                onIntent = onIntent,
-                onAttachSolution = { solutionPicker.launch() },
-                onAttachComment = { commentPicker.launch() },
-            )
+        if (state.isExpanded) {
+            when (val details = state.taskDetails) {
+                is ContentState.Loading -> TaskManagementSkeleton()
+                is ContentState.Error -> TaskManagementErrorRow(
+                    message = details.message,
+                    onRetry = {
+                        onIntent(CodingMaterialComponent.Intent.RetryLoadDetails)
+                    },
+                )
+                is ContentState.Success -> TaskManagementSection(
+                    taskDetails = details.data,
+                    state = state,
+                    onIntent = onIntent,
+                    onAttachSolution = { solutionPicker.launch() },
+                    onAttachComment = { commentPicker.launch() },
+                )
+            }
         }
     }
 }
@@ -96,13 +109,11 @@ internal fun CodingMaterialCardContent(
 @Composable
 private fun TaskHeader(
     material: LongreadMaterial,
-    taskDetails: TaskDetails?,
+    taskDetailsState: ContentState<TaskDetails>,
     isActive: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val taskState = taskDetails?.state ?: TaskState.Backlog
-
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -129,16 +140,79 @@ private fun TaskHeader(
             }
         }
         Column(horizontalAlignment = Alignment.End) {
-            StatusBadge(
-                label = taskStateLabel(taskState),
-                color = taskStateColor(taskState),
-            )
+            TaskHeaderStatus(taskDetailsState)
             Icon(
                 imageVector = if (isActive) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
                 contentDescription = if (isActive) "Свернуть" else "Развернуть",
                 tint = AppTheme.colors.textSecondary,
                 modifier = Modifier.size(18.dp).padding(top = 4.dp),
             )
+        }
+    }
+}
+
+/**
+ * Status area of [TaskHeader]: skeleton while loading, badge on success,
+ * empty spacer on error (the error is surfaced in the expanded section instead).
+ * The skeleton preserves the badge footprint so the row doesn't jump.
+ */
+@Composable
+private fun TaskHeaderStatus(taskDetailsState: ContentState<TaskDetails>) {
+    when (taskDetailsState) {
+        is ContentState.Loading -> ShimmerBox(
+            modifier = Modifier.width(72.dp),
+            height = 18.dp,
+            cornerRadius = 8.dp,
+        )
+        is ContentState.Success -> {
+            val taskState = taskDetailsState.data.state ?: TaskState.Backlog
+            StatusBadge(
+                label = taskStateLabel(taskState),
+                color = taskStateColor(taskState),
+            )
+        }
+        is ContentState.Error -> Spacer(Modifier.height(18.dp))
+    }
+}
+
+/** Skeleton for the expanded task-management area while task details load. */
+@Composable
+private fun TaskManagementSkeleton(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        ShimmerBox(Modifier.width(140.dp), height = 12.dp)
+        ShimmerBox(Modifier.fillMaxWidth(), height = 40.dp, cornerRadius = 8.dp)
+    }
+}
+
+/** Error row shown inside the expanded card when task details failed to load. */
+@Composable
+private fun TaskManagementErrorRow(
+    message: String,
+    onRetry: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .background(AppTheme.colors.background)
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Text(
+            text = message,
+            color = AppTheme.colors.textSecondary,
+            fontSize = 13.sp,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f),
+        )
+        TextButton(onClick = onRetry) {
+            Text("Повторить", color = AppTheme.colors.accent)
         }
     }
 }

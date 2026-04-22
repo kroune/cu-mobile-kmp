@@ -2,6 +2,7 @@ package io.github.kroune.cumobile.presentation.longread.component.coding
 
 import com.arkivanov.decompose.value.MutableValue
 import io.github.kroune.cumobile.domain.repository.TaskRepository
+import io.github.kroune.cumobile.presentation.common.ContentState
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
@@ -151,10 +152,13 @@ internal class CodingTaskActions(
 
     private suspend fun refreshTaskDetails() {
         val details = taskRepository.fetchTaskDetails(taskId)
-        if (details != null) {
-            state.value = state.value.copy(taskDetails = details)
+        state.value = if (details != null) {
+            state.value.copy(taskDetails = ContentState.Success(details))
         } else {
             logger.warn { "Failed to fetch task details for taskId=$taskId" }
+            state.value.copy(
+                taskDetails = ContentState.Error("Не удалось загрузить задание"),
+            )
         }
         refreshEventsAndComments()
     }
@@ -162,25 +166,33 @@ internal class CodingTaskActions(
     private suspend fun refreshEventsAndComments() {
         val events = taskRepository.fetchTaskEvents(taskId)
         val comments = taskRepository.fetchTaskComments(taskId)
-        if (events == null) {
+        val eventsState = if (events != null) {
+            ContentState.Success(events.toPersistentList())
+        } else {
             logger.warn { "Failed to load task events for taskId=$taskId" }
+            ContentState.Error("Не удалось загрузить историю")
         }
-        if (comments == null) {
+        val commentsState = if (comments != null) {
+            ContentState.Success(comments.toPersistentList())
+        } else {
             logger.warn { "Failed to load task comments for taskId=$taskId" }
+            ContentState.Error("Не удалось загрузить комментарии")
         }
         state.value = state.value.copy(
-            taskEvents = events.orEmpty().toPersistentList(),
-            taskComments = comments.orEmpty().toPersistentList(),
+            taskEvents = eventsState,
+            taskComments = commentsState,
         )
     }
 
     private suspend fun refreshComments() {
         val comments = taskRepository.fetchTaskComments(taskId)
-        if (comments == null) {
+        state.value = if (comments != null) {
+            state.value.copy(taskComments = ContentState.Success(comments.toPersistentList()))
+        } else {
             logger.warn { "Failed to load task comments for taskId=$taskId" }
+            state.value.copy(
+                taskComments = ContentState.Error("Не удалось загрузить комментарии"),
+            )
         }
-        state.value = state.value.copy(
-            taskComments = comments.orEmpty().toPersistentList(),
-        )
     }
 }

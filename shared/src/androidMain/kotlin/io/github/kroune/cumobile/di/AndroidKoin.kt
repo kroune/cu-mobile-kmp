@@ -39,7 +39,8 @@ fun initKoinAndroid(context: Context) {
 private fun setupCoil(context: Context) {
     val httpClient = KoinPlatform.getKoin().get<HttpClient>()
     SingletonImageLoader.setSafe { _ ->
-        ImageLoader.Builder(context)
+        ImageLoader
+            .Builder(context)
             .components { add(KtorNetworkFetcherFactory(httpClient)) }
             .build()
     }

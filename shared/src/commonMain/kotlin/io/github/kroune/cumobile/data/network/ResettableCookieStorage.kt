@@ -22,7 +22,10 @@ class ResettableCookieStorage : CookiesStorage {
         return cookies.filter { matches(it, requestUrl, now) }
     }
 
-    override suspend fun addCookie(requestUrl: Url, cookie: Cookie) {
+    override suspend fun addCookie(
+        requestUrl: Url,
+        cookie: Cookie,
+    ) {
         val domain = cookie.domain?.lowercase() ?: requestUrl.host.lowercase()
         val path = cookie.path ?: "/"
         cookies.removeAll {
@@ -36,11 +39,17 @@ class ResettableCookieStorage : CookiesStorage {
         }
     }
 
-    override fun close(): Unit = Unit
+    override fun close(): Unit =
+        Unit
 
-    fun reset() = cookies.clear()
+    fun reset() =
+        cookies.clear()
 
-    private fun matches(cookie: Cookie, url: Url, now: GMTDate): Boolean {
+    private fun matches(
+        cookie: Cookie,
+        url: Url,
+        now: GMTDate,
+    ): Boolean {
         val expires = cookie.expires
         if (expires != null && expires < now) return false
 

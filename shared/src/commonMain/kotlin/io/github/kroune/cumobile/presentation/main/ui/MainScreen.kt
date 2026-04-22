@@ -242,7 +242,6 @@ private fun DetailOverlay(
     }
 }
 
-
 /** Update available dialog. */
 @Composable
 private fun UpdateDialog(

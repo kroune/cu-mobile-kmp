@@ -8,6 +8,7 @@ import io.github.kroune.cumobile.data.model.PickedFile
 import io.github.kroune.cumobile.data.model.TaskComment
 import io.github.kroune.cumobile.data.model.TaskDetails
 import io.github.kroune.cumobile.data.model.TaskEvent
+import io.github.kroune.cumobile.presentation.common.ContentState
 import io.github.kroune.cumobile.presentation.common.RenderComponent
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -34,9 +35,9 @@ interface CodingMaterialComponent : RenderComponent {
     data class State(
         val isExpanded: Boolean = false,
         val selectedTab: String = "solution",
-        val taskDetails: TaskDetails? = null,
-        val taskEvents: ImmutableList<TaskEvent> = persistentListOf(),
-        val taskComments: ImmutableList<TaskComment> = persistentListOf(),
+        val taskDetails: ContentState<TaskDetails> = ContentState.Loading,
+        val taskEvents: ContentState<ImmutableList<TaskEvent>> = ContentState.Loading,
+        val taskComments: ContentState<ImmutableList<TaskComment>> = ContentState.Loading,
         val solutionUrl: String = "",
         val commentText: String = "",
         val isSubmitting: Boolean = false,
@@ -49,6 +50,8 @@ interface CodingMaterialComponent : RenderComponent {
 
     sealed interface Intent {
         data object ToggleExpanded : Intent
+
+        data object RetryLoadDetails : Intent
 
         data class SelectTab(
             val tab: String,

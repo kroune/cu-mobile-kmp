@@ -18,9 +18,8 @@ class DateTimeProvider {
         System.now().toEpochMilliseconds()
 
     /** Returns today's [LocalDate] in the system default timezone. */
-    fun today(): LocalDate {
-        return System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
-    }
+    fun today(): LocalDate =
+        System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
 
     /** Returns milliseconds for today at 00:00:00 in the system default timezone. */
     fun todayMillis(): Long {

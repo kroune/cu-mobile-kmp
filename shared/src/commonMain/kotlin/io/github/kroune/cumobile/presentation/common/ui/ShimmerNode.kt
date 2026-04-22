@@ -19,22 +19,23 @@ import kotlinx.coroutines.launch
 internal fun Modifier.shimmerNode(
     base: Color,
     highlight: Color,
-): Modifier = this.then(
-    ShimmerElement(
-        base = base,
-        highlight = highlight,
-    ),
-)
+): Modifier =
+    this.then(
+        ShimmerElement(
+            base = base,
+            highlight = highlight,
+        ),
+    )
 
 private data class ShimmerElement(
     val base: Color,
     val highlight: Color,
 ) : ModifierNodeElement<ShimmerNode>() {
-
-    override fun create(): ShimmerNode = ShimmerNode(
-        base = base,
-        highlight = highlight,
-    )
+    override fun create(): ShimmerNode =
+        ShimmerNode(
+            base = base,
+            highlight = highlight,
+        )
 
     override fun update(node: ShimmerNode) {
         node.update(base, highlight)
@@ -44,8 +45,8 @@ private data class ShimmerElement(
 private class ShimmerNode(
     base: Color,
     highlight: Color,
-) : Modifier.Node(), DrawModifierNode {
-
+) : Modifier.Node(),
+    DrawModifierNode {
     override val shouldAutoInvalidate: Boolean = false
 
     private var base: Color = base

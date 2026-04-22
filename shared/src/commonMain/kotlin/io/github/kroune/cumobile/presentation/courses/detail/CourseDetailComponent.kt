@@ -18,7 +18,7 @@ interface CourseDetailComponent {
     data class State(
         val courseId: String = "",
         val overview: CourseOverview? = null,
-        val isLoading: Boolean = false,
+        val isLoading: Boolean = true,
         val error: String? = null,
         /** Search query filtering themes and longreads by name. */
         val searchQuery: String = "",

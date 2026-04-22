@@ -40,7 +40,8 @@ fun iosKoinModule(): Module =
 fun setupCoilForIos() {
     val httpClient = KoinPlatform.getKoin().get<HttpClient>()
     SingletonImageLoader.setSafe { platformContext ->
-        ImageLoader.Builder(platformContext)
+        ImageLoader
+            .Builder(platformContext)
             .components { add(KtorNetworkFetcherFactory(httpClient)) }
             .build()
     }
