@@ -42,7 +42,8 @@ fun TopBar(
         modifier = modifier
             .fillMaxWidth()
             .background(AppTheme.colors.background)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = 16.dp)
+            .padding(bottom = 12.dp, top = 2.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {

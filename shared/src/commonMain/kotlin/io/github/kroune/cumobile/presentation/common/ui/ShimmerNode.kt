@@ -106,6 +106,7 @@ private class ShimmerNode(
         }
     }
 
+    @Suppress("MagicNumber")
     override fun ContentDrawScope.draw() {
         drawRect(
             brush = Brush.linearGradient(
