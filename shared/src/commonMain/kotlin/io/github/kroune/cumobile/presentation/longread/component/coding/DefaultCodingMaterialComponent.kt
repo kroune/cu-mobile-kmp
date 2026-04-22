@@ -30,6 +30,7 @@ class DefaultCodingMaterialComponent(
     componentContext: ComponentContext,
     override val material: LongreadMaterial,
     private val taskId: String,
+    private val initiallyExpanded: Boolean = false,
     private val taskRepository: TaskRepository,
     private val contentRepository: ContentRepository,
     private val onShowError: (String) -> Unit,
@@ -58,6 +59,10 @@ class DefaultCodingMaterialComponent(
 
     init {
         loadTaskDetails()
+        if (initiallyExpanded) {
+            _state.value = _state.value.copy(isExpanded = true)
+            loadEventsAndComments()
+        }
     }
 
     override fun onIntent(intent: CodingMaterialComponent.Intent) {

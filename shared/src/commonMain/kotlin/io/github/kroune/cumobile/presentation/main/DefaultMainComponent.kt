@@ -17,6 +17,7 @@ import com.arkivanov.decompose.router.stack.pushNew
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.backhandler.BackCallback
+import io.github.kroune.cumobile.data.model.StudentTask
 import io.github.kroune.cumobile.data.model.UpdateInfo
 import io.github.kroune.cumobile.data.network.ApiEndpoints
 import io.github.kroune.cumobile.data.network.BaseUrl
@@ -115,18 +116,11 @@ class DefaultMainComponent(
 
     private val tabNavigation = PagesNavigation<TabConfig>()
 
-    private val taskNavigator = TaskNavigator(
-        scope = scope,
-        courseRepository = mainDependenciesLazy().courseRepository,
-        navigateToLongread = ::navigateToLongread,
-        navigateToCourseDetail = ::navigateToCourseDetail,
-    )
-
     private val tabChildFactory = TabChildFactory(
         deps = mainDependenciesLazy(),
         nav = TabNavigationCallbacks(
             toCourseDetail = ::navigateToCourseDetail,
-            toTask = taskNavigator::navigate,
+            toTask = ::navigateToTask,
             toCoursePerformance = ::navigateToCoursePerformance,
             toFileRenameSettings = ::navigateToFileRenameSettings,
             toScanner = ::navigateToScanner,
@@ -227,6 +221,21 @@ class DefaultMainComponent(
         )
     }
 
+    private fun navigateToTask(task: StudentTask) {
+        val longreadId = task.longread.id
+        val themeId = task.theme.id
+        val courseId = task.course.id
+        if (longreadId.isBlank() || themeId.isBlank()) {
+            logger.error {
+                "Cannot navigate to task ${task.id}: longreadId=$longreadId, themeId=$themeId"
+            }
+            return
+        }
+        detailNavigation.pushNew(
+            DetailConfig.Longread(longreadId, courseId, themeId, focusTaskId = task.id),
+        )
+    }
+
     override fun navigateToLongread(
         longreadId: String,
         courseId: String,
@@ -293,6 +302,7 @@ class DefaultMainComponent(
             val longreadId: String,
             val courseId: String,
             val themeId: String,
+            val focusTaskId: String? = null,
         ) : DetailConfig
 
         @Serializable

@@ -27,6 +27,8 @@ data class StudentTask(
     val startedAt: String? = null,
     val exercise: TaskExercise = TaskExercise(),
     val course: TaskCourse = TaskCourse(),
+    val theme: TaskTheme = TaskTheme(),
+    val longread: TaskLongread = TaskLongread(),
     val isLateDaysEnabled: Boolean = false,
     val lateDays: Int? = null,
     /**
@@ -68,4 +70,17 @@ data class TaskExerciseActivity(
     val name: String = "",
     val weight: Double? = null,
     val isLateDaysEnabled: Boolean = false,
+)
+
+/** Theme summary embedded in a [StudentTask]. */
+@Serializable
+data class TaskTheme(
+    val id: String = "",
+    val name: String = "",
+)
+
+/** Longread reference embedded in a [StudentTask]. */
+@Serializable
+data class TaskLongread(
+    val id: String = "",
 )

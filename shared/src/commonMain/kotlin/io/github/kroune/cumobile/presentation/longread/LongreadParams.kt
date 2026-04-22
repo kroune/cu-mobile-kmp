@@ -9,4 +9,5 @@ data class LongreadParams(
     val longreadId: String,
     val courseId: String,
     val themeId: String,
+    val focusTaskId: String? = null,
 )

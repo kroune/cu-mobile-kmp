@@ -58,6 +58,7 @@ class DefaultLongreadComponent(
     private val taskRepository by deps.taskRepository
     private val renameRepository by deps.renameRepository
     private val dispatchers by deps.dispatchers
+    private val focusTaskId: String? = params.focusTaskId
 
     private val scope = componentScope()
 
@@ -225,6 +226,7 @@ class DefaultLongreadComponent(
                     componentContext = childContext,
                     material = material,
                     taskId = config.taskId,
+                    initiallyExpanded = config.taskId == focusTaskId,
                     taskRepository = taskRepository,
                     contentRepository = contentRepository,
                     onShowError = { msg ->

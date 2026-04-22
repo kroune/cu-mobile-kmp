@@ -83,6 +83,7 @@ internal class DetailChildFactory(
                     longreadId = config.longreadId,
                     courseId = config.courseId,
                     themeId = config.themeId,
+                    focusTaskId = config.focusTaskId,
                 ),
                 deps = LongreadDependencies(
                     contentRepository = deps.contentRepository,

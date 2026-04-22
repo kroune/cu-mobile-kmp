@@ -1,6 +1,7 @@
 package io.github.kroune.cumobile.presentation.main
 
 import com.arkivanov.decompose.ComponentContext
+import io.github.kroune.cumobile.data.model.StudentTask
 import io.github.kroune.cumobile.presentation.common.invoke
 import io.github.kroune.cumobile.presentation.courses.DefaultCoursesComponent
 import io.github.kroune.cumobile.presentation.files.DefaultFilesComponent
@@ -14,7 +15,7 @@ import io.github.kroune.cumobile.presentation.tasks.DefaultTasksComponent
  */
 internal data class TabNavigationCallbacks(
     val toCourseDetail: (courseId: String) -> Unit,
-    val toTask: (courseId: String, exerciseId: String) -> Unit,
+    val toTask: (task: StudentTask) -> Unit,
     val toCoursePerformance: (courseId: String, courseName: String, totalGrade: Int) -> Unit,
     val toFileRenameSettings: () -> Unit,
     val toScanner: () -> Unit,
@@ -41,7 +42,7 @@ internal class TabChildFactory(
                         courseRepository = deps.courseRepository,
                         calendarRepository = deps.calendarRepository,
                     ),
-                    onOpenTask = { nav.toTask(it.course.id, it.exercise.id) },
+                    onOpenTask = nav.toTask,
                     onOpenCourse = nav.toCourseDetail,
                 ),
             )
@@ -50,7 +51,7 @@ internal class TabChildFactory(
                     componentContext = childContext,
                     taskRepository = deps.taskRepository,
                     dispatchers = deps.dispatchers,
-                    onOpenTask = { nav.toTask(it.course.id, it.exercise.id) },
+                    onOpenTask = nav.toTask,
                 ),
             )
             DefaultMainComponent.TabConfig.Courses -> MainComponent.TabChild.CoursesChild(
