@@ -25,6 +25,7 @@ import io.github.kroune.cumobile.presentation.longread.component.markdown.Markdo
 import io.github.kroune.cumobile.presentation.longread.component.questions.DefaultQuestionsMaterialComponent
 import io.github.kroune.cumobile.presentation.longread.component.video.VideoMaterialComponent
 import io.github.kroune.cumobile.presentation.longread.htmlrender.extractPlainText
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.BufferOverflow
@@ -181,15 +182,23 @@ class DefaultLongreadComponent(
 
     private fun loadMaterials() {
         scope.launch {
-            _state.value = _state.value.copy(isLoading = true, error = null)
+            _state.value = _state.value.copy(
+                isLoading = true,
+                error = null,
+                materials = persistentListOf(),
+            )
             navigation.setItems { emptyList() }
 
             val materials = contentRepository.fetchLongreadMaterials(
                 _state.value.longreadId,
             )
             if (materials != null) {
+                val title = materials.firstOrNull()?.contentName
+                    ?: materials.firstOrNull()?.name
+                    ?: "Лонгрид"
                 _state.value = _state.value.copy(
                     materials = materials.toPersistentList(),
+                    title = title,
                     isLoading = false,
                 )
                 materialsMap = materials.associateBy { it.id }

@@ -46,15 +46,12 @@ interface LongreadComponent {
         val isLoading: Boolean = true,
         val error: String? = null,
         val materials: ImmutableList<LongreadMaterial> = persistentListOf(),
+        val title: String = "Лонгрид",
         val isSearchVisible: Boolean = false,
         val searchQuery: String = "",
         val searchMatchCount: Int = 0,
         val currentMatchIndex: Int = 0,
     ) {
-        val title: String
-            get() = materials.firstOrNull()?.contentName
-                ?: materials.firstOrNull()?.name
-                ?: "Лонгрид"
     }
 
     sealed interface Intent {

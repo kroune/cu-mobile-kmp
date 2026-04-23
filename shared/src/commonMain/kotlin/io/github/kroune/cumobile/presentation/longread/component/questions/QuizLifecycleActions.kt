@@ -27,16 +27,17 @@ internal class QuizLifecycleActions(
         scope.launch {
             state.value = state.value.copy(isSubmitting = true)
             val result = taskRepository.startTask(taskId)
-            state.value = state.value.copy(isSubmitting = false)
             if (result == null) {
                 logger.warn { "Failed to start task $taskId" }
                 onShowError("Не удалось начать задание")
+                state.value = state.value.copy(isSubmitting = false)
                 return@launch
             }
             val sessionId = result.quizSessionId
             if (sessionId == null) {
                 logger.warn { "startTask returned null quizSessionId for taskId=$taskId" }
                 onShowError("Не удалось начать тест")
+                state.value = state.value.copy(isSubmitting = false)
                 return@launch
             }
             state.value = state.value.copy(sessionId = sessionId)
@@ -47,6 +48,7 @@ internal class QuizLifecycleActions(
             }
 
             startNewAttempt(sessionId)
+            state.value = state.value.copy(isSubmitting = false)
         }
     }
 

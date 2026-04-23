@@ -79,7 +79,11 @@ class DefaultProfileComponent(
             launch {
                 val lmsProfile = profileRepository().fetchLmsProfile()
                 _state.value = _state.value.copy(
-                    lmsProfile = ContentState.Success(lmsProfile),
+                    lmsProfile = if (lmsProfile != null) {
+                        ContentState.Success(lmsProfile)
+                    } else {
+                        ContentState.Error("Не удалось загрузить LMS профиль")
+                    },
                 )
             }
         }

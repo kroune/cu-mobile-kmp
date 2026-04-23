@@ -34,6 +34,7 @@ private val previewCodingMaterial = LongreadMaterial(
 
 private val previewLongreadSuccessState = LongreadComponent.State(
     isLoading = false,
+    title = "Введение в алгоритмы",
     materials = persistentListOf(
         LongreadMaterial(
             id = "1",

@@ -107,8 +107,8 @@ internal fun TasksScreenContent(
             AppTabRow(
                 currentPage = pagerState.currentPage,
                 labels = listOf(
-                    "активные (${content?.activeCount ?: 0})",
-                    "архив (${content?.archiveCount ?: 0})",
+                    "активные" + (content?.let { " (${it.activeCount})" } ?: ""),
+                    "архив" + (content?.let { " (${it.archiveCount})" } ?: ""),
                 ),
                 onPageSelected = { page ->
                     onIntent(TasksComponent.Intent.SelectSegment(page))

@@ -56,7 +56,7 @@ class DefaultCourseDetailComponent(
 
     private fun loadOverview() {
         scope.launch {
-            _state.value = _state.value.copy(isLoading = true, error = null)
+            _state.value = _state.value.copy(isLoading = true, error = null, overview = null)
 
             val overview = courseRepository.fetchCourseOverview(courseId)
             if (overview != null) {

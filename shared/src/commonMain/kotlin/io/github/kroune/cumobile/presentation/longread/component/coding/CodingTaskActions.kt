@@ -31,13 +31,13 @@ internal class CodingTaskActions(
         scope.launch {
             state.value = state.value.copy(isSubmitting = true)
             val result = taskRepository.startTask(taskId)
-            state.value = state.value.copy(isSubmitting = false)
             if (result != null) {
                 refreshTaskDetails()
             } else {
                 logger.warn { "Failed to start task $taskId" }
                 onShowError("Не удалось начать задание")
             }
+            state.value = state.value.copy(isSubmitting = false)
         }
     }
 
@@ -48,7 +48,6 @@ internal class CodingTaskActions(
         scope.launch {
             state.value = state.value.copy(isSubmitting = true)
             val success = taskRepository.submitTask(taskId, url, attachments)
-            state.value = state.value.copy(isSubmitting = false)
             if (success) {
                 state.value = state.value.copy(
                     solutionUrl = "",
@@ -59,6 +58,7 @@ internal class CodingTaskActions(
                 logger.warn { "Failed to submit solution for task $taskId" }
                 onShowError("Не удалось отправить решение")
             }
+            state.value = state.value.copy(isSubmitting = false)
         }
     }
 
@@ -72,16 +72,15 @@ internal class CodingTaskActions(
             val commentId = taskRepository.createComment(taskId, text, attachments)
             if (commentId != null) {
                 state.value = state.value.copy(
-                    isSubmitting = false,
                     commentText = "",
                     pendingCommentAttachments = persistentListOf(),
                 )
                 refreshComments()
             } else {
                 logger.warn { "Failed to create comment for task $taskId" }
-                state.value = state.value.copy(isSubmitting = false)
                 onShowError("Не удалось отправить комментарий")
             }
+            state.value = state.value.copy(isSubmitting = false)
         }
     }
 
@@ -94,16 +93,15 @@ internal class CodingTaskActions(
             val success = taskRepository.editComment(commentId, text)
             if (success) {
                 state.value = state.value.copy(
-                    isSubmitting = false,
                     editingCommentId = null,
                     editCommentText = "",
                 )
                 refreshComments()
             } else {
                 logger.warn { "Failed to edit comment $commentId" }
-                state.value = state.value.copy(isSubmitting = false)
                 onShowError("Не удалось изменить комментарий")
             }
+            state.value = state.value.copy(isSubmitting = false)
         }
     }
 
@@ -112,13 +110,12 @@ internal class CodingTaskActions(
             state.value = state.value.copy(isSubmitting = true)
             val success = taskRepository.deleteComment(commentId)
             if (success) {
-                state.value = state.value.copy(isSubmitting = false)
                 refreshComments()
             } else {
                 logger.warn { "Failed to delete comment $commentId" }
-                state.value = state.value.copy(isSubmitting = false)
                 onShowError("Не удалось удалить комментарий")
             }
+            state.value = state.value.copy(isSubmitting = false)
         }
     }
 
@@ -126,13 +123,13 @@ internal class CodingTaskActions(
         scope.launch {
             state.value = state.value.copy(isSubmitting = true)
             val success = taskRepository.prolongLateDays(taskId, days)
-            state.value = state.value.copy(isSubmitting = false)
             if (success) {
                 refreshTaskDetails()
             } else {
                 logger.warn { "Failed to prolong late days for task $taskId" }
                 onShowError("Не удалось продлить дедлайн")
             }
+            state.value = state.value.copy(isSubmitting = false)
         }
     }
 
@@ -140,13 +137,13 @@ internal class CodingTaskActions(
         scope.launch {
             state.value = state.value.copy(isSubmitting = true)
             val success = taskRepository.cancelLateDays(taskId)
-            state.value = state.value.copy(isSubmitting = false)
             if (success) {
                 refreshTaskDetails()
             } else {
                 logger.warn { "Failed to cancel late days for task $taskId" }
                 onShowError("Не удалось отменить продление")
             }
+            state.value = state.value.copy(isSubmitting = false)
         }
     }
 

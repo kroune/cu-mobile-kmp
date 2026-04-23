@@ -90,7 +90,11 @@ class DefaultMainComponent(
         }.fold(
             onSuccess = { lmsProfile ->
                 _topBarState.value = _topBarState.value.copy(
-                    lateDaysBalance = ContentState.Success(lmsProfile?.lateDaysBalance),
+                    lateDaysBalance = if (lmsProfile != null) {
+                        ContentState.Success(lmsProfile.lateDaysBalance)
+                    } else {
+                        ContentState.Error("Не удалось загрузить баланс")
+                    },
                 )
             },
             onFailure = { e ->
