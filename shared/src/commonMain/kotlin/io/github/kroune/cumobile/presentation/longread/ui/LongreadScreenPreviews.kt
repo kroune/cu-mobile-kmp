@@ -81,7 +81,7 @@ private fun previewTaskDetails(
             state = state,
             score = score,
             deadline = "2026-04-15T23:59:00Z",
-            exercise = TaskDetailsExercise(name = "Быстрая сортировка", maxScore = 10),
+            exercise = TaskDetailsExercise(name = "Быстрая сортировка", maxScore = 10.0),
             solution = solutionUrl?.let { TaskDetailsSolution(solutionUrl = it) },
             isLateDaysEnabled = isLateDaysEnabled,
             lateDays = lateDays,

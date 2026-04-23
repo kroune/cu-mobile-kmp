@@ -22,7 +22,7 @@ import io.github.kroune.cumobile.presentation.longread.component.file.FileDownlo
 import io.github.kroune.cumobile.presentation.longread.component.file.FileMaterialComponent
 import io.github.kroune.cumobile.presentation.longread.component.image.ImageMaterialComponent
 import io.github.kroune.cumobile.presentation.longread.component.markdown.MarkdownMaterialComponent
-import io.github.kroune.cumobile.presentation.longread.component.questions.QuestionsMaterialComponent
+import io.github.kroune.cumobile.presentation.longread.component.questions.DefaultQuestionsMaterialComponent
 import io.github.kroune.cumobile.presentation.longread.component.video.VideoMaterialComponent
 import io.github.kroune.cumobile.presentation.longread.htmlrender.extractPlainText
 import kotlinx.collections.immutable.toPersistentList
@@ -37,6 +37,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.getValue
 
 /**
  * Default implementation of [LongreadComponent].
@@ -54,8 +55,11 @@ class DefaultLongreadComponent(
     private val onNavigateToFiles: () -> Unit,
 ) : LongreadComponent,
     ComponentContext by componentContext {
+    private val lazyTaskRepository = deps.taskRepository
+    private val lazyQuizRepository = deps.quizRepository
     private val contentRepository by deps.contentRepository
-    private val taskRepository by deps.taskRepository
+    private val taskRepository by lazyTaskRepository
+    private val quizRepository by lazyQuizRepository
     private val renameRepository by deps.renameRepository
     private val dispatchers by deps.dispatchers
     private val focusTaskId: String? = params.focusTaskId
@@ -237,9 +241,16 @@ class DefaultLongreadComponent(
             )
 
             is MaterialConfig.Questions -> LongreadItem.Questions(
-                QuestionsMaterialComponent(
+                DefaultQuestionsMaterialComponent(
                     componentContext = childContext,
                     material = material,
+                    taskId = config.taskId,
+                    initiallyExpanded = config.taskId == focusTaskId,
+                    taskRepository = lazyTaskRepository,
+                    quizRepository = lazyQuizRepository,
+                    onShowError = { msg ->
+                        _effects.trySend(LongreadComponent.Effect.SnackBarEffect(msg))
+                    },
                 ),
             )
 
@@ -356,7 +367,7 @@ private fun LongreadMaterial.toConfig(): MaterialConfig =
     when {
         isCoding && taskId != null -> MaterialConfig.Coding(id, taskId = taskId)
         isFile -> MaterialConfig.File(id)
-        isQuestions -> MaterialConfig.Questions(id)
+        isQuestions && taskId != null -> MaterialConfig.Questions(id, taskId = taskId)
         isImage -> MaterialConfig.Image(id)
         isVideo || isVideoPlatform -> MaterialConfig.Video(id)
         isAudio -> MaterialConfig.Audio(id)

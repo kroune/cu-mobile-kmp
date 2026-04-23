@@ -31,6 +31,7 @@ sealed interface MaterialConfig {
     @Serializable
     data class Questions(
         override val id: String,
+        val taskId: String,
     ) : MaterialConfig
 
     @Serializable

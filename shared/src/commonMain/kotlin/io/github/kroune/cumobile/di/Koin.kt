@@ -11,6 +11,7 @@ import io.github.kroune.cumobile.data.network.CourseApiService
 import io.github.kroune.cumobile.data.network.NotificationApiService
 import io.github.kroune.cumobile.data.network.PerformanceApiService
 import io.github.kroune.cumobile.data.network.ProfileApiService
+import io.github.kroune.cumobile.data.network.QuizApiService
 import io.github.kroune.cumobile.data.network.ResettableCookieStorage
 import io.github.kroune.cumobile.data.network.TaskApiService
 import io.github.kroune.cumobile.data.network.TimetableApiService
@@ -26,6 +27,7 @@ import io.github.kroune.cumobile.data.repository.FileRepositoryImpl
 import io.github.kroune.cumobile.data.repository.NotificationRepositoryImpl
 import io.github.kroune.cumobile.data.repository.PerformanceRepositoryImpl
 import io.github.kroune.cumobile.data.repository.ProfileRepositoryImpl
+import io.github.kroune.cumobile.data.repository.QuizRepositoryImpl
 import io.github.kroune.cumobile.data.repository.TaskRepositoryImpl
 import io.github.kroune.cumobile.domain.repository.AuthRepository
 import io.github.kroune.cumobile.domain.repository.CalendarRepository
@@ -36,6 +38,7 @@ import io.github.kroune.cumobile.domain.repository.FileRepository
 import io.github.kroune.cumobile.domain.repository.NotificationRepository
 import io.github.kroune.cumobile.domain.repository.PerformanceRepository
 import io.github.kroune.cumobile.domain.repository.ProfileRepository
+import io.github.kroune.cumobile.domain.repository.QuizRepository
 import io.github.kroune.cumobile.domain.repository.TaskRepository
 import io.github.kroune.cumobile.domain.usecase.GetClassesForDateUseCase
 import io.github.kroune.cumobile.presentation.main.MainDependencies
@@ -69,6 +72,7 @@ private val networkModule = module {
     single { NotificationApiService(inject()) }
     single { PerformanceApiService(inject()) }
     single { TimetableApiService(inject()) }
+    single { QuizApiService(inject()) }
     single { UpdateChecker(inject()) }
 }
 
@@ -88,6 +92,7 @@ private val repositoryModule = module {
     single<FileRepository> { FileRepositoryImpl(inject(), inject(), inject()) }
     single<NotificationRepository> { NotificationRepositoryImpl(inject(), inject(), inject()) }
     single<PerformanceRepository> { PerformanceRepositoryImpl(inject(), inject(), inject()) }
+    single<QuizRepository> { QuizRepositoryImpl(inject(), inject(), inject()) }
     single { GetClassesForDateUseCase() }
     single<CalendarRepository> { CalendarRepositoryImpl(inject(), inject(), inject(), inject()) }
     single<FileRenameRepository> { FileRenameRepositoryImpl(inject()) }
@@ -102,6 +107,7 @@ private val repositoryModule = module {
             fileRepository = inject(),
             fileRenameRepository = inject(),
             calendarRepository = inject(),
+            quizRepository = inject(),
             fileOpener = inject(),
             updateChecker = inject(),
             pdfGenerator = inject(),

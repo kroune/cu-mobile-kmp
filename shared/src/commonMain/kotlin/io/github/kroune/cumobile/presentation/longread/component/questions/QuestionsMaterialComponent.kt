@@ -1,51 +1,89 @@
 package io.github.kroune.cumobile.presentation.longread.component.questions
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.arkivanov.decompose.ComponentContext
+import com.arkivanov.decompose.value.Value
+import io.github.kroune.cumobile.data.model.EvaluationStrategy
 import io.github.kroune.cumobile.data.model.LongreadMaterial
+import io.github.kroune.cumobile.data.model.QuizAnswer
+import io.github.kroune.cumobile.data.model.QuizAttempt
+import io.github.kroune.cumobile.data.model.QuizQuestion
+import io.github.kroune.cumobile.data.model.TaskDetails
+import io.github.kroune.cumobile.presentation.common.ContentState
 import io.github.kroune.cumobile.presentation.common.RenderComponent
-import io.github.kroune.cumobile.presentation.common.ui.AppTheme
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableMap
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentMapOf
 
-/**
- * Simple material component for question-type materials (unsupported on mobile).
- */
-class QuestionsMaterialComponent(
-    componentContext: ComponentContext,
-    private val material: LongreadMaterial,
-) : ComponentContext by componentContext,
-    RenderComponent {
-    @Composable
-    override fun Render() {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
-                .background(AppTheme.colors.surface)
-                .padding(16.dp),
-        ) {
-            Text(
-                text = material.contentName ?: "Вопросы",
-                color = AppTheme.colors.textPrimary,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-            )
-            Text(
-                text = "Этот тип материала недоступен в мобильном приложении",
-                color = AppTheme.colors.textSecondary,
-                fontSize = 14.sp,
-                modifier = Modifier.padding(top = 8.dp),
-            )
-        }
+interface QuestionsMaterialComponent : RenderComponent {
+    val state: Value<State>
+    val material: LongreadMaterial
+
+    fun onIntent(intent: Intent)
+
+    data class State(
+        val isExpanded: Boolean = false,
+        val phase: QuizPhase = QuizPhase.Loading,
+        val taskDetails: ContentState<TaskDetails> = ContentState.Loading,
+        val taskState: String? = null,
+        val questions: ImmutableList<QuizQuestion> = persistentListOf(),
+        val answers: ImmutableMap<String, QuizAnswer> = persistentMapOf(),
+        val timerTotalSeconds: Long = 0,
+        val timerRemainingSeconds: Long = 0,
+        val isSubmitting: Boolean = false,
+        val sessionId: String? = null,
+        val attemptId: String? = null,
+        val attemptResults: QuizAttempt? = null,
+        val pastAttempts: ImmutableList<QuizAttempt> = persistentListOf(),
+        val attemptsLimit: Int? = null,
+        val evaluationStrategy: EvaluationStrategy? = null,
+        val confirmDialog: ConfirmDialog? = null,
+        val canStartNewAttempt: Boolean = false,
+    )
+
+    sealed interface QuizPhase {
+        data object Loading : QuizPhase
+
+        data object NotStarted : QuizPhase
+
+        data object InProgress : QuizPhase
+
+        data object Completing : QuizPhase
+
+        data object Completed : QuizPhase
+
+        data class Error(
+            val message: String,
+        ) : QuizPhase
+    }
+
+    sealed interface ConfirmDialog {
+        data class StartQuiz(
+            val timerDuration: String,
+        ) : ConfirmDialog
+
+        data class CompleteWithUnanswered(
+            val unansweredCount: Int,
+        ) : ConfirmDialog
+    }
+
+    sealed interface Intent {
+        data object ToggleExpanded : Intent
+
+        data object RetryLoad : Intent
+
+        data object StartTask : Intent
+
+        data object StartAttempt : Intent
+
+        data class UpdateAnswer(
+            val questionId: String,
+            val answer: QuizAnswer,
+        ) : Intent
+
+        data object CompleteAttempt : Intent
+
+        data object ConfirmDialogAction : Intent
+
+        data object DismissDialog : Intent
     }
 }

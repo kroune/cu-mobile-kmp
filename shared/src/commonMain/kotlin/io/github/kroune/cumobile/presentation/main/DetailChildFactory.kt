@@ -88,6 +88,7 @@ internal class DetailChildFactory(
                 deps = LongreadDependencies(
                     contentRepository = deps.contentRepository,
                     taskRepository = deps.taskRepository,
+                    quizRepository = deps.quizRepository,
                     renameRepository = deps.fileRenameRepository,
                     dispatchers = deps.dispatchers,
                 ),

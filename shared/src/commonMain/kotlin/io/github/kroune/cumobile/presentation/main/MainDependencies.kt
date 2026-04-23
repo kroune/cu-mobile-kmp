@@ -12,6 +12,7 @@ import io.github.kroune.cumobile.domain.repository.FileRepository
 import io.github.kroune.cumobile.domain.repository.NotificationRepository
 import io.github.kroune.cumobile.domain.repository.PerformanceRepository
 import io.github.kroune.cumobile.domain.repository.ProfileRepository
+import io.github.kroune.cumobile.domain.repository.QuizRepository
 import io.github.kroune.cumobile.domain.repository.TaskRepository
 import io.github.kroune.cumobile.util.AppDispatchers
 
@@ -34,6 +35,7 @@ data class MainDependencies(
     val fileRepository: Lazy<FileRepository>,
     val fileRenameRepository: Lazy<FileRenameRepository>,
     val calendarRepository: Lazy<CalendarRepository>,
+    val quizRepository: Lazy<QuizRepository>,
     val fileOpener: Lazy<FileOpener>,
     val updateChecker: Lazy<UpdateChecker>,
     val pdfGenerator: Lazy<PdfGenerator>,
