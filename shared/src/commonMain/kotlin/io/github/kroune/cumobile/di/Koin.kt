@@ -45,7 +45,6 @@ import io.github.kroune.cumobile.presentation.main.MainDependencies
 import io.github.kroune.cumobile.presentation.root.DefaultRootComponent
 import io.github.kroune.cumobile.util.AppDispatchers
 import org.koin.core.component.KoinComponent
-import org.koin.core.component.get
 import org.koin.core.component.inject
 import org.koin.core.context.startKoin
 import org.koin.core.module.Module
