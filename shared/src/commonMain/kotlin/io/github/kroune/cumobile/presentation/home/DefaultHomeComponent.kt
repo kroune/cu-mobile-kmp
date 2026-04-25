@@ -3,16 +3,16 @@ package io.github.kroune.cumobile.presentation.home
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
-import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
+import com.arkivanov.essenty.lifecycle.doOnStart
 import io.github.kroune.cumobile.data.model.StudentTask
 import io.github.kroune.cumobile.data.model.TaskState
 import io.github.kroune.cumobile.presentation.common.ContentState
 import io.github.kroune.cumobile.presentation.common.DateTimeProvider
+import io.github.kroune.cumobile.presentation.common.componentScope
 import io.github.kroune.cumobile.util.runCatchingCancellable
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.coroutines.Dispatchers
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -38,16 +38,12 @@ class DefaultHomeComponent(
     deps: HomeDependencies,
     private val onOpenTask: (StudentTask) -> Unit,
     private val onOpenCourse: (String) -> Unit,
-    private val onOpenProfile: () -> Unit = {},
 ) : HomeComponent,
     ComponentContext by componentContext {
-    private val taskRepository = deps.taskRepository
-    private val courseRepository = deps.courseRepository
-    private val profileRepository = deps.profileRepository
-    private val calendarRepository = deps.calendarRepository
-    private val scope = coroutineScope(
-        Dispatchers.Main.immediate + SupervisorJob(),
-    )
+    private val taskRepository by deps.taskRepository
+    private val courseRepository by deps.courseRepository
+    private val calendarRepository by deps.calendarRepository
+    private val scope = componentScope()
 
     private val dateTimeProvider = DateTimeProvider()
     private val today = dateTimeProvider.today()
@@ -66,8 +62,10 @@ class DefaultHomeComponent(
     private var currentLoadJob: Job? = null
 
     init {
-        loadData()
-        loadSchedule()
+        lifecycle.doOnStart(isOneTime = true) {
+            loadData()
+            loadSchedule()
+        }
     }
 
     override fun onIntent(intent: HomeComponent.Intent) {
@@ -81,7 +79,6 @@ class DefaultHomeComponent(
             HomeComponent.Intent.PreviousWeek -> changeWeek(-1)
             HomeComponent.Intent.NextWeek -> changeWeek(1)
             is HomeComponent.Intent.SelectDate -> selectDate(intent.date)
-            HomeComponent.Intent.OpenProfile -> onOpenProfile()
         }
     }
 
@@ -117,7 +114,7 @@ class DefaultHomeComponent(
             }.fold(
                 onSuccess = { classes ->
                     _state.value = _state.value.copy(
-                        schedule = ContentState.Success(classes),
+                        schedule = ContentState.Success(classes.toImmutableList()),
                     )
                 },
                 onFailure = { e ->
@@ -136,9 +133,6 @@ class DefaultHomeComponent(
         _state.value = _state.value.copy(
             tasks = ContentState.Loading,
             courses = ContentState.Loading,
-            profileInitials = ContentState.Loading,
-            avatarBytes = ContentState.Loading,
-            lateDaysBalance = ContentState.Loading,
         )
 
         currentLoadJob = scope.launch {
@@ -146,7 +140,7 @@ class DefaultHomeComponent(
                 val tasks = loadTasks()
                 _state.value = _state.value.copy(
                     tasks = if (tasks != null) {
-                        ContentState.Success(tasks)
+                        ContentState.Success(tasks.toImmutableList())
                     } else {
                         ContentState.Error("Не удалось загрузить задания")
                     },
@@ -157,62 +151,13 @@ class DefaultHomeComponent(
                 val courses = courseRepository.fetchCourses()
                 _state.value = _state.value.copy(
                     courses = if (courses != null) {
-                        ContentState.Success(courses)
+                        ContentState.Success(courses.toImmutableList())
                     } else {
                         ContentState.Error("Не удалось загрузить курсы")
                     },
                 )
             }
-
-            launch {
-                val initials = loadProfileInitials()
-                _state.value = _state.value.copy(
-                    profileInitials = ContentState.Success(initials),
-                )
-            }
-
-            launch { loadLateDaysBalance() }
-            launch { loadAvatar() }
         }
-    }
-
-    private suspend fun loadLateDaysBalance() {
-        runCatchingCancellable {
-            profileRepository.fetchLmsProfile()
-        }.fold(
-            onSuccess = { lmsProfile ->
-                _state.value = _state.value.copy(
-                    lateDaysBalance = ContentState.Success(lmsProfile?.lateDaysBalance),
-                )
-            },
-            onFailure = { e ->
-                logger.error(e) { "Failed to load late days balance" }
-                _state.value = _state.value.copy(
-                    lateDaysBalance = ContentState.Error("Не удалось загрузить баланс"),
-                )
-                _effects.trySend(
-                    HomeComponent.Effect.ShowError("Не удалось загрузить баланс поздних дней"),
-                )
-            },
-        )
-    }
-
-    private suspend fun loadAvatar() {
-        runCatchingCancellable {
-            profileRepository.fetchAvatar()
-        }.fold(
-            onSuccess = { bytes ->
-                _state.value = _state.value.copy(
-                    avatarBytes = ContentState.Success(bytes),
-                )
-            },
-            onFailure = { e ->
-                logger.error(e) { "Failed to load avatar" }
-                _state.value = _state.value.copy(
-                    avatarBytes = ContentState.Success(null),
-                )
-            },
-        )
     }
 
     /**
@@ -229,23 +174,6 @@ class DefaultHomeComponent(
             TaskState.Evaluated,
         )
         return taskRepository.fetchTasks(states)
-    }
-
-    /**
-     * Computes user initials from the profile (first letters of
-     * first name and last name).
-     */
-    private suspend fun loadProfileInitials(): String {
-        val profile = profileRepository.fetchProfile() ?: return ""
-        val first = profile.firstName
-            .firstOrNull()
-            ?.uppercase()
-            .orEmpty()
-        val last = profile.lastName
-            .firstOrNull()
-            ?.uppercase()
-            .orEmpty()
-        return "$first$last"
     }
 
     companion object {

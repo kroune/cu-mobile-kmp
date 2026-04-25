@@ -12,6 +12,10 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import io.github.kroune.cumobile.data.model.TaskState
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toInstant
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 /**
  * Complete color palette for the CuMobile app.
@@ -166,6 +170,25 @@ val LightAppColors = AppColorScheme(
 )
 
 val LocalAppColors = staticCompositionLocalOf { DarkAppColors }
+
+/**
+ * Overridable clock for composables that need "now" (e.g. overdue checks).
+ * Defaults to [Clock.System]. Provide a fixed clock in previews/tests.
+ */
+val LocalClock = staticCompositionLocalOf<Clock> { Clock.System }
+
+/** Fixed clock for previews/tests: 2026-03-30T12:00:00Z — before all preview deadlines. */
+val previewClock: Clock = object : Clock {
+    private val fixedInstant = Instant.fromEpochMilliseconds(
+        kotlinx.datetime
+            .LocalDateTime(2026, 3, 30, 12, 0, 0)
+            .toInstant(TimeZone.UTC)
+            .toEpochMilliseconds(),
+    )
+
+    override fun now(): Instant =
+        fixedInstant
+}
 
 /** App-wide theme accessor. Use [AppTheme.colors] inside composables. */
 object AppTheme {

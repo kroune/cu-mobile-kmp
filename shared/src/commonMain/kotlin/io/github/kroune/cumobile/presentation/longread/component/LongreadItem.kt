@@ -48,7 +48,7 @@ sealed interface LongreadItem : RenderComponent {
 
     @Stable
     class Questions(
-        private val component: QuestionsMaterialComponent,
+        val component: QuestionsMaterialComponent,
     ) : LongreadItem {
         @Composable
         override fun Render() =

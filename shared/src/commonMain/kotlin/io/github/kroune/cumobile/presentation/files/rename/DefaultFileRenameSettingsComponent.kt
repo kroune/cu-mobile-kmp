@@ -3,14 +3,13 @@ package io.github.kroune.cumobile.presentation.files.rename
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
-import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.data.local.FileRenameRule
 import io.github.kroune.cumobile.domain.repository.CourseRepository
 import io.github.kroune.cumobile.domain.repository.FileRenameRepository
+import io.github.kroune.cumobile.presentation.common.componentScope
+import io.github.kroune.cumobile.presentation.common.invoke
 import io.github.kroune.cumobile.util.runCatchingCancellable
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -22,14 +21,12 @@ private val logger = KotlinLogging.logger {}
  */
 class DefaultFileRenameSettingsComponent(
     componentContext: ComponentContext,
-    private val renameRepository: FileRenameRepository,
-    private val courseRepository: CourseRepository,
+    private val renameRepository: Lazy<FileRenameRepository>,
+    private val courseRepository: Lazy<CourseRepository>,
     private val onBack: () -> Unit,
 ) : FileRenameSettingsComponent,
     ComponentContext by componentContext {
-    private val scope = coroutineScope(
-        Dispatchers.Main.immediate + SupervisorJob(),
-    )
+    private val scope = componentScope()
 
     private val _state = MutableValue(FileRenameSettingsComponent.State())
     override val state: Value<FileRenameSettingsComponent.State> = _state
@@ -52,7 +49,7 @@ class DefaultFileRenameSettingsComponent(
         scope.launch {
             _state.value = _state.value.copy(isLoading = true, error = null)
             runCatchingCancellable {
-                courseRepository.fetchCourses()
+                courseRepository().fetchCourses()
             }.fold(
                 onSuccess = { courses ->
                     _state.value = _state.value.copy(
@@ -72,7 +69,8 @@ class DefaultFileRenameSettingsComponent(
     }
 
     private fun observeRules() {
-        renameRepository.rules
+        renameRepository()
+            .rules
             .onEach { rules ->
                 _state.value = _state.value.copy(rules = rules)
             }.launchIn(scope)
@@ -80,13 +78,13 @@ class DefaultFileRenameSettingsComponent(
 
     private fun addRule(rule: FileRenameRule) {
         scope.launch {
-            renameRepository.addRule(rule)
+            renameRepository().addRule(rule)
         }
     }
 
     private fun deleteRule(rule: FileRenameRule) {
         scope.launch {
-            renameRepository.deleteRule(rule)
+            renameRepository().deleteRule(rule)
         }
     }
 }

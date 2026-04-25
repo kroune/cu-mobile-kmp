@@ -2,16 +2,17 @@ package io.github.kroune.cumobile.presentation.home
 
 import io.github.kroune.cumobile.domain.repository.CalendarRepository
 import io.github.kroune.cumobile.domain.repository.CourseRepository
-import io.github.kroune.cumobile.domain.repository.ProfileRepository
 import io.github.kroune.cumobile.domain.repository.TaskRepository
 
 /**
- * Groups repository dependencies for [DefaultHomeComponent]
- * to keep the constructor parameter count within bounds.
+ * Groups repository dependencies for [DefaultHomeComponent].
+ *
+ * Fields are [Lazy] so a tab that never runs its `loadData()` (e.g. the
+ * user leaves the app before the Home lifecycle starts) doesn't
+ * instantiate the underlying repositories.
  */
 class HomeDependencies(
-    val taskRepository: TaskRepository,
-    val courseRepository: CourseRepository,
-    val profileRepository: ProfileRepository,
-    val calendarRepository: CalendarRepository,
+    val taskRepository: Lazy<TaskRepository>,
+    val courseRepository: Lazy<CourseRepository>,
+    val calendarRepository: Lazy<CalendarRepository>,
 )

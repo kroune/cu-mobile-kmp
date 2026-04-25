@@ -17,6 +17,7 @@ import io.github.kroune.cumobile.data.model.TaskEventContent
 import io.github.kroune.cumobile.data.model.TaskEventScore
 import io.github.kroune.cumobile.data.model.TaskState
 import io.github.kroune.cumobile.data.model.UploadStatus
+import io.github.kroune.cumobile.presentation.common.ContentState
 import io.github.kroune.cumobile.presentation.common.ui.CuMobileTheme
 import io.github.kroune.cumobile.presentation.longread.LongreadComponent
 import io.github.kroune.cumobile.presentation.longread.component.coding.CodingMaterialComponent
@@ -32,6 +33,8 @@ private val previewCodingMaterial = LongreadMaterial(
 )
 
 private val previewLongreadSuccessState = LongreadComponent.State(
+    isLoading = false,
+    title = "Введение в алгоритмы",
     materials = persistentListOf(
         LongreadMaterial(
             id = "1",
@@ -72,17 +75,19 @@ private fun previewTaskDetails(
     isLateDaysEnabled: Boolean = false,
     lateDays: Int? = null,
     lateDaysBalance: Int? = null,
-) =
-    TaskDetails(
-        id = "42",
-        state = state,
-        score = score,
-        deadline = "2026-04-15T23:59:00Z",
-        exercise = TaskDetailsExercise(name = "Быстрая сортировка", maxScore = 10),
-        solution = solutionUrl?.let { TaskDetailsSolution(solutionUrl = it) },
-        isLateDaysEnabled = isLateDaysEnabled,
-        lateDays = lateDays,
-        student = lateDaysBalance?.let { TaskDetailsStudent(lateDaysBalance = it) },
+): ContentState<TaskDetails> =
+    ContentState.Success(
+        TaskDetails(
+            id = "42",
+            state = state,
+            score = score,
+            deadline = "2026-04-15T23:59:00Z",
+            exercise = TaskDetailsExercise(name = "Быстрая сортировка", maxScore = 10.0),
+            solution = solutionUrl?.let { TaskDetailsSolution(solutionUrl = it) },
+            isLateDaysEnabled = isLateDaysEnabled,
+            lateDays = lateDays,
+            student = lateDaysBalance?.let { TaskDetailsStudent(lateDaysBalance = it) },
+        ),
     )
 
 private val previewComments = persistentListOf(
@@ -165,6 +170,7 @@ private fun PreviewLongreadLoadErrorDark() {
     CuMobileTheme(darkTheme = true) {
         LongreadScreenContent(
             state = LongreadComponent.State(
+                isLoading = false,
                 error = "Не удалось загрузить материалы",
             ),
             actionError = null,
@@ -180,6 +186,7 @@ private fun PreviewLongreadLoadErrorLight() {
     CuMobileTheme(darkTheme = false) {
         LongreadScreenContent(
             state = LongreadComponent.State(
+                isLoading = false,
                 error = "Не удалось загрузить материалы",
             ),
             actionError = null,
@@ -194,7 +201,7 @@ private fun PreviewLongreadLoadErrorLight() {
 private fun PreviewLongreadEmptyMaterialsDark() {
     CuMobileTheme(darkTheme = true) {
         LongreadScreenContent(
-            state = LongreadComponent.State(),
+            state = LongreadComponent.State(isLoading = false),
             actionError = null,
             onIntent = {},
             onDismissError = {},
@@ -342,7 +349,7 @@ private fun PreviewCodingCardCommentsTabDark() {
                 isExpanded = true,
                 selectedTab = "comments",
                 taskDetails = previewTaskDetails(state = TaskState.InProgress),
-                taskComments = previewComments,
+                taskComments = ContentState.Success(previewComments),
             ),
             onIntent = {},
         )
@@ -360,7 +367,7 @@ private fun PreviewCodingCardCommentsTabLight() {
                 isExpanded = true,
                 selectedTab = "comments",
                 taskDetails = previewTaskDetails(state = TaskState.InProgress),
-                taskComments = previewComments,
+                taskComments = ContentState.Success(previewComments),
             ),
             onIntent = {},
         )
@@ -378,7 +385,7 @@ private fun PreviewCodingCardCommentEditingDark() {
                 isExpanded = true,
                 selectedTab = "comments",
                 taskDetails = previewTaskDetails(state = TaskState.InProgress),
-                taskComments = previewComments,
+                taskComments = ContentState.Success(previewComments),
                 editingCommentId = "c2",
                 editCommentText = "Исправил обработку граничных случаев",
             ),
@@ -404,7 +411,7 @@ private fun PreviewCodingCardInfoTabDark() {
                     lateDays = 2,
                     lateDaysBalance = 5,
                 ),
-                taskEvents = previewEvents,
+                taskEvents = ContentState.Success(previewEvents),
             ),
             onIntent = {},
         )

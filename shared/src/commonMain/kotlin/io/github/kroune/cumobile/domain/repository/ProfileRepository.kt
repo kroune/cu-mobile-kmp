@@ -12,7 +12,7 @@ interface ProfileRepository {
     suspend fun fetchLmsProfile(): StudentLmsProfile?
 
     /** Fetches the student's avatar as raw bytes. */
-    suspend fun fetchAvatar(): ByteArray?
+    suspend fun fetchAvatar(): ByteArray
 
     /** Uploads a new avatar image. */
     suspend fun uploadAvatar(

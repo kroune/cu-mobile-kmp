@@ -4,15 +4,17 @@ import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.decompose.value.update
-import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.data.network.AuthApiService
 import io.github.kroune.cumobile.data.network.AuthStepResult
 import io.github.kroune.cumobile.domain.repository.AuthRepository
 import io.github.kroune.cumobile.domain.repository.CookieValidationResult
 import io.github.kroune.cumobile.presentation.auth.LoginComponent.AuthStep
+import io.github.kroune.cumobile.presentation.common.componentScope
+import io.github.kroune.cumobile.presentation.common.invoke
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 
 private val logger = KotlinLogging.logger {}
@@ -25,17 +27,19 @@ private val logger = KotlinLogging.logger {}
  */
 class DefaultLoginComponent(
     componentContext: ComponentContext,
-    private val authRepository: AuthRepository,
-    private val authApiServiceFactory: () -> AuthApiService,
+    private val authRepository: Lazy<AuthRepository>,
+    private val authApiService: Lazy<AuthApiService>,
     private val onLoginSuccess: () -> Unit,
     private val onNavigateToWebView: () -> Unit,
 ) : LoginComponent,
     ComponentContext by componentContext {
-    private val scope = coroutineScope(Dispatchers.Main.immediate + SupervisorJob())
+    private val scope = componentScope()
     private val _state = MutableValue(LoginComponent.State())
     override val state: Value<LoginComponent.State> = _state
 
-    private var authApi: AuthApiService? = null
+    private val _effects = Channel<LoginComponent.Effect>(Channel.BUFFERED)
+    override val effects: Flow<LoginComponent.Effect> = _effects.receiveAsFlow()
+
     private var currentLoginAction: String? = null
     private var currentPhoneNumber: String? = null
 
@@ -54,31 +58,40 @@ class DefaultLoginComponent(
             is LoginComponent.Intent.UpdateOtpCode ->
                 _state.update { it.copy(otpCode = intent.value) }
 
+            is LoginComponent.Intent.UpdateBffCookie ->
+                _state.update { it.copy(bffCookie = intent.value) }
+
             is LoginComponent.Intent.Submit -> handleSubmit()
             is LoginComponent.Intent.Back -> handleBack()
             is LoginComponent.Intent.FallbackToWebView -> {
-                authApi?.close()
-                authApi = null
                 onNavigateToWebView()
+            }
+            is LoginComponent.Intent.OpenBffCookieLogin -> {
+                _state.update {
+                    LoginComponent.State(step = AuthStep.BffCookie)
+                }
             }
         }
     }
 
+    private fun emitError(message: String) {
+        _effects.trySend(LoginComponent.Effect.ShowError(message))
+    }
+
     private fun startAuthFlow() {
         scope.launch {
-            _state.update { it.copy(isLoading = true, error = null) }
-            val api = authApiServiceFactory()
-            authApi = api
-            when (val result = api.startAuth()) {
+            _state.update { it.copy(isLoading = true) }
+            authApiService().resetSession()
+            when (val result = authApiService().startAuth()) {
                 is AuthStepResult.NextStep -> {
                     currentLoginAction = result.loginAction
                     _state.update {
                         it.copy(
                             isLoading = false,
                             step = mapActivePage(result.activePage),
-                            error = result.errorMessage,
                         )
                     }
+                    result.errorMessage?.let { emitError(it) }
                 }
 
                 is AuthStepResult.Redirect -> {
@@ -86,50 +99,60 @@ class DefaultLoginComponent(
                 }
 
                 is AuthStepResult.Error -> {
-                    _state.update { it.copy(isLoading = false, error = result.message) }
+                    _state.update { it.copy(isLoading = false) }
+                    emitError(result.message)
                 }
             }
         }
     }
 
     private fun handleSubmit() {
+        val currentState = _state.value
+        if (currentState.isLoading) return
+
+        if (currentState.step == AuthStep.BffCookie) {
+            submitBffCookie(currentState.bffCookie)
+            return
+        }
+
         val action = currentLoginAction
         if (action == null) {
             logger.warn { "handleSubmit: no loginAction available" }
-            _state.update { it.copy(error = "Нет активной сессии, попробуйте снова") }
+            emitError("Нет активной сессии, попробуйте снова")
             return
         }
-        val currentState = _state.value
-        if (currentState.isLoading) return
         logger.info { "handleSubmit: step=${currentState.step}" }
 
         scope.launch {
-            _state.update { it.copy(isLoading = true, error = null) }
-            val api = authApi ?: return@launch
+            _state.update { it.copy(isLoading = true) }
 
             val result = when (currentState.step) {
+                AuthStep.BffCookie -> return@launch // handled above
                 AuthStep.Email -> {
                     if (currentState.email.isBlank()) {
-                        _state.update { it.copy(isLoading = false, error = "Введите email") }
+                        _state.update { it.copy(isLoading = false) }
+                        emitError("Введите email")
                         return@launch
                     }
-                    api.submitUsername(action, currentState.email.trim())
+                    authApiService().submitUsername(action, currentState.email.trim())
                 }
 
                 AuthStep.Password -> {
                     if (currentState.password.isBlank()) {
-                        _state.update { it.copy(isLoading = false, error = "Введите пароль") }
+                        _state.update { it.copy(isLoading = false) }
+                        emitError("Введите пароль")
                         return@launch
                     }
-                    api.submitPassword(action, currentState.password)
+                    authApiService().submitPassword(action, currentState.password)
                 }
 
                 AuthStep.Otp -> {
                     if (currentState.otpCode.isBlank()) {
-                        _state.update { it.copy(isLoading = false, error = "Введите код") }
+                        _state.update { it.copy(isLoading = false) }
+                        emitError("Введите код")
                         return@launch
                     }
-                    api.submitOtp(
+                    authApiService().submitOtp(
                         loginAction = action,
                         code = currentState.otpCode.trim(),
                         phoneNumber = currentPhoneNumber.orEmpty(),
@@ -151,16 +174,20 @@ class DefaultLoginComponent(
                 }
                 val newStep = mapActivePage(result.activePage)
                 val currentStep = _state.value.step
-                // If step didn't change and no error from server — show implicit error
-                val error = result.errorMessage ?: inferErrorForSameStep(currentStep, newStep)
                 _state.update {
                     it.copy(
                         isLoading = false,
                         step = newStep,
                         phoneNumber = result.phoneNumber ?: it.phoneNumber,
-                        error = error,
                         otpCode = "",
                     )
+                }
+                // If the step changed, the UI transition itself is the confirmation —
+                // don't surface server `systemMessage` payloads (e.g. "codeSent") as
+                // they'd just duplicate the screen we just navigated to.
+                if (currentStep == newStep) {
+                    val error = result.errorMessage ?: inferErrorForSameStep(currentStep, newStep)
+                    error?.let { emitError(it) }
                 }
             }
 
@@ -169,47 +196,33 @@ class DefaultLoginComponent(
             }
 
             is AuthStepResult.Error -> {
-                _state.update { it.copy(isLoading = false, error = result.message) }
+                _state.update { it.copy(isLoading = false) }
+                emitError(result.message)
             }
         }
     }
 
     private suspend fun handleRedirect(callbackUrl: String) {
-        val api = authApi ?: return
-        val bffCookie = api.exchangeCallback(callbackUrl)
+        val bffCookie = authApiService().exchangeCallback(callbackUrl)
         if (bffCookie != null) {
-            authRepository.saveCookie(bffCookie)
-            when (authRepository.validateCookie()) {
+            authRepository().saveCookie(bffCookie)
+            when (authRepository().validateCookie()) {
                 CookieValidationResult.Valid -> {
                     logger.info { "Native auth succeeded" }
-                    api.close()
-                    authApi = null
                     onLoginSuccess()
                 }
                 CookieValidationResult.Invalid -> {
-                    _state.update {
-                        it.copy(
-                            isLoading = false,
-                            error = "Cookie невалиден. Попробуйте через браузер.",
-                        )
-                    }
+                    _state.update { it.copy(isLoading = false) }
+                    emitError("Cookie невалиден. Попробуйте через браузер.")
                 }
                 CookieValidationResult.NetworkError -> {
-                    _state.update {
-                        it.copy(
-                            isLoading = false,
-                            error = "Ошибка сети. Проверьте подключение и попробуйте снова.",
-                        )
-                    }
+                    _state.update { it.copy(isLoading = false) }
+                    emitError("Ошибка сети. Проверьте подключение и попробуйте снова.")
                 }
             }
         } else {
-            _state.update {
-                it.copy(
-                    isLoading = false,
-                    error = "Не удалось получить сессию. Попробуйте через браузер.",
-                )
-            }
+            _state.update { it.copy(isLoading = false) }
+            emitError("Не удалось получить сессию. Попробуйте через браузер.")
         }
     }
 
@@ -219,9 +232,7 @@ class DefaultLoginComponent(
             AuthStep.Email -> { // nothing to go back to
             }
 
-            AuthStep.Password -> {
-                // Restart the auth flow for email step
-                authApi?.close()
+            AuthStep.Password, AuthStep.Otp, AuthStep.BffCookie -> {
                 _state.update {
                     LoginComponent.State(
                         step = AuthStep.Email,
@@ -230,17 +241,32 @@ class DefaultLoginComponent(
                 }
                 startAuthFlow()
             }
+        }
+    }
 
-            AuthStep.Otp -> {
-                // Restart the auth flow for email step
-                authApi?.close()
-                _state.update {
-                    LoginComponent.State(
-                        step = AuthStep.Email,
-                        email = it.email,
-                    )
+    private fun submitBffCookie(rawCookie: String) {
+        val cookie = rawCookie.trim()
+        if (cookie.isBlank()) {
+            emitError("Введите bff.cookie")
+            return
+        }
+        logger.info { "submitBffCookie: length=${cookie.length}" }
+        scope.launch {
+            _state.update { it.copy(isLoading = true) }
+            authRepository().saveCookie(cookie)
+            when (authRepository().validateCookie()) {
+                CookieValidationResult.Valid -> {
+                    logger.info { "BFF cookie auth succeeded" }
+                    onLoginSuccess()
                 }
-                startAuthFlow()
+                CookieValidationResult.Invalid -> {
+                    _state.update { it.copy(isLoading = false) }
+                    emitError("Cookie невалиден")
+                }
+                CookieValidationResult.NetworkError -> {
+                    _state.update { it.copy(isLoading = false) }
+                    emitError("Ошибка сети. Проверьте подключение и попробуйте снова.")
+                }
             }
         }
     }
@@ -268,6 +294,7 @@ class DefaultLoginComponent(
             AuthStep.Email -> "Неверный email"
             AuthStep.Password -> "Неверный логин или пароль"
             AuthStep.Otp -> "Неверный код"
+            AuthStep.BffCookie -> null
         }
     }
 }

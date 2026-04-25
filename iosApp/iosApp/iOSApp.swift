@@ -5,6 +5,7 @@ import ComposeApp
 struct iOSApp: App {
     init() {
         KoinKt.doInitKoin(platformModule: IosKoinKt.iosKoinModule())
+        IosKoinKt.setupCoilForIos()
     }
 
     @UIApplicationDelegateAdaptor(AppDelegate.self)

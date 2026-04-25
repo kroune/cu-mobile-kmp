@@ -3,15 +3,15 @@ package io.github.kroune.cumobile.presentation.courses
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
-import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
+import com.arkivanov.essenty.lifecycle.doOnStart
 import io.github.kroune.cumobile.domain.repository.CourseRepository
 import io.github.kroune.cumobile.domain.repository.PerformanceRepository
 import io.github.kroune.cumobile.presentation.common.ContentState
+import io.github.kroune.cumobile.presentation.common.componentScope
+import io.github.kroune.cumobile.presentation.common.invoke
 import io.github.kroune.cumobile.util.runCatchingCancellable
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.launchIn
@@ -29,15 +29,13 @@ private val logger = KotlinLogging.logger {}
  */
 class DefaultCoursesComponent(
     componentContext: ComponentContext,
-    private val courseRepository: CourseRepository,
-    private val performanceRepository: PerformanceRepository,
+    private val courseRepository: Lazy<CourseRepository>,
+    private val performanceRepository: Lazy<PerformanceRepository>,
     private val onOpenCourse: (courseId: String) -> Unit,
     private val onOpenCoursePerformance: (courseId: String, courseName: String, totalGrade: Int) -> Unit,
 ) : CoursesComponent,
     ComponentContext by componentContext {
-    private val scope = coroutineScope(
-        Dispatchers.Main.immediate + SupervisorJob(),
-    )
+    private val scope = componentScope()
 
     private val _state = MutableValue(CoursesComponent.State())
     override val state: Value<CoursesComponent.State> = _state
@@ -51,36 +49,45 @@ class DefaultCoursesComponent(
         when (intent) {
             is CoursesComponent.Intent.SelectSegment ->
                 _state.value = _state.value.copy(segment = intent.index)
+
             CoursesComponent.Intent.ToggleActive ->
                 _state.value = _state.value.copy(
                     showActive = !_state.value.showActive,
                 )
+
             CoursesComponent.Intent.ToggleArchived ->
                 _state.value = _state.value.copy(
                     showArchived = !_state.value.showArchived,
                 )
+
             is CoursesComponent.Intent.OpenCourse ->
                 onOpenCourse(intent.courseId)
+
             is CoursesComponent.Intent.OpenCoursePerformance ->
                 onOpenCoursePerformance(
                     intent.courseId,
                     intent.courseName,
                     intent.totalGrade,
                 )
+
             CoursesComponent.Intent.Refresh ->
                 loadAllData()
+
             is CoursesComponent.Intent.ReorderCourses ->
                 reorderCourses(intent.ids)
         }
     }
 
     init {
-        loadAllData()
         observeOrder()
+        lifecycle.doOnStart(isOneTime = true) {
+            loadAllData()
+        }
     }
 
     private fun observeOrder() {
-        courseRepository.courseIdOrderFlow
+        courseRepository()
+            .courseIdOrderFlow
             .onEach { order ->
                 _state.value = _state.value.copy(courseOrder = order)
             }.launchIn(scope)
@@ -88,7 +95,7 @@ class DefaultCoursesComponent(
 
     private fun reorderCourses(ids: List<String>) {
         scope.launch {
-            courseRepository.saveCourseIdOrder(ids)
+            courseRepository().saveCourseIdOrder(ids)
         }
     }
 
@@ -103,7 +110,7 @@ class DefaultCoursesComponent(
 
         currentLoadJob = scope.launch {
             launch {
-                val courses = courseRepository.fetchCourses()
+                val courses = courseRepository().fetchCourses()
                 if (courses != null) {
                     _state.value = _state.value.copy(
                         courses = ContentState.Success(courses),
@@ -117,7 +124,7 @@ class DefaultCoursesComponent(
             }
 
             launch {
-                val performance = performanceRepository.fetchPerformance()
+                val performance = performanceRepository().fetchPerformance()
                 if (performance != null) {
                     _state.value = _state.value.copy(
                         performanceCourses = ContentState.Success(performance.courses),
@@ -132,7 +139,7 @@ class DefaultCoursesComponent(
 
             launch {
                 runCatchingCancellable {
-                    performanceRepository.fetchGradebook()
+                    performanceRepository().fetchGradebook()
                 }.onSuccess { gradebook ->
                     _state.value = _state.value.copy(
                         gradebook = ContentState.Success(gradebook),

@@ -41,12 +41,20 @@ coil = "3.4.0"
 ksoup = "0.2.6"
 composemediaplayer = "0.8.7"
 
+playServicesAuthApiPhone = "18.3.0"
+
 screenshot = "0.0.1-alpha13"
 
 roborazzi = "1.59.0"
-composable-preview-scanner = "0.8.1"
+composable-preview-scanner = "0.8.2"
 robolectric = "4.16.1"
 uiTestJunit4 = "1.10.5"
+
+androidx-benchmark = "1.5.0-alpha05"
+androidx-profileinstaller = "1.4.1"
+androidx-baselineprofile = "1.5.0-alpha05"
+androidx-test-runner = "1.7.0"
+androidx-uiautomator = "2.3.0"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -72,7 +80,7 @@ androidx-datastore-preferences = { module = "androidx.datastore:datastore-prefer
 
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
-androidx-sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version.ref = "sqlite" }
+androidx-sqlite-framework = { module = "androidx.sqlite:sqlite-framework", version.ref = "sqlite" }
 
 decompose = { group = "com.arkivanov.decompose", name = "decompose", version.ref = "decompose" }
 decompose-lifecycle = { group = "com.arkivanov.essenty", name = "lifecycle", version.ref = "essenty" }
@@ -105,12 +113,19 @@ coil-network-ktor3 = { group = "io.coil-kt.coil3", name = "coil-network-ktor3", 
 ksoup = { group = "com.fleeksoft.ksoup", name = "ksoup", version.ref = "ksoup" }
 composemediaplayer = { group = "io.github.kdroidfilter", name = "composemediaplayer", version.ref = "composemediaplayer" }
 
+play-services-auth-api-phone = { group = "com.google.android.gms", name = "play-services-auth-api-phone", version.ref = "playServicesAuthApiPhone" }
+
 roborazzi = { group = "io.github.takahirom.roborazzi", name = "roborazzi", version.ref = "roborazzi" }
 roborazzi-compose = { group = "io.github.takahirom.roborazzi", name = "roborazzi-compose", version.ref = "roborazzi" }
 composable-preview-scanner = { module = "io.github.sergio-sastre.ComposablePreviewScanner:android", version.ref = "composable-preview-scanner" }
 robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
 androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4", version.ref = "uiTestJunit4" }
 compose-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest", version.ref = "composeMultiplatform" }
+
+androidx-benchmark-macro-junit4 = { group = "androidx.benchmark", name = "benchmark-macro-junit4", version.ref = "androidx-benchmark" }
+androidx-profileinstaller = { group = "androidx.profileinstaller", name = "profileinstaller", version.ref = "androidx-profileinstaller" }
+androidx-test-runner = { group = "androidx.test", name = "runner", version.ref = "androidx-test-runner" }
+androidx-uiautomator = { group = "androidx.test.uiautomator", name = "uiautomator", version.ref = "androidx-uiautomator" }
 
 [plugins]
 kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
@@ -132,3 +147,7 @@ kotlinCocoapods = { id = "org.jetbrains.kotlin.native.cocoapods", version.ref = 
 
 roborazziPlugin = { id = "io.github.takahirom.roborazzi", version.ref = "roborazzi" }
 vkompose = { id = "com.vk.vkompose", version.ref = "vkompose" }
+
+androidTest = { id = "com.android.test", version.ref = "agp" }
+androidxBaselineprofile = { id = "androidx.baselineprofile", version.ref = "androidx-baselineprofile" }
+kotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }

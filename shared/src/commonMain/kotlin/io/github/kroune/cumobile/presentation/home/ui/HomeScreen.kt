@@ -33,10 +33,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
+import io.github.kroune.cumobile.baseline.BaselineTestTags
 import io.github.kroune.cumobile.data.model.Course
 import io.github.kroune.cumobile.data.model.StudentTask
 import io.github.kroune.cumobile.presentation.common.ContentState
@@ -124,30 +126,24 @@ internal fun HomeContent(
             .background(AppTheme.colors.background),
         contentPadding = PaddingValues(bottom = 16.dp),
     ) {
-        item {
+        item(key = "deadlines") {
             DeadlinesSection(
                 tasksState = state.tasks,
                 deadlineTasks = state.deadlineTasks,
                 onTaskClick = onTaskClick,
             )
-        }
-
-        item {
             Spacer(modifier = Modifier.height(16.dp))
         }
 
-        item {
+        item(key = "schedule") {
             ScheduleSection(
                 state = state,
                 onIntent = onIntent,
             )
-        }
-
-        item {
             Spacer(modifier = Modifier.height(16.dp))
         }
 
-        item {
+        item("courses") {
             CoursesSection(
                 coursesState = state.courses,
                 activeCourses = state.activeCourses,
@@ -193,6 +189,7 @@ private fun DeadlinesSection(
                 if (deadlineTasks.isEmpty()) {
                     EmptySection(text = "Нет активных заданий")
                 } else {
+                    val firstTaskId = deadlineTasks.firstOrNull()?.id
                     LazyRow(
                         modifier = Modifier.padding(top = 16.dp),
                         contentPadding = PaddingValues(horizontal = 16.dp),
@@ -202,9 +199,15 @@ private fun DeadlinesSection(
                             items = deadlineTasks,
                             key = { it.id },
                         ) { task ->
+                            val cardModifier = if (task.id == firstTaskId) {
+                                Modifier.testTag(BaselineTestTags.FIRST_TASK_CARD)
+                            } else {
+                                Modifier
+                            }
                             DeadlineTaskCard(
                                 task = task,
                                 onClick = { onTaskClick(task) },
+                                modifier = cardModifier,
                             )
                         }
                     }
@@ -275,7 +278,6 @@ private fun CoursesSection(
                             CourseCard(
                                 course = course,
                                 onClick = { onCourseClick(course.id) },
-                                modifier = Modifier.aspectRatio(1.4f),
                             )
                         }
                     }
@@ -419,8 +421,11 @@ internal fun HomeScreenSkeleton(modifier: Modifier = Modifier) {
             .background(AppTheme.colors.background)
             .verticalScroll(rememberScrollState()),
     ) {
-        // Deadlines section
-        SectionHeader(title = "Дедлайны", count = 0)
+        SectionHeader(
+            title = "Дедлайны",
+            count = 0,
+            modifier = Modifier.padding(top = 8.dp),
+        )
         Row(
             modifier = Modifier
                 .fillMaxWidth()

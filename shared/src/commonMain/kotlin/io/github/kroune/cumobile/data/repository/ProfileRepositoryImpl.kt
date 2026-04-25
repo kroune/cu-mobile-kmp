@@ -5,6 +5,8 @@ import io.github.kroune.cumobile.data.model.StudentLmsProfile
 import io.github.kroune.cumobile.data.model.StudentProfile
 import io.github.kroune.cumobile.data.network.ProfileApiService
 import io.github.kroune.cumobile.domain.repository.ProfileRepository
+import io.github.kroune.cumobile.presentation.common.invoke
+import io.github.kroune.cumobile.util.AppDispatchers
 
 /**
  * Implementation of [ProfileRepository].
@@ -13,27 +15,29 @@ import io.github.kroune.cumobile.domain.repository.ProfileRepository
  * all network calls to [ProfileApiService].
  */
 internal class ProfileRepositoryImpl(
-    authLocal: AuthLocalDataSource,
-    private val profileApi: ProfileApiService,
-) : CookieAwareRepository(authLocal),
+    authLocal: Lazy<AuthLocalDataSource>,
+    private val profileApi: Lazy<ProfileApiService>,
+    dispatchers: Lazy<AppDispatchers>,
+) : CookieAwareRepository(authLocal, dispatchers),
     ProfileRepository {
     override suspend fun fetchProfile(): StudentProfile? =
-        withCookie { profileApi.fetchProfile(it) }
+        withCookie { profileApi().fetchProfile(it) }
 
     override suspend fun fetchLmsProfile(): StudentLmsProfile? =
-        withCookie { profileApi.fetchLmsProfile(it) }
+        withCookie { profileApi().fetchLmsProfile(it) }
 
-    override suspend fun fetchAvatar(): ByteArray? =
-        withCookie { profileApi.fetchAvatar(it) }
+    override suspend fun fetchAvatar(): ByteArray =
+        withCookie { profileApi().fetchAvatar(it) }
+            ?: error("Cannot fetch avatar: no auth cookie")
 
     override suspend fun uploadAvatar(
         bytes: ByteArray,
         contentType: String,
     ): Boolean =
         withCookieOrFalse {
-            profileApi.uploadAvatar(it, bytes, contentType)
+            profileApi().uploadAvatar(it, bytes, contentType)
         }
 
     override suspend fun deleteAvatar(): Boolean =
-        withCookieOrFalse { profileApi.deleteAvatar(it) }
+        withCookieOrFalse { profileApi().deleteAvatar(it) }
 }

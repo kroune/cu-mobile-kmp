@@ -2,6 +2,7 @@ package io.github.kroune.cumobile.data.network
 
 import io.github.kroune.cumobile.data.model.Course
 import io.github.kroune.cumobile.data.model.CourseOverview
+import io.github.kroune.cumobile.presentation.common.invoke
 import io.github.kroune.cumobile.util.runCatchingCancellable
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
@@ -26,7 +27,7 @@ private val json = Json {
  * API service for course-related endpoints.
  */
 internal class CourseApiService(
-    private val httpClient: HttpClient,
+    private val httpClient: Lazy<HttpClient>,
 ) {
     /**
      * Fetches all courses for the current student.
@@ -36,7 +37,7 @@ internal class CourseApiService(
      */
     suspend fun fetchCourses(cookie: String): List<Course>? =
         runCatchingCancellable {
-            val response = httpClient.get("${ApiEndpoints.Courses.STUDENT}?limit=$MaxListLimit") {
+            val response = httpClient().get("${ApiEndpoints.Courses.STUDENT}?limit=$MaxListLimit") {
                 header("Cookie", cookieHeader(cookie))
             }
             if (response.status != HttpStatusCode.OK) {
@@ -66,7 +67,7 @@ internal class CourseApiService(
         courseId: String,
     ): CourseOverview? =
         safeApiCall(logger, "fetch course overview for courseId=$courseId") {
-            httpClient.get(ApiEndpoints.Courses.overview(courseId)) {
+            httpClient().get(ApiEndpoints.Courses.overview(courseId)) {
                 header("Cookie", cookieHeader(cookie))
             }
         }

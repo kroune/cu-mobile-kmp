@@ -3,16 +3,28 @@ package io.github.kroune.cumobile.presentation.performance
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
-import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.data.model.CourseExercise
 import io.github.kroune.cumobile.data.model.TaskScore
 import io.github.kroune.cumobile.domain.repository.PerformanceRepository
 import io.github.kroune.cumobile.presentation.common.ContentState
+import io.github.kroune.cumobile.presentation.common.componentScope
+import io.github.kroune.cumobile.presentation.common.dataOrNull
+import io.github.kroune.cumobile.presentation.common.isLoading
+import io.github.kroune.cumobile.util.AppDispatchers
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+
+/**
+ * Target course identity for [DefaultCoursePerformanceComponent].
+ * Bundled to keep the constructor within the detekt LongParameterList threshold.
+ */
+data class CoursePerformanceParams(
+    val courseId: String,
+    val courseName: String,
+    val totalGrade: Int,
+)
 
 /**
  * Default implementation of [CoursePerformanceComponent].
@@ -23,36 +35,62 @@ import kotlinx.coroutines.launch
  */
 class DefaultCoursePerformanceComponent(
     componentContext: ComponentContext,
-    private val courseId: String,
-    private val courseName: String,
-    private val totalGrade: Int,
-    private val performanceRepository: PerformanceRepository,
+    private val params: CoursePerformanceParams,
+    performanceRepository: Lazy<PerformanceRepository>,
+    dispatchers: Lazy<AppDispatchers>,
     private val onBack: () -> Unit,
 ) : CoursePerformanceComponent,
     ComponentContext by componentContext {
-    private val scope = coroutineScope(
-        Dispatchers.Main.immediate + SupervisorJob(),
-    )
+    private val performanceRepository by performanceRepository
+    private val dispatchers by dispatchers
+    private val scope = componentScope()
 
     private val _state = MutableValue(
         CoursePerformanceComponent.State(
-            courseId = courseId,
-            courseName = courseName,
-            totalGrade = totalGrade,
+            courseId = params.courseId,
+            courseName = params.courseName,
+            totalGrade = params.totalGrade,
         ),
     )
     override val state: Value<CoursePerformanceComponent.State> = _state
+
+    private fun updateState(block: CoursePerformanceComponent.State.() -> CoursePerformanceComponent.State) {
+        val s = _state.value.block()
+        val exercises = s.content.dataOrNull
+            ?.exercises
+            .orEmpty()
+            .toImmutableList()
+        val summaries = s.content.dataOrNull
+            ?.activitySummaries
+            .orEmpty()
+            .toImmutableList()
+        val filtered = if (s.activityFilter == null) {
+            exercises
+        } else {
+            exercises.filter { it.activityName == s.activityFilter }.toImmutableList()
+        }
+        _state.value = s.copy(
+            exercises = exercises,
+            activitySummaries = summaries,
+            isContentLoading = s.content.isLoading,
+            activityNames = exercises
+                .map { it.activityName }
+                .distinct()
+                .sorted()
+                .toImmutableList(),
+            filteredExercises = filtered,
+            totalContribution = summaries.sumOf { it.totalContribution },
+        )
+    }
 
     override fun onIntent(intent: CoursePerformanceComponent.Intent) {
         when (intent) {
             CoursePerformanceComponent.Intent.Back -> onBack()
             CoursePerformanceComponent.Intent.Refresh -> loadData()
             is CoursePerformanceComponent.Intent.SelectTab ->
-                _state.value = _state.value.copy(selectedTab = intent.index)
+                updateState { copy(selectedTab = intent.index) }
             is CoursePerformanceComponent.Intent.FilterByActivity ->
-                _state.value = _state.value.copy(
-                    activityFilter = intent.activityName,
-                )
+                updateState { copy(activityFilter = intent.activityName) }
         }
     }
 
@@ -61,40 +99,37 @@ class DefaultCoursePerformanceComponent(
     }
 
     private fun loadData() {
-        _state.value = _state.value.copy(content = ContentState.Loading)
+        updateState { copy(content = ContentState.Loading) }
 
         scope.launch {
             val exercisesDeferred = async {
-                performanceRepository.fetchCourseExercises(courseId)
+                performanceRepository.fetchCourseExercises(params.courseId)
             }
             val performanceDeferred = async {
-                performanceRepository.fetchCoursePerformance(courseId)
+                performanceRepository.fetchCoursePerformance(params.courseId)
             }
 
             val exercisesResponse = exercisesDeferred.await()
             val performanceResponse = performanceDeferred.await()
 
             if (exercisesResponse == null && performanceResponse == null) {
-                _state.value = _state.value.copy(
-                    content = ContentState.Error("Не удалось загрузить успеваемость"),
-                )
+                updateState {
+                    copy(content = ContentState.Error("Не удалось загрузить успеваемость"))
+                }
                 return@launch
             }
 
             val exercises = exercisesResponse?.exercises.orEmpty()
             val tasks = performanceResponse?.tasks.orEmpty()
 
-            val exercisesWithScores = joinExercisesWithScores(exercises, tasks)
-            val summaries = buildActivitySummaries(tasks)
+            val performanceData = withContext(dispatchers.default) {
+                PerformanceData(
+                    exercises = joinExercisesWithScores(exercises, tasks).toImmutableList(),
+                    activitySummaries = buildActivitySummaries(tasks).toImmutableList(),
+                )
+            }
 
-            _state.value = _state.value.copy(
-                content = ContentState.Success(
-                    PerformanceData(
-                        exercises = exercisesWithScores.toImmutableList(),
-                        activitySummaries = summaries.toImmutableList(),
-                    ),
-                ),
-            )
+            updateState { copy(content = ContentState.Success(performanceData)) }
         }
     }
 }

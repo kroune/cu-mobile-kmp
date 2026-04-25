@@ -4,8 +4,10 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atTime
 import kotlinx.datetime.format
 import kotlinx.datetime.format.DateTimeComponents
+import kotlinx.datetime.format.MonthNames
 import kotlinx.datetime.format.char
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
@@ -17,6 +19,45 @@ private val logger = KotlinLogging.logger {}
 
 private const val BytesPerKb = 1024L
 private const val DecimalBase = 10
+private const val EndOfDayHour = 23
+private const val EndOfDayMinute = 59
+private const val EndOfDaySecond = 59
+
+// ──────────────────────────────────────────────────────
+// Russian month names (shared across UI)
+// ──────────────────────────────────────────────────────
+
+/** Short abbreviated Russian months: "янв", "фев", … */
+internal val russianMonthsShort = MonthNames(
+    "янв",
+    "фев",
+    "мар",
+    "апр",
+    "мая",
+    "июн",
+    "июл",
+    "авг",
+    "сен",
+    "окт",
+    "ноя",
+    "дек",
+)
+
+/** Full genitive Russian months: "января", "февраля", … */
+internal val russianMonthsFull = MonthNames(
+    "января",
+    "февраля",
+    "марта",
+    "апреля",
+    "мая",
+    "июня",
+    "июля",
+    "августа",
+    "сентября",
+    "октября",
+    "ноября",
+    "декабря",
+)
 
 // ──────────────────────────────────────────────────────
 // Format definitions (kotlinx-datetime Format DSL)
@@ -66,14 +107,16 @@ private val dayMonthYearDateFormat = LocalDate.Format {
 // ISO 8601 date/time formatting
 // ──────────────────────────────────────────────────────
 
-private fun parseIsoDateTime(iso: String): LocalDateTime =
-    runCatching {
-        LocalDateTime.parse(iso)
-    }.getOrElse {
+internal fun parseIsoDateTime(iso: String): LocalDateTime {
+    if (!iso.contains('T')) {
+        return LocalDate.parse(iso).atTime(EndOfDayHour, EndOfDayMinute, EndOfDaySecond)
+    }
+    return runCatching { LocalDateTime.parse(iso) }.getOrElse {
         DateTimeComponents.Formats.ISO_DATE_TIME_OFFSET
             .parse(iso)
             .toLocalDateTime()
     }
+}
 
 private inline fun formatIsoOrFallback(
     iso: String,

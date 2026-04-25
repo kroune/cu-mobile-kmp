@@ -15,8 +15,10 @@ private val logger = KotlinLogging.logger {}
  * API service for performance and gradebook endpoints.
  */
 internal class PerformanceApiService(
-    private val httpClient: HttpClient,
+    httpClient: Lazy<HttpClient>,
 ) {
+    private val httpClient by httpClient
+
     /** Fetches overall student performance summary. */
     suspend fun fetchPerformance(cookie: String): StudentPerformanceResponse? =
         safeApiCall(logger, "fetch performance") {

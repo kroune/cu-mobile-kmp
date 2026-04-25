@@ -47,7 +47,6 @@ import io.github.kroune.cumobile.presentation.common.ui.ErrorContent
 import io.github.kroune.cumobile.presentation.common.ui.LoadingContent
 import io.github.kroune.cumobile.presentation.common.ui.stripEmojiPrefix
 import io.github.kroune.cumobile.presentation.courses.detail.CourseDetailComponent
-import io.github.kroune.cumobile.presentation.courses.detail.filteredThemes
 
 /**
  * Course detail screen showing themes with expandable longreads.
@@ -113,8 +112,7 @@ private fun ThemesContent(
     onIntent: (CourseDetailComponent.Intent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val themes = state.overview?.themes.orEmpty()
-    val filtered = filteredThemes(themes, state.searchQuery)
+    val filtered = state.filteredThemes
 
     Column(modifier = modifier.padding(horizontal = 16.dp)) {
         Spacer(modifier = Modifier.height(8.dp))

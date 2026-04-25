@@ -10,8 +10,8 @@ import com.arkivanov.decompose.router.items.childItems
 import com.arkivanov.decompose.router.items.setItems
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
-import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.data.model.LongreadMaterial
+import io.github.kroune.cumobile.presentation.common.componentScope
 import io.github.kroune.cumobile.presentation.longread.LongreadComponent.Intent
 import io.github.kroune.cumobile.presentation.longread.component.ExternalUpdate
 import io.github.kroune.cumobile.presentation.longread.component.LongreadItem
@@ -22,17 +22,23 @@ import io.github.kroune.cumobile.presentation.longread.component.file.FileDownlo
 import io.github.kroune.cumobile.presentation.longread.component.file.FileMaterialComponent
 import io.github.kroune.cumobile.presentation.longread.component.image.ImageMaterialComponent
 import io.github.kroune.cumobile.presentation.longread.component.markdown.MarkdownMaterialComponent
-import io.github.kroune.cumobile.presentation.longread.component.questions.QuestionsMaterialComponent
+import io.github.kroune.cumobile.presentation.longread.component.questions.DefaultQuestionsMaterialComponent
 import io.github.kroune.cumobile.presentation.longread.component.video.VideoMaterialComponent
+import io.github.kroune.cumobile.presentation.longread.htmlrender.extractPlainText
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlin.getValue
 
 /**
  * Default implementation of [LongreadComponent].
@@ -40,7 +46,7 @@ import kotlinx.coroutines.launch
  * Uses Decompose's ChildItems to give each material its own component
  * with automatic lifecycle management via [ChildItemsLifecycleController].
  */
-@OptIn(ExperimentalDecomposeApi::class)
+@OptIn(ExperimentalDecomposeApi::class, FlowPreview::class)
 class DefaultLongreadComponent(
     componentContext: ComponentContext,
     params: LongreadParams,
@@ -50,13 +56,15 @@ class DefaultLongreadComponent(
     private val onNavigateToFiles: () -> Unit,
 ) : LongreadComponent,
     ComponentContext by componentContext {
-    private val contentRepository = deps.contentRepository
-    private val taskRepository = deps.taskRepository
-    private val renameRepository = deps.renameRepository
+    private val lazyTaskRepository = deps.taskRepository
+    private val lazyQuizRepository = deps.quizRepository
+    private val contentRepository by deps.contentRepository
+    private val taskRepository by lazyTaskRepository
+    private val renameRepository by deps.renameRepository
+    private val dispatchers by deps.dispatchers
+    private val focusTaskId: String? = params.focusTaskId
 
-    private val scope = coroutineScope(
-        Dispatchers.Main.immediate + SupervisorJob(),
-    )
+    private val scope = componentScope()
 
     private val _state = MutableValue(
         LongreadComponent.State(
@@ -72,6 +80,14 @@ class DefaultLongreadComponent(
 
     private val searchHandler = LongreadSearchHandler(state = _state)
 
+    /**
+     * Debounced pipe for the search query. Keystrokes update this flow
+     * synchronously; downstream collectors run on [Dispatchers.Default]
+     * after [SEARCH_DEBOUNCE_MS] of inactivity, so fast typing doesn't
+     * trigger a text scan per character.
+     */
+    private val searchQueryInput = MutableStateFlow("")
+
     /** Broadcasts [ExternalUpdate] events to material child components. */
     private val _externalUpdates = MutableSharedFlow<ExternalUpdate>(
         replay = 10,
@@ -81,6 +97,13 @@ class DefaultLongreadComponent(
 
     /** Lookup map from material ID to material data, used by the child factory. */
     private var materialsMap: Map<String, LongreadMaterial> = emptyMap()
+
+    /**
+     * Plain text extracted from each material's HTML, keyed by material id.
+     * Built once per [loadMaterials] call on [Dispatchers.Default] so search
+     * keystrokes don't re-run the Ksoup parser per material per character.
+     */
+    private var plainTextByMaterialId: Map<String, String> = emptyMap()
 
     private val navigation = ItemsNavigation<MaterialConfig>()
 
@@ -112,36 +135,75 @@ class DefaultLongreadComponent(
             Intent.Search.ToggleSearch -> {
                 searchHandler.toggleSearch()
                 if (!_state.value.isSearchVisible) {
-                    _externalUpdates.tryEmit(ExternalUpdate.SearchQuery(""))
+                    searchQueryInput.value = ""
                 }
             }
             Intent.Search.NextMatch -> searchHandler.navigateMatch(forward = true)
             Intent.Search.PreviousMatch -> searchHandler.navigateMatch(forward = false)
             is Intent.Search.UpdateSearchQuery -> {
-                searchHandler.updateSearchQuery(intent.query)
-                _externalUpdates.tryEmit(ExternalUpdate.SearchQuery(intent.query))
+                searchHandler.updateQueryText(intent.query)
+                searchQueryInput.value = intent.query
             }
         }
     }
 
     init {
         loadMaterials()
+        observeSearchQuery()
+    }
+
+    /**
+     * Collects debounced search queries on [Dispatchers.Default]: runs
+     * the match count over the cached plaintext, applies the result to
+     * [state], and broadcasts the query to child material components.
+     *
+     * Empty queries short-circuit (no scan, immediate broadcast) so
+     * clearing the field is instant.
+     */
+    private fun observeSearchQuery() {
+        scope.launch {
+            searchQueryInput
+                .debounce { if (it.isEmpty()) 0L else SEARCH_DEBOUNCE_MS }
+                .distinctUntilChanged()
+                .collect { query ->
+                    val count = if (query.isBlank()) {
+                        0
+                    } else {
+                        withContext(dispatchers.default) {
+                            countMatches(plainTextByMaterialId, query)
+                        }
+                    }
+                    searchHandler.applyMatchCount(forQuery = query, matchCount = count)
+                    _externalUpdates.tryEmit(ExternalUpdate.SearchQuery(query))
+                }
+        }
     }
 
     private fun loadMaterials() {
         scope.launch {
-            _state.value = _state.value.copy(isLoading = true, error = null)
+            _state.value = _state.value.copy(
+                isLoading = true,
+                error = null,
+                materials = persistentListOf(),
+            )
             navigation.setItems { emptyList() }
 
             val materials = contentRepository.fetchLongreadMaterials(
                 _state.value.longreadId,
             )
             if (materials != null) {
+                val title = materials.firstOrNull()?.contentName
+                    ?: materials.firstOrNull()?.name
+                    ?: "Лонгрид"
                 _state.value = _state.value.copy(
                     materials = materials.toPersistentList(),
+                    title = title,
                     isLoading = false,
                 )
                 materialsMap = materials.associateBy { it.id }
+                plainTextByMaterialId = withContext(dispatchers.default) {
+                    buildPlainTextIndex(materials)
+                }
                 val configs = materials.map { it.toConfig() }
                 navigation.setItems { configs }
             } else {
@@ -176,6 +238,7 @@ class DefaultLongreadComponent(
                     componentContext = childContext,
                     material = material,
                     taskId = config.taskId,
+                    initiallyExpanded = config.taskId == focusTaskId,
                     taskRepository = taskRepository,
                     contentRepository = contentRepository,
                     onShowError = { msg ->
@@ -186,9 +249,16 @@ class DefaultLongreadComponent(
             )
 
             is MaterialConfig.Questions -> LongreadItem.Questions(
-                QuestionsMaterialComponent(
+                DefaultQuestionsMaterialComponent(
                     componentContext = childContext,
                     material = material,
+                    taskId = config.taskId,
+                    initiallyExpanded = config.taskId == focusTaskId,
+                    taskRepository = lazyTaskRepository,
+                    quizRepository = lazyQuizRepository,
+                    onShowError = { msg ->
+                        _effects.trySend(LongreadComponent.Effect.SnackBarEffect(msg))
+                    },
                 ),
             )
 
@@ -279,7 +349,23 @@ class DefaultLongreadComponent(
 
     companion object {
         private val UNSAFE_CHARS_REGEX = Regex("[^a-zA-Z0-9._-]")
+        private const val SEARCH_DEBOUNCE_MS = 180L
     }
+}
+
+/**
+ * Extracts plain text from each material's `viewContent` once. Skips
+ * materials without HTML content. Runs on [Dispatchers.Default] via the
+ * caller; Ksoup parsing is CPU-bound and blocks per material.
+ */
+private fun buildPlainTextIndex(materials: List<LongreadMaterial>): Map<String, String> {
+    val result = HashMap<String, String>(materials.size)
+    for (material in materials) {
+        val html = material.viewContent
+        if (html.isNullOrBlank()) continue
+        result[material.id] = extractPlainText(html)
+    }
+    return result
 }
 
 /**
@@ -289,7 +375,7 @@ private fun LongreadMaterial.toConfig(): MaterialConfig =
     when {
         isCoding && taskId != null -> MaterialConfig.Coding(id, taskId = taskId)
         isFile -> MaterialConfig.File(id)
-        isQuestions -> MaterialConfig.Questions(id)
+        isQuestions && taskId != null -> MaterialConfig.Questions(id, taskId = taskId)
         isImage -> MaterialConfig.Image(id)
         isVideo || isVideoPlatform -> MaterialConfig.Video(id)
         isAudio -> MaterialConfig.Audio(id)

@@ -31,6 +31,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -44,13 +45,13 @@ import com.arkivanov.decompose.extensions.compose.stack.animation.plus
 import com.arkivanov.decompose.extensions.compose.stack.animation.scale
 import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
+import io.github.kroune.cumobile.baseline.BaselineTestTags
 import io.github.kroune.cumobile.presentation.common.dataOrNull
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 import io.github.kroune.cumobile.presentation.common.ui.TopBar
 import io.github.kroune.cumobile.presentation.courses.detail.ui.CourseDetailScreen
 import io.github.kroune.cumobile.presentation.courses.ui.CoursesScreen
 import io.github.kroune.cumobile.presentation.files.ui.FilesScreen
-import io.github.kroune.cumobile.presentation.home.HomeComponent
 import io.github.kroune.cumobile.presentation.home.ui.HomeScreen
 import io.github.kroune.cumobile.presentation.longread.ui.LongreadScreen
 import io.github.kroune.cumobile.presentation.main.MainComponent
@@ -59,7 +60,6 @@ import io.github.kroune.cumobile.presentation.performance.ui.CoursePerformanceSc
 import io.github.kroune.cumobile.presentation.profile.ui.ProfileScreen
 import io.github.kroune.cumobile.presentation.scanner.ui.ScannerScreen
 import io.github.kroune.cumobile.presentation.tasks.ui.TasksScreen
-import com.arkivanov.decompose.router.pages.ChildPages as PagesState
 
 /**
  * Main screen with bottom navigation and top bar.
@@ -74,10 +74,8 @@ import com.arkivanov.decompose.router.pages.ChildPages as PagesState
 fun MainScreen(component: MainComponent) {
     val pages by component.tabPages.subscribeAsState()
     val updateInfo by component.updateInfo.subscribeAsState()
+    val topBarState by component.topBarState.subscribeAsState()
     val selectedIndex = pages.selectedIndex
-
-    // Extract profile initials and late days from the Home tab (observed reactively)
-    val homeState = extractHomeState(pages)
 
     if (updateInfo.latestVersion.isNotEmpty()) {
         UpdateDialog(
@@ -97,11 +95,11 @@ fun MainScreen(component: MainComponent) {
         ) {
             TopBar(
                 title = TAB_LABELS[selectedIndex],
-                profileInitials = homeState?.profileInitials?.dataOrNull.orEmpty(),
-                avatarBytes = homeState?.avatarBytes?.dataOrNull,
-                lateDaysBalance = homeState?.lateDaysBalance?.dataOrNull,
-                onNotificationsClick = { component.navigateToNotifications() },
-                onProfileClick = { component.navigateToProfile() },
+                avatarUrl = topBarState.avatarUrl,
+                lateDaysBalance = topBarState.lateDaysBalance.dataOrNull,
+                onNotificationsClick = { component.navigation.toNotifications() },
+                onProfileClick = { component.navigation.toProfile() },
+                onAvatarRetry = { component.onAvatarChanged() },
             )
 
             ChildPages(
@@ -155,6 +153,7 @@ private fun BottomNavBar(
     ) {
         TAB_LABELS.forEachIndexed { index, label ->
             NavigationBarItem(
+                modifier = Modifier.testTag(TAB_TAGS[index]),
                 selected = selectedIndex == index,
                 onClick = { onTabSelected(index) },
                 icon = {
@@ -201,7 +200,7 @@ private fun DetailOverlay(
             is MainComponent.DetailChild.CourseDetailChild -> {
                 CourseDetailScreen(
                     component = instance.component,
-                    onBack = { component.navigateDetailBack() },
+                    onBack = { component.navigation.back() },
                 )
             }
             is MainComponent.DetailChild.LongreadChild -> {
@@ -212,51 +211,35 @@ private fun DetailOverlay(
             is MainComponent.DetailChild.CoursePerformanceChild -> {
                 CoursePerformanceScreen(
                     component = instance.component,
-                    onBack = { component.navigateDetailBack() },
+                    onBack = { component.navigation.back() },
                 )
             }
             is MainComponent.DetailChild.ProfileChild -> {
                 ProfileScreen(
                     component = instance.component,
-                    onBack = { component.navigateDetailBack() },
+                    onBack = { component.navigation.back() },
                 )
             }
             is MainComponent.DetailChild.NotificationsChild -> {
                 NotificationsScreen(
                     component = instance.component,
-                    onBack = { component.navigateDetailBack() },
+                    onBack = { component.navigation.back() },
                 )
             }
             is MainComponent.DetailChild.FileRenameSettingsChild -> {
                 io.github.kroune.cumobile.presentation.files.rename.ui.FileRenameSettingsScreen(
                     component = instance.component,
-                    onBack = { component.navigateDetailBack() },
+                    onBack = { component.navigation.back() },
                 )
             }
             is MainComponent.DetailChild.ScannerChild -> {
                 ScannerScreen(
                     component = instance.component,
-                    onBack = { component.navigateDetailBack() },
+                    onBack = { component.navigation.back() },
                 )
             }
         }
     }
-}
-
-/**
- * Extracts the HomeComponent state from the tab pages
- * for displaying profile initials and late days in the top bar.
- *
- * Uses [subscribeAsState] to observe changes reactively so the
- * top bar updates when profile data finishes loading.
- */
-@Composable
-private fun extractHomeState(pages: PagesState<*, MainComponent.TabChild>): HomeComponent.State? {
-    val homeChild = pages.items.firstOrNull()?.instance
-    if (homeChild !is MainComponent.TabChild.HomeChild) return null
-    return homeChild.component.state
-        .subscribeAsState()
-        .value
 }
 
 /** Update available dialog. */
@@ -317,6 +300,14 @@ private val TAB_ICONS = listOf(
     Icons.AutoMirrored.Outlined.ListAlt,
     Icons.Outlined.School,
     Icons.Outlined.Folder,
+)
+
+/** Baseline-profile anchor tags, parallel to [TAB_LABELS]. */
+private val TAB_TAGS = listOf(
+    BaselineTestTags.TAB_HOME,
+    BaselineTestTags.TAB_TASKS,
+    BaselineTestTags.TAB_COURSES,
+    BaselineTestTags.TAB_FILES,
 )
 
 /** Pager that disables user swiping between tabs. */

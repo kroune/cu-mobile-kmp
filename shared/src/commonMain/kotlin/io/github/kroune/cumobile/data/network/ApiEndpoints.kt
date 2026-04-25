@@ -75,6 +75,22 @@ internal object ApiEndpoints {
             "micro-lms/courses/$courseId/student-performance"
     }
 
+    object Quizzes {
+        const val ATTEMPTS = "micro-lms/quizzes/attempts"
+
+        fun attemptById(id: String): String =
+            "micro-lms/quizzes/attempts/$id"
+
+        fun completeAttempt(id: String): String =
+            "micro-lms/quizzes/attempts/$id/complete"
+
+        fun questions(quizId: String): String =
+            "micro-lms/quizzes/$quizId/questions"
+
+        fun sessionAttempts(sessionId: String): String =
+            "micro-lms/quizzes/sessions/$sessionId/attempts"
+    }
+
     object Timetable {
         const val ME = "micro-lms/students/me/timetables"
     }

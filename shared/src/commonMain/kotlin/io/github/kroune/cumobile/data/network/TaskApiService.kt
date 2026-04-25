@@ -28,8 +28,10 @@ private val logger = KotlinLogging.logger {}
  * API service for task-related endpoints.
  */
 internal class TaskApiService(
-    private val httpClient: HttpClient,
+    httpClient: Lazy<HttpClient>,
 ) {
+    private val httpClient by httpClient
+
     /** @param states list of task state filter values, e.g. `["inProgress", "backlog"]`. */
     suspend fun fetchTasks(
         cookie: String,

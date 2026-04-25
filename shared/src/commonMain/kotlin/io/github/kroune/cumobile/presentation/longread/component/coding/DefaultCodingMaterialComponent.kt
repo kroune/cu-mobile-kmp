@@ -6,16 +6,15 @@ import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
-import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.data.model.LongreadMaterial
 import io.github.kroune.cumobile.data.model.MaterialAttachment
 import io.github.kroune.cumobile.domain.repository.ContentRepository
 import io.github.kroune.cumobile.domain.repository.TaskRepository
+import io.github.kroune.cumobile.presentation.common.ContentState
+import io.github.kroune.cumobile.presentation.common.componentScope
 import io.github.kroune.cumobile.presentation.longread.ui.coding.CodingMaterialCardContent
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.collections.immutable.toPersistentList
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
@@ -32,15 +31,14 @@ class DefaultCodingMaterialComponent(
     componentContext: ComponentContext,
     override val material: LongreadMaterial,
     private val taskId: String,
+    private val initiallyExpanded: Boolean = false,
     private val taskRepository: TaskRepository,
     private val contentRepository: ContentRepository,
     private val onShowError: (String) -> Unit,
     private val onSaveFile: suspend (url: String, filename: String) -> Boolean = { _, _ -> false },
 ) : CodingMaterialComponent,
     ComponentContext by componentContext {
-    private val scope = coroutineScope(
-        Dispatchers.Main.immediate + SupervisorJob(),
-    )
+    private val scope = componentScope()
 
     private val _state = MutableValue(CodingMaterialComponent.State())
     override val state: Value<CodingMaterialComponent.State> = _state
@@ -62,11 +60,16 @@ class DefaultCodingMaterialComponent(
 
     init {
         loadTaskDetails()
+        if (initiallyExpanded) {
+            _state.value = _state.value.copy(isExpanded = true)
+            loadEventsAndComments()
+        }
     }
 
     override fun onIntent(intent: CodingMaterialComponent.Intent) {
         when (intent) {
             CodingMaterialComponent.Intent.ToggleExpanded -> toggleExpanded()
+            CodingMaterialComponent.Intent.RetryLoadDetails -> loadTaskDetails()
             is CodingMaterialComponent.Intent.SelectTab ->
                 _state.value = _state.value.copy(selectedTab = intent.tab)
             is CodingMaterialComponent.Intent.Task -> handleTaskIntent(intent)
@@ -154,31 +157,45 @@ class DefaultCodingMaterialComponent(
 
     private fun loadTaskDetails() {
         scope.launch {
+            _state.value = _state.value.copy(taskDetails = ContentState.Loading)
             val details = taskRepository.fetchTaskDetails(taskId)
-            if (details != null) {
-                _state.value = _state.value.copy(taskDetails = details)
+            _state.value = if (details != null) {
+                _state.value.copy(taskDetails = ContentState.Success(details))
             } else {
                 logger.warn { "Failed to load task details for taskId=$taskId" }
+                _state.value.copy(
+                    taskDetails = ContentState.Error("Не удалось загрузить задание"),
+                )
             }
         }
     }
 
     private fun loadEventsAndComments() {
         scope.launch {
+            _state.value = _state.value.copy(
+                taskEvents = ContentState.Loading,
+                taskComments = ContentState.Loading,
+            )
             coroutineScope {
                 val eventsDeferred = async { taskRepository.fetchTaskEvents(taskId) }
                 val commentsDeferred = async { taskRepository.fetchTaskComments(taskId) }
                 val events = eventsDeferred.await()
                 val comments = commentsDeferred.await()
-                if (events == null) {
+                val eventsState = if (events != null) {
+                    ContentState.Success(events.toPersistentList())
+                } else {
                     logger.warn { "Failed to load task events for taskId=$taskId" }
+                    ContentState.Error("Не удалось загрузить историю")
                 }
-                if (comments == null) {
+                val commentsState = if (comments != null) {
+                    ContentState.Success(comments.toPersistentList())
+                } else {
                     logger.warn { "Failed to load task comments for taskId=$taskId" }
+                    ContentState.Error("Не удалось загрузить комментарии")
                 }
                 _state.value = _state.value.copy(
-                    taskEvents = events.orEmpty().toPersistentList(),
-                    taskComments = comments.orEmpty().toPersistentList(),
+                    taskEvents = eventsState,
+                    taskComments = commentsState,
                 )
             }
         }

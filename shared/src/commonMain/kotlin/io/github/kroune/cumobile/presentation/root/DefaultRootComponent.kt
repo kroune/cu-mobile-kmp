@@ -9,18 +9,17 @@ import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.router.stack.replaceAll
 import com.arkivanov.decompose.value.Value
-import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.data.network.AuthApiService
 import io.github.kroune.cumobile.domain.repository.AuthRepository
 import io.github.kroune.cumobile.domain.repository.CookieValidationResult
 import io.github.kroune.cumobile.presentation.auth.DefaultLoginComponent
 import io.github.kroune.cumobile.presentation.auth.webview.DefaultWebViewLoginComponent
+import io.github.kroune.cumobile.presentation.common.componentScope
+import io.github.kroune.cumobile.presentation.common.invoke
 import io.github.kroune.cumobile.presentation.main.DefaultMainComponent
 import io.github.kroune.cumobile.presentation.main.MainDependencies
 import io.github.kroune.cumobile.util.runCatchingCancellable
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
@@ -39,12 +38,22 @@ private val logger = KotlinLogging.logger {}
 @OptIn(DelicateDecomposeApi::class)
 class DefaultRootComponent(
     componentContext: ComponentContext,
-    private val authRepository: AuthRepository,
-    private val authApiServiceFactory: () -> AuthApiService,
-    private val mainDependencies: MainDependencies,
+    /**
+     * Forwarded as a [Lazy] to child login components so the underlying
+     * [AuthRepository] isn't materialised until the first auth call.
+     * Read here via `()` when we eagerly need it (splash cookie check).
+     */
+    private val authRepository: Lazy<AuthRepository>,
+    private val authApiService: Lazy<AuthApiService>,
+    /**
+     * Passed straight through to [DefaultMainComponent]. The heavy
+     * main-flow repositories are instantiated only after the user lands
+     * on `Config.Main` — unauthenticated launches don't pay the cost.
+     */
+    private val mainDependencies: Lazy<MainDependencies>,
 ) : RootComponent,
     ComponentContext by componentContext {
-    private val scope = coroutineScope(Dispatchers.Main.immediate + SupervisorJob())
+    private val scope = componentScope()
     private val navigation = StackNavigation<Config>()
 
     override val childStack: Value<ChildStack<*, RootComponent.Child>> =
@@ -63,7 +72,7 @@ class DefaultRootComponent(
     private fun checkSavedAuth() {
         scope.launch {
             runCatchingCancellable {
-                if (authRepository.hasCookie()) {
+                if (authRepository().hasCookie()) {
                     logger.info { "checkSavedAuth: cookie found locally, navigating to Main" }
                     navigateToMain()
                     validateCookieInBackground()
@@ -81,7 +90,7 @@ class DefaultRootComponent(
     private fun validateCookieInBackground() {
         scope.launch {
             runCatchingCancellable {
-                when (authRepository.validateCookie()) {
+                when (authRepository().validateCookie()) {
                     CookieValidationResult.Valid ->
                         logger.info { "validateCookieInBackground: cookie valid" }
                     CookieValidationResult.Invalid -> {
@@ -107,7 +116,7 @@ class DefaultRootComponent(
                 DefaultLoginComponent(
                     componentContext = childContext,
                     authRepository = authRepository,
-                    authApiServiceFactory = authApiServiceFactory,
+                    authApiService = authApiService,
                     onLoginSuccess = ::navigateToMain,
                     onNavigateToWebView = ::navigateToWebView,
                 ),
@@ -125,7 +134,7 @@ class DefaultRootComponent(
             is Config.Main -> RootComponent.Child.MainChild(
                 DefaultMainComponent(
                     componentContext = childContext,
-                    mainDependencies = mainDependencies,
+                    mainDependenciesLazy = mainDependencies,
                     onLogout = ::handleLogout,
                 ),
             )
@@ -145,7 +154,7 @@ class DefaultRootComponent(
 
     private fun handleLogout() {
         scope.launch {
-            authRepository.clearCookie()
+            authRepository().clearCookie()
             navigation.replaceAll(Config.Login)
         }
     }

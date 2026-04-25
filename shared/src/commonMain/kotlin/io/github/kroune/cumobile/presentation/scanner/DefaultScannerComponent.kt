@@ -3,15 +3,14 @@ package io.github.kroune.cumobile.presentation.scanner
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
-import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.data.local.FileStorage
 import io.github.kroune.cumobile.data.local.PdfGenerator
 import io.github.kroune.cumobile.data.local.PdfPageInput
 import io.github.kroune.cumobile.data.model.PickedFile
+import io.github.kroune.cumobile.presentation.common.componentScope
+import io.github.kroune.cumobile.presentation.common.invoke
 import io.github.kroune.cumobile.util.runCatchingCancellable
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -30,15 +29,13 @@ private val logger = KotlinLogging.logger {}
  */
 class DefaultScannerComponent(
     componentContext: ComponentContext,
-    private val pdfGenerator: PdfGenerator,
-    private val fileStorage: FileStorage,
+    private val pdfGenerator: Lazy<PdfGenerator>,
+    private val fileStorage: Lazy<FileStorage>,
     private val onBack: () -> Unit,
     private val onFileSaved: () -> Unit = {},
 ) : ScannerComponent,
     ComponentContext by componentContext {
-    private val scope = coroutineScope(
-        Dispatchers.Main.immediate + SupervisorJob(),
-    )
+    private val scope = componentScope()
 
     private var pageCounter = 0
 
@@ -46,6 +43,15 @@ class DefaultScannerComponent(
         ScannerComponent.State(fileName = generateDefaultFileName()),
     )
     override val state: Value<ScannerComponent.State> = _state
+
+    private fun updateState(block: ScannerComponent.State.() -> ScannerComponent.State) {
+        val s = _state.value.block()
+        _state.value = s.copy(
+            isEditing = s.editingPageIndex in s.pages.indices,
+            editingPage = s.pages.getOrNull(s.editingPageIndex),
+            canSave = s.pages.isNotEmpty() && !s.isSaving,
+        )
+    }
 
     private val _effects = Channel<ScannerComponent.Effect>(Channel.BUFFERED)
     override val effects: Flow<ScannerComponent.Effect> = _effects.receiveAsFlow()
@@ -78,9 +84,9 @@ class DefaultScannerComponent(
                 originalName = file.name,
             )
         }
-        _state.value = _state.value.copy(
-            pages = _state.value.pages + newPages,
-        )
+        updateState {
+            copy(pages = pages + newPages)
+        }
     }
 
     private fun removePage(index: Int) {
@@ -88,14 +94,16 @@ class DefaultScannerComponent(
         if (index !in current.indices) return
         current.removeAt(index)
         val editing = _state.value.editingPageIndex
-        _state.value = _state.value.copy(
-            pages = current,
-            editingPageIndex = when {
-                editing == index -> -1
-                editing > index -> editing - 1
-                else -> editing
-            },
-        )
+        updateState {
+            copy(
+                pages = current,
+                editingPageIndex = when {
+                    editing == index -> -1
+                    editing > index -> editing - 1
+                    else -> editing
+                },
+            )
+        }
     }
 
     private fun movePage(
@@ -108,7 +116,7 @@ class DefaultScannerComponent(
         val temp = pages[index]
         pages[index] = pages[target]
         pages[target] = temp
-        _state.value = _state.value.copy(pages = pages)
+        updateState { copy(pages = pages) }
     }
 
     // endregion
@@ -119,7 +127,7 @@ class DefaultScannerComponent(
         when (intent) {
             is ScannerComponent.Intent.Editor.Open -> {
                 if (intent.index in _state.value.pages.indices) {
-                    _state.value = _state.value.copy(editingPageIndex = intent.index)
+                    updateState { copy(editingPageIndex = intent.index) }
                 }
             }
             is ScannerComponent.Intent.Editor.UpdateRotation -> {
@@ -133,10 +141,10 @@ class DefaultScannerComponent(
                     page.originalName,
                     intent.degrees,
                 )
-                _state.value = _state.value.copy(pages = pages)
+                updateState { copy(pages = pages) }
             }
             ScannerComponent.Intent.Editor.Close ->
-                _state.value = _state.value.copy(editingPageIndex = -1)
+                updateState { copy(editingPageIndex = -1) }
         }
     }
 
@@ -147,9 +155,9 @@ class DefaultScannerComponent(
     private fun handleSettingsIntent(intent: ScannerComponent.Intent.Settings) {
         when (intent) {
             is ScannerComponent.Intent.Settings.UpdateFileName ->
-                _state.value = _state.value.copy(fileName = intent.name)
+                updateState { copy(fileName = intent.name) }
             is ScannerComponent.Intent.Settings.SetCompression ->
-                _state.value = _state.value.copy(compressImages = intent.enabled)
+                updateState { copy(compressImages = intent.enabled) }
         }
     }
 
@@ -161,7 +169,7 @@ class DefaultScannerComponent(
         val currentState = _state.value
         if (currentState.pages.isEmpty() || currentState.isSaving) return
 
-        _state.value = currentState.copy(isSaving = true)
+        updateState { copy(isSaving = true) }
 
         scope.launch {
             runCatchingCancellable {
@@ -171,14 +179,14 @@ class DefaultScannerComponent(
                         rotationDegrees = page.rotationDegrees,
                     )
                 }
-                pdfGenerator.generatePdf(
+                pdfGenerator().generatePdf(
                     pages = pdfPages,
                     compress = currentState.compressImages,
                 ) to currentState.fileName
             }.fold(
                 onSuccess = { (pdfBytes, fileName) ->
                     if (pdfBytes == null) {
-                        _state.value = _state.value.copy(isSaving = false)
+                        updateState { copy(isSaving = false) }
                         _effects.trySend(
                             ScannerComponent.Effect.ShowError("Не удалось создать PDF"),
                         )
@@ -186,9 +194,9 @@ class DefaultScannerComponent(
                     }
 
                     val filename = buildUniqueFilename(fileName)
-                    val saved = fileStorage.saveFile(pdfBytes, filename)
+                    val saved = fileStorage().saveFile(pdfBytes, filename)
 
-                    _state.value = _state.value.copy(isSaving = false)
+                    updateState { copy(isSaving = false) }
 
                     if (saved) {
                         _effects.trySend(ScannerComponent.Effect.SaveSuccess)
@@ -202,7 +210,7 @@ class DefaultScannerComponent(
                 },
                 onFailure = { e ->
                     logger.error(e) { "Failed to save PDF" }
-                    _state.value = _state.value.copy(isSaving = false)
+                    updateState { copy(isSaving = false) }
                     _effects.trySend(
                         ScannerComponent.Effect.ShowError("Ошибка при сохранении: ${e.message}"),
                     )
@@ -214,12 +222,12 @@ class DefaultScannerComponent(
     private fun buildUniqueFilename(rawName: String): String {
         val normalized = normalizeFileName(rawName)
         val base = "$normalized.pdf"
-        if (!fileStorage.fileExists(base)) return base
+        if (!fileStorage().fileExists(base)) return base
 
         var counter = 1
         while (true) {
             val candidate = "${normalized}__dup$counter.pdf"
-            if (!fileStorage.fileExists(candidate)) return candidate
+            if (!fileStorage().fileExists(candidate)) return candidate
             counter++
         }
     }

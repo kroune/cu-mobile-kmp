@@ -173,20 +173,18 @@ private fun ProfileContent(
     ) {
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Avatar section
         var showAvatarDialog by remember { mutableStateOf(false) }
         AvatarSection(
-            initials = state.initials,
-            avatarBytes = state.avatarBytes.dataOrNull,
+            avatarUrl = state.avatarUrl,
             isBusy = state.isDeletingAvatar || state.isUploadingAvatar,
             onDelete = { onIntent(ProfileComponent.Intent.DeleteAvatar) },
             onUpload = { avatarPicker.launch() },
             onAvatarClick = { showAvatarDialog = true },
         )
 
-        if (showAvatarDialog && state.hasAvatar) {
+        if (showAvatarDialog && state.avatarUrl.isNotEmpty()) {
             AvatarFullScreenDialog(
-                avatarBytes = state.avatarBytes.dataOrNull,
+                avatarUrl = state.avatarUrl,
                 onDismiss = { showAvatarDialog = false },
             )
         }
@@ -231,15 +229,13 @@ private fun ProfileContent(
 
 @Composable
 private fun AvatarSection(
-    initials: String,
-    avatarBytes: ByteArray?,
+    avatarUrl: String,
     isBusy: Boolean,
     onDelete: () -> Unit,
     onUpload: () -> Unit,
     onAvatarClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val hasAvatar = avatarBytes != null
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
         Box(
             modifier = Modifier
@@ -247,7 +243,7 @@ private fun AvatarSection(
                 .clip(CircleShape)
                 .border(2.dp, AppTheme.colors.accent, CircleShape)
                 .background(AppTheme.colors.accent.copy(alpha = 0.2f), CircleShape)
-                .clickable(enabled = hasAvatar && !isBusy, onClick = onAvatarClick),
+                .clickable(enabled = !isBusy, onClick = onAvatarClick),
             contentAlignment = Alignment.Center,
         ) {
             if (isBusy) {
@@ -256,24 +252,17 @@ private fun AvatarSection(
                     color = AppTheme.colors.accent,
                     strokeWidth = 2.dp,
                 )
-            } else if (avatarBytes != null) {
+            } else {
                 AsyncImage(
-                    model = avatarBytes,
+                    model = avatarUrl,
                     contentDescription = "Аватар",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize(),
                 )
-            } else {
-                Text(
-                    text = initials.ifEmpty { "?" },
-                    color = AppTheme.colors.accent,
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Bold,
-                )
             }
         }
 
-        if (hasAvatar && !isBusy) {
+        if (!isBusy) {
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
@@ -285,9 +274,7 @@ private fun AvatarSection(
             ) {
                 Icon(Icons.Filled.Close, "Удалить аватар", Modifier.size(16.dp), AppTheme.colors.textPrimary)
             }
-        }
 
-        if (!isBusy) {
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
@@ -305,7 +292,7 @@ private fun AvatarSection(
 
 @Composable
 private fun AvatarFullScreenDialog(
-    avatarBytes: ByteArray?,
+    avatarUrl: String,
     onDismiss: () -> Unit,
 ) {
     Dialog(onDismissRequest = onDismiss) {
@@ -318,14 +305,12 @@ private fun AvatarFullScreenDialog(
                 .clickable(onClick = onDismiss),
             contentAlignment = Alignment.Center,
         ) {
-            if (avatarBytes != null) {
-                AsyncImage(
-                    model = avatarBytes,
-                    contentDescription = "Аватар",
-                    contentScale = ContentScale.Fit,
-                    modifier = Modifier.fillMaxSize(),
-                )
-            }
+            AsyncImage(
+                model = avatarUrl,
+                contentDescription = "Аватар",
+                contentScale = ContentScale.Fit,
+                modifier = Modifier.fillMaxSize(),
+            )
         }
     }
 }

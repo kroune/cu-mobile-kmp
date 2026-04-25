@@ -6,6 +6,8 @@ import io.github.kroune.cumobile.data.model.Course
 import io.github.kroune.cumobile.data.model.CourseOverview
 import io.github.kroune.cumobile.data.network.CourseApiService
 import io.github.kroune.cumobile.domain.repository.CourseRepository
+import io.github.kroune.cumobile.presentation.common.invoke
+import io.github.kroune.cumobile.util.AppDispatchers
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -15,23 +17,24 @@ import kotlinx.coroutines.flow.Flow
  * all network calls to [CourseApiService].
  */
 internal class CourseRepositoryImpl(
-    authLocal: AuthLocalDataSource,
-    private val courseLocal: CourseLocalDataSource,
-    private val courseApi: CourseApiService,
-) : CookieAwareRepository(authLocal),
+    authLocal: Lazy<AuthLocalDataSource>,
+    private val courseLocalLazy: Lazy<CourseLocalDataSource>,
+    private val courseApiLazy: Lazy<CourseApiService>,
+    dispatchers: Lazy<AppDispatchers>,
+) : CookieAwareRepository(authLocal, dispatchers),
     CourseRepository {
     override suspend fun fetchCourses(): List<Course>? =
         withCookie {
-            courseApi.fetchCourses(it)
+            courseApiLazy().fetchCourses(it)
         }
 
     override suspend fun fetchCourseOverview(courseId: String): CourseOverview? =
         withCookie {
-            courseApi.fetchCourseOverview(it, courseId)
+            courseApiLazy().fetchCourseOverview(it, courseId)
         }
 
-    override val courseIdOrderFlow: Flow<List<String>> = courseLocal.courseIdOrderFlow
+    override val courseIdOrderFlow: Flow<List<String>> by lazy { courseLocalLazy().courseIdOrderFlow }
 
     override suspend fun saveCourseIdOrder(ids: List<String>) =
-        courseLocal.saveCourseIdOrder(ids)
+        courseLocalLazy().saveCourseIdOrder(ids)
 }

@@ -35,14 +35,12 @@ interface ScannerComponent {
         val pages: List<ScanPage> = emptyList(),
         val fileName: String = "",
         val compressImages: Boolean = false,
-        /** Index of page being edited, or -1 if not editing. */
         val editingPageIndex: Int = -1,
         val isSaving: Boolean = false,
-    ) {
-        val isEditing: Boolean get() = editingPageIndex in pages.indices
-        val editingPage: ScanPage? get() = pages.getOrNull(editingPageIndex)
-        val canSave: Boolean get() = pages.isNotEmpty() && !isSaving
-    }
+        val isEditing: Boolean = false,
+        val editingPage: ScanPage? = null,
+        val canSave: Boolean = false,
+    )
 
     sealed interface Intent {
         /** Page management intents. */

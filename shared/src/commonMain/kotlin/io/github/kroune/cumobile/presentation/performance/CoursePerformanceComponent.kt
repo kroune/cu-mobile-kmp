@@ -4,10 +4,8 @@ import com.arkivanov.decompose.value.Value
 import io.github.kroune.cumobile.data.model.CourseExercise
 import io.github.kroune.cumobile.data.model.TaskScore
 import io.github.kroune.cumobile.presentation.common.ContentState
-import io.github.kroune.cumobile.presentation.common.dataOrNull
-import io.github.kroune.cumobile.presentation.common.isLoading
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 /**
  * Component for the course performance screen.
@@ -28,45 +26,13 @@ interface CoursePerformanceComponent {
         val content: ContentState<PerformanceData> = ContentState.Loading,
         val selectedTab: Int = 0,
         val activityFilter: String? = null,
-    ) {
-        /** Exercises from loaded data. */
-        val exercises: ImmutableList<ExerciseWithScore>
-            get() = content.dataOrNull
-                ?.exercises
-                .orEmpty()
-                .toImmutableList()
-
-        /** Activity summaries from loaded data. */
-        val activitySummaries: ImmutableList<ActivitySummary>
-            get() = content.dataOrNull
-                ?.activitySummaries
-                .orEmpty()
-                .toImmutableList()
-
-        /** Whether content is still loading. */
-        val isContentLoading: Boolean
-            get() = content.isLoading
-
-        /** All unique activity names for the filter chips. */
-        val activityNames: ImmutableList<String>
-            get() = exercises
-                .map { it.activityName }
-                .distinct()
-                .sorted()
-                .toImmutableList()
-
-        /** Exercises filtered by the selected activity. */
-        val filteredExercises: ImmutableList<ExerciseWithScore>
-            get() = if (activityFilter == null) {
-                exercises
-            } else {
-                exercises.filter { it.activityName == activityFilter }.toImmutableList()
-            }
-
-        /** Grand total contribution across all activities. */
-        val totalContribution: Double
-            get() = activitySummaries.sumOf { it.totalContribution }
-    }
+        val exercises: ImmutableList<ExerciseWithScore> = persistentListOf(),
+        val activitySummaries: ImmutableList<ActivitySummary> = persistentListOf(),
+        val isContentLoading: Boolean = true,
+        val activityNames: ImmutableList<String> = persistentListOf(),
+        val filteredExercises: ImmutableList<ExerciseWithScore> = persistentListOf(),
+        val totalContribution: Double = 0.0,
+    )
 
     sealed interface Intent {
         data object Back : Intent
@@ -96,25 +62,17 @@ data class PerformanceData(
  *
  * Matched by [CourseExercise.id] == [TaskScore.exerciseId].
  */
+private const val DefaultMaxScore = 10
+
 data class ExerciseWithScore(
     val exercise: CourseExercise,
     val score: TaskScore?,
-) {
-    val themeName: String
-        get() = exercise.theme?.name ?: "Без темы"
-
-    val activityName: String
-        get() = exercise.activity?.name ?: "Без активности"
-
-    val scoreValue: Double
-        get() = score?.score ?: 0.0
-
-    val maxScore: Int
-        get() = score?.maxScore ?: 10
-
-    val state: String
-        get() = score?.state ?: "none"
-}
+    val themeName: String = exercise.theme?.name ?: "Без темы",
+    val activityName: String = exercise.activity?.name ?: "Без активности",
+    val scoreValue: Double = score?.score ?: 0.0,
+    val maxScore: Int = score?.maxScore ?: DefaultMaxScore,
+    val state: String = score?.state ?: "none",
+)
 
 /**
  * Aggregated performance summary for a single activity type.
@@ -127,7 +85,5 @@ data class ActivitySummary(
     val count: Int,
     val averageScore: Double,
     val weight: Double,
-) {
-    val totalContribution: Double
-        get() = averageScore * weight
-}
+    val totalContribution: Double = averageScore * weight,
+)

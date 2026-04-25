@@ -3,6 +3,7 @@ package io.github.kroune.cumobile.data.network
 import io.github.kroune.cumobile.data.model.LongreadMaterial
 import io.github.kroune.cumobile.data.model.LongreadMaterialsResponse
 import io.github.kroune.cumobile.data.model.UploadLinkData
+import io.github.kroune.cumobile.presentation.common.invoke
 import io.github.kroune.cumobile.util.runCatchingCancellable
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
@@ -26,7 +27,7 @@ private const val UrlJsonKey = "url"
  * API service for content-related endpoints (longreads, materials, file links).
  */
 internal class ContentApiService(
-    private val httpClient: HttpClient,
+    private val httpClient: Lazy<HttpClient>,
 ) {
     /** Fetches all materials for a longread. */
     suspend fun fetchLongreadMaterials(
@@ -38,7 +39,7 @@ internal class ContentApiService(
             "fetch longread materials for longreadId=$longreadId",
         ) {
             val url = "${ApiEndpoints.Content.longreadMaterials(longreadId)}?limit=$MaxListLimit"
-            httpClient.get(url) {
+            httpClient().get(url) {
                 header("Cookie", cookieHeader(cookie))
             }
         }?.items
@@ -49,7 +50,7 @@ internal class ContentApiService(
         materialId: String,
     ): LongreadMaterial? =
         safeApiCall(logger, "fetch material materialId=$materialId") {
-            httpClient.get(ApiEndpoints.Content.material(materialId)) {
+            httpClient().get(ApiEndpoints.Content.material(materialId)) {
                 header("Cookie", cookieHeader(cookie))
             }
         }
@@ -63,7 +64,7 @@ internal class ContentApiService(
         runCatchingCancellable {
             val url = ApiEndpoints.Content.DOWNLOAD_LINK +
                 "?filename=${filename.encodeUrlParam()}&version=$version"
-            val response = httpClient.get(url) {
+            val response = httpClient().get(url) {
                 header("Cookie", cookieHeader(cookie))
             }
             if (response.status == HttpStatusCode.OK) {
@@ -90,7 +91,7 @@ internal class ContentApiService(
                 "?directory=${directory.encodeUrlParam()}" +
                 "&filename=${filename.encodeUrlParam()}" +
                 "&contentType=${contentType.encodeUrlParam()}"
-            httpClient.get(url) {
+            httpClient().get(url) {
                 header("Cookie", cookieHeader(cookie))
             }
         }
@@ -109,7 +110,7 @@ internal class ContentApiService(
         contentType: String,
     ): Boolean =
         runCatchingCancellable {
-            val response = httpClient.put(presignedUrl) {
+            val response = httpClient().put(presignedUrl) {
                 setBody(ByteArrayContent(bytes, ContentType.parse(contentType)))
             }
             if (isSuccessStatus(response.status)) {

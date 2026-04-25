@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.ktlint)
     alias(libs.plugins.roborazziPlugin)
     alias(libs.plugins.vkompose)
+    alias(libs.plugins.androidxBaselineprofile)
 }
 
 val jdkVersion =
@@ -115,12 +116,22 @@ android {
     }
 }
 
+baselineProfile {
+    saveInSrc = true
+    automaticGenerationDuringBuild = false
+    mergeIntoMain = true
+}
+
 dependencies {
     implementation(libs.kotlin.logging)
     implementation(projects.shared)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.compose.ui)
+    implementation(libs.compose.foundation)
+    implementation(libs.androidx.profileinstaller)
+
+    "baselineProfile"(projects.baselineprofile)
 
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)

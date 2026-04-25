@@ -27,14 +27,18 @@ data class TaskDetails(
     val deadline: String? = null,
     /** ISO 8601 datetime string — when the task was started. */
     val startedAt: String? = null,
+    /** ISO 8601 datetime string — when the current attempt was started. */
+    val attemptStartedAt: String? = null,
     val quizSessionId: String? = null,
     val currentAttemptId: String? = null,
+    val evaluatedAttemptId: String? = null,
+    val lastAttemptId: String? = null,
     val exercise: TaskDetailsExercise? = null,
     val solution: TaskDetailsSolution? = null,
     val student: TaskDetailsStudent? = null,
 ) {
     /** Convenience accessor for `exercise.maxScore`. */
-    val maxScore: Int?
+    val maxScore: Double?
         get() = exercise?.maxScore
 
     /** Whether a solution has been submitted. */
@@ -57,10 +61,18 @@ data class TaskDetails(
 /** Nested exercise info within [TaskDetails] JSON. */
 @Serializable
 data class TaskDetailsExercise(
+    val id: String? = null,
     val name: String? = null,
     val type: String? = null,
     val timer: String? = null,
-    val maxScore: Int? = null,
+    val maxScore: Double? = null,
+    val settings: ExerciseSettings? = null,
+)
+
+@Serializable
+data class ExerciseSettings(
+    val attemptsLimit: Int? = null,
+    val evaluationStrategy: EvaluationStrategy? = null,
 )
 
 /** Nested solution info within [TaskDetails] JSON. */
@@ -68,6 +80,7 @@ data class TaskDetailsExercise(
 data class TaskDetailsSolution(
     val solutionUrl: String? = null,
     val attachments: List<MaterialAttachment> = emptyList(),
+    val answers: List<QuizAnswerResult> = emptyList(),
 )
 
 /** Nested student info within [TaskDetails] JSON. */

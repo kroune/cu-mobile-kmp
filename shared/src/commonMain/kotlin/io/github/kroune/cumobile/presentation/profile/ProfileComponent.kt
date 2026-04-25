@@ -30,32 +30,13 @@ interface ProfileComponent {
     data class State(
         val profile: ContentState<StudentProfile> = ContentState.Loading,
         val lmsProfile: ContentState<StudentLmsProfile?> = ContentState.Loading,
-        val avatarBytes: ContentState<ByteArray?> = ContentState.Loading,
+        val avatarUrl: String = "",
         val isDeletingAvatar: Boolean = false,
         val isUploadingAvatar: Boolean = false,
     ) {
         /** Whether the important content (profile) is still loading. */
         val isContentLoading: Boolean
             get() = profile.isLoading
-
-        /** Whether the user has an avatar. */
-        val hasAvatar: Boolean
-            get() = avatarBytes.dataOrNull != null
-
-        /** User initials for avatar placeholder (first char of first + last name). */
-        val initials: String
-            get() {
-                val p = profile.dataOrNull ?: return ""
-                val first = p.firstName
-                    .firstOrNull()
-                    ?.uppercase()
-                    .orEmpty()
-                val last = p.lastName
-                    .firstOrNull()
-                    ?.uppercase()
-                    .orEmpty()
-                return "$first$last"
-            }
 
         /** Translated education level label. */
         val educationLevelLabel: String
@@ -76,25 +57,6 @@ interface ProfileComponent {
                 val uni = p.universityEmail ?: return p.emails
                 return p.emails.filter { it.value != uni }
             }
-
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (other !is State) return false
-            return profile == other.profile &&
-                lmsProfile == other.lmsProfile &&
-                avatarBytes == other.avatarBytes &&
-                isDeletingAvatar == other.isDeletingAvatar &&
-                isUploadingAvatar == other.isUploadingAvatar
-        }
-
-        override fun hashCode(): Int {
-            var result = profile.hashCode()
-            result = 31 * result + lmsProfile.hashCode()
-            result = 31 * result + avatarBytes.hashCode()
-            result = 31 * result + isDeletingAvatar.hashCode()
-            result = 31 * result + isUploadingAvatar.hashCode()
-            return result
-        }
     }
 
     sealed interface Intent {

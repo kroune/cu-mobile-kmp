@@ -3,19 +3,20 @@ package io.github.kroune.cumobile.presentation.notifications
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
-import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import io.github.kroune.cumobile.data.model.NotificationCategory
 import io.github.kroune.cumobile.data.model.NotificationItem
 import io.github.kroune.cumobile.domain.repository.NotificationRepository
 import io.github.kroune.cumobile.presentation.common.ContentState
+import io.github.kroune.cumobile.presentation.common.componentScope
+import io.github.kroune.cumobile.presentation.common.invoke
+import io.github.kroune.cumobile.util.AppDispatchers
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 private val logger = KotlinLogging.logger {}
 
@@ -27,12 +28,13 @@ private val logger = KotlinLogging.logger {}
  */
 class DefaultNotificationsComponent(
     componentContext: ComponentContext,
-    private val notificationRepository: NotificationRepository,
+    private val notificationRepository: Lazy<NotificationRepository>,
+    private val dispatchers: Lazy<AppDispatchers>,
     private val onBack: () -> Unit,
     private val onOpenLongread: ((longreadId: String, courseId: String, themeId: String) -> Unit)? = null,
 ) : NotificationsComponent,
     ComponentContext by componentContext {
-    private val scope = coroutineScope(Dispatchers.Main.immediate + SupervisorJob())
+    private val scope = componentScope()
 
     private val _state = MutableValue(NotificationsComponent.State())
     override val state: Value<NotificationsComponent.State> = _state
@@ -53,15 +55,18 @@ class DefaultNotificationsComponent(
             is NotificationsComponent.Intent.SelectTab -> {
                 _state.value = _state.value.copy(selectedTab = intent.index)
             }
+
             is NotificationsComponent.Intent.OpenLink -> {
                 val handledInApp = handleOpenLink(intent.uri)
                 if (!handledInApp) {
                     _state.value = _state.value.copy(externalLinkToOpen = intent.uri)
                 }
             }
+
             NotificationsComponent.Intent.ExternalLinkOpened -> {
                 _state.value = _state.value.copy(externalLinkToOpen = null)
             }
+
             is NotificationsComponent.Intent.ToggleExpand -> {
                 val current = _state.value.expandedNotificationIds
                 val updated = if (intent.notificationId in current) {
@@ -84,7 +89,7 @@ class DefaultNotificationsComponent(
 
         currentLoadJob = scope.launch {
             launch {
-                val education = notificationRepository.fetchNotifications(
+                val education = notificationRepository().fetchNotifications(
                     category = NotificationCategory.Education,
                 )
                 if (education != null) {
@@ -102,7 +107,7 @@ class DefaultNotificationsComponent(
             }
 
             launch {
-                val other = notificationRepository.fetchNotifications(
+                val other = notificationRepository().fetchNotifications(
                     category = NotificationCategory.Other,
                 )
                 if (other != null) {
@@ -144,6 +149,8 @@ class DefaultNotificationsComponent(
         return false
     }
 
-    private fun sortByDate(items: List<NotificationItem>) =
-        items.sortedByDescending { it.createdAt }
+    private suspend fun sortByDate(items: List<NotificationItem>): List<NotificationItem> =
+        withContext(dispatchers().default) {
+            items.sortedByDescending { it.createdAt }
+        }
 }

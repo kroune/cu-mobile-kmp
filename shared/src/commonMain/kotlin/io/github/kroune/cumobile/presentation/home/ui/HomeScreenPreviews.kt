@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import io.github.kroune.cumobile.data.model.ClassData
@@ -16,7 +17,10 @@ import io.github.kroune.cumobile.presentation.common.ContentState
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 import io.github.kroune.cumobile.presentation.common.ui.CuMobileTheme
 import io.github.kroune.cumobile.presentation.common.ui.ErrorContent
+import io.github.kroune.cumobile.presentation.common.ui.LocalClock
+import io.github.kroune.cumobile.presentation.common.ui.previewClock
 import io.github.kroune.cumobile.presentation.home.HomeComponent
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.datetime.LocalDate
 
 private val previewMonday = LocalDate(2026, 3, 23)
@@ -24,7 +28,7 @@ private val previewToday = LocalDate(2026, 3, 30)
 
 private val previewHomeState = HomeComponent.State(
     tasks = ContentState.Success(
-        listOf(
+        persistentListOf(
             StudentTask(
                 id = "1",
                 state = TaskState.InProgress,
@@ -40,34 +44,28 @@ private val previewHomeState = HomeComponent.State(
         ),
     ),
     courses = ContentState.Success(
-        listOf(
+        persistentListOf(
             Course(id = "1", name = "Алгоритмы", category = "development"),
             Course(id = "2", name = "Линейная алгебра", category = "mathematics"),
             Course(id = "3", name = "Менеджмент", category = "business"),
         ),
     ),
-    profileInitials = ContentState.Success("ИП"),
-    lateDaysBalance = ContentState.Success(5),
-    avatarBytes = ContentState.Success(null),
     selectedDate = previewToday,
     weekStart = previewMonday,
-    schedule = ContentState.Success(emptyList()),
+    schedule = ContentState.Success(persistentListOf()),
 )
 
 private val previewHomeEmptyState = HomeComponent.State(
-    tasks = ContentState.Success(emptyList()),
-    courses = ContentState.Success(emptyList()),
-    profileInitials = ContentState.Success("ИП"),
-    avatarBytes = ContentState.Success(null),
-    lateDaysBalance = ContentState.Success(null),
+    tasks = ContentState.Success(persistentListOf()),
+    courses = ContentState.Success(persistentListOf()),
     selectedDate = previewToday,
     weekStart = previewMonday,
-    schedule = ContentState.Success(emptyList()),
+    schedule = ContentState.Success(persistentListOf()),
 )
 
 val previewHomeWithScheduleState = previewHomeState.copy(
     schedule = ContentState.Success(
-        listOf(
+        persistentListOf(
             ClassData(
                 startTime = "09:00",
                 endTime = "10:30",
@@ -120,7 +118,9 @@ private fun PreviewHomeScreenSkeletonLight() {
 @Composable
 private fun PreviewHomeScreenDark() {
     CuMobileTheme(darkTheme = true) {
-        HomeContent(state = previewHomeState, onIntent = {}, onTaskClick = {}, onCourseClick = {})
+        CompositionLocalProvider(LocalClock provides previewClock) {
+            HomeContent(state = previewHomeState, onIntent = {}, onTaskClick = {}, onCourseClick = {})
+        }
     }
 }
 
@@ -128,7 +128,9 @@ private fun PreviewHomeScreenDark() {
 @Composable
 private fun PreviewHomeScreenLight() {
     CuMobileTheme(darkTheme = false) {
-        HomeContent(state = previewHomeState, onIntent = {}, onTaskClick = {}, onCourseClick = {})
+        CompositionLocalProvider(LocalClock provides previewClock) {
+            HomeContent(state = previewHomeState, onIntent = {}, onTaskClick = {}, onCourseClick = {})
+        }
     }
 }
 
@@ -178,12 +180,14 @@ private fun PreviewHomeScreenLoadingDark() {
 @Composable
 private fun PreviewHomeScreenEmptyDark() {
     CuMobileTheme(darkTheme = true) {
-        HomeContent(
-            state = previewHomeEmptyState,
-            onIntent = {},
-            onTaskClick = {},
-            onCourseClick = {},
-        )
+        CompositionLocalProvider(LocalClock provides previewClock) {
+            HomeContent(
+                state = previewHomeEmptyState,
+                onIntent = {},
+                onTaskClick = {},
+                onCourseClick = {},
+            )
+        }
     }
 }
 
@@ -191,12 +195,14 @@ private fun PreviewHomeScreenEmptyDark() {
 @Composable
 private fun PreviewHomeScreenEmptyLight() {
     CuMobileTheme(darkTheme = false) {
-        HomeContent(
-            state = previewHomeEmptyState,
-            onIntent = {},
-            onTaskClick = {},
-            onCourseClick = {},
-        )
+        CompositionLocalProvider(LocalClock provides previewClock) {
+            HomeContent(
+                state = previewHomeEmptyState,
+                onIntent = {},
+                onTaskClick = {},
+                onCourseClick = {},
+            )
+        }
     }
 }
 
@@ -204,11 +210,13 @@ private fun PreviewHomeScreenEmptyLight() {
 @Composable
 private fun PreviewHomeWithScheduleLight() {
     CuMobileTheme(darkTheme = false) {
-        HomeContent(
-            state = previewHomeWithScheduleState,
-            onIntent = {},
-            onTaskClick = {},
-            onCourseClick = {},
-        )
+        CompositionLocalProvider(LocalClock provides previewClock) {
+            HomeContent(
+                state = previewHomeWithScheduleState,
+                onIntent = {},
+                onTaskClick = {},
+                onCourseClick = {},
+            )
+        }
     }
 }

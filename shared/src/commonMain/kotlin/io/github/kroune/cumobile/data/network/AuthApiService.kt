@@ -3,9 +3,6 @@ package io.github.kroune.cumobile.data.network
 import io.github.kroune.cumobile.util.runCatchingCancellable
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
-import io.ktor.client.plugins.HttpTimeout
-import io.ktor.client.plugins.cookies.AcceptAllCookiesStorage
-import io.ktor.client.plugins.cookies.HttpCookies
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -18,8 +15,6 @@ import io.ktor.http.content.TextContent
 import io.ktor.http.encodeURLParameter
 
 private val logger = KotlinLogging.logger {}
-
-private const val AuthTimeoutMs = 30_000L
 
 /**
  * Result of a Keycloak auth step.
@@ -47,30 +42,23 @@ sealed interface AuthStepResult {
 
 /**
  * Handles Keycloak OIDC authentication flow via direct HTTP calls
- * instead of a WebView. Each instance manages a single auth session
- * with its own cookie jar.
+ * instead of a WebView. Uses a shared [HttpClient] with a
+ * [ResettableCookieStorage] that is cleared between login attempts
+ * via [resetSession].
  *
  * The flow is:
- * 1. [startAuth] — GET OIDC auth URL → parse loginAction from HTML
- * 2. [submitUsername] — POST username → password page
- * 3. [submitPassword] — POST password → OTP page
- * 4. [submitOtp] — POST OTP code → 302 redirect to callback
- * 5. [exchangeCallback] — GET callback URL → capture bff.cookie
+ * 1. [resetSession] — clear cookies from any previous attempt
+ * 2. [startAuth] — GET OIDC auth URL → parse loginAction from HTML
+ * 3. [submitUsername] — POST username → password page
+ * 4. [submitPassword] — POST password → OTP page
+ * 5. [submitOtp] — POST OTP code → 302 redirect to callback
+ * 6. [exchangeCallback] — GET callback URL → capture bff.cookie
  */
-class AuthApiService {
-    private val cookieStorage = AcceptAllCookiesStorage()
-
-    private val client = HttpClient {
-        followRedirects = false
-        install(HttpCookies) {
-            storage = cookieStorage
-        }
-        install(HttpTimeout) {
-            requestTimeoutMillis = AuthTimeoutMs
-            connectTimeoutMillis = AuthTimeoutMs
-            socketTimeoutMillis = AuthTimeoutMs
-        }
-    }
+class AuthApiService(
+    httpClient: Lazy<HttpClient>,
+    private val cookieStorage: Lazy<ResettableCookieStorage>,
+) {
+    private val client by httpClient
 
     /**
      * Initiates the auth flow by loading the Keycloak login page.
@@ -152,10 +140,10 @@ class AuthApiService {
         }
 
     /**
-     * Closes the HTTP client. Call after auth flow completes.
+     * Clears the session cookie jar so a fresh login attempt starts clean.
      */
-    fun close() {
-        client.close()
+    fun resetSession() {
+        cookieStorage.value.reset()
     }
 
     private suspend fun postForm(
@@ -243,7 +231,7 @@ internal fun parseAuthPage(html: String): AuthStepResult {
         return AuthStepResult.Error("Не удалось разобрать страницу авторизации")
     }
 
-    val translatedError = errorMessage?.let { translateKeycloakError(it) }
+    val translatedError = errorMessage?.let { translateKeycloakMessage(it, errorLevel) }
 
     return AuthStepResult.NextStep(
         activePage = activePage,
@@ -275,15 +263,26 @@ internal fun extractJsStringValue(
         ?.get(2)
 }
 
-// Informational messages that are not errors map to null; unknown codes are returned as-is.
-private val keycloakErrorTranslations: Map<String, String?> = mapOf(
+private val keycloakErrorTranslations: Map<String, String> = mapOf(
     "phoneTokenCodeDoesNotMatch" to "Неверный код",
     "phoneTokenCodeExpired" to "Код истёк, запросите новый",
     "invalidUserMessage" to "Неверный логин или пароль",
     "invalidPasswordMessage" to "Неверный пароль",
     "accountTemporarilyDisabledMessage" to "Аккаунт временно заблокирован",
-    "codeSent" to null,
 )
 
-private fun translateKeycloakError(errorCode: String): String? =
-    keycloakErrorTranslations.getOrElse(errorCode) { errorCode }
+/** Keycloak `systemMessage.level` values for messages the user shouldn't see as errors. */
+private val nonErrorLevels = setOf("success", "info")
+
+/**
+ * Maps Keycloak's `systemMessage` payload to a user-facing error, or `null` if the
+ * payload is informational (e.g. `codeSent` with level `success`) and should not
+ * be surfaced as an error at all.
+ */
+private fun translateKeycloakMessage(
+    errorCode: String,
+    errorLevel: String?,
+): String? {
+    if (errorLevel in nonErrorLevels) return null
+    return keycloakErrorTranslations[errorCode] ?: errorCode
+}

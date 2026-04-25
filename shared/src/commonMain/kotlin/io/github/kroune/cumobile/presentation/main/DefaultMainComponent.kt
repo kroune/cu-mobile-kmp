@@ -17,12 +17,20 @@ import com.arkivanov.decompose.router.stack.pushNew
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.backhandler.BackCallback
-import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
+import io.github.kroune.cumobile.data.model.StudentTask
 import io.github.kroune.cumobile.data.model.UpdateInfo
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
+import io.github.kroune.cumobile.data.network.ApiEndpoints
+import io.github.kroune.cumobile.data.network.BaseUrl
+import io.github.kroune.cumobile.presentation.common.ContentState
+import io.github.kroune.cumobile.presentation.common.componentScope
+import io.github.kroune.cumobile.presentation.common.invoke
+import io.github.kroune.cumobile.util.runCatchingCancellable
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
+import kotlin.time.Clock.System
+
+private val logger = KotlinLogging.logger {}
 
 /**
  * Default implementation of [MainComponent].
@@ -34,13 +42,11 @@ import kotlinx.serialization.Serializable
 @OptIn(DelicateDecomposeApi::class)
 class DefaultMainComponent(
     componentContext: ComponentContext,
-    private val mainDependencies: MainDependencies,
+    private val mainDependenciesLazy: Lazy<MainDependencies>,
     private val onLogout: () -> Unit,
 ) : MainComponent,
     ComponentContext by componentContext {
-    private val scope = coroutineScope(
-        Dispatchers.Main.immediate + SupervisorJob(),
-    )
+    private val scope = componentScope()
 
     // region Update check
 
@@ -54,7 +60,7 @@ class DefaultMainComponent(
 
     init {
         scope.launch {
-            val info = mainDependencies.updateChecker.checkForUpdate()
+            val info = mainDependenciesLazy().updateChecker().checkForUpdate()
             if (info != null) {
                 _updateInfo.value = info
             }
@@ -63,17 +69,132 @@ class DefaultMainComponent(
 
     // endregion
 
-    // region Tab navigation (ChildPages)
+    // region Top bar state (profile header shared across all tabs)
+
+    private var avatarVersion = System.now().toEpochMilliseconds()
+
+    private val _topBarState = MutableValue(
+        TopBarState(avatarUrl = buildAvatarUrl()),
+    )
+    override val topBarState: Value<TopBarState> = _topBarState
+
+    init {
+        scope.launch {
+            loadLateDaysBalance()
+        }
+    }
+
+    private suspend fun loadLateDaysBalance() {
+        runCatchingCancellable {
+            mainDependenciesLazy().profileRepository().fetchLmsProfile()
+        }.fold(
+            onSuccess = { lmsProfile ->
+                _topBarState.value = _topBarState.value.copy(
+                    lateDaysBalance = if (lmsProfile != null) {
+                        ContentState.Success(lmsProfile.lateDaysBalance)
+                    } else {
+                        ContentState.Error("Не удалось загрузить баланс")
+                    },
+                )
+            },
+            onFailure = { e ->
+                logger.error(e) { "Failed to load late days balance" }
+                _topBarState.value = _topBarState.value.copy(
+                    lateDaysBalance = ContentState.Error("Не удалось загрузить баланс"),
+                )
+            },
+        )
+    }
+
+    private fun buildAvatarUrl(): String =
+        "${BaseUrl}${ApiEndpoints.Profile.AVATAR_ME}?v=$avatarVersion"
+
+    override fun onAvatarChanged() {
+        avatarVersion = System.now().toEpochMilliseconds()
+        _topBarState.value = _topBarState.value.copy(avatarUrl = buildAvatarUrl())
+    }
+
+    // endregion
+
+    // region Navigation
 
     private val tabNavigation = PagesNavigation<TabConfig>()
+    private val detailNavigation = StackNavigation<DetailConfig>()
+
+    override val navigation = object : MainComponent.Navigation {
+        override fun toProfile() {
+            detailNavigation.pushNew(DetailConfig.Profile)
+        }
+
+        override fun toNotifications() {
+            detailNavigation.pushNew(DetailConfig.Notifications)
+        }
+
+        override fun toCourseDetail(courseId: String) {
+            detailNavigation.pushNew(DetailConfig.CourseDetail(courseId))
+        }
+
+        override fun toCoursePerformance(
+            courseId: String,
+            courseName: String,
+            totalGrade: Int,
+        ) {
+            detailNavigation.bringToFront(
+                DetailConfig.CoursePerformance(courseId, courseName, totalGrade),
+            )
+        }
+
+        override fun toLongread(
+            longreadId: String,
+            courseId: String,
+            themeId: String,
+        ) {
+            detailNavigation.pushNew(
+                DetailConfig.Longread(longreadId, courseId, themeId),
+            )
+        }
+
+        override fun toFileRenameSettings() {
+            detailNavigation.pushNew(DetailConfig.FileRenameSettings)
+        }
+
+        override fun toScanner() {
+            detailNavigation.pushNew(DetailConfig.Scanner)
+        }
+
+        override fun back() {
+            detailNavigation.pop()
+        }
+    }
+
+    private fun navigateToTask(task: StudentTask) {
+        val longreadId = task.longread.id
+        val themeId = task.theme.id
+        val courseId = task.course.id
+        if (longreadId.isBlank() || themeId.isBlank()) {
+            logger.error {
+                "Cannot navigate to task ${task.id}: longreadId=$longreadId, themeId=$themeId"
+            }
+            return
+        }
+        detailNavigation.pushNew(
+            DetailConfig.Longread(longreadId, courseId, themeId, focusTaskId = task.id),
+        )
+    }
+
+    // endregion
+
+    // region Tab navigation (ChildPages)
 
     private val tabChildFactory = TabChildFactory(
-        deps = mainDependencies,
-        navigateToCourseDetail = ::navigateToCourseDetail,
-        navigateToProfile = ::navigateToProfile,
-        navigateToCoursePerformance = ::navigateToCoursePerformance,
-        navigateToFileRenameSettings = ::navigateToFileRenameSettings,
-        navigateToScanner = ::navigateToScanner,
+        deps = mainDependenciesLazy(),
+        nav = TabNavigationCallbacks(
+            toCourseDetail = navigation::toCourseDetail,
+            toTask = ::navigateToTask,
+            toCoursePerformance = navigation::toCoursePerformance,
+            toFileRenameSettings = navigation::toFileRenameSettings,
+            toScanner = navigation::toScanner,
+        ),
     )
 
     override val tabPages: Value<ChildPages<*, MainComponent.TabChild>> =
@@ -92,7 +213,7 @@ class DefaultMainComponent(
                 )
             },
             pageStatus = { index, pages ->
-                if (index == pages.selectedIndex) Status.RESUMED else Status.CREATED
+                if (index == pages.selectedIndex) Status.RESUMED else Status.DESTROYED
             },
             childFactory = tabChildFactory::create,
         )
@@ -115,8 +236,6 @@ class DefaultMainComponent(
 
     // region Detail navigation (ChildStack)
 
-    private val detailNavigation = StackNavigation<DetailConfig>()
-
     private val filesCoordinator = FilesCoordinator(
         tabPages = tabPages,
         selectTab = ::selectTab,
@@ -125,10 +244,11 @@ class DefaultMainComponent(
     )
 
     private val detailChildFactory = DetailChildFactory(
-        deps = mainDependencies,
-        navigateBack = ::navigateDetailBack,
-        navigateToLongread = ::navigateToLongread,
+        deps = mainDependenciesLazy(),
+        navigateBack = navigation::back,
+        navigateToLongread = navigation::toLongread,
         onLogout = onLogout,
+        onAvatarChanged = ::onAvatarChanged,
         downloadCallbacks = DownloadCallbacks(
             refreshFiles = filesCoordinator::refreshFiles,
             navigateToFiles = filesCoordinator::navigateToFilesWithHighlight,
@@ -146,50 +266,6 @@ class DefaultMainComponent(
             handleBackButton = true,
             childFactory = detailChildFactory::create,
         )
-
-    override fun navigateToProfile() {
-        detailNavigation.pushNew(DetailConfig.Profile)
-    }
-
-    override fun navigateToNotifications() {
-        detailNavigation.pushNew(DetailConfig.Notifications)
-    }
-
-    override fun navigateToCourseDetail(courseId: String) {
-        detailNavigation.pushNew(DetailConfig.CourseDetail(courseId))
-    }
-
-    override fun navigateToCoursePerformance(
-        courseId: String,
-        courseName: String,
-        totalGrade: Int,
-    ) {
-        detailNavigation.bringToFront(
-            DetailConfig.CoursePerformance(courseId, courseName, totalGrade),
-        )
-    }
-
-    override fun navigateToLongread(
-        longreadId: String,
-        courseId: String,
-        themeId: String,
-    ) {
-        detailNavigation.pushNew(
-            DetailConfig.Longread(longreadId, courseId, themeId),
-        )
-    }
-
-    override fun navigateToFileRenameSettings() {
-        detailNavigation.pushNew(DetailConfig.FileRenameSettings)
-    }
-
-    override fun navigateToScanner() {
-        detailNavigation.pushNew(DetailConfig.Scanner)
-    }
-
-    override fun navigateDetailBack() {
-        detailNavigation.pop()
-    }
 
     // endregion
 
@@ -235,6 +311,7 @@ class DefaultMainComponent(
             val longreadId: String,
             val courseId: String,
             val themeId: String,
+            val focusTaskId: String? = null,
         ) : DetailConfig
 
         @Serializable

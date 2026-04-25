@@ -6,6 +6,8 @@ import io.github.kroune.cumobile.data.model.MaterialAttachment
 import io.github.kroune.cumobile.data.model.UploadLinkData
 import io.github.kroune.cumobile.data.network.ContentApiService
 import io.github.kroune.cumobile.domain.repository.ContentRepository
+import io.github.kroune.cumobile.presentation.common.invoke
+import io.github.kroune.cumobile.util.AppDispatchers
 import io.github.oshai.kotlinlogging.KotlinLogging
 
 private val logger = KotlinLogging.logger {}
@@ -17,18 +19,19 @@ private val logger = KotlinLogging.logger {}
  * all network calls to [ContentApiService].
  */
 internal class ContentRepositoryImpl(
-    authLocal: AuthLocalDataSource,
-    private val contentApi: ContentApiService,
-) : CookieAwareRepository(authLocal),
+    authLocal: Lazy<AuthLocalDataSource>,
+    private val contentApi: Lazy<ContentApiService>,
+    dispatchers: Lazy<AppDispatchers>,
+) : CookieAwareRepository(authLocal, dispatchers),
     ContentRepository {
     override suspend fun fetchLongreadMaterials(longreadId: String): List<LongreadMaterial>? =
         withCookie {
-            contentApi.fetchLongreadMaterials(it, longreadId)
+            contentApi().fetchLongreadMaterials(it, longreadId)
         }
 
     override suspend fun fetchMaterial(materialId: String): LongreadMaterial? =
         withCookie {
-            contentApi.fetchMaterial(it, materialId)
+            contentApi().fetchMaterial(it, materialId)
         }
 
     override suspend fun getDownloadLink(
@@ -36,7 +39,7 @@ internal class ContentRepositoryImpl(
         version: String,
     ): String? =
         withCookie {
-            contentApi.getDownloadLink(it, filename, version)
+            contentApi().getDownloadLink(it, filename, version)
         }
 
     override suspend fun getUploadLink(
@@ -45,7 +48,7 @@ internal class ContentRepositoryImpl(
         contentType: String,
     ): UploadLinkData? =
         withCookie {
-            contentApi.getUploadLink(it, directory, filename, contentType)
+            contentApi().getUploadLink(it, directory, filename, contentType)
         }
 
     override suspend fun uploadFile(
@@ -59,7 +62,7 @@ internal class ContentRepositoryImpl(
             logger.warn { "Failed to get upload link for $filename" }
             return null
         }
-        val uploaded = contentApi.uploadFileToUrl(uploadData.url, bytes, contentType)
+        val uploaded = contentApi().uploadFileToUrl(uploadData.url, bytes, contentType)
         if (!uploaded) {
             logger.warn { "Failed to upload $filename to presigned URL" }
             return null

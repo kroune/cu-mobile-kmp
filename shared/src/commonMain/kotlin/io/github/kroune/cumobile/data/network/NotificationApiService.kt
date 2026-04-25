@@ -16,8 +16,10 @@ private val logger = KotlinLogging.logger {}
  * API service for notification endpoints.
  */
 internal class NotificationApiService(
-    private val httpClient: HttpClient,
+    httpClient: Lazy<HttpClient>,
 ) {
+    private val httpClient by httpClient
+
     /**
      * Fetches in-app notifications.
      *
