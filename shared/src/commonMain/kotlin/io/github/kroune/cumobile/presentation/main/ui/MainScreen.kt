@@ -97,8 +97,8 @@ fun MainScreen(component: MainComponent) {
                 title = TAB_LABELS[selectedIndex],
                 avatarUrl = topBarState.avatarUrl,
                 lateDaysBalance = topBarState.lateDaysBalance.dataOrNull,
-                onNotificationsClick = { component.navigateToNotifications() },
-                onProfileClick = { component.navigateToProfile() },
+                onNotificationsClick = { component.navigation.toNotifications() },
+                onProfileClick = { component.navigation.toProfile() },
                 onAvatarRetry = { component.onAvatarChanged() },
             )
 
@@ -200,7 +200,7 @@ private fun DetailOverlay(
             is MainComponent.DetailChild.CourseDetailChild -> {
                 CourseDetailScreen(
                     component = instance.component,
-                    onBack = { component.navigateDetailBack() },
+                    onBack = { component.navigation.back() },
                 )
             }
             is MainComponent.DetailChild.LongreadChild -> {
@@ -211,31 +211,31 @@ private fun DetailOverlay(
             is MainComponent.DetailChild.CoursePerformanceChild -> {
                 CoursePerformanceScreen(
                     component = instance.component,
-                    onBack = { component.navigateDetailBack() },
+                    onBack = { component.navigation.back() },
                 )
             }
             is MainComponent.DetailChild.ProfileChild -> {
                 ProfileScreen(
                     component = instance.component,
-                    onBack = { component.navigateDetailBack() },
+                    onBack = { component.navigation.back() },
                 )
             }
             is MainComponent.DetailChild.NotificationsChild -> {
                 NotificationsScreen(
                     component = instance.component,
-                    onBack = { component.navigateDetailBack() },
+                    onBack = { component.navigation.back() },
                 )
             }
             is MainComponent.DetailChild.FileRenameSettingsChild -> {
                 io.github.kroune.cumobile.presentation.files.rename.ui.FileRenameSettingsScreen(
                     component = instance.component,
-                    onBack = { component.navigateDetailBack() },
+                    onBack = { component.navigation.back() },
                 )
             }
             is MainComponent.DetailChild.ScannerChild -> {
                 ScannerScreen(
                     component = instance.component,
-                    onBack = { component.navigateDetailBack() },
+                    onBack = { component.navigation.back() },
                 )
             }
         }

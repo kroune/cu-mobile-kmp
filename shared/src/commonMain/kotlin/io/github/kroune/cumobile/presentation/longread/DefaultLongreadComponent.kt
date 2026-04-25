@@ -60,7 +60,6 @@ class DefaultLongreadComponent(
     private val lazyQuizRepository = deps.quizRepository
     private val contentRepository by deps.contentRepository
     private val taskRepository by lazyTaskRepository
-    private val quizRepository by lazyQuizRepository
     private val renameRepository by deps.renameRepository
     private val dispatchers by deps.dispatchers
     private val focusTaskId: String? = params.focusTaskId

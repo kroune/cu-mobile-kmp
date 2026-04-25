@@ -61,7 +61,9 @@ private val previewQuestions = persistentListOf(
         id = "q3",
         type = QuizQuestionType.NumberMatch,
         score = 1.0,
-        content = QuizQuestionContent(description = "Сколько сравнений в худшем случае для сортировки пузырьком массива из 5 элементов?"),
+        content = QuizQuestionContent(
+            description = "Сколько сравнений в худшем случае для сортировки пузырьком массива из 5 элементов?",
+        ),
     ),
     QuizQuestion(
         id = "q4",
@@ -214,80 +216,82 @@ private fun PreviewQuizTimerLowDark() {
 // region Completed
 
 @Suppress("MagicNumber")
+private val previewCompletedSuccessState = QuestionsMaterialComponent.State(
+    isExpanded = true,
+    phase = QuizPhase.Completed,
+    taskDetails = ContentState.Success(
+        TaskDetails(
+            id = "t1",
+            state = TaskState.Evaluated,
+            score = 8.0,
+            extraScore = 1.0,
+            scoreSkillLevel = "intermediate",
+            exercise = TaskDetailsExercise(
+                id = "ex1",
+                name = "Тест: Основы алгоритмов",
+                type = "Questions",
+                maxScore = 10.0,
+            ),
+            quizSessionId = "s1",
+            evaluatedAttemptId = "a1",
+        ),
+    ),
+    taskState = TaskState.Evaluated,
+    questions = previewQuestions,
+    evaluationStrategy = EvaluationStrategy.Best,
+    attemptResults = QuizAttempt(
+        id = "a1",
+        score = 8.0,
+        maxScore = 10.0,
+        answers = listOf(
+            QuizAnswerResult(
+                questionId = "q1",
+                result = QuestionResult.Success,
+                score = 2.0,
+                value = JsonPrimitive("b"),
+            ),
+            QuizAnswerResult(
+                questionId = "q2",
+                result = QuestionResult.PartialSuccess,
+                score = 2.0,
+                recommendation = "Сортировка выбором не является стабильной",
+                value = kotlinx.serialization.json.JsonArray(
+                    listOf(JsonPrimitive("a"), JsonPrimitive("c")),
+                ),
+            ),
+            QuizAnswerResult(
+                questionId = "q3",
+                result = QuestionResult.Success,
+                score = 1.0,
+                value = JsonPrimitive(10),
+            ),
+            QuizAnswerResult(
+                questionId = "q4",
+                result = QuestionResult.Fail,
+                score = 0.0,
+                recommendation = "Правильный ответ: stack",
+                value = JsonPrimitive("queue"),
+            ),
+            QuizAnswerResult(
+                questionId = "q5",
+                result = QuestionResult.Review,
+                score = 3.0,
+                value = JsonPrimitive("Стек — LIFO, очередь — FIFO"),
+            ),
+        ),
+    ),
+    pastAttempts = persistentListOf(
+        QuizAttempt(id = "a1", score = 8.0, maxScore = 10.0),
+    ),
+)
+
 @Preview
 @Composable
 private fun PreviewQuizCompletedSuccessDark() {
     CuMobileTheme(darkTheme = true) {
         QuestionsMaterialCard(
             material = previewQuizMaterial,
-            state = QuestionsMaterialComponent.State(
-                isExpanded = true,
-                phase = QuizPhase.Completed,
-                taskDetails = ContentState.Success(
-                    TaskDetails(
-                        id = "t1",
-                        state = TaskState.Evaluated,
-                        score = 8.0,
-                        extraScore = 1.0,
-                        scoreSkillLevel = "intermediate",
-                        exercise = TaskDetailsExercise(
-                            id = "ex1",
-                            name = "Тест: Основы алгоритмов",
-                            type = "Questions",
-                            maxScore = 10.0,
-                        ),
-                        quizSessionId = "s1",
-                        evaluatedAttemptId = "a1",
-                    ),
-                ),
-                taskState = TaskState.Evaluated,
-                questions = previewQuestions,
-                evaluationStrategy = EvaluationStrategy.Best,
-                attemptResults = QuizAttempt(
-                    id = "a1",
-                    score = 8.0,
-                    maxScore = 10.0,
-                    answers = listOf(
-                        QuizAnswerResult(
-                            questionId = "q1",
-                            result = QuestionResult.Success,
-                            score = 2.0,
-                            value = JsonPrimitive("b"),
-                        ),
-                        QuizAnswerResult(
-                            questionId = "q2",
-                            result = QuestionResult.PartialSuccess,
-                            score = 2.0,
-                            recommendation = "Сортировка выбором не является стабильной",
-                            value = kotlinx.serialization.json.JsonArray(
-                                listOf(JsonPrimitive("a"), JsonPrimitive("c")),
-                            ),
-                        ),
-                        QuizAnswerResult(
-                            questionId = "q3",
-                            result = QuestionResult.Success,
-                            score = 1.0,
-                            value = JsonPrimitive(10),
-                        ),
-                        QuizAnswerResult(
-                            questionId = "q4",
-                            result = QuestionResult.Fail,
-                            score = 0.0,
-                            recommendation = "Правильный ответ: stack",
-                            value = JsonPrimitive("queue"),
-                        ),
-                        QuizAnswerResult(
-                            questionId = "q5",
-                            result = QuestionResult.Review,
-                            score = 3.0,
-                            value = JsonPrimitive("Стек — LIFO, очередь — FIFO"),
-                        ),
-                    ),
-                ),
-                pastAttempts = persistentListOf(
-                    QuizAttempt(id = "a1", score = 8.0, maxScore = 10.0),
-                ),
-            ),
+            state = previewCompletedSuccessState,
             onIntent = {},
         )
     }

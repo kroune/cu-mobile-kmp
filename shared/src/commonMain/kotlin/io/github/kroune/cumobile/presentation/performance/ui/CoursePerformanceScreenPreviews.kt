@@ -68,6 +68,23 @@ private val previewPerformanceExercises =
         ),
     )
 
+private val previewActivitySummaries = persistentListOf(
+    ActivitySummary(
+        activityId = "1",
+        activityName = "Домашнее задание",
+        count = 5,
+        averageScore = 8.0,
+        weight = 0.4,
+    ),
+    ActivitySummary(
+        activityId = "2",
+        activityName = "Лабораторная",
+        count = 3,
+        averageScore = 5.0,
+        weight = 0.3,
+    ),
+)
+
 private val previewPerformanceState =
     CoursePerformanceComponent.State(
         courseId = "1",
@@ -76,24 +93,15 @@ private val previewPerformanceState =
         content = ContentState.Success(
             PerformanceData(
                 exercises = previewPerformanceExercises,
-                activitySummaries = persistentListOf(
-                    ActivitySummary(
-                        activityId = "1",
-                        activityName = "Домашнее задание",
-                        count = 5,
-                        averageScore = 8.0,
-                        weight = 0.4,
-                    ),
-                    ActivitySummary(
-                        activityId = "2",
-                        activityName = "Лабораторная",
-                        count = 3,
-                        averageScore = 5.0,
-                        weight = 0.3,
-                    ),
-                ),
+                activitySummaries = previewActivitySummaries,
             ),
         ),
+        exercises = previewPerformanceExercises,
+        activitySummaries = previewActivitySummaries,
+        isContentLoading = false,
+        activityNames = persistentListOf("Домашнее задание", "Лабораторная"),
+        filteredExercises = previewPerformanceExercises,
+        totalContribution = previewActivitySummaries.sumOf { it.totalContribution },
     )
 
 @Preview
@@ -176,6 +184,7 @@ private fun PreviewPerformanceErrorDark() {
             state = CoursePerformanceComponent.State(
                 courseId = "1",
                 content = ContentState.Error("Не удалось загрузить успеваемость"),
+                isContentLoading = false,
             ),
             onIntent = {},
             onBack = {},
@@ -191,6 +200,7 @@ private fun PreviewPerformanceErrorLight() {
             state = CoursePerformanceComponent.State(
                 courseId = "1",
                 content = ContentState.Error("Не удалось загрузить успеваемость"),
+                isContentLoading = false,
             ),
             onIntent = {},
             onBack = {},

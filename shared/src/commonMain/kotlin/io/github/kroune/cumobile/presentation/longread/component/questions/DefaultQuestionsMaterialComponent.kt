@@ -8,7 +8,6 @@ import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import io.github.kroune.cumobile.data.model.LongreadMaterial
 import io.github.kroune.cumobile.data.model.QuizAnswer
-import io.github.kroune.cumobile.data.model.TaskDetails
 import io.github.kroune.cumobile.domain.repository.QuizRepository
 import io.github.kroune.cumobile.domain.repository.TaskRepository
 import io.github.kroune.cumobile.presentation.common.ContentState
@@ -22,8 +21,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
-import kotlin.time.Instant
-import io.github.kroune.cumobile.data.model.TaskState as TS
 
 private val logger = KotlinLogging.logger {}
 
@@ -64,8 +61,20 @@ internal class DefaultQuestionsMaterialComponent(
             taskRepository = this.taskRepository,
             quizRepository = this.quizRepository,
             scope = scope,
-            onShowError = onShowError,
+            callbacks = QuizLifecycleCallbacks(
+                onShowError = onShowError,
+                onStartTimer = ::startTimer,
+            ),
+        )
+    }
+
+    private val stateResolver by lazy {
+        QuizStateResolver(
+            state = _state,
+            quizRepository = this.quizRepository,
+            quizLifecycle = quizLifecycle,
             onStartTimer = ::startTimer,
+            onCompleteAttempt = ::handleCompleteAttempt,
         )
     }
 
@@ -152,137 +161,8 @@ internal class DefaultQuestionsMaterialComponent(
                 return@launch
             }
             _state.value = _state.value.copy(taskDetails = ContentState.Success(details))
-            applyTaskDetailsToState(details)
+            stateResolver.applyTaskDetails(details)
         }
-    }
-
-    private suspend fun applyTaskDetailsToState(details: TaskDetails) {
-        val exerciseId = details.exercise?.id
-        val sessionId = details.quizSessionId
-        val currentAttemptId = details.currentAttemptId
-        val settings = details.exercise?.settings
-
-        _state.value = _state.value.copy(
-            sessionId = sessionId,
-            attemptId = currentAttemptId,
-            attemptsLimit = settings?.attemptsLimit,
-            evaluationStrategy = settings?.evaluationStrategy,
-            taskState = details.state,
-        )
-
-        if (exerciseId != null) {
-            quizLifecycle.loadQuestions(exerciseId)
-        }
-
-        when (details.state) {
-            TS.Backlog -> _state.value = _state.value.copy(
-                phase = QuestionsMaterialComponent.QuizPhase.NotStarted,
-            )
-            TS.InProgress -> handleInProgressState(details, sessionId, currentAttemptId)
-            TS.Review, TS.Evaluated, TS.Failed ->
-                handleCompletedState(details, sessionId)
-            else -> _state.value = _state.value.copy(
-                phase = QuestionsMaterialComponent.QuizPhase.Completed,
-            )
-        }
-    }
-
-    private suspend fun handleInProgressState(
-        details: TaskDetails,
-        sessionId: String?,
-        currentAttemptId: String?,
-    ) {
-        if (sessionId != null && currentAttemptId != null) {
-            resumeInProgressQuiz(details)
-        } else if (sessionId != null) {
-            quizLifecycle.loadPastAttempts(sessionId)
-            val lastAttemptId = _state.value.pastAttempts
-                .lastOrNull()
-                ?.id
-            if (lastAttemptId != null) {
-                val attempt = quizRepository.getAttempt(lastAttemptId)
-                _state.value = _state.value.copy(attemptResults = attempt)
-            }
-            val limit = _state.value.attemptsLimit
-            val used = _state.value.pastAttempts.size
-            _state.value = _state.value.copy(
-                phase = QuestionsMaterialComponent.QuizPhase.Completed,
-                canStartNewAttempt = limit == null || used < limit,
-            )
-        } else {
-            _state.value = _state.value.copy(
-                phase = QuestionsMaterialComponent.QuizPhase.NotStarted,
-            )
-        }
-    }
-
-    private suspend fun handleCompletedState(
-        details: TaskDetails,
-        sessionId: String?,
-    ) {
-        if (sessionId != null) {
-            quizLifecycle.loadPastAttempts(sessionId)
-        }
-        val attemptIdToShow = details.evaluatedAttemptId
-            ?: details.lastAttemptId
-            ?: details.currentAttemptId
-            ?: _state.value.pastAttempts
-                .lastOrNull()
-                ?.id
-        if (attemptIdToShow != null) {
-            val attempt = quizRepository.getAttempt(attemptIdToShow)
-            _state.value = _state.value.copy(attemptResults = attempt)
-        }
-        _state.value = _state.value.copy(
-            phase = QuestionsMaterialComponent.QuizPhase.Completed,
-            canStartNewAttempt = false,
-        )
-    }
-
-    private suspend fun resumeInProgressQuiz(details: TaskDetails) {
-        val attemptId = details.currentAttemptId ?: return
-        val attempt = quizRepository.getAttempt(attemptId)
-        if (attempt != null) {
-            val questionsMap = _state.value.questions.associateBy { it.id }
-            val restoredAnswers = attempt.answers
-                .mapNotNull { result ->
-                    val question = questionsMap[result.questionId] ?: return@mapNotNull null
-                    val value = result.value ?: return@mapNotNull null
-                    val answer = QuizAnswer.fromJsonElement(question.type, value)
-                        ?: return@mapNotNull null
-                    result.questionId to answer
-                }.toMap()
-            _state.value = _state.value.copy(answers = restoredAnswers.toPersistentMap())
-        }
-
-        val timer = details.exercise?.timer
-        val attemptStartedAt = details.attemptStartedAt
-        if (timer != null && attemptStartedAt != null) {
-            val totalSeconds = parseTimerToSeconds(timer)
-            val elapsedSeconds = computeElapsedSeconds(attemptStartedAt)
-            if (elapsedSeconds == null) {
-                _state.value = _state.value.copy(
-                    phase = QuestionsMaterialComponent.QuizPhase.Error(
-                        "Ошибка при восстановлении таймера",
-                    ),
-                )
-                return
-            }
-            val remaining = (totalSeconds - elapsedSeconds).coerceAtLeast(0)
-            _state.value = _state.value.copy(
-                timerTotalSeconds = totalSeconds,
-                timerRemainingSeconds = remaining,
-            )
-            if (remaining <= 0) {
-                handleCompleteAttempt()
-                return
-            }
-            startTimer(remaining)
-        }
-
-        _state.value = _state.value.copy(
-            phase = QuestionsMaterialComponent.QuizPhase.InProgress,
-        )
     }
 
     private fun handleUpdateAnswer(
@@ -338,28 +218,18 @@ internal class DefaultQuestionsMaterialComponent(
     }
 }
 
-private const val SECONDS_PER_HOUR = 3600L
-private const val SECONDS_PER_MINUTE = 60L
-private const val TIMER_PARTS_COUNT = 3
+private const val SecondsPerHour = 3600L
+private const val SecondsPerMinute = 60L
+private const val TimerPartsCount = 3
 
 internal fun parseTimerToSeconds(timer: String): Long {
     val parts = timer.split(":")
-    if (parts.size != TIMER_PARTS_COUNT) {
+    if (parts.size != TimerPartsCount) {
         logger.warn { "Malformed timer string: '$timer', expected HH:MM:SS format" }
         return 0
     }
     val hours = parts[0].toLongOrNull() ?: 0
     val minutes = parts[1].toLongOrNull() ?: 0
     val seconds = parts[2].toLongOrNull() ?: 0
-    return hours * SECONDS_PER_HOUR + minutes * SECONDS_PER_MINUTE + seconds
+    return hours * SecondsPerHour + minutes * SecondsPerMinute + seconds
 }
-
-private fun computeElapsedSeconds(isoDateTime: String): Long? =
-    try {
-        val instant = Instant.parse(isoDateTime)
-        val now = Clock.System.now()
-        (now - instant).inWholeSeconds
-    } catch (e: Exception) {
-        logger.error(e) { "Failed to parse attemptStartedAt: $isoDateTime" }
-        null
-    }

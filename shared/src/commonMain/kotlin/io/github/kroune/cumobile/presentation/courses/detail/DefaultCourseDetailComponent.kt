@@ -30,10 +30,20 @@ class DefaultCourseDetailComponent(
     )
     override val state: Value<CourseDetailComponent.State> = _state
 
+    private fun updateState(block: CourseDetailComponent.State.() -> CourseDetailComponent.State) {
+        val s = _state.value.block()
+        _state.value = s.copy(
+            filteredThemes = filteredThemes(
+                s.overview?.themes.orEmpty(),
+                s.searchQuery,
+            ),
+        )
+    }
+
     override fun onIntent(intent: CourseDetailComponent.Intent) {
         when (intent) {
             is CourseDetailComponent.Intent.Search ->
-                _state.value = _state.value.copy(searchQuery = intent.query)
+                updateState { copy(searchQuery = intent.query) }
             is CourseDetailComponent.Intent.ToggleTheme -> {
                 val current = _state.value.expandedThemeIds
                 val updated = if (intent.themeId in current) {
@@ -41,7 +51,7 @@ class DefaultCourseDetailComponent(
                 } else {
                     current + intent.themeId
                 }
-                _state.value = _state.value.copy(expandedThemeIds = updated)
+                updateState { copy(expandedThemeIds = updated) }
             }
             is CourseDetailComponent.Intent.OpenLongread ->
                 onOpenLongread(intent.longreadId, intent.courseId, intent.themeId)
@@ -56,19 +66,13 @@ class DefaultCourseDetailComponent(
 
     private fun loadOverview() {
         scope.launch {
-            _state.value = _state.value.copy(isLoading = true, error = null, overview = null)
+            updateState { copy(isLoading = true, error = null, overview = null) }
 
             val overview = courseRepository.fetchCourseOverview(courseId)
             if (overview != null) {
-                _state.value = _state.value.copy(
-                    overview = overview,
-                    isLoading = false,
-                )
+                updateState { copy(overview = overview, isLoading = false) }
             } else {
-                _state.value = _state.value.copy(
-                    isLoading = false,
-                    error = "Не удалось загрузить курс",
-                )
+                updateState { copy(isLoading = false, error = "Не удалось загрузить курс") }
             }
         }
     }

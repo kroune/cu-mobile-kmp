@@ -20,10 +20,9 @@ interface CourseDetailComponent {
         val overview: CourseOverview? = null,
         val isLoading: Boolean = true,
         val error: String? = null,
-        /** Search query filtering themes and longreads by name. */
         val searchQuery: String = "",
-        /** IDs of themes that are currently expanded. */
         val expandedThemeIds: Set<String> = emptySet(),
+        val filteredThemes: List<CourseTheme> = emptyList(),
     )
 
     sealed interface Intent {

@@ -51,8 +51,7 @@ interface LongreadComponent {
         val searchQuery: String = "",
         val searchMatchCount: Int = 0,
         val currentMatchIndex: Int = 0,
-    ) {
-    }
+    )
 
     sealed interface Intent {
         sealed interface Navigation : Intent {

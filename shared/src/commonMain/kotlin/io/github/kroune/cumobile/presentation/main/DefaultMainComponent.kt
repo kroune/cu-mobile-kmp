@@ -116,18 +116,84 @@ class DefaultMainComponent(
 
     // endregion
 
-    // region Tab navigation (ChildPages)
+    // region Navigation
 
     private val tabNavigation = PagesNavigation<TabConfig>()
+    private val detailNavigation = StackNavigation<DetailConfig>()
+
+    override val navigation = object : MainComponent.Navigation {
+        override fun toProfile() {
+            detailNavigation.pushNew(DetailConfig.Profile)
+        }
+
+        override fun toNotifications() {
+            detailNavigation.pushNew(DetailConfig.Notifications)
+        }
+
+        override fun toCourseDetail(courseId: String) {
+            detailNavigation.pushNew(DetailConfig.CourseDetail(courseId))
+        }
+
+        override fun toCoursePerformance(
+            courseId: String,
+            courseName: String,
+            totalGrade: Int,
+        ) {
+            detailNavigation.bringToFront(
+                DetailConfig.CoursePerformance(courseId, courseName, totalGrade),
+            )
+        }
+
+        override fun toLongread(
+            longreadId: String,
+            courseId: String,
+            themeId: String,
+        ) {
+            detailNavigation.pushNew(
+                DetailConfig.Longread(longreadId, courseId, themeId),
+            )
+        }
+
+        override fun toFileRenameSettings() {
+            detailNavigation.pushNew(DetailConfig.FileRenameSettings)
+        }
+
+        override fun toScanner() {
+            detailNavigation.pushNew(DetailConfig.Scanner)
+        }
+
+        override fun back() {
+            detailNavigation.pop()
+        }
+    }
+
+    private fun navigateToTask(task: StudentTask) {
+        val longreadId = task.longread.id
+        val themeId = task.theme.id
+        val courseId = task.course.id
+        if (longreadId.isBlank() || themeId.isBlank()) {
+            logger.error {
+                "Cannot navigate to task ${task.id}: longreadId=$longreadId, themeId=$themeId"
+            }
+            return
+        }
+        detailNavigation.pushNew(
+            DetailConfig.Longread(longreadId, courseId, themeId, focusTaskId = task.id),
+        )
+    }
+
+    // endregion
+
+    // region Tab navigation (ChildPages)
 
     private val tabChildFactory = TabChildFactory(
         deps = mainDependenciesLazy(),
         nav = TabNavigationCallbacks(
-            toCourseDetail = ::navigateToCourseDetail,
+            toCourseDetail = navigation::toCourseDetail,
             toTask = ::navigateToTask,
-            toCoursePerformance = ::navigateToCoursePerformance,
-            toFileRenameSettings = ::navigateToFileRenameSettings,
-            toScanner = ::navigateToScanner,
+            toCoursePerformance = navigation::toCoursePerformance,
+            toFileRenameSettings = navigation::toFileRenameSettings,
+            toScanner = navigation::toScanner,
         ),
     )
 
@@ -170,8 +236,6 @@ class DefaultMainComponent(
 
     // region Detail navigation (ChildStack)
 
-    private val detailNavigation = StackNavigation<DetailConfig>()
-
     private val filesCoordinator = FilesCoordinator(
         tabPages = tabPages,
         selectTab = ::selectTab,
@@ -181,8 +245,8 @@ class DefaultMainComponent(
 
     private val detailChildFactory = DetailChildFactory(
         deps = mainDependenciesLazy(),
-        navigateBack = ::navigateDetailBack,
-        navigateToLongread = ::navigateToLongread,
+        navigateBack = navigation::back,
+        navigateToLongread = navigation::toLongread,
         onLogout = onLogout,
         onAvatarChanged = ::onAvatarChanged,
         downloadCallbacks = DownloadCallbacks(
@@ -202,65 +266,6 @@ class DefaultMainComponent(
             handleBackButton = true,
             childFactory = detailChildFactory::create,
         )
-
-    override fun navigateToProfile() {
-        detailNavigation.pushNew(DetailConfig.Profile)
-    }
-
-    override fun navigateToNotifications() {
-        detailNavigation.pushNew(DetailConfig.Notifications)
-    }
-
-    override fun navigateToCourseDetail(courseId: String) {
-        detailNavigation.pushNew(DetailConfig.CourseDetail(courseId))
-    }
-
-    override fun navigateToCoursePerformance(
-        courseId: String,
-        courseName: String,
-        totalGrade: Int,
-    ) {
-        detailNavigation.bringToFront(
-            DetailConfig.CoursePerformance(courseId, courseName, totalGrade),
-        )
-    }
-
-    private fun navigateToTask(task: StudentTask) {
-        val longreadId = task.longread.id
-        val themeId = task.theme.id
-        val courseId = task.course.id
-        if (longreadId.isBlank() || themeId.isBlank()) {
-            logger.error {
-                "Cannot navigate to task ${task.id}: longreadId=$longreadId, themeId=$themeId"
-            }
-            return
-        }
-        detailNavigation.pushNew(
-            DetailConfig.Longread(longreadId, courseId, themeId, focusTaskId = task.id),
-        )
-    }
-
-    override fun navigateToLongread(
-        longreadId: String,
-        courseId: String,
-        themeId: String,
-    ) {
-        detailNavigation.pushNew(
-            DetailConfig.Longread(longreadId, courseId, themeId),
-        )
-    }
-
-    override fun navigateToFileRenameSettings() {
-        detailNavigation.pushNew(DetailConfig.FileRenameSettings)
-    }
-
-    override fun navigateToScanner() {
-        detailNavigation.pushNew(DetailConfig.Scanner)
-    }
-
-    override fun navigateDetailBack() {
-        detailNavigation.pop()
-    }
 
     // endregion
 

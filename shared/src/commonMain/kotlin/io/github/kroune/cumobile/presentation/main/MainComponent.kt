@@ -58,40 +58,37 @@ interface MainComponent {
     /** Select a bottom navigation tab by index. */
     fun selectTab(index: Int)
 
-    /** Navigate to the profile screen. */
-    fun navigateToProfile()
-
-    /** Navigate to the notifications screen. */
-    fun navigateToNotifications()
-
-    /** Navigate to course detail. */
-    fun navigateToCourseDetail(courseId: String)
-
-    /** Navigate to longread/material viewer. */
-    fun navigateToLongread(
-        longreadId: String,
-        courseId: String,
-        themeId: String,
-    )
-
-    /** Navigate to course performance. */
-    fun navigateToCoursePerformance(
-        courseId: String,
-        courseName: String,
-        totalGrade: Int,
-    )
-
-    /** Navigate to file rename settings. */
-    fun navigateToFileRenameSettings()
-
-    /** Navigate to document scanner. */
-    fun navigateToScanner()
-
-    /** Navigate back from detail screen. */
-    fun navigateDetailBack()
+    /** Detail screen navigation actions. */
+    val navigation: Navigation
 
     /** Called when the user logs out. */
     fun onLogout()
+
+    interface Navigation {
+        fun toProfile()
+
+        fun toNotifications()
+
+        fun toCourseDetail(courseId: String)
+
+        fun toLongread(
+            longreadId: String,
+            courseId: String,
+            themeId: String,
+        )
+
+        fun toCoursePerformance(
+            courseId: String,
+            courseName: String,
+            totalGrade: Int,
+        )
+
+        fun toFileRenameSettings()
+
+        fun toScanner()
+
+        fun back()
+    }
 
     /** Bottom navigation tab children. */
     sealed class TabChild {

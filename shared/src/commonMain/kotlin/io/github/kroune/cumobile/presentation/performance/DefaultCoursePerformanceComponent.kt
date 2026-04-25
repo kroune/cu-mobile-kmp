@@ -8,6 +8,8 @@ import io.github.kroune.cumobile.data.model.TaskScore
 import io.github.kroune.cumobile.domain.repository.PerformanceRepository
 import io.github.kroune.cumobile.presentation.common.ContentState
 import io.github.kroune.cumobile.presentation.common.componentScope
+import io.github.kroune.cumobile.presentation.common.dataOrNull
+import io.github.kroune.cumobile.presentation.common.isLoading
 import io.github.kroune.cumobile.util.AppDispatchers
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.async
@@ -41,8 +43,6 @@ class DefaultCoursePerformanceComponent(
     ComponentContext by componentContext {
     private val performanceRepository by performanceRepository
     private val dispatchers by dispatchers
-    private val courseId: String get() = params.courseId
-
     private val scope = componentScope()
 
     private val _state = MutableValue(
@@ -54,16 +54,43 @@ class DefaultCoursePerformanceComponent(
     )
     override val state: Value<CoursePerformanceComponent.State> = _state
 
+    private fun updateState(block: CoursePerformanceComponent.State.() -> CoursePerformanceComponent.State) {
+        val s = _state.value.block()
+        val exercises = s.content.dataOrNull
+            ?.exercises
+            .orEmpty()
+            .toImmutableList()
+        val summaries = s.content.dataOrNull
+            ?.activitySummaries
+            .orEmpty()
+            .toImmutableList()
+        val filtered = if (s.activityFilter == null) {
+            exercises
+        } else {
+            exercises.filter { it.activityName == s.activityFilter }.toImmutableList()
+        }
+        _state.value = s.copy(
+            exercises = exercises,
+            activitySummaries = summaries,
+            isContentLoading = s.content.isLoading,
+            activityNames = exercises
+                .map { it.activityName }
+                .distinct()
+                .sorted()
+                .toImmutableList(),
+            filteredExercises = filtered,
+            totalContribution = summaries.sumOf { it.totalContribution },
+        )
+    }
+
     override fun onIntent(intent: CoursePerformanceComponent.Intent) {
         when (intent) {
             CoursePerformanceComponent.Intent.Back -> onBack()
             CoursePerformanceComponent.Intent.Refresh -> loadData()
             is CoursePerformanceComponent.Intent.SelectTab ->
-                _state.value = _state.value.copy(selectedTab = intent.index)
+                updateState { copy(selectedTab = intent.index) }
             is CoursePerformanceComponent.Intent.FilterByActivity ->
-                _state.value = _state.value.copy(
-                    activityFilter = intent.activityName,
-                )
+                updateState { copy(activityFilter = intent.activityName) }
         }
     }
 
@@ -72,23 +99,23 @@ class DefaultCoursePerformanceComponent(
     }
 
     private fun loadData() {
-        _state.value = _state.value.copy(content = ContentState.Loading)
+        updateState { copy(content = ContentState.Loading) }
 
         scope.launch {
             val exercisesDeferred = async {
-                performanceRepository.fetchCourseExercises(courseId)
+                performanceRepository.fetchCourseExercises(params.courseId)
             }
             val performanceDeferred = async {
-                performanceRepository.fetchCoursePerformance(courseId)
+                performanceRepository.fetchCoursePerformance(params.courseId)
             }
 
             val exercisesResponse = exercisesDeferred.await()
             val performanceResponse = performanceDeferred.await()
 
             if (exercisesResponse == null && performanceResponse == null) {
-                _state.value = _state.value.copy(
-                    content = ContentState.Error("Не удалось загрузить успеваемость"),
-                )
+                updateState {
+                    copy(content = ContentState.Error("Не удалось загрузить успеваемость"))
+                }
                 return@launch
             }
 
@@ -102,9 +129,7 @@ class DefaultCoursePerformanceComponent(
                 )
             }
 
-            _state.value = _state.value.copy(
-                content = ContentState.Success(performanceData),
-            )
+            updateState { copy(content = ContentState.Success(performanceData)) }
         }
     }
 }

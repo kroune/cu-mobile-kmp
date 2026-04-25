@@ -5,6 +5,7 @@ import io.github.kroune.cumobile.data.model.QuizAttempt
 import io.github.kroune.cumobile.data.model.QuizQuestion
 import io.github.kroune.cumobile.data.model.QuizQuestionType
 import io.github.kroune.cumobile.data.model.StartAttemptResponse
+import io.github.kroune.cumobile.presentation.common.invoke
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
@@ -14,7 +15,6 @@ import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
-import io.github.kroune.cumobile.presentation.common.invoke
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 
@@ -42,7 +42,6 @@ internal data class SubmitAnswerBody(
 internal class QuizApiService(
     private val httpClient: Lazy<HttpClient>,
 ) {
-
     suspend fun startAttempt(
         cookie: String,
         sessionId: String,

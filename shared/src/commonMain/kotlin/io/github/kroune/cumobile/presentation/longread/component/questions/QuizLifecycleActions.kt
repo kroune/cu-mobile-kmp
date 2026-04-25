@@ -14,14 +14,18 @@ import io.github.kroune.cumobile.data.model.TaskState as TS
 
 private val logger = KotlinLogging.logger {}
 
+internal class QuizLifecycleCallbacks(
+    val onShowError: (String) -> Unit,
+    val onStartTimer: (Long) -> Unit,
+)
+
 internal class QuizLifecycleActions(
     private val taskId: String,
     private val state: MutableValue<QuestionsMaterialComponent.State>,
     private val taskRepository: TaskRepository,
     private val quizRepository: QuizRepository,
     private val scope: CoroutineScope,
-    private val onShowError: (String) -> Unit,
-    private val onStartTimer: (Long) -> Unit,
+    private val callbacks: QuizLifecycleCallbacks,
 ) {
     fun startTask() {
         scope.launch {
@@ -29,14 +33,14 @@ internal class QuizLifecycleActions(
             val result = taskRepository.startTask(taskId)
             if (result == null) {
                 logger.warn { "Failed to start task $taskId" }
-                onShowError("Не удалось начать задание")
+                callbacks.onShowError("Не удалось начать задание")
                 state.value = state.value.copy(isSubmitting = false)
                 return@launch
             }
             val sessionId = result.quizSessionId
             if (sessionId == null) {
                 logger.warn { "startTask returned null quizSessionId for taskId=$taskId" }
-                onShowError("Не удалось начать тест")
+                callbacks.onShowError("Не удалось начать тест")
                 state.value = state.value.copy(isSubmitting = false)
                 return@launch
             }
@@ -56,7 +60,7 @@ internal class QuizLifecycleActions(
         val sessionId = state.value.sessionId ?: return
         val limit = state.value.attemptsLimit
         if (limit != null && state.value.pastAttempts.size >= limit) {
-            onShowError("Все попытки использованы")
+            callbacks.onShowError("Все попытки использованы")
             return
         }
         scope.launch {
@@ -78,7 +82,7 @@ internal class QuizLifecycleActions(
             val success = quizRepository.completeAttempt(attemptId, sessionId)
             if (!success) {
                 logger.warn { "Failed to complete quiz attempt attemptId=$attemptId" }
-                onShowError("Не удалось завершить тест")
+                callbacks.onShowError("Не удалось завершить тест")
                 state.value = state.value.copy(
                     phase = QuestionsMaterialComponent.QuizPhase.InProgress,
                     isSubmitting = false,
@@ -128,7 +132,7 @@ internal class QuizLifecycleActions(
         val attemptResponse = quizRepository.startAttempt(sessionId)
         if (attemptResponse == null) {
             logger.warn { "Failed to start quiz attempt for sessionId=$sessionId" }
-            onShowError("Не удалось начать попытку")
+            callbacks.onShowError("Не удалось начать попытку")
             return
         }
 
@@ -146,7 +150,7 @@ internal class QuizLifecycleActions(
         )
 
         if (totalSeconds > 0) {
-            onStartTimer(totalSeconds)
+            callbacks.onStartTimer(totalSeconds)
         }
     }
 }

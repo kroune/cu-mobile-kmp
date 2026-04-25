@@ -45,9 +45,10 @@ internal class QuizAnswerDebouncer(
         pendingValues.clear()
         if (toSend.isEmpty()) return true
         return coroutineScope {
-            toSend.map { (questionId, answer) ->
+            val deferreds = toSend.map { (questionId, answer) ->
                 async { sendAnswer(questionId, answer) }
-            }.awaitAll().all { it }
+            }
+            deferreds.awaitAll().all { it }
         }
     }
 

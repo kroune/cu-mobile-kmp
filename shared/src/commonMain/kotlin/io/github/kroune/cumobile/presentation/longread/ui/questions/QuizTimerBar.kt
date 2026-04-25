@@ -24,9 +24,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-private const val FRACTION_GREEN = 0.4f
-private const val FRACTION_YELLOW = 0.1f
-private const val BLINK_DURATION_MS = 600
+private const val FractionGreen = 0.4f
+private const val FractionYellow = 0.1f
+private const val BlinkDurationMs = 600
 
 @Composable
 fun QuizTimerBar(
@@ -38,8 +38,8 @@ fun QuizTimerBar(
 
     val timerColor by animateColorAsState(
         targetValue = when {
-            fraction > FRACTION_GREEN -> Color(0xFF4CAF50)
-            fraction > FRACTION_YELLOW -> Color(0xFFFFC107)
+            fraction > FractionGreen -> Color(0xFF4CAF50)
+            fraction > FractionYellow -> Color(0xFFFFC107)
             else -> Color(0xFFF44336)
         },
         label = "timerColor",
@@ -50,12 +50,12 @@ fun QuizTimerBar(
         initialValue = 1f,
         targetValue = 0.3f,
         animationSpec = infiniteRepeatable(
-            animation = tween(BLINK_DURATION_MS, easing = LinearEasing),
+            animation = tween(BlinkDurationMs, easing = LinearEasing),
             repeatMode = RepeatMode.Reverse,
         ),
         label = "blinkAlpha",
     )
-    val blinkAlpha = if (fraction <= FRACTION_YELLOW) animatedAlpha else 1f
+    val blinkAlpha = if (fraction <= FractionYellow) animatedAlpha else 1f
 
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
