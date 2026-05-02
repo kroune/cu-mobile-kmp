@@ -6,13 +6,15 @@ import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
-import io.github.kroune.cumobile.data.model.LongreadMaterial
-import io.github.kroune.cumobile.data.model.QuizAnswer
 import io.github.kroune.cumobile.domain.repository.QuizRepository
 import io.github.kroune.cumobile.domain.repository.TaskRepository
 import io.github.kroune.cumobile.presentation.common.ContentState
 import io.github.kroune.cumobile.presentation.common.componentScope
 import io.github.kroune.cumobile.presentation.common.dataOrNull
+import io.github.kroune.cumobile.presentation.common.model.LongreadMaterialUi
+import io.github.kroune.cumobile.presentation.common.model.QuizAnswerUi
+import io.github.kroune.cumobile.presentation.common.model.mappers.toDomain
+import io.github.kroune.cumobile.presentation.common.model.mappers.toUi
 import io.github.kroune.cumobile.presentation.longread.ui.questions.QuestionsMaterialCard
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.collections.immutable.toPersistentMap
@@ -26,7 +28,7 @@ private val logger = KotlinLogging.logger {}
 
 internal class DefaultQuestionsMaterialComponent(
     componentContext: ComponentContext,
-    override val material: LongreadMaterial,
+    override val material: LongreadMaterialUi,
     private val taskId: String,
     initiallyExpanded: Boolean = false,
     taskRepository: Lazy<TaskRepository>,
@@ -160,14 +162,14 @@ internal class DefaultQuestionsMaterialComponent(
                 )
                 return@launch
             }
-            _state.value = _state.value.copy(taskDetails = ContentState.Success(details))
-            stateResolver.applyTaskDetails(details)
+            _state.value = _state.value.copy(taskDetails = ContentState.Success(details.toUi()))
+            stateResolver.applyTaskDetailsDomain(details)
         }
     }
 
     private fun handleUpdateAnswer(
         questionId: String,
-        answer: QuizAnswer,
+        answer: QuizAnswerUi,
     ) {
         if (_state.value.phase != QuestionsMaterialComponent.QuizPhase.InProgress) return
         _state.value = _state.value.copy(
@@ -175,7 +177,7 @@ internal class DefaultQuestionsMaterialComponent(
                 .toPersistentMap()
                 .put(questionId, answer),
         )
-        answerDebouncer.submit(questionId, answer)
+        answerDebouncer.submit(questionId, answer.toDomain())
     }
 
     private fun handleCompleteAttempt() {

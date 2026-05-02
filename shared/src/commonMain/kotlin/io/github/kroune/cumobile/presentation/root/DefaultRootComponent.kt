@@ -15,9 +15,9 @@ import io.github.kroune.cumobile.domain.repository.CookieValidationResult
 import io.github.kroune.cumobile.presentation.auth.DefaultLoginComponent
 import io.github.kroune.cumobile.presentation.auth.webview.DefaultWebViewLoginComponent
 import io.github.kroune.cumobile.presentation.common.componentScope
-import io.github.kroune.cumobile.presentation.common.invoke
 import io.github.kroune.cumobile.presentation.main.DefaultMainComponent
 import io.github.kroune.cumobile.presentation.main.MainDependencies
+import io.github.kroune.cumobile.util.invoke
 import io.github.kroune.cumobile.util.runCatchingCancellable
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.launch

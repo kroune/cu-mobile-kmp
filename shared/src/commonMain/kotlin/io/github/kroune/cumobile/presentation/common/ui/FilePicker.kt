@@ -1,7 +1,7 @@
 package io.github.kroune.cumobile.presentation.common.ui
 
 import androidx.compose.runtime.Composable
-import io.github.kroune.cumobile.data.model.PickedFile
+import io.github.kroune.cumobile.presentation.common.model.PickedFileUi
 
 /** Handle returned by [rememberFilePicker] to trigger the file picker dialog. */
 interface FilePicker {
@@ -15,4 +15,4 @@ interface FilePicker {
  * When the user selects a file, [onFilePicked] is invoked with the file metadata and bytes.
  */
 @Composable
-expect fun rememberFilePicker(onFilePicked: (PickedFile) -> Unit): FilePicker
+expect fun rememberFilePicker(onFilePicked: (PickedFileUi) -> Unit): FilePicker

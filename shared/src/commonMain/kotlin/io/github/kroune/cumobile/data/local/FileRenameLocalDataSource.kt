@@ -3,7 +3,7 @@ package io.github.kroune.cumobile.data.local
 import io.github.kroune.cumobile.data.local.db.FileRenameRuleDao
 import io.github.kroune.cumobile.data.local.db.toDomain
 import io.github.kroune.cumobile.data.local.db.toEntity
-import io.github.kroune.cumobile.presentation.common.invoke
+import io.github.kroune.cumobile.util.invoke
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map

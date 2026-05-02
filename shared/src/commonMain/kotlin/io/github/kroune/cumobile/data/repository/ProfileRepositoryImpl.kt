@@ -1,12 +1,13 @@
 package io.github.kroune.cumobile.data.repository
 
 import io.github.kroune.cumobile.data.local.AuthLocalDataSource
-import io.github.kroune.cumobile.data.model.StudentLmsProfile
-import io.github.kroune.cumobile.data.model.StudentProfile
+import io.github.kroune.cumobile.data.model.mappers.toDomain
 import io.github.kroune.cumobile.data.network.ProfileApiService
+import io.github.kroune.cumobile.domain.model.LmsProfileDomain
+import io.github.kroune.cumobile.domain.model.ProfileDomain
 import io.github.kroune.cumobile.domain.repository.ProfileRepository
-import io.github.kroune.cumobile.presentation.common.invoke
 import io.github.kroune.cumobile.util.AppDispatchers
+import io.github.kroune.cumobile.util.invoke
 
 /**
  * Implementation of [ProfileRepository].
@@ -20,11 +21,11 @@ internal class ProfileRepositoryImpl(
     dispatchers: Lazy<AppDispatchers>,
 ) : CookieAwareRepository(authLocal, dispatchers),
     ProfileRepository {
-    override suspend fun fetchProfile(): StudentProfile? =
-        withCookie { profileApi().fetchProfile(it) }
+    override suspend fun fetchProfile(): ProfileDomain? =
+        withCookie { profileApi().fetchProfile(it) }?.toDomain()
 
-    override suspend fun fetchLmsProfile(): StudentLmsProfile? =
-        withCookie { profileApi().fetchLmsProfile(it) }
+    override suspend fun fetchLmsProfile(): LmsProfileDomain? =
+        withCookie { profileApi().fetchLmsProfile(it) }?.toDomain()
 
     override suspend fun fetchAvatar(): ByteArray =
         withCookie { profileApi().fetchAvatar(it) }

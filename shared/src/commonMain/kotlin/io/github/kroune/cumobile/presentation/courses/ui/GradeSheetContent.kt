@@ -28,8 +28,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import io.github.kroune.cumobile.data.model.StudentPerformanceCourse
 import io.github.kroune.cumobile.presentation.common.ContentState
+import io.github.kroune.cumobile.presentation.common.dataOrNull
+import io.github.kroune.cumobile.presentation.common.model.CourseGradeUi
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 import io.github.kroune.cumobile.presentation.common.ui.EmptyContent
 import io.github.kroune.cumobile.presentation.common.ui.ErrorContent
@@ -67,8 +68,9 @@ internal fun GradeSheetContent(
             onRetry = { onIntent(CoursesComponent.Intent.Refresh) },
         )
         is ContentState.Success -> {
+            val courseList = state.courses.dataOrNull
             val items = perfState.data.filter { perf ->
-                state.courseList.none { it.id == perf.id && it.isArchived }
+                courseList == null || courseList.none { it.id == perf.id && it.isArchived }
             }
 
             if (items.isEmpty()) {
@@ -102,7 +104,7 @@ internal fun GradeSheetContent(
 
 @Composable
 private fun GradeSheetTile(
-    performance: StudentPerformanceCourse,
+    performance: CourseGradeUi,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {

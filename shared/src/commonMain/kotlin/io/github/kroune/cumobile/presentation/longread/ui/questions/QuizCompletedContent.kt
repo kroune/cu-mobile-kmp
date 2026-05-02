@@ -21,10 +21,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import io.github.kroune.cumobile.data.model.EvaluationStrategy
-import io.github.kroune.cumobile.data.model.QuizAnswer
-import io.github.kroune.cumobile.data.model.QuizAttempt
 import io.github.kroune.cumobile.presentation.common.dataOrNull
+import io.github.kroune.cumobile.presentation.common.model.AnswerValueUi
+import io.github.kroune.cumobile.presentation.common.model.QuizAnswerUi
+import io.github.kroune.cumobile.presentation.common.model.QuizAttemptUi
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 import io.github.kroune.cumobile.presentation.longread.component.questions.QuestionsMaterialComponent
 
@@ -48,7 +48,7 @@ internal fun CompletedContent(
 
 @Composable
 private fun AttemptScoreHeader(
-    attempt: QuizAttempt,
+    attempt: QuizAttemptUi,
     state: QuestionsMaterialComponent.State,
 ) {
     val details = state.taskDetails.dataOrNull
@@ -64,11 +64,11 @@ private fun AttemptScoreHeader(
         )
         val score = attempt.score ?: 0.0
         val maxScore = attempt.maxScore ?: 0.0
-        val extraScore = details?.extraScore
+        val extraScoreText = details?.extraScoreText
         val scoreText = buildString {
             append("${score.displayScore()} / ${maxScore.displayScore()}")
-            if (extraScore != null && extraScore > 0.0) {
-                append(" +${extraScore.displayScore()}")
+            if (extraScoreText != null) {
+                append(" +$extraScoreText")
             }
         }
         Text(
@@ -90,11 +90,12 @@ private fun AttemptScoreHeader(
 }
 
 @Composable
-private fun EvaluationStrategyText(strategy: EvaluationStrategy?) {
+private fun EvaluationStrategyText(strategy: String?) {
     if (strategy == null) return
     val strategyText = when (strategy) {
-        EvaluationStrategy.Best -> "Оценивается по лучшей попытке"
-        EvaluationStrategy.Last -> "Оценивается по последней попытке"
+        "Best" -> "Оценивается по лучшей попытке"
+        "Last" -> "Оценивается по последней попытке"
+        else -> return
     }
     Text(
         text = strategyText,
@@ -113,8 +114,8 @@ private fun CompletedQuestionsList(state: QuestionsMaterialComponent.State) {
     state.questions.forEachIndexed { index, question ->
         key(question.id) {
             val resultForQuestion = answersMap[question.id]
-            val answerToShow = resultForQuestion?.value?.let {
-                QuizAnswer.fromJsonElement(question.type, it)
+            val answerToShow = resultForQuestion?.answerValue?.let {
+                answerValueToQuizAnswer(question.typeLabel, it)
             } ?: state.answers[question.id]
             QuestionItem(
                 index = index + 1,
@@ -175,3 +176,21 @@ private fun RetryButton(
         }
     }
 }
+
+private fun answerValueToQuizAnswer(
+    typeLabel: String,
+    value: AnswerValueUi,
+): QuizAnswerUi? =
+    when (typeLabel) {
+        LabelSingleChoice ->
+            (value as? AnswerValueUi.Text)?.let { QuizAnswerUi.SingleChoice(it.content) }
+        LabelMultipleChoice ->
+            (value as? AnswerValueUi.Choices)?.let { QuizAnswerUi.MultipleChoice(it.optionIds.toSet()) }
+        LabelStringMatch ->
+            (value as? AnswerValueUi.Text)?.let { QuizAnswerUi.StringMatch(it.content) }
+        LabelNumberMatch ->
+            (value as? AnswerValueUi.Text)?.let { QuizAnswerUi.NumberMatch(it.content) }
+        LabelOpenText ->
+            (value as? AnswerValueUi.Text)?.let { QuizAnswerUi.OpenText(it.content) }
+        else -> null
+    }

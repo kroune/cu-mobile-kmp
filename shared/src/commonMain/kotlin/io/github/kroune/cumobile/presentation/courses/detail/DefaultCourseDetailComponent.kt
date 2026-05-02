@@ -5,6 +5,7 @@ import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import io.github.kroune.cumobile.domain.repository.CourseRepository
 import io.github.kroune.cumobile.presentation.common.componentScope
+import io.github.kroune.cumobile.presentation.common.model.mappers.toUi
 import kotlinx.coroutines.launch
 
 /**
@@ -68,7 +69,7 @@ class DefaultCourseDetailComponent(
         scope.launch {
             updateState { copy(isLoading = true, error = null, overview = null) }
 
-            val overview = courseRepository.fetchCourseOverview(courseId)
+            val overview = courseRepository.fetchCourseOverview(courseId)?.toUi()
             if (overview != null) {
                 updateState { copy(overview = overview, isLoading = false) }
             } else {

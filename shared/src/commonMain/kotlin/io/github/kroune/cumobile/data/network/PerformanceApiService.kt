@@ -1,9 +1,9 @@
 package io.github.kroune.cumobile.data.network
 
-import io.github.kroune.cumobile.data.model.CourseExercisesResponse
-import io.github.kroune.cumobile.data.model.CourseStudentPerformanceResponse
-import io.github.kroune.cumobile.data.model.GradebookResponse
-import io.github.kroune.cumobile.data.model.StudentPerformanceResponse
+import io.github.kroune.cumobile.data.model.CourseExercisesResponseApi
+import io.github.kroune.cumobile.data.model.CourseStudentPerformanceResponseApi
+import io.github.kroune.cumobile.data.model.GradebookResponseApi
+import io.github.kroune.cumobile.data.model.StudentPerformanceResponseApi
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
@@ -20,7 +20,7 @@ internal class PerformanceApiService(
     private val httpClient by httpClient
 
     /** Fetches overall student performance summary. */
-    suspend fun fetchPerformance(cookie: String): StudentPerformanceResponse? =
+    suspend fun fetchPerformance(cookie: String): StudentPerformanceResponseApi? =
         safeApiCall(logger, "fetch performance") {
             httpClient.get(ApiEndpoints.Performance.STUDENT) {
                 header("Cookie", cookieHeader(cookie))
@@ -31,7 +31,7 @@ internal class PerformanceApiService(
     suspend fun fetchCourseExercises(
         cookie: String,
         courseId: String,
-    ): CourseExercisesResponse? =
+    ): CourseExercisesResponseApi? =
         safeApiCall(logger, "fetch course exercises for courseId=$courseId") {
             httpClient.get(ApiEndpoints.Courses.exercises(courseId)) {
                 header("Cookie", cookieHeader(cookie))
@@ -42,7 +42,7 @@ internal class PerformanceApiService(
     suspend fun fetchCoursePerformance(
         cookie: String,
         courseId: String,
-    ): CourseStudentPerformanceResponse? =
+    ): CourseStudentPerformanceResponseApi? =
         safeApiCall(logger, "fetch course performance for courseId=$courseId") {
             httpClient.get(ApiEndpoints.Performance.coursePerformance(courseId)) {
                 header("Cookie", cookieHeader(cookie))
@@ -50,7 +50,7 @@ internal class PerformanceApiService(
         }
 
     /** Fetches the student's gradebook. */
-    suspend fun fetchGradebook(cookie: String): GradebookResponse? =
+    suspend fun fetchGradebook(cookie: String): GradebookResponseApi? =
         safeApiCall(logger, "fetch gradebook") {
             httpClient.get(ApiEndpoints.Performance.GRADEBOOK) {
                 header("Cookie", cookieHeader(cookie))

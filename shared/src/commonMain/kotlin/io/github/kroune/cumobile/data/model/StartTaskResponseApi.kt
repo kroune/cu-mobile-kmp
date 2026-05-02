@@ -8,6 +8,6 @@ import kotlinx.serialization.Serializable
  * Contains the quiz session ID when the started task is a quiz.
  */
 @Serializable
-data class StartTaskResponse(
+data class StartTaskResponseApi(
     val quizSessionId: String? = null,
 )

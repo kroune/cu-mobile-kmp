@@ -8,9 +8,11 @@ import io.github.kroune.cumobile.domain.repository.CourseRepository
 import io.github.kroune.cumobile.domain.repository.PerformanceRepository
 import io.github.kroune.cumobile.presentation.common.ContentState
 import io.github.kroune.cumobile.presentation.common.componentScope
-import io.github.kroune.cumobile.presentation.common.invoke
+import io.github.kroune.cumobile.presentation.common.model.mappers.toUi
+import io.github.kroune.cumobile.util.invoke
 import io.github.kroune.cumobile.util.runCatchingCancellable
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -113,7 +115,9 @@ class DefaultCoursesComponent(
                 val courses = courseRepository().fetchCourses()
                 if (courses != null) {
                     _state.value = _state.value.copy(
-                        courses = ContentState.Success(courses),
+                        courses = ContentState.Success(
+                            courses.map { it.toUi() }.toImmutableList(),
+                        ),
                     )
                 } else {
                     logger.warn { "Failed to load courses" }
@@ -127,7 +131,9 @@ class DefaultCoursesComponent(
                 val performance = performanceRepository().fetchPerformance()
                 if (performance != null) {
                     _state.value = _state.value.copy(
-                        performanceCourses = ContentState.Success(performance.courses),
+                        performanceCourses = ContentState.Success(
+                            performance.map { it.toUi() }.toImmutableList(),
+                        ),
                     )
                 } else {
                     logger.warn { "Failed to load performance data" }
@@ -142,7 +148,7 @@ class DefaultCoursesComponent(
                     performanceRepository().fetchGradebook()
                 }.onSuccess { gradebook ->
                     _state.value = _state.value.copy(
-                        gradebook = ContentState.Success(gradebook),
+                        gradebook = ContentState.Success(gradebook?.toUi()),
                     )
                 }.onFailure { e ->
                     logger.error(e) { "Failed to load gradebook" }

@@ -7,4 +7,9 @@
 
 ---
 
-*Пока пусто — добавляй задачи по мере планирования.*
+## Выполненные задачи
+
+### Domain model refactoring (2026-04-27)
+Введены domain-модели (`*Domain`) и маппера (`*Api.toDomain()`). API DTOs переименованы с суффиксом `Api`.
+Все MVI State-классы используют domain-типы с pre-computed plain fields (без геттеров).
+Детали в `ARCHITECTURE.md` → раздел «Модели данных».

@@ -8,7 +8,7 @@ import kotlinx.serialization.Serializable
  * API endpoint: `GET /hub/students/me`
  */
 @Serializable
-data class StudentProfile(
+data class ProfileApi(
     val id: String = "",
     val firstName: String = "",
     val lastName: String = "",
@@ -23,8 +23,8 @@ data class StudentProfile(
     val gender: String = "",
     val enrollmentPhase: String = "",
     val educationLevel: String = "",
-    val emails: List<EmailInfo> = emptyList(),
-    val phones: List<PhoneInfo> = emptyList(),
+    val emails: List<EmailInfoApi> = emptyList(),
+    val phones: List<PhoneInfoApi> = emptyList(),
 ) {
     /** Full name in "Last First Middle" format. */
     val fullName: String
@@ -38,16 +38,16 @@ data class StudentProfile(
             ?: emails.firstOrNull()?.value
 }
 
-/** Email entry within [StudentProfile]. */
+/** Email entry within [ProfileApi]. */
 @Serializable
-data class EmailInfo(
+data class EmailInfoApi(
     val value: String = "",
     val type: String = "",
 )
 
-/** Phone entry within [StudentProfile]. */
+/** Phone entry within [ProfileApi]. */
 @Serializable
-data class PhoneInfo(
+data class PhoneInfoApi(
     val value: String = "",
     val type: String = "",
 )

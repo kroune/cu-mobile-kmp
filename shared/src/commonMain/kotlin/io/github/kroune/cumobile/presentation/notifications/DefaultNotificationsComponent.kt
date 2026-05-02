@@ -3,14 +3,15 @@ package io.github.kroune.cumobile.presentation.notifications
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
-import io.github.kroune.cumobile.data.model.NotificationCategory
-import io.github.kroune.cumobile.data.model.NotificationItem
+import io.github.kroune.cumobile.domain.model.NotificationDomain
 import io.github.kroune.cumobile.domain.repository.NotificationRepository
 import io.github.kroune.cumobile.presentation.common.ContentState
 import io.github.kroune.cumobile.presentation.common.componentScope
-import io.github.kroune.cumobile.presentation.common.invoke
+import io.github.kroune.cumobile.presentation.common.model.mappers.toUi
 import io.github.kroune.cumobile.util.AppDispatchers
+import io.github.kroune.cumobile.util.invoke
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -20,10 +21,13 @@ import kotlinx.coroutines.withContext
 
 private val logger = KotlinLogging.logger {}
 
+private const val CategoryEducation = 1
+private const val CategoryOther = 2
+
 /**
  * Default implementation of [NotificationsComponent].
  *
- * Loads education ([NotificationCategory.Education]) and other ([NotificationCategory.Other])
+ * Loads education (category [CategoryEducation]) and other (category [CategoryOther])
  * notifications in parallel on creation. Supports tab switching and link opening.
  */
 class DefaultNotificationsComponent(
@@ -90,11 +94,13 @@ class DefaultNotificationsComponent(
         currentLoadJob = scope.launch {
             launch {
                 val education = notificationRepository().fetchNotifications(
-                    category = NotificationCategory.Education,
+                    category = CategoryEducation,
                 )
                 if (education != null) {
                     _state.value = _state.value.copy(
-                        educationNotifications = ContentState.Success(sortByDate(education)),
+                        educationNotifications = ContentState.Success(
+                            sortByDate(education).map { it.toUi() }.toImmutableList(),
+                        ),
                     )
                 } else {
                     logger.warn { "Failed to load education notifications" }
@@ -108,11 +114,13 @@ class DefaultNotificationsComponent(
 
             launch {
                 val other = notificationRepository().fetchNotifications(
-                    category = NotificationCategory.Other,
+                    category = CategoryOther,
                 )
                 if (other != null) {
                     _state.value = _state.value.copy(
-                        otherNotifications = ContentState.Success(sortByDate(other)),
+                        otherNotifications = ContentState.Success(
+                            sortByDate(other).map { it.toUi() }.toImmutableList(),
+                        ),
                     )
                 } else {
                     logger.warn { "Failed to load other notifications" }
@@ -149,7 +157,7 @@ class DefaultNotificationsComponent(
         return false
     }
 
-    private suspend fun sortByDate(items: List<NotificationItem>): List<NotificationItem> =
+    private suspend fun sortByDate(items: List<NotificationDomain>): List<NotificationDomain> =
         withContext(dispatchers().default) {
             items.sortedByDescending { it.createdAt }
         }

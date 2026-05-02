@@ -1,8 +1,8 @@
 package io.github.kroune.cumobile.presentation.courses.detail
 
 import com.arkivanov.decompose.value.Value
-import io.github.kroune.cumobile.data.model.CourseOverview
-import io.github.kroune.cumobile.data.model.CourseTheme
+import io.github.kroune.cumobile.presentation.common.model.CourseOverviewUi
+import io.github.kroune.cumobile.presentation.common.model.CourseThemeUi
 
 /**
  * MVI component for the Course Detail screen.
@@ -17,12 +17,12 @@ interface CourseDetailComponent {
 
     data class State(
         val courseId: String = "",
-        val overview: CourseOverview? = null,
+        val overview: CourseOverviewUi? = null,
         val isLoading: Boolean = true,
         val error: String? = null,
         val searchQuery: String = "",
         val expandedThemeIds: Set<String> = emptySet(),
-        val filteredThemes: List<CourseTheme> = emptyList(),
+        val filteredThemes: List<CourseThemeUi> = emptyList(),
     )
 
     sealed interface Intent {
@@ -59,9 +59,9 @@ interface CourseDetailComponent {
  * For non-matching themes, only matching longreads are retained.
  */
 internal fun filteredThemes(
-    themes: List<CourseTheme>,
+    themes: List<CourseThemeUi>,
     query: String,
-): List<CourseTheme> {
+): List<CourseThemeUi> {
     if (query.isBlank()) return themes
 
     return themes.mapNotNull { theme ->

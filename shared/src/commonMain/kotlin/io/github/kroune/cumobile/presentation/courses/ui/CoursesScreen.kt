@@ -59,20 +59,20 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import io.github.kroune.cumobile.baseline.BaselineTestTags
-import io.github.kroune.cumobile.data.model.Course
+import io.github.kroune.cumobile.presentation.common.dataOrNull
 import io.github.kroune.cumobile.presentation.common.isError
+import io.github.kroune.cumobile.presentation.common.isLoading
+import io.github.kroune.cumobile.presentation.common.model.CourseUi
+import io.github.kroune.cumobile.presentation.common.model.color
 import io.github.kroune.cumobile.presentation.common.ui.ActionErrorBar
 import io.github.kroune.cumobile.presentation.common.ui.AppTabRow
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 import io.github.kroune.cumobile.presentation.common.ui.EmptyContent
 import io.github.kroune.cumobile.presentation.common.ui.ErrorContent
-import io.github.kroune.cumobile.presentation.common.ui.SegmentedControl
-import io.github.kroune.cumobile.presentation.common.ui.courseCategoryColor
-import io.github.kroune.cumobile.presentation.common.ui.courseCategoryLabel
-import io.github.kroune.cumobile.presentation.common.ui.stripEmojiPrefix
 import io.github.kroune.cumobile.presentation.courses.CoursesComponent
 import io.github.kroune.cumobile.presentation.courses.activeCourses
 import io.github.kroune.cumobile.presentation.courses.archivedCourses
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -117,7 +117,7 @@ internal fun CoursesScreenContent(
     modifier: Modifier = Modifier,
 ) {
     PullToRefreshBox(
-        isRefreshing = state.isContentLoading,
+        isRefreshing = state.courses.isLoading,
         onRefresh = { onIntent(CoursesComponent.Intent.Refresh) },
         modifier = modifier
             .fillMaxSize()
@@ -155,7 +155,7 @@ internal fun CoursesScreenContent(
                     error = "Не удалось загрузить курсы",
                     onRetry = { onIntent(CoursesComponent.Intent.Refresh) },
                 )
-                state.isContentLoading -> CoursesScreenSkeleton()
+                state.courses.isLoading -> CoursesScreenSkeleton()
                 else -> HorizontalPager(
                     state = pagerState,
                     modifier = Modifier.fillMaxSize(),
@@ -180,8 +180,9 @@ private fun CoursesListContent(
     onIntent: (CoursesComponent.Intent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val active = activeCourses(state.courseList, state.courseOrder)
-    val archived = archivedCourses(state.courseList, state.courseOrder)
+    val courseList = state.courses.dataOrNull ?: persistentListOf()
+    val active = activeCourses(courseList, state.courseOrder)
+    val archived = archivedCourses(courseList, state.courseOrder)
 
     if (active.isEmpty() && archived.isEmpty()) {
         EmptyContent(text = "Нет курсов")
@@ -255,8 +256,8 @@ private data class DragCallbacks(
 )
 
 private fun LazyListScope.activeCoursesSection(
-    active: List<Course>,
-    localActive: List<Course>,
+    active: List<CourseUi>,
+    localActive: List<CourseUi>,
     state: CoursesComponent.State,
     drag: DragCallbacks,
     onIntent: (CoursesComponent.Intent) -> Unit,
@@ -295,7 +296,7 @@ private fun LazyListScope.activeCoursesSection(
 }
 
 private fun LazyListScope.archivedCoursesSection(
-    archived: List<Course>,
+    archived: List<CourseUi>,
     state: CoursesComponent.State,
     onIntent: (CoursesComponent.Intent) -> Unit,
 ) {
@@ -327,8 +328,8 @@ private fun trySwapDraggedItem(
     dragOffsetY: Float,
     draggedId: String?,
     layoutInfo: LazyListLayoutInfo,
-    currentItems: List<Course>,
-): Pair<List<Course>, Float>? {
+    currentItems: List<CourseUi>,
+): Pair<List<CourseUi>, Float>? {
     val currentId = draggedId ?: return null
     val draggedInfo = layoutInfo.visibleItemsInfo
         .firstOrNull { it.key == currentId } ?: return null
@@ -360,9 +361,9 @@ private fun handleDragSwap(
     dragOffsetY: Float,
     draggedId: String?,
     listState: LazyListState,
-    localActive: List<Course>,
+    localActive: List<CourseUi>,
     scope: CoroutineScope,
-    onSwap: (newItems: List<Course>, offsetAdj: Float) -> Unit,
+    onSwap: (newItems: List<CourseUi>, offsetAdj: Float) -> Unit,
 ) {
     val swap = trySwapDraggedItem(dragOffsetY, draggedId, listState.layoutInfo, localActive)
     if (swap != null) {
@@ -384,7 +385,7 @@ private const val HysteresisRatio = 0.15f
  */
 @Composable
 private fun DraggableCourseItem(
-    course: Course,
+    course: CourseUi,
     dragOffset: Float?,
     onClick: () -> Unit,
     onDragStart: () -> Unit,
@@ -396,7 +397,7 @@ private fun DraggableCourseItem(
     val currentOnDrag by rememberUpdatedState(onDrag)
     val currentOnDragEnd by rememberUpdatedState(onDragEnd)
     val isDragging = dragOffset != null
-    val catColor = courseCategoryColor(course.category)
+    val catColor = course.categoryStyle.color()
 
     val rowModifier = modifier
         .fillMaxWidth()
@@ -439,7 +440,7 @@ private fun DraggableCourseItem(
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = stripEmojiPrefix(course.name),
+                text = course.name,
                 color = AppTheme.colors.textPrimary,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
@@ -447,7 +448,7 @@ private fun DraggableCourseItem(
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
-                text = courseCategoryLabel(course.category),
+                text = course.categoryLabel,
                 color = catColor,
                 fontSize = 12.sp,
             )
@@ -467,11 +468,11 @@ private fun DraggableCourseItem(
  */
 @Composable
 private fun CourseListTile(
-    course: Course,
+    course: CourseUi,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val catColor = courseCategoryColor(course.category)
+    val catColor = course.categoryStyle.color()
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -483,7 +484,7 @@ private fun CourseListTile(
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = stripEmojiPrefix(course.name),
+                text = course.name,
                 color = AppTheme.colors.textPrimary,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
@@ -491,7 +492,7 @@ private fun CourseListTile(
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
-                text = courseCategoryLabel(course.category),
+                text = course.categoryLabel,
                 color = catColor,
                 fontSize = 12.sp,
             )

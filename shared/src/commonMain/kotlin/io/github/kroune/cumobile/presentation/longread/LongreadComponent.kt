@@ -5,7 +5,7 @@ import androidx.compose.material3.SnackbarResult
 import com.arkivanov.decompose.ExperimentalDecomposeApi
 import com.arkivanov.decompose.router.items.LazyChildItems
 import com.arkivanov.decompose.value.Value
-import io.github.kroune.cumobile.data.model.LongreadMaterial
+import io.github.kroune.cumobile.presentation.common.model.LongreadMaterialUi
 import io.github.kroune.cumobile.presentation.longread.component.LongreadItem
 import io.github.kroune.cumobile.presentation.longread.component.MaterialConfig
 import kotlinx.collections.immutable.ImmutableList
@@ -45,7 +45,7 @@ interface LongreadComponent {
         val themeId: String = "",
         val isLoading: Boolean = true,
         val error: String? = null,
-        val materials: ImmutableList<LongreadMaterial> = persistentListOf(),
+        val materials: ImmutableList<LongreadMaterialUi> = persistentListOf(),
         val title: String = "Лонгрид",
         val isSearchVisible: Boolean = false,
         val searchQuery: String = "",

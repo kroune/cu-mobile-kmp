@@ -22,7 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.kdroidfilter.composemediaplayer.rememberVideoPlayerState
-import io.github.kroune.cumobile.data.model.LongreadMaterial
+import io.github.kroune.cumobile.presentation.common.model.LongreadMaterialUi
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 import io.github.kroune.cumobile.presentation.longread.htmlrender.resolveUrl
 import io.github.kroune.cumobile.presentation.longread.ui.MediaUrlRow
@@ -30,7 +30,7 @@ import io.github.kroune.cumobile.presentation.longread.ui.MediaUrlRow
 /** Card for `audio` materials with native playback. */
 @Composable
 fun AudioMaterialCard(
-    material: LongreadMaterial,
+    material: LongreadMaterialUi,
     modifier: Modifier = Modifier,
 ) {
     val audioUrl = material.viewContent ?: return

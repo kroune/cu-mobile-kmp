@@ -55,9 +55,9 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import coil3.compose.AsyncImage
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
-import io.github.kroune.cumobile.data.model.StudentProfile
 import io.github.kroune.cumobile.presentation.common.ContentState
 import io.github.kroune.cumobile.presentation.common.dataOrNull
+import io.github.kroune.cumobile.presentation.common.model.ProfileUi
 import io.github.kroune.cumobile.presentation.common.ui.ActionErrorBar
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 import io.github.kroune.cumobile.presentation.common.ui.DetailTopBar
@@ -156,7 +156,7 @@ internal fun ProfileScreenContent(
 @Composable
 private fun ProfileContent(
     state: ProfileComponent.State,
-    profile: StudentProfile,
+    profile: ProfileUi,
     onIntent: (ProfileComponent.Intent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -200,14 +200,14 @@ private fun ProfileContent(
             textAlign = TextAlign.Center,
         )
 
-        // Course + education level
-        val courseNumber = profile.course
-        if ((courseNumber != null && courseNumber > 0) || state.educationLevelLabel.isNotEmpty()) {
+        val courseLabel = profile.studentCourseLabel
+        val levelLabel = profile.educationLevelLabel
+        if (courseLabel != null || levelLabel.isNotEmpty()) {
             val courseText = buildString {
-                if (courseNumber != null && courseNumber > 0) append("$courseNumber курс")
-                if (state.educationLevelLabel.isNotEmpty()) {
+                if (courseLabel != null) append(courseLabel)
+                if (levelLabel.isNotEmpty()) {
                     if (isNotEmpty()) append(" — ")
-                    append(state.educationLevelLabel)
+                    append(levelLabel)
                 }
             }
             Spacer(modifier = Modifier.height(4.dp))
@@ -345,7 +345,7 @@ private fun InfoCard(
         }
 
         // Other emails
-        state.otherEmails.forEach { email ->
+        profile.otherEmails.forEach { email ->
             key(email.value) {
                 Spacer(modifier = Modifier.height(12.dp))
                 InfoRowWithBadge(

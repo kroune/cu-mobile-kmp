@@ -18,9 +18,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import io.github.kroune.cumobile.presentation.common.model.ActivitySummaryUi
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 import io.github.kroune.cumobile.presentation.common.ui.gradeColor
-import io.github.kroune.cumobile.presentation.performance.ActivitySummary
 import kotlinx.collections.immutable.ImmutableList
 
 /**
@@ -28,7 +28,7 @@ import kotlinx.collections.immutable.ImmutableList
  */
 @Composable
 internal fun PerformanceTab(
-    summaries: ImmutableList<ActivitySummary>,
+    summaries: ImmutableList<ActivitySummaryUi>,
     totalContribution: Double,
     modifier: Modifier = Modifier,
 ) {
@@ -84,7 +84,7 @@ private fun HeaderCell(
 
 @Composable
 private fun PerformanceSummaryRow(
-    summary: ActivitySummary,
+    summary: ActivitySummaryUi,
     modifier: Modifier = Modifier,
 ) {
     val avgColor = scoreRatioColor(summary.averageScore / 10.0)

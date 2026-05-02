@@ -45,9 +45,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
-import io.github.kroune.cumobile.data.local.DownloadedFileInfo
-import io.github.kroune.cumobile.presentation.common.formatEpochDate
 import io.github.kroune.cumobile.presentation.common.formatSizeBytes
+import io.github.kroune.cumobile.presentation.common.model.DownloadedFileInfoUi
 import io.github.kroune.cumobile.presentation.common.ui.ActionErrorBar
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 import io.github.kroune.cumobile.presentation.common.ui.ErrorContent
@@ -249,7 +248,7 @@ private fun FilesHeader(
 
 @Composable
 private fun FileList(
-    files: List<DownloadedFileInfo>,
+    files: List<DownloadedFileInfoUi>,
     selectedFiles: Set<String>,
     downloadingFiles: Set<String> = emptySet(),
     highlightedFile: String? = null,
@@ -283,7 +282,7 @@ private fun FileList(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun FileRow(
-    file: DownloadedFileInfo,
+    file: DownloadedFileInfoUi,
     isSelected: Boolean,
     isSelecting: Boolean,
     isHighlighted: Boolean = false,
@@ -341,9 +340,7 @@ private fun FileRow(
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
-                text = "${formatSizeBytes(file.sizeBytes)} • ${
-                    formatEpochDate(file.lastModifiedMillis)
-                }",
+                text = "${file.sizeLabel} • ${file.dateLabel}",
                 color = AppTheme.colors.textSecondary,
                 fontSize = 12.sp,
             )

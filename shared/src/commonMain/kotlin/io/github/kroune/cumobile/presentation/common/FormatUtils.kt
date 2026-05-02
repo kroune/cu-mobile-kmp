@@ -139,6 +139,12 @@ fun formatDeadline(isoDate: String?): String {
     return formatIsoOrFallback(isoDate) { dayMonthTimeFormat.format(it) }
 }
 
+/** Formats a deadline [Instant] to `"dd.MM HH:mm"`. Returns `"Без дедлайна"` when null. */
+fun formatDeadlineInstant(instant: Instant?): String {
+    if (instant == null) return "Без дедлайна"
+    return dayMonthTimeFormat.format(instant.toLocalDateTime(TimeZone.currentSystemDefault()))
+}
+
 /** Formats an ISO 8601 datetime to `"dd.MM HH:mm"`. Falls back to the raw string. */
 fun formatDateTime(dateTime: String): String =
     formatIsoOrFallback(dateTime) { dayMonthTimeFormat.format(it) }

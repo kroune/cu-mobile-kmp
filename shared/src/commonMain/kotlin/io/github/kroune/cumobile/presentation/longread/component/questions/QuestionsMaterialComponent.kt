@@ -1,14 +1,14 @@
 package io.github.kroune.cumobile.presentation.longread.component.questions
 
 import com.arkivanov.decompose.value.Value
-import io.github.kroune.cumobile.data.model.EvaluationStrategy
-import io.github.kroune.cumobile.data.model.LongreadMaterial
-import io.github.kroune.cumobile.data.model.QuizAnswer
-import io.github.kroune.cumobile.data.model.QuizAttempt
-import io.github.kroune.cumobile.data.model.QuizQuestion
-import io.github.kroune.cumobile.data.model.TaskDetails
 import io.github.kroune.cumobile.presentation.common.ContentState
 import io.github.kroune.cumobile.presentation.common.RenderComponent
+import io.github.kroune.cumobile.presentation.common.model.LongreadMaterialUi
+import io.github.kroune.cumobile.presentation.common.model.QuizAnswerUi
+import io.github.kroune.cumobile.presentation.common.model.QuizAttemptUi
+import io.github.kroune.cumobile.presentation.common.model.QuizQuestionUi
+import io.github.kroune.cumobile.presentation.common.model.StatusStyle
+import io.github.kroune.cumobile.presentation.common.model.TaskDetailsUi
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentListOf
@@ -16,26 +16,26 @@ import kotlinx.collections.immutable.persistentMapOf
 
 interface QuestionsMaterialComponent : RenderComponent {
     val state: Value<State>
-    val material: LongreadMaterial
+    val material: LongreadMaterialUi
 
     fun onIntent(intent: Intent)
 
     data class State(
         val isExpanded: Boolean = false,
         val phase: QuizPhase = QuizPhase.Loading,
-        val taskDetails: ContentState<TaskDetails> = ContentState.Loading,
-        val taskState: String? = null,
-        val questions: ImmutableList<QuizQuestion> = persistentListOf(),
-        val answers: ImmutableMap<String, QuizAnswer> = persistentMapOf(),
+        val taskDetails: ContentState<TaskDetailsUi> = ContentState.Loading,
+        val taskStatusStyle: StatusStyle? = null,
+        val questions: ImmutableList<QuizQuestionUi> = persistentListOf(),
+        val answers: ImmutableMap<String, QuizAnswerUi> = persistentMapOf(),
         val timerTotalSeconds: Long = 0,
         val timerRemainingSeconds: Long = 0,
         val isSubmitting: Boolean = false,
         val sessionId: String? = null,
         val attemptId: String? = null,
-        val attemptResults: QuizAttempt? = null,
-        val pastAttempts: ImmutableList<QuizAttempt> = persistentListOf(),
+        val attemptResults: QuizAttemptUi? = null,
+        val pastAttempts: ImmutableList<QuizAttemptUi> = persistentListOf(),
         val attemptsLimit: Int? = null,
-        val evaluationStrategy: EvaluationStrategy? = null,
+        val evaluationStrategy: String? = null,
         val confirmDialog: ConfirmDialog? = null,
         val canStartNewAttempt: Boolean = false,
     )
@@ -77,7 +77,7 @@ interface QuestionsMaterialComponent : RenderComponent {
 
         data class UpdateAnswer(
             val questionId: String,
-            val answer: QuizAnswer,
+            val answer: QuizAnswerUi,
         ) : Intent
 
         data object CompleteAttempt : Intent

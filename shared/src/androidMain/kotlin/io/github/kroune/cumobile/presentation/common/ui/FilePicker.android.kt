@@ -6,13 +6,13 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
-import io.github.kroune.cumobile.data.model.PickedFile
+import io.github.kroune.cumobile.presentation.common.model.PickedFileUi
 import io.github.oshai.kotlinlogging.KotlinLogging
 
 private val logger = KotlinLogging.logger {}
 
 @Composable
-actual fun rememberFilePicker(onFilePicked: (PickedFile) -> Unit): FilePicker {
+actual fun rememberFilePicker(onFilePicked: (PickedFileUi) -> Unit): FilePicker {
     val context = LocalContext.current
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument(),
@@ -34,7 +34,7 @@ actual fun rememberFilePicker(onFilePicked: (PickedFile) -> Unit): FilePicker {
                 logger.warn { "Failed to read file bytes from $uri" }
                 return@rememberLauncherForActivityResult
             }
-            onFilePicked(PickedFile(displayName, bytes, mimeType, bytes.size.toLong()))
+            onFilePicked(PickedFileUi(displayName, bytes, mimeType, bytes.size.toLong()))
         } catch (e: Exception) {
             logger.error(e) { "Failed to pick file from $uri" }
         }

@@ -1,7 +1,7 @@
 package io.github.kroune.cumobile.presentation.scanner
 
 import com.arkivanov.decompose.value.Value
-import io.github.kroune.cumobile.data.model.PickedFile
+import io.github.kroune.cumobile.presentation.common.model.PickedFileUi
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -46,7 +46,7 @@ interface ScannerComponent {
         /** Page management intents. */
         sealed interface Page : Intent {
             data class Add(
-                val images: List<PickedFile>,
+                val images: List<PickedFileUi>,
             ) : Page
 
             data class Remove(

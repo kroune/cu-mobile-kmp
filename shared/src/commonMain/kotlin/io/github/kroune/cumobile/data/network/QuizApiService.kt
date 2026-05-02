@@ -1,11 +1,12 @@
 package io.github.kroune.cumobile.data.network
 
-import io.github.kroune.cumobile.data.model.QuizAnswer
-import io.github.kroune.cumobile.data.model.QuizAttempt
-import io.github.kroune.cumobile.data.model.QuizQuestion
-import io.github.kroune.cumobile.data.model.QuizQuestionType
-import io.github.kroune.cumobile.data.model.StartAttemptResponse
-import io.github.kroune.cumobile.presentation.common.invoke
+import io.github.kroune.cumobile.data.model.QuizAttemptApi
+import io.github.kroune.cumobile.data.model.QuizQuestionApi
+import io.github.kroune.cumobile.data.model.StartAttemptResponseApi
+import io.github.kroune.cumobile.data.model.mappers.apiQuestionType
+import io.github.kroune.cumobile.data.model.mappers.toJsonElement
+import io.github.kroune.cumobile.domain.model.QuizAnswer
+import io.github.kroune.cumobile.util.invoke
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
@@ -35,7 +36,7 @@ internal data class SubmitAnswerRequest(
 internal data class SubmitAnswerBody(
     val questionId: String,
     val sessionId: String,
-    val type: QuizQuestionType,
+    val type: String,
     val value: JsonElement,
 )
 
@@ -45,7 +46,7 @@ internal class QuizApiService(
     suspend fun startAttempt(
         cookie: String,
         sessionId: String,
-    ): StartAttemptResponse? =
+    ): StartAttemptResponseApi? =
         safeApiCall(logger, "start quiz attempt for sessionId=$sessionId") {
             httpClient().post(ApiEndpoints.Quizzes.ATTEMPTS) {
                 header("Cookie", cookieHeader(cookie))
@@ -57,7 +58,7 @@ internal class QuizApiService(
     suspend fun getAttempt(
         cookie: String,
         attemptId: String,
-    ): QuizAttempt? =
+    ): QuizAttemptApi? =
         safeApiCall(logger, "get quiz attempt attemptId=$attemptId") {
             httpClient().get(ApiEndpoints.Quizzes.attemptById(attemptId)) {
                 header("Cookie", cookieHeader(cookie))
@@ -80,7 +81,7 @@ internal class QuizApiService(
     suspend fun getQuestions(
         cookie: String,
         quizId: String,
-    ): List<QuizQuestion>? =
+    ): List<QuizQuestionApi>? =
         safeApiCall(logger, "get quiz questions for quizId=$quizId") {
             httpClient().get(ApiEndpoints.Quizzes.questions(quizId)) {
                 header("Cookie", cookieHeader(cookie))
@@ -90,7 +91,7 @@ internal class QuizApiService(
     suspend fun listAttempts(
         cookie: String,
         sessionId: String,
-    ): List<QuizAttempt>? =
+    ): List<QuizAttemptApi>? =
         safeApiCall(logger, "list quiz attempts for sessionId=$sessionId") {
             httpClient().get(ApiEndpoints.Quizzes.sessionAttempts(sessionId)) {
                 header("Cookie", cookieHeader(cookie))
@@ -114,7 +115,7 @@ internal class QuizApiService(
                         answer = SubmitAnswerBody(
                             questionId = questionId,
                             sessionId = sessionId,
-                            type = answer.type,
+                            type = answer.apiQuestionType(),
                             value = answer.toJsonElement(),
                         ),
                         attemptId = attemptId,

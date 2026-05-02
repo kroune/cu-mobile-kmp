@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
  * Response from the content upload link endpoint.
  */
 @Serializable
-data class UploadLinkData(
+data class UploadLinkDataApi(
     val shortName: String = "",
     val filename: String = "",
     val objectKey: String = "",

@@ -1,8 +1,8 @@
 package io.github.kroune.cumobile.presentation.files.rename
 
 import com.arkivanov.decompose.value.Value
-import io.github.kroune.cumobile.data.local.FileRenameRule
-import io.github.kroune.cumobile.data.model.Course
+import io.github.kroune.cumobile.presentation.common.model.CourseUi
+import io.github.kroune.cumobile.presentation.common.model.FileRenameRuleUi
 
 /**
  * MVI component for managing file renaming templates.
@@ -13,19 +13,19 @@ interface FileRenameSettingsComponent {
     fun onIntent(intent: Intent)
 
     data class State(
-        val rules: List<FileRenameRule> = emptyList(),
-        val courses: List<Course> = emptyList(),
+        val rules: List<FileRenameRuleUi> = emptyList(),
+        val courses: List<CourseUi> = emptyList(),
         val isLoading: Boolean = false,
         val error: String? = null,
     )
 
     sealed interface Intent {
         data class AddRule(
-            val rule: FileRenameRule,
+            val rule: FileRenameRuleUi,
         ) : Intent
 
         data class DeleteRule(
-            val rule: FileRenameRule,
+            val rule: FileRenameRuleUi,
         ) : Intent
 
         data object Back : Intent

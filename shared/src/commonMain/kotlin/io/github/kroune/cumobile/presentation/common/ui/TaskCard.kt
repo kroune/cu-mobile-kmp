@@ -22,33 +22,29 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import io.github.kroune.cumobile.data.model.StudentTask
-import io.github.kroune.cumobile.data.model.TaskState
-import io.github.kroune.cumobile.presentation.common.formatDeadlineDayShortMonth
-import io.github.kroune.cumobile.presentation.common.formatDeadlineTime
-import io.github.kroune.cumobile.presentation.common.parseDeadlineInstant
-
-private const val MillisPerHour = 3_600_000L
-private const val MillisPerDay = 86_400_000L
-private const val HoursPerDay = 24
-private const val UrgencyRedHours = 24L
-private const val UrgencyOrangeHours = 72L
+import io.github.kroune.cumobile.presentation.common.model.TaskUi
+import io.github.kroune.cumobile.presentation.common.model.UrgencyLevel
+import io.github.kroune.cumobile.presentation.common.model.color
 
 /**
  * Compact task card for the Дедлайны row on the Home screen.
  *
  * Layout favours temporal scanning:
- *  - Right column: large time (primary) and urgency-colored date beneath it.
+ *  - Right column: large date primary and urgency-colored date beneath it.
  *  - Left column: state chip, accent-colored course name, secondary task title.
  */
 @Composable
 fun DeadlineTaskCard(
-    task: StudentTask,
+    task: TaskUi,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val stateColor = taskStateColor(task.state)
-    val urgency = deadlineUrgencyColor(task.exercise.deadline, stateColor)
+    val statusColor = task.statusStyle.color()
+    val urgency = when (task.urgencyLevel) {
+        UrgencyLevel.Red -> AppTheme.colors.error
+        UrgencyLevel.Orange -> AppTheme.colors.taskReview
+        UrgencyLevel.Normal -> statusColor
+    }
 
     Row(
         modifier = modifier
@@ -66,9 +62,9 @@ fun DeadlineTaskCard(
                 .padding(end = 10.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            DeadlineStateChip(task = task, stateColor = stateColor)
+            DeadlineStateChip(task = task, statusColor = statusColor)
             Text(
-                text = stripEmojiPrefix(task.course.name),
+                text = task.courseName,
                 color = AppTheme.colors.accent,
                 fontSize = 13.sp,
                 lineHeight = 15.sp,
@@ -77,7 +73,7 @@ fun DeadlineTaskCard(
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
-                text = stripEmojiPrefix(task.exercise.name),
+                text = task.exerciseName,
                 color = AppTheme.colors.textSecondary,
                 fontSize = 11.sp,
                 lineHeight = 13.sp,
@@ -92,14 +88,14 @@ fun DeadlineTaskCard(
             verticalArrangement = Arrangement.SpaceBetween,
         ) {
             Text(
-                text = formatDeadlineTime(task.exercise.deadline),
+                text = task.deadlineTimeFormatted,
                 fontSize = 22.sp,
                 fontWeight = FontWeight.ExtraBold,
                 color = AppTheme.colors.textPrimary,
                 modifier = Modifier.weight(1f),
             )
             Text(
-                text = formatDeadlineDayShortMonth(task.exercise.deadline),
+                text = task.deadlineDayMonthFormatted,
                 fontSize = 15.sp,
                 lineHeight = 15.sp,
                 fontWeight = FontWeight.Bold,
@@ -111,18 +107,18 @@ fun DeadlineTaskCard(
 
 @Composable
 private fun DeadlineStateChip(
-    task: StudentTask,
-    stateColor: Color,
+    task: TaskUi,
+    statusColor: Color,
 ) {
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(6.dp))
-            .background(stateColor.copy(alpha = 0.2f))
+            .background(statusColor.copy(alpha = 0.2f))
             .padding(horizontal = 6.dp, vertical = 2.dp),
     ) {
         Text(
-            text = deadlineBadgeLabel(task.state, task.score),
-            color = stateColor,
+            text = task.deadlineBadgeLabel,
+            color = statusColor,
             fontSize = 10.sp,
             lineHeight = 10.sp,
             fontWeight = FontWeight.Bold,
@@ -151,32 +147,5 @@ fun StatusBadge(
             fontSize = 11.sp,
             fontWeight = FontWeight.SemiBold,
         )
-    }
-}
-
-private fun deadlineBadgeLabel(
-    state: String,
-    score: Double?,
-): String =
-    if (state == TaskState.Evaluated && score != null) {
-        "${score.toInt()}"
-    } else {
-        taskStateLabel(state)
-    }
-
-@Composable
-private fun deadlineUrgencyColor(
-    deadline: String?,
-    stateColor: Color,
-): Color {
-    val instant = parseDeadlineInstant(deadline) ?: return stateColor
-    val diffMs = instant.toEpochMilliseconds() - LocalClock.current.now().toEpochMilliseconds()
-    if (diffMs <= 0) return AppTheme.colors.error
-    val totalHours = diffMs / MillisPerHour
-    val totalDaysCeil = (diffMs + MillisPerDay - 1) / MillisPerDay
-    return when {
-        totalHours < UrgencyRedHours -> AppTheme.colors.error
-        totalDaysCeil <= UrgencyOrangeHours / HoursPerDay -> AppTheme.colors.taskReview
-        else -> stateColor
     }
 }

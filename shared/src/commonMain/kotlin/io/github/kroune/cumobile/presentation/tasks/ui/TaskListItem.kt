@@ -23,16 +23,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import io.github.kroune.cumobile.data.model.StudentTask
-import io.github.kroune.cumobile.presentation.common.formatDeadline
-import io.github.kroune.cumobile.presentation.common.isOverdue
+import io.github.kroune.cumobile.presentation.common.model.TaskUi
+import io.github.kroune.cumobile.presentation.common.model.color
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
-import io.github.kroune.cumobile.presentation.common.ui.LocalClock
 import io.github.kroune.cumobile.presentation.common.ui.StatusBadge
-import io.github.kroune.cumobile.presentation.common.ui.stripEmojiPrefix
-import io.github.kroune.cumobile.presentation.common.ui.taskStateColor
-import io.github.kroune.cumobile.presentation.common.ui.taskStateLabel
-import io.github.kroune.cumobile.presentation.tasks.effectiveTaskState
 
 /**
  * Task list item card matching the Flutter reference.
@@ -42,26 +36,24 @@ import io.github.kroune.cumobile.presentation.tasks.effectiveTaskState
  */
 @Composable
 fun TaskListItem(
-    task: StudentTask,
+    task: TaskUi,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val state = effectiveTaskState(task)
-    val stateColor = taskStateColor(state)
+    val statusColor = task.statusStyle.color()
     val shape = RoundedCornerShape(12.dp)
 
     Column(
         modifier = modifier
             .fillMaxWidth()
             .clip(shape)
-            .border(1.dp, stateColor, shape)
+            .border(1.dp, statusColor, shape)
             .background(AppTheme.colors.surface, shape)
             .clickable(onClick = onClick)
             .padding(12.dp),
     ) {
-        // Exercise name
         Text(
-            text = task.exercise.name,
+            text = task.exerciseName,
             color = AppTheme.colors.textPrimary,
             fontSize = 15.sp,
             fontWeight = FontWeight.SemiBold,
@@ -70,9 +62,8 @@ fun TaskListItem(
 
         Spacer(modifier = Modifier.height(4.dp))
 
-        // Course name
         Text(
-            text = stripEmojiPrefix(task.course.name),
+            text = task.courseName,
             color = AppTheme.colors.textSecondary,
             fontSize = 13.sp,
             maxLines = 1,
@@ -80,25 +71,24 @@ fun TaskListItem(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Bottom row: status badge + deadline
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
             StatusBadge(
-                label = taskStateLabel(state),
-                color = stateColor,
+                label = task.statusLabel,
+                color = statusColor,
             )
 
             DeadlineText(task = task)
         }
 
-        // Late days info (if enabled and used)
-        if (task.isLateDaysEnabled && task.lateDays != null && task.lateDays > 0) {
+        val lateDaysText = task.lateDaysText
+        if (lateDaysText != null) {
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "Перенесено на ${task.lateDays} дн.",
+                text = lateDaysText,
                 color = AppTheme.colors.textSecondary,
                 fontSize = 12.sp,
             )
@@ -111,12 +101,11 @@ fun TaskListItem(
  */
 @Composable
 private fun DeadlineText(
-    task: StudentTask,
+    task: TaskUi,
     modifier: Modifier = Modifier,
 ) {
-    val deadline = task.deadline ?: task.exercise.deadline
-    if (deadline != null) {
-        val overdue = isOverdue(deadline, LocalClock.current.now())
+    val deadlineFormatted = task.deadlineFormatted
+    if (deadlineFormatted != null) {
         Row(
             modifier = modifier,
             verticalAlignment = Alignment.CenterVertically,
@@ -129,8 +118,8 @@ private fun DeadlineText(
                 modifier = Modifier.size(14.dp),
             )
             Text(
-                text = formatDeadline(deadline),
-                color = if (overdue) AppTheme.colors.error else AppTheme.colors.textSecondary,
+                text = deadlineFormatted,
+                color = if (task.isOverdue) AppTheme.colors.error else AppTheme.colors.textSecondary,
                 fontSize = 12.sp,
             )
         }

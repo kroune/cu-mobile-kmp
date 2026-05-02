@@ -10,7 +10,7 @@ import io.github.kroune.cumobile.domain.repository.AuthRepository
 import io.github.kroune.cumobile.domain.repository.CookieValidationResult
 import io.github.kroune.cumobile.presentation.auth.LoginComponent.AuthStep
 import io.github.kroune.cumobile.presentation.common.componentScope
-import io.github.kroune.cumobile.presentation.common.invoke
+import io.github.kroune.cumobile.util.invoke
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow

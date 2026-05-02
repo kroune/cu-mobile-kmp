@@ -1,11 +1,11 @@
 package io.github.kroune.cumobile.data.network
 
-import io.github.kroune.cumobile.data.model.MaterialAttachment
-import io.github.kroune.cumobile.data.model.StartTaskResponse
-import io.github.kroune.cumobile.data.model.StudentTask
-import io.github.kroune.cumobile.data.model.TaskComment
-import io.github.kroune.cumobile.data.model.TaskDetails
-import io.github.kroune.cumobile.data.model.TaskEvent
+import io.github.kroune.cumobile.data.model.MaterialAttachmentApi
+import io.github.kroune.cumobile.data.model.StartTaskResponseApi
+import io.github.kroune.cumobile.data.model.TaskApi
+import io.github.kroune.cumobile.data.model.TaskCommentApi
+import io.github.kroune.cumobile.data.model.TaskDetailsApi
+import io.github.kroune.cumobile.data.model.TaskEventApi
 import io.github.kroune.cumobile.util.runCatchingCancellable
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
@@ -36,7 +36,7 @@ internal class TaskApiService(
     suspend fun fetchTasks(
         cookie: String,
         states: List<String>,
-    ): List<StudentTask>? =
+    ): List<TaskApi>? =
         safeApiCall(logger, "fetch tasks") {
             val queryString = states.joinToString("&") { "state=$it" }
             httpClient.get("${ApiEndpoints.Tasks.STUDENT}?$queryString") {
@@ -48,7 +48,7 @@ internal class TaskApiService(
     suspend fun fetchTaskDetails(
         cookie: String,
         taskId: String,
-    ): TaskDetails? =
+    ): TaskDetailsApi? =
         safeApiCall(logger, "fetch task details for taskId=$taskId") {
             httpClient.get(ApiEndpoints.Tasks.byId(taskId)) {
                 header("Cookie", cookieHeader(cookie))
@@ -59,7 +59,7 @@ internal class TaskApiService(
     suspend fun fetchTaskEvents(
         cookie: String,
         taskId: String,
-    ): List<TaskEvent>? =
+    ): List<TaskEventApi>? =
         safeApiCall(logger, "fetch task events for taskId=$taskId") {
             httpClient.get(ApiEndpoints.Tasks.events(taskId)) {
                 header("Cookie", cookieHeader(cookie))
@@ -70,7 +70,7 @@ internal class TaskApiService(
     suspend fun fetchTaskComments(
         cookie: String,
         taskId: String,
-    ): List<TaskComment>? =
+    ): List<TaskCommentApi>? =
         safeApiCall(logger, "fetch task comments for taskId=$taskId") {
             httpClient.get(ApiEndpoints.Tasks.comments(taskId)) {
                 header("Cookie", cookieHeader(cookie))
@@ -81,7 +81,7 @@ internal class TaskApiService(
     suspend fun startTask(
         cookie: String,
         taskId: String,
-    ): StartTaskResponse? =
+    ): StartTaskResponseApi? =
         safeApiCall(logger, "start task taskId=$taskId") {
             httpClient.put(ApiEndpoints.Tasks.start(taskId)) {
                 header("Cookie", cookieHeader(cookie))
@@ -99,7 +99,7 @@ internal class TaskApiService(
         cookie: String,
         taskId: String,
         solutionUrl: String? = null,
-        attachments: List<MaterialAttachment> = emptyList(),
+        attachments: List<MaterialAttachmentApi> = emptyList(),
     ): Boolean =
         safeApiAction(logger, "submit task taskId=$taskId") {
             httpClient.put(ApiEndpoints.Tasks.submit(taskId)) {
@@ -145,7 +145,7 @@ internal class TaskApiService(
         cookie: String,
         commentId: String,
         content: String,
-        attachments: List<MaterialAttachment> = emptyList(),
+        attachments: List<MaterialAttachmentApi> = emptyList(),
     ): Boolean =
         safeApiAction(logger, "edit comment commentId=$commentId") {
             httpClient.put(ApiEndpoints.Tasks.commentById(commentId)) {
@@ -176,7 +176,7 @@ internal class TaskApiService(
         cookie: String,
         taskId: String,
         content: String,
-        attachments: List<MaterialAttachment> = emptyList(),
+        attachments: List<MaterialAttachmentApi> = emptyList(),
     ): String? =
         runCatchingCancellable {
             val response = httpClient.post(ApiEndpoints.Tasks.COMMENTS) {

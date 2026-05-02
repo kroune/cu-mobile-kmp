@@ -1,9 +1,9 @@
 package io.github.kroune.cumobile.data.network
 
-import io.github.kroune.cumobile.data.model.LongreadMaterial
-import io.github.kroune.cumobile.data.model.LongreadMaterialsResponse
-import io.github.kroune.cumobile.data.model.UploadLinkData
-import io.github.kroune.cumobile.presentation.common.invoke
+import io.github.kroune.cumobile.data.model.LongreadMaterialApi
+import io.github.kroune.cumobile.data.model.LongreadMaterialsResponseApi
+import io.github.kroune.cumobile.data.model.UploadLinkDataApi
+import io.github.kroune.cumobile.util.invoke
 import io.github.kroune.cumobile.util.runCatchingCancellable
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
@@ -33,8 +33,8 @@ internal class ContentApiService(
     suspend fun fetchLongreadMaterials(
         cookie: String,
         longreadId: String,
-    ): List<LongreadMaterial>? =
-        safeApiCall<LongreadMaterialsResponse>(
+    ): List<LongreadMaterialApi>? =
+        safeApiCall<LongreadMaterialsResponseApi>(
             logger,
             "fetch longread materials for longreadId=$longreadId",
         ) {
@@ -48,7 +48,7 @@ internal class ContentApiService(
     suspend fun fetchMaterial(
         cookie: String,
         materialId: String,
-    ): LongreadMaterial? =
+    ): LongreadMaterialApi? =
         safeApiCall(logger, "fetch material materialId=$materialId") {
             httpClient().get(ApiEndpoints.Content.material(materialId)) {
                 header("Cookie", cookieHeader(cookie))
@@ -79,13 +79,13 @@ internal class ContentApiService(
             null
         }
 
-    /** @return [UploadLinkData] with pre-signed upload URL, or null. */
+    /** @return [UploadLinkDataApi] with pre-signed upload URL, or null. */
     suspend fun getUploadLink(
         cookie: String,
         directory: String,
         filename: String,
         contentType: String,
-    ): UploadLinkData? =
+    ): UploadLinkDataApi? =
         safeApiCall(logger, "get upload link for filename=$filename") {
             val url = ApiEndpoints.Content.UPLOAD_LINK +
                 "?directory=${directory.encodeUrlParam()}" +

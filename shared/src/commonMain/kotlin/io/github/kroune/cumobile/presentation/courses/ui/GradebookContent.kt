@@ -25,9 +25,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import io.github.kroune.cumobile.data.model.GradebookGrade
-import io.github.kroune.cumobile.data.model.GradebookSemester
 import io.github.kroune.cumobile.presentation.common.ContentState
+import io.github.kroune.cumobile.presentation.common.model.GradebookGradeUi
+import io.github.kroune.cumobile.presentation.common.model.GradebookSemesterUi
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 import io.github.kroune.cumobile.presentation.common.ui.EmptyContent
 import io.github.kroune.cumobile.presentation.common.ui.ErrorContent
@@ -86,7 +86,7 @@ internal fun GradebookContent(
 
 @Composable
 private fun SemesterCard(
-    semester: GradebookSemester,
+    semester: GradebookSemesterUi,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -105,11 +105,14 @@ private fun SemesterCard(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        semester.regularGrades.forEach { grade ->
+        val regularGrades = semester.grades.filter { it.subjectType != "elective" }
+        val electiveGrades = semester.grades.filter { it.subjectType == "elective" }
+
+        regularGrades.forEach { grade ->
             GradeRow(grade = grade)
         }
 
-        if (semester.electiveGrades.isNotEmpty()) {
+        if (electiveGrades.isNotEmpty()) {
             Spacer(modifier = Modifier.height(12.dp))
             HorizontalDivider(
                 color = AppTheme.colors.textSecondary.copy(alpha = 0.2f),
@@ -122,7 +125,7 @@ private fun SemesterCard(
                 fontWeight = FontWeight.SemiBold,
             )
             Spacer(modifier = Modifier.height(8.dp))
-            semester.electiveGrades.forEach { grade ->
+            electiveGrades.forEach { grade ->
                 GradeRow(grade = grade)
             }
         }
@@ -131,7 +134,7 @@ private fun SemesterCard(
 
 @Composable
 private fun GradeRow(
-    grade: GradebookGrade,
+    grade: GradebookGradeUi,
     modifier: Modifier = Modifier,
 ) {
     val color = normalizedGradeColor(grade.normalizedGrade)

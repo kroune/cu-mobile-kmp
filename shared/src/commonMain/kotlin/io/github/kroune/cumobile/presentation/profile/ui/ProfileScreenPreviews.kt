@@ -6,24 +6,34 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import io.github.kroune.cumobile.data.model.EmailInfo
-import io.github.kroune.cumobile.data.model.PhoneInfo
-import io.github.kroune.cumobile.data.model.StudentProfile
+import io.github.kroune.cumobile.domain.model.EducationLevel
+import io.github.kroune.cumobile.domain.model.EmailDomain
+import io.github.kroune.cumobile.domain.model.PhoneDomain
+import io.github.kroune.cumobile.domain.model.ProfileDomain
 import io.github.kroune.cumobile.presentation.common.ContentState
+import io.github.kroune.cumobile.presentation.common.model.mappers.toUi
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 import io.github.kroune.cumobile.presentation.common.ui.CuMobileTheme
 import io.github.kroune.cumobile.presentation.common.ui.DetailTopBar
 import io.github.kroune.cumobile.presentation.profile.ProfileComponent
+import kotlinx.collections.immutable.persistentListOf
 
 private val previewProfileState = ProfileComponent.State(
     profile = ContentState.Success(
-        StudentProfile(
+        ProfileDomain(
+            id = "",
             firstName = "Иван",
             lastName = "Петров",
-            educationLevel = "bachelor",
-            course = 2,
+            middleName = "",
+            timeLogin = "",
+            educationLevel = EducationLevel.Bachelor,
+            universityEmail = null,
+            otherEmails = persistentListOf(),
+            phones = persistentListOf(),
+            birthdate = "",
             telegram = "@ipetrov",
-        ),
+            studentCourse = 2,
+        ).toUi(),
     ),
     lmsProfile = ContentState.Success(null),
     avatarUrl = "https://example.com/avatar.png",
@@ -31,25 +41,24 @@ private val previewProfileState = ProfileComponent.State(
 
 private val previewProfileFullState = ProfileComponent.State(
     profile = ContentState.Success(
-        StudentProfile(
+        ProfileDomain(
+            id = "",
             firstName = "Иван",
             lastName = "Петров",
             middleName = "Сергеевич",
-            educationLevel = "bachelor",
-            course = 2,
-            telegram = "@ipetrov",
             timeLogin = "ipetrov",
-            emails = listOf(
-                EmailInfo(
-                    value = "ipetrov@edu.centraluniversity.ru",
-                    type = "university",
-                ),
-                EmailInfo(value = "ivan.petrov@gmail.com", type = "personal"),
+            educationLevel = EducationLevel.Bachelor,
+            universityEmail = "ipetrov@edu.centraluniversity.ru",
+            otherEmails = persistentListOf(
+                EmailDomain(value = "ivan.petrov@gmail.com", type = "personal"),
             ),
-            phones = listOf(
-                PhoneInfo(value = "+79001234567", type = "mobile"),
+            phones = persistentListOf(
+                PhoneDomain(value = "+79001234567", type = "mobile"),
             ),
-        ),
+            birthdate = "",
+            telegram = "@ipetrov",
+            studentCourse = 2,
+        ).toUi(),
     ),
     lmsProfile = ContentState.Success(null),
     avatarUrl = "https://example.com/avatar.png",

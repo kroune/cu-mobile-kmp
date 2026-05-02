@@ -34,18 +34,19 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
-import io.github.kroune.cumobile.data.model.StudentTask
 import io.github.kroune.cumobile.presentation.common.ContentState
 import io.github.kroune.cumobile.presentation.common.dataOrNull
 import io.github.kroune.cumobile.presentation.common.errorOrNull
 import io.github.kroune.cumobile.presentation.common.isLoading
+import io.github.kroune.cumobile.presentation.common.model.StatusStyle
+import io.github.kroune.cumobile.presentation.common.model.TaskUi
+import io.github.kroune.cumobile.presentation.common.model.label
 import io.github.kroune.cumobile.presentation.common.ui.AppTabRow
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 import io.github.kroune.cumobile.presentation.common.ui.EmptyContent
 import io.github.kroune.cumobile.presentation.common.ui.ErrorContent
 import io.github.kroune.cumobile.presentation.common.ui.LoadingContent
 import io.github.kroune.cumobile.presentation.common.ui.stripEmojiPrefix
-import io.github.kroune.cumobile.presentation.common.ui.taskStateLabel
 import io.github.kroune.cumobile.presentation.tasks.TasksComponent
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -156,7 +157,7 @@ internal fun TasksScreenContent(
 @Composable
 private fun TasksContentArea(
     contentState: ContentState<TasksComponent.Content>,
-    tasks: ImmutableList<StudentTask>,
+    tasks: ImmutableList<TaskUi>,
     onIntent: (TasksComponent.Intent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -271,7 +272,7 @@ private fun StatusFilterChips(
             key = { it },
         ) { status ->
             FilterChip(
-                label = taskStateLabel(status),
+                label = StatusStyle.fromApiValue(status).label(),
                 selected = statusFilter == status,
                 onClick = {
                     val newFilter = if (statusFilter == status) null else status

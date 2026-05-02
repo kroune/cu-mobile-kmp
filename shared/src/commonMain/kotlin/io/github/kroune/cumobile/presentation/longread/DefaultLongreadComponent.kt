@@ -10,8 +10,12 @@ import com.arkivanov.decompose.router.items.childItems
 import com.arkivanov.decompose.router.items.setItems
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
-import io.github.kroune.cumobile.data.model.LongreadMaterial
+import io.github.kroune.cumobile.domain.model.LongreadDiscriminator
+import io.github.kroune.cumobile.domain.model.LongreadMaterialDomain
+import io.github.kroune.cumobile.domain.model.viewContent
 import io.github.kroune.cumobile.presentation.common.componentScope
+import io.github.kroune.cumobile.presentation.common.model.LongreadMaterialUi
+import io.github.kroune.cumobile.presentation.common.model.mappers.toUi
 import io.github.kroune.cumobile.presentation.longread.LongreadComponent.Intent
 import io.github.kroune.cumobile.presentation.longread.component.ExternalUpdate
 import io.github.kroune.cumobile.presentation.longread.component.LongreadItem
@@ -96,7 +100,7 @@ class DefaultLongreadComponent(
     val externalUpdates: Flow<ExternalUpdate> = _externalUpdates
 
     /** Lookup map from material ID to material data, used by the child factory. */
-    private var materialsMap: Map<String, LongreadMaterial> = emptyMap()
+    private var materialsMap: Map<String, LongreadMaterialUi> = emptyMap()
 
     /**
      * Plain text extracted from each material's HTML, keyed by material id.
@@ -111,7 +115,7 @@ class DefaultLongreadComponent(
         source = navigation,
         serializer = MaterialConfig.serializer(),
         initialItems = { Items(items = emptyList()) },
-        key = "LongreadMaterialItems",
+        key = "LongreadMaterialDomainItems",
         childFactory = ::createChild,
     )
 
@@ -195,16 +199,17 @@ class DefaultLongreadComponent(
                 val title = materials.firstOrNull()?.contentName
                     ?: materials.firstOrNull()?.name
                     ?: "Лонгрид"
+                val uiMaterials = materials.map { it.toUi() }
                 _state.value = _state.value.copy(
-                    materials = materials.toPersistentList(),
+                    materials = uiMaterials.toPersistentList(),
                     title = title,
                     isLoading = false,
                 )
-                materialsMap = materials.associateBy { it.id }
+                materialsMap = uiMaterials.associateBy { it.id }
                 plainTextByMaterialId = withContext(dispatchers.default) {
                     buildPlainTextIndex(materials)
                 }
-                val configs = materials.map { it.toConfig() }
+                val configs = uiMaterials.map { it.toConfig() }
                 navigation.setItems { configs }
             } else {
                 _state.value = _state.value.copy(
@@ -219,7 +224,7 @@ class DefaultLongreadComponent(
         config: MaterialConfig,
         childContext: ComponentContext,
     ): LongreadItem {
-        val material = materialsMap[config.id] ?: LongreadMaterial(id = config.id)
+        val material = materialsMap[config.id] ?: emptyMaterialUi(config.id)
         return when (config) {
             is MaterialConfig.Markdown -> LongreadItem.Markdown(
                 MarkdownMaterialComponent(
@@ -285,9 +290,27 @@ class DefaultLongreadComponent(
         }
     }
 
+    private fun emptyMaterialUi(id: String) =
+        LongreadMaterialUi(
+            id = id,
+            discriminator = "",
+            viewContent = null,
+            filename = null,
+            version = null,
+            length = null,
+            name = null,
+            contentName = null,
+            attachments = persistentListOf(),
+            deadlineFormatted = null,
+            maxScore = null,
+            activityName = null,
+            activityWeight = null,
+            taskId = null,
+        )
+
     private fun createFileComponent(
         childContext: ComponentContext,
-        material: LongreadMaterial,
+        material: LongreadMaterialUi,
     ) =
         FileMaterialComponent(
             componentContext = childContext,
@@ -319,13 +342,13 @@ class DefaultLongreadComponent(
         _effects.trySend(effect)
     }
 
-    private suspend fun buildLocalFilename(material: LongreadMaterial): String {
+    private suspend fun buildLocalFilename(material: LongreadMaterialUi): String {
         val filename = material.filename ?: "file"
         val version = material.version ?: "1"
         val dotIndex = filename.lastIndexOf('.')
         val extension = if (dotIndex > 0) filename.substring(dotIndex + 1) else ""
 
-        val activityName = material.estimation?.activityName
+        val activityName = material.activityName
         if (activityName != null) {
             val rule = renameRepository.getMatchingRule(
                 courseId = _state.value.courseId,
@@ -358,7 +381,7 @@ class DefaultLongreadComponent(
  * materials without HTML content. Runs on [Dispatchers.Default] via the
  * caller; Ksoup parsing is CPU-bound and blocks per material.
  */
-private fun buildPlainTextIndex(materials: List<LongreadMaterial>): Map<String, String> {
+private fun buildPlainTextIndex(materials: List<LongreadMaterialDomain>): Map<String, String> {
     val result = HashMap<String, String>(materials.size)
     for (material in materials) {
         val html = material.viewContent
@@ -369,15 +392,25 @@ private fun buildPlainTextIndex(materials: List<LongreadMaterial>): Map<String, 
 }
 
 /**
- * Maps a [LongreadMaterial] to its corresponding [MaterialConfig].
+ * Maps a [LongreadMaterialUi] to its corresponding [MaterialConfig].
  */
-private fun LongreadMaterial.toConfig(): MaterialConfig =
-    when {
-        isCoding && taskId != null -> MaterialConfig.Coding(id, taskId = taskId)
-        isFile -> MaterialConfig.File(id)
-        isQuestions && taskId != null -> MaterialConfig.Questions(id, taskId = taskId)
-        isImage -> MaterialConfig.Image(id)
-        isVideo || isVideoPlatform -> MaterialConfig.Video(id)
-        isAudio -> MaterialConfig.Audio(id)
+private fun LongreadMaterialUi.toConfig(): MaterialConfig =
+    when (discriminator) {
+        LongreadDiscriminator.Coding -> if (taskId != null) {
+            MaterialConfig.Coding(id, taskId = taskId)
+        } else {
+            MaterialConfig.Markdown(id)
+        }
+        LongreadDiscriminator.File -> MaterialConfig.File(id)
+        LongreadDiscriminator.Questions -> if (taskId != null) {
+            MaterialConfig.Questions(id, taskId = taskId)
+        } else {
+            MaterialConfig.Markdown(id)
+        }
+        LongreadDiscriminator.Image -> MaterialConfig.Image(id)
+        LongreadDiscriminator.Video,
+        LongreadDiscriminator.VideoPlatform,
+        -> MaterialConfig.Video(id)
+        LongreadDiscriminator.Audio -> MaterialConfig.Audio(id)
         else -> MaterialConfig.Markdown(id)
     }

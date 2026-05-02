@@ -1,8 +1,8 @@
 package io.github.kroune.cumobile.data.repository
 
 import io.github.kroune.cumobile.data.local.AuthLocalDataSource
-import io.github.kroune.cumobile.presentation.common.invoke
 import io.github.kroune.cumobile.util.AppDispatchers
+import io.github.kroune.cumobile.util.invoke
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext

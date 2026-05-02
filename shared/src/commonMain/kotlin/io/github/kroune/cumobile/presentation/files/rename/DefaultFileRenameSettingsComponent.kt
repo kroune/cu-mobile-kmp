@@ -3,11 +3,13 @@ package io.github.kroune.cumobile.presentation.files.rename
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
-import io.github.kroune.cumobile.data.local.FileRenameRule
 import io.github.kroune.cumobile.domain.repository.CourseRepository
 import io.github.kroune.cumobile.domain.repository.FileRenameRepository
 import io.github.kroune.cumobile.presentation.common.componentScope
-import io.github.kroune.cumobile.presentation.common.invoke
+import io.github.kroune.cumobile.presentation.common.model.FileRenameRuleUi
+import io.github.kroune.cumobile.presentation.common.model.mappers.toDomain
+import io.github.kroune.cumobile.presentation.common.model.mappers.toUi
+import io.github.kroune.cumobile.util.invoke
 import io.github.kroune.cumobile.util.runCatchingCancellable
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.launchIn
@@ -53,7 +55,7 @@ class DefaultFileRenameSettingsComponent(
             }.fold(
                 onSuccess = { courses ->
                     _state.value = _state.value.copy(
-                        courses = courses.orEmpty(),
+                        courses = courses.orEmpty().map { it.toUi() },
                         isLoading = false,
                     )
                 },
@@ -72,19 +74,19 @@ class DefaultFileRenameSettingsComponent(
         renameRepository()
             .rules
             .onEach { rules ->
-                _state.value = _state.value.copy(rules = rules)
+                _state.value = _state.value.copy(rules = rules.map { it.toUi() })
             }.launchIn(scope)
     }
 
-    private fun addRule(rule: FileRenameRule) {
+    private fun addRule(rule: FileRenameRuleUi) {
         scope.launch {
-            renameRepository().addRule(rule)
+            renameRepository().addRule(rule.toDomain())
         }
     }
 
-    private fun deleteRule(rule: FileRenameRule) {
+    private fun deleteRule(rule: FileRenameRuleUi) {
         scope.launch {
-            renameRepository().deleteRule(rule)
+            renameRepository().deleteRule(rule.toDomain())
         }
     }
 }

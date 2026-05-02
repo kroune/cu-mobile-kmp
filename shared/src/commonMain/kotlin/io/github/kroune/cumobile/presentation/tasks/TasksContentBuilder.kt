@@ -1,33 +1,34 @@
 package io.github.kroune.cumobile.presentation.tasks
 
-import io.github.kroune.cumobile.data.model.StudentTask
-import io.github.kroune.cumobile.data.model.TaskState
+import io.github.kroune.cumobile.domain.model.TaskDomain
+import io.github.kroune.cumobile.domain.model.TaskStatus
+import io.github.kroune.cumobile.presentation.common.model.TaskUi
+import io.github.kroune.cumobile.presentation.common.model.mappers.toUi
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlin.time.Instant
 
 /**
- * Pairs a [StudentTask] with its normalized effective state so we
- * don't recompute [effectiveTaskState] / [normalizeTaskState] for
- * the same task during filtering and sorting.
+ * Pairs a [TaskDomain] with its effective [TaskStatus] so we
+ * don't recompute the status for the same task during filtering and sorting.
  */
 private data class IndexedTask(
-    val task: StudentTask,
-    val effectiveState: String,
+    val task: TaskDomain,
+    val status: TaskStatus,
 )
 
-private val BottomStates = setOf(
-    TaskState.Evaluated,
-    TaskState.Failed,
-    TaskState.Rejected,
-    TaskState.Review,
+private val BottomStatuses = setOf(
+    TaskStatus.Evaluated,
+    TaskStatus.Failed,
+    TaskStatus.Rejected,
+    TaskStatus.Review,
 )
 
 /**
  * Builds [TasksComponent.Content] from the raw task list and current filters.
  *
  * Runs as a single pass over [allTasks]:
- * - Precomputes effective state per task so filtering and sorting reuse it.
  * - Segregates tasks into active/archive buckets in one sweep.
  * - Filters each bucket by status/course/search and sorts by bottom-state +
  *   deadline.
@@ -35,11 +36,12 @@ private val BottomStates = setOf(
  * Pure function — safe to call on [kotlinx.coroutines.Dispatchers.Default].
  */
 internal fun buildTasksContent(
-    allTasks: List<StudentTask>,
+    allTasks: List<TaskDomain>,
     segment: Int,
     statusFilter: String?,
     courseFilter: String?,
     searchQuery: String,
+    now: Instant,
 ): TasksComponent.Content {
     if (allTasks.isEmpty()) return TasksComponent.Content()
 
@@ -48,15 +50,14 @@ internal fun buildTasksContent(
     val coursePairs = LinkedHashMap<String, String>()
 
     for (task in allTasks) {
-        val effective = normalizeTaskState(effectiveTaskState(task))
-        val indexed = IndexedTask(task, effective)
-        when (effective) {
-            in ActiveStates -> active.add(indexed)
-            in ArchiveStates -> archive.add(indexed)
-            else -> Unit
+        val indexed = IndexedTask(task, task.status)
+        if (task.status.isActive) {
+            active.add(indexed)
+        } else {
+            archive.add(indexed)
         }
-        if (task.course.id !in coursePairs) {
-            coursePairs[task.course.id] = task.course.name
+        if (task.courseId !in coursePairs) {
+            coursePairs[task.courseId] = task.courseName
         }
     }
 
@@ -67,8 +68,8 @@ internal fun buildTasksContent(
         .toImmutableList()
 
     return TasksComponent.Content(
-        activeFilteredTasks = active.filterAndSort(statusFilter, courseFilter, searchQuery),
-        archiveFilteredTasks = archive.filterAndSort(statusFilter, courseFilter, searchQuery),
+        activeFilteredTasks = active.filterAndSort(statusFilter, courseFilter, searchQuery, now),
+        archiveFilteredTasks = archive.filterAndSort(statusFilter, courseFilter, searchQuery, now),
         activeCount = active.size,
         archiveCount = archive.size,
         availableCourses = availableCourses,
@@ -81,11 +82,16 @@ private fun collectAvailableStatuses(
     active: List<IndexedTask>,
     archive: List<IndexedTask>,
 ): ImmutableList<String> {
-    val segmentStates = if (segment == 0) ActiveStates else ArchiveStates
     val bucket = if (segment == 0) active else archive
-    val present = bucket.mapTo(mutableSetOf()) { it.effectiveState }
-    return segmentStates
-        .filter { it in present }
+    val present = bucket.mapTo(mutableSetOf()) { it.status.apiValue }
+    val segmentStatuses = if (segment == 0) {
+        TaskStatus.ACTIVE_STATUSES
+    } else {
+        TaskStatus.ARCHIVE_STATUSES
+    }
+    return segmentStatuses
+        .filter { it.apiValue in present }
+        .map { it.apiValue }
         .toImmutableList()
 }
 
@@ -93,34 +99,35 @@ private fun List<IndexedTask>.filterAndSort(
     statusFilter: String?,
     courseFilter: String?,
     searchQuery: String,
-): ImmutableList<StudentTask> {
+    now: Instant,
+): ImmutableList<TaskUi> {
     if (isEmpty()) return persistentListOf()
     val query = searchQuery.takeIf { it.isNotEmpty() }
     val filtered = filter { item ->
-        (statusFilter == null || item.effectiveState == statusFilter) &&
-            (courseFilter == null || item.task.course.id == courseFilter) &&
+        (statusFilter == null || item.status.apiValue == statusFilter) &&
+            (courseFilter == null || item.task.courseId == courseFilter) &&
             (
                 query == null ||
-                    item.task.exercise.name
+                    item.task.exerciseName
                         .contains(query, ignoreCase = true)
             )
     }
     if (filtered.isEmpty()) return persistentListOf()
     return filtered
         .sortedWith(indexedTaskComparator())
-        .map { it.task }
+        .map { it.task.toUi(now) }
         .toImmutableList()
 }
 
 private fun indexedTaskComparator(): Comparator<IndexedTask> =
     Comparator { a, b ->
-        val aBottom = a.effectiveState in BottomStates
-        val bBottom = b.effectiveState in BottomStates
+        val aBottom = a.status in BottomStatuses
+        val bBottom = b.status in BottomStatuses
         if (aBottom != bBottom) {
             return@Comparator if (aBottom) 1 else -1
         }
-        val deadlineA = a.task.deadline ?: a.task.exercise.deadline
-        val deadlineB = b.task.deadline ?: b.task.exercise.deadline
+        val deadlineA = a.task.deadline ?: a.task.exerciseDeadline
+        val deadlineB = b.task.deadline ?: b.task.exerciseDeadline
         when {
             deadlineA == null && deadlineB == null -> 0
             deadlineA == null -> 1

@@ -8,29 +8,64 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import io.github.kroune.cumobile.data.model.StudentTask
-import io.github.kroune.cumobile.data.model.TaskCourse
-import io.github.kroune.cumobile.data.model.TaskExercise
-import io.github.kroune.cumobile.data.model.TaskState
+import io.github.kroune.cumobile.domain.model.TaskDomain
+import io.github.kroune.cumobile.domain.model.TaskStatus
+import io.github.kroune.cumobile.presentation.common.model.mappers.toUi
+import io.github.kroune.cumobile.presentation.common.parseDeadlineInstant
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 import io.github.kroune.cumobile.presentation.common.ui.CuMobileTheme
 import io.github.kroune.cumobile.presentation.common.ui.LocalClock
 import io.github.kroune.cumobile.presentation.common.ui.previewClock
 
-private val previewTask = StudentTask(
-    state = TaskState.InProgress,
-    exercise = TaskExercise(name = "ДЗ: Деревья и графы", deadline = "2026-04-01T23:59:00"),
-    course = TaskCourse(name = "Алгоритмы и структуры данных"),
-)
+private val previewTask = TaskDomain(
+    id = "",
+    status = TaskStatus.InProgress,
+    score = null,
+    extraScore = null,
+    deadline = null,
+    submitAt = null,
+    startedAt = null,
+    exerciseId = "",
+    exerciseName = "ДЗ: Деревья и графы",
+    exerciseType = "",
+    exerciseMaxScore = 0,
+    exerciseDeadline = parseDeadlineInstant("2026-04-01T23:59:00"),
+    activityName = null,
+    activityWeight = null,
+    courseId = "",
+    courseName = "Алгоритмы и структуры данных",
+    courseIsArchived = false,
+    themeId = "",
+    themeName = "",
+    longreadId = "",
+    isLateDaysEnabled = false,
+    lateDays = null,
+).toUi(previewClock.now())
 
-private val previewTaskWithOffset = StudentTask(
-    state = TaskState.Backlog,
-    exercise = TaskExercise(
-        name = "Аудиторная работа",
-        deadline = "2026-03-16T12:20:00+00:00",
-    ),
-    course = TaskCourse(name = "Введение в искусственный интеллект"),
-)
+private val previewTaskWithOffset = TaskDomain(
+    id = "",
+    status = TaskStatus.Backlog,
+    score = null,
+    extraScore = null,
+    deadline = null,
+    submitAt = null,
+    startedAt = null,
+    exerciseId = "",
+    exerciseName = "Аудиторная работа",
+    exerciseType = "",
+    exerciseMaxScore = 0,
+    exerciseDeadline = parseDeadlineInstant("2026-03-16T12:20:00+00:00"),
+    activityName = null,
+    activityWeight = null,
+    courseId = "",
+    courseName = "Введение в искусственный интеллект",
+    courseIsArchived = false,
+    themeId = "",
+    themeName = "",
+    longreadId = "",
+    isLateDaysEnabled = false,
+    lateDays = null,
+).toUi(previewClock.now())
 
 @Preview
 @Composable

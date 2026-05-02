@@ -33,18 +33,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import io.github.kroune.cumobile.data.model.LongreadMaterial
-import io.github.kroune.cumobile.data.model.TaskDetails
-import io.github.kroune.cumobile.data.model.TaskState
 import io.github.kroune.cumobile.presentation.common.ContentState
-import io.github.kroune.cumobile.presentation.common.formatDeadline
+import io.github.kroune.cumobile.presentation.common.model.LongreadMaterialUi
+import io.github.kroune.cumobile.presentation.common.model.StatusStyle
+import io.github.kroune.cumobile.presentation.common.model.TaskDetailsUi
+import io.github.kroune.cumobile.presentation.common.model.color
+import io.github.kroune.cumobile.presentation.common.model.label
 import io.github.kroune.cumobile.presentation.common.ui.AppTabRow
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 import io.github.kroune.cumobile.presentation.common.ui.ShimmerBox
 import io.github.kroune.cumobile.presentation.common.ui.StatusBadge
 import io.github.kroune.cumobile.presentation.common.ui.rememberFilePicker
-import io.github.kroune.cumobile.presentation.common.ui.taskStateColor
-import io.github.kroune.cumobile.presentation.common.ui.taskStateLabel
 import io.github.kroune.cumobile.presentation.longread.component.coding.CodingMaterialComponent
 
 /**
@@ -55,7 +54,7 @@ import io.github.kroune.cumobile.presentation.longread.component.coding.CodingMa
  */
 @Composable
 internal fun CodingMaterialCardContent(
-    material: LongreadMaterial,
+    material: LongreadMaterialUi,
     state: CodingMaterialComponent.State,
     onIntent: (CodingMaterialComponent.Intent) -> Unit,
     modifier: Modifier = Modifier,
@@ -108,8 +107,8 @@ internal fun CodingMaterialCardContent(
 /** Header row with exercise name, status badge, and expand indicator. */
 @Composable
 private fun TaskHeader(
-    material: LongreadMaterial,
-    taskDetailsState: ContentState<TaskDetails>,
+    material: LongreadMaterialUi,
+    taskDetailsState: ContentState<TaskDetailsUi>,
     isActive: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -130,10 +129,10 @@ private fun TaskHeader(
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
-            material.estimation?.let { est ->
+            if (material.maxScore != null || material.activityName != null) {
                 Text(
-                    text = "Макс. балл: ${est.maxScore ?: "-"}" +
-                        (est.activityName?.let { " \u2022 $it" }.orEmpty()),
+                    text = "Макс. балл: ${material.maxScore ?: "-"}" +
+                        (material.activityName?.let { " \u2022 $it" }.orEmpty()),
                     color = AppTheme.colors.textSecondary,
                     fontSize = 12.sp,
                 )
@@ -157,7 +156,7 @@ private fun TaskHeader(
  * The skeleton preserves the badge footprint so the row doesn't jump.
  */
 @Composable
-private fun TaskHeaderStatus(taskDetailsState: ContentState<TaskDetails>) {
+private fun TaskHeaderStatus(taskDetailsState: ContentState<TaskDetailsUi>) {
     when (taskDetailsState) {
         is ContentState.Loading -> ShimmerBox(
             modifier = Modifier.width(72.dp),
@@ -165,10 +164,10 @@ private fun TaskHeaderStatus(taskDetailsState: ContentState<TaskDetails>) {
             cornerRadius = 8.dp,
         )
         is ContentState.Success -> {
-            val taskState = taskDetailsState.data.state ?: TaskState.Backlog
+            val style = taskDetailsState.data.statusStyle ?: StatusStyle.Backlog
             StatusBadge(
-                label = taskStateLabel(taskState),
-                color = taskStateColor(taskState),
+                label = style.label(),
+                color = style.color(),
             )
         }
         is ContentState.Error -> Spacer(Modifier.height(18.dp))
@@ -225,7 +224,7 @@ private fun TaskManagementErrorRow(
  */
 @Composable
 private fun TaskManagementSection(
-    taskDetails: TaskDetails,
+    taskDetails: TaskDetailsUi,
     state: CodingMaterialComponent.State,
     onIntent: (CodingMaterialComponent.Intent) -> Unit,
     onAttachSolution: () -> Unit,
@@ -247,13 +246,13 @@ private fun TaskManagementSection(
                 modifier = Modifier.size(14.dp),
             )
             Text(
-                text = formatDeadline(taskDetails.deadline),
+                text = taskDetails.deadlineFormatted ?: "—",
                 color = AppTheme.colors.textSecondary,
                 fontSize = 12.sp,
             )
         }
 
-        if (taskDetails.state == TaskState.Backlog) {
+        if (taskDetails.statusStyle == StatusStyle.Backlog) {
             StartTaskButton(
                 isSubmitting = state.isSubmitting,
                 onClick = {
@@ -274,7 +273,7 @@ private fun TaskManagementSection(
 
 @Composable
 private fun TaskTabbedContent(
-    taskDetails: TaskDetails,
+    taskDetails: TaskDetailsUi,
     state: CodingMaterialComponent.State,
     onIntent: (CodingMaterialComponent.Intent) -> Unit,
     onAttachSolution: () -> Unit,

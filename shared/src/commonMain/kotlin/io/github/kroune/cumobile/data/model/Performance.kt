@@ -8,13 +8,13 @@ import kotlinx.serialization.Serializable
  * Overall student performance across all courses.
  */
 @Serializable
-data class StudentPerformanceResponse(
-    val courses: List<StudentPerformanceCourse> = emptyList(),
+data class StudentPerformanceResponseApi(
+    val courses: List<PerformanceCourseApi> = emptyList(),
 )
 
-/** Per-course total score in [StudentPerformanceResponse]. */
+/** Per-course total score in [StudentPerformanceResponseApi]. */
 @Serializable
-data class StudentPerformanceCourse(
+data class PerformanceCourseApi(
     val id: String,
     val name: String,
     val description: String? = null,
@@ -27,33 +27,33 @@ data class StudentPerformanceCourse(
  * Course exercises response.
  */
 @Serializable
-data class CourseExercisesResponse(
+data class CourseExercisesResponseApi(
     val id: String,
     val name: String,
     val isArchived: Boolean = false,
-    val exercises: List<CourseExercise> = emptyList(),
+    val exercises: List<CourseExerciseApi> = emptyList(),
 )
 
 /** Single exercise within a course. */
 @Serializable
-data class CourseExercise(
+data class CourseExerciseApi(
     val id: String,
     val name: String,
     val type: String = "",
-    val activity: CourseExerciseActivity? = null,
-    val theme: CourseExerciseTheme? = null,
+    val activity: CourseExerciseActivityApi? = null,
+    val theme: CourseExerciseThemeApi? = null,
 )
 
-/** Activity descriptor for a [CourseExercise]. */
+/** Activity descriptor for a [CourseExerciseApi]. */
 @Serializable
-data class CourseExerciseActivity(
+data class CourseExerciseActivityApi(
     val id: String,
     val name: String,
 )
 
-/** Theme descriptor for a [CourseExercise]. */
+/** Theme descriptor for a [CourseExerciseApi]. */
 @Serializable
-data class CourseExerciseTheme(
+data class CourseExerciseThemeApi(
     val id: String,
     val name: String,
 )
@@ -64,18 +64,18 @@ data class CourseExerciseTheme(
  * Per-course student performance with individual task scores.
  */
 @Serializable
-data class CourseStudentPerformanceResponse(
-    val tasks: List<TaskScore> = emptyList(),
+data class CourseStudentPerformanceResponseApi(
+    val tasks: List<TaskScoreApi> = emptyList(),
 )
 
 /**
- * Individual task score within [CourseStudentPerformanceResponse].
+ * Individual task score within [CourseStudentPerformanceResponseApi].
  *
- * Known [state] values match [StudentTask] states.
+ * Known [state] values match [TaskApi] states.
  * Known [scoreSkillLevel] values: `"basic"`, `"medium"`, `"advanced"`.
  */
 @Serializable
-data class TaskScore(
+data class TaskScoreApi(
     val id: String,
     val state: String = "",
     val score: Double = 0.0,
@@ -83,12 +83,12 @@ data class TaskScore(
     val extraScore: Double? = null,
     val exerciseId: String,
     val maxScore: Int = 10,
-    val activity: TaskScoreActivity,
+    val activity: TaskScoreActivityApi,
 )
 
-/** Activity descriptor for a [TaskScore]. */
+/** Activity descriptor for a [TaskScoreApi]. */
 @Serializable
-data class TaskScoreActivity(
+data class TaskScoreActivityApi(
     val id: String,
     val name: String,
     val weight: Double = 0.0,

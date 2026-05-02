@@ -14,7 +14,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import io.github.kroune.cumobile.data.model.LongreadMaterial
+import io.github.kroune.cumobile.presentation.common.model.LongreadMaterialUi
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 import io.github.kroune.cumobile.presentation.longread.component.markdown.MarkdownMaterialComponent
 import io.github.kroune.cumobile.presentation.longread.htmlrender.HtmlContent
@@ -23,7 +23,7 @@ import kotlinx.collections.immutable.persistentListOf
 
 @Composable
 fun MarkdownMaterialCard(
-    material: LongreadMaterial,
+    material: LongreadMaterialUi,
     currentState: MarkdownMaterialComponent.State,
 ) {
     val html = material.viewContent.orEmpty()

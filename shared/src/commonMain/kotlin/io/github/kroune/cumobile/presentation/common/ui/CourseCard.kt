@@ -16,7 +16,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import io.github.kroune.cumobile.data.model.Course
+import io.github.kroune.cumobile.presentation.common.model.CourseUi
+import io.github.kroune.cumobile.presentation.common.model.color
 
 /**
  * Course card for the home screen grid.
@@ -30,11 +31,11 @@ import io.github.kroune.cumobile.data.model.Course
  */
 @Composable
 fun CourseCard(
-    course: Course,
+    course: CourseUi,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val categoryColor = courseCategoryColor(course.category)
+    val categoryColor = course.categoryStyle.color()
     val shape = RoundedCornerShape(12.dp)
 
     Column(
@@ -46,9 +47,8 @@ fun CourseCard(
             .padding(12.dp),
         verticalArrangement = Arrangement.SpaceBetween,
     ) {
-        // Course name
         Text(
-            text = stripEmojiPrefix(course.name),
+            text = course.name,
             color = AppTheme.colors.textPrimary,
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
@@ -56,7 +56,6 @@ fun CourseCard(
             overflow = TextOverflow.Ellipsis,
         )
 
-        // Category chip
         Box(
             modifier = Modifier
                 .padding(top = 8.dp)
@@ -65,7 +64,7 @@ fun CourseCard(
                 .padding(horizontal = 8.dp, vertical = 4.dp),
         ) {
             Text(
-                text = courseCategoryLabel(course.category),
+                text = course.categoryLabel,
                 color = categoryColor,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Medium,

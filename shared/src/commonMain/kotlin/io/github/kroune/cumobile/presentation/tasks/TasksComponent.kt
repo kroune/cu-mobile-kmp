@@ -1,9 +1,9 @@
 package io.github.kroune.cumobile.presentation.tasks
 
 import com.arkivanov.decompose.value.Value
-import io.github.kroune.cumobile.data.model.StudentTask
-import io.github.kroune.cumobile.data.model.TaskState
+import io.github.kroune.cumobile.domain.model.TaskStatus
 import io.github.kroune.cumobile.presentation.common.ContentState
+import io.github.kroune.cumobile.presentation.common.model.TaskUi
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -48,8 +48,8 @@ interface TasksComponent {
      * Produced once per raw-state mutation on [kotlinx.coroutines.Dispatchers.Default].
      */
     data class Content(
-        val activeFilteredTasks: ImmutableList<StudentTask> = persistentListOf(),
-        val archiveFilteredTasks: ImmutableList<StudentTask> = persistentListOf(),
+        val activeFilteredTasks: ImmutableList<TaskUi> = persistentListOf(),
+        val archiveFilteredTasks: ImmutableList<TaskUi> = persistentListOf(),
         val activeCount: Int = 0,
         val archiveCount: Int = 0,
         val availableCourses: ImmutableList<Pair<String, String>> = persistentListOf(),
@@ -79,7 +79,7 @@ interface TasksComponent {
 
         /** Open a task (navigate to longread/course detail). */
         data class OpenTask(
-            val task: StudentTask,
+            val task: TaskUi,
         ) : Intent
 
         /** Refresh the task list from the API. */
@@ -88,57 +88,6 @@ interface TasksComponent {
 }
 
 /**
- * Active task states (shown in the "Active" segment).
+ * All API state values requested when fetching tasks.
  */
-internal val ActiveStates = setOf(
-    TaskState.Backlog,
-    TaskState.InProgress,
-    TaskState.HasSolution,
-    TaskState.Revision,
-    TaskState.Rework,
-    TaskState.Review,
-)
-
-/**
- * Archive task states (shown in the "Archive" segment).
- */
-internal val ArchiveStates = setOf(
-    TaskState.Evaluated,
-    TaskState.Failed,
-    TaskState.Rejected,
-)
-
-/**
- * All states requested from the API.
- */
-internal val AllApiStates = listOf(
-    TaskState.InProgress,
-    TaskState.Review,
-    TaskState.Backlog,
-    TaskState.Failed,
-    TaskState.Evaluated,
-)
-
-/**
- * Normalizes task state for display.
- *
- * Maps "rework" -> "revision" and "rejected" -> "failed" to match
- * the Flutter reference UI grouping.
- */
-internal fun normalizeTaskState(state: String): String =
-    when (state) {
-        TaskState.Rework -> TaskState.Revision
-        TaskState.Rejected -> TaskState.Failed
-        else -> state
-    }
-
-/**
- * Derives a virtual "hasSolution" state when a task is inProgress
- * but already has a submitted solution.
- */
-internal fun effectiveTaskState(task: StudentTask): String =
-    if (task.state == TaskState.InProgress && task.submitAt != null) {
-        TaskState.HasSolution
-    } else {
-        task.state
-    }
+internal val AllApiStates: List<String> = TaskStatus.entries.map { it.apiValue }

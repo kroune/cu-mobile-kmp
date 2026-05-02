@@ -26,8 +26,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import io.github.kroune.cumobile.presentation.common.model.ExerciseWithScoreUi
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
-import io.github.kroune.cumobile.presentation.performance.ExerciseWithScore
 import kotlinx.collections.immutable.ImmutableList
 
 /**
@@ -35,7 +35,7 @@ import kotlinx.collections.immutable.ImmutableList
  */
 @Composable
 internal fun ScoresTab(
-    exercises: ImmutableList<ExerciseWithScore>,
+    exercises: ImmutableList<ExerciseWithScoreUi>,
     activityNames: ImmutableList<String>,
     activeFilter: String?,
     onFilterActivity: (String?) -> Unit,
@@ -54,7 +54,7 @@ internal fun ScoresTab(
                 .fillMaxSize()
                 .padding(horizontal = 16.dp),
         ) {
-            items(exercises, key = { it.exercise.id }) { item ->
+            items(exercises, key = { it.exerciseId }) { item ->
                 ExerciseTile(item)
                 Spacer(Modifier.height(8.dp))
             }
@@ -104,7 +104,7 @@ private fun ActivityFilterChips(
 
 @Composable
 private fun ExerciseTile(
-    item: ExerciseWithScore,
+    item: ExerciseWithScoreUi,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -129,7 +129,7 @@ private fun ExerciseTile(
         }
         Spacer(Modifier.height(4.dp))
         Text(
-            text = item.exercise.name,
+            text = item.exerciseName,
             color = AppTheme.colors.textPrimary,
             fontSize = 14.sp,
             maxLines = 2,

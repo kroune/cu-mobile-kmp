@@ -6,9 +6,9 @@ import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
-import io.github.kroune.cumobile.data.model.LongreadMaterial
 import io.github.kroune.cumobile.presentation.common.RenderComponent
 import io.github.kroune.cumobile.presentation.common.componentScope
+import io.github.kroune.cumobile.presentation.common.model.LongreadMaterialUi
 import io.github.kroune.cumobile.presentation.longread.component.ExternalUpdate
 import io.github.kroune.cumobile.presentation.longread.ui.markdown.MarkdownMaterialCard
 import kotlinx.coroutines.flow.Flow
@@ -27,7 +27,7 @@ import kotlinx.coroutines.launch
  */
 class MarkdownMaterialComponent(
     componentContext: ComponentContext,
-    private val material: LongreadMaterial,
+    private val material: LongreadMaterialUi,
     externalUpdates: Flow<ExternalUpdate>,
 ) : ComponentContext by componentContext,
     RenderComponent {

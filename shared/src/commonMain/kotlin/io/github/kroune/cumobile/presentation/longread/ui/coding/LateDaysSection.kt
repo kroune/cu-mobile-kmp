@@ -31,19 +31,19 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import io.github.kroune.cumobile.data.model.TaskDetails
-import io.github.kroune.cumobile.presentation.common.formatDeadline
-import io.github.kroune.cumobile.presentation.common.formatDeadlinePlusDays
+import io.github.kroune.cumobile.presentation.common.formatDeadlineInstant
+import io.github.kroune.cumobile.presentation.common.model.TaskDetailsUi
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 import io.github.kroune.cumobile.presentation.longread.component.coding.CodingMaterialComponent
 import kotlin.math.min
+import kotlin.time.Duration.Companion.days
 
 private const val MaxLateDaysPerTask = 7
 
 /** Late days balance and management buttons with stepper dialog. */
 @Composable
 internal fun LateDaysInfo(
-    taskDetails: TaskDetails,
+    taskDetails: TaskDetailsUi,
     onIntent: (CodingMaterialComponent.Intent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -80,7 +80,7 @@ internal fun LateDaysInfo(
 }
 
 @Composable
-private fun LateDaysHeader(taskDetails: TaskDetails) {
+private fun LateDaysHeader(taskDetails: TaskDetailsUi) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -92,7 +92,7 @@ private fun LateDaysHeader(taskDetails: TaskDetails) {
         )
         Text(
             text = "Использовано: ${taskDetails.lateDays ?: 0}" +
-                " | Баланс: ${taskDetails.lateDaysBalance ?: 0}",
+                " | Баланс: ${taskDetails.studentLateDaysBalance ?: 0}",
             color = AppTheme.colors.textSecondary,
             fontSize = 12.sp,
         )
@@ -101,12 +101,12 @@ private fun LateDaysHeader(taskDetails: TaskDetails) {
 
 @Composable
 private fun LateDaysActions(
-    taskDetails: TaskDetails,
+    taskDetails: TaskDetailsUi,
     onProlongClick: () -> Unit,
     onCancelClick: () -> Unit,
 ) {
     val used = taskDetails.lateDays ?: 0
-    val balance = taskDetails.lateDaysBalance ?: 0
+    val balance = taskDetails.studentLateDaysBalance ?: 0
     val maxAdditional = min(MaxLateDaysPerTask - used, balance)
 
     Row(
@@ -142,12 +142,12 @@ private fun LateDaysActions(
 
 @Composable
 private fun LateDaysDialog(
-    taskDetails: TaskDetails,
+    taskDetails: TaskDetailsUi,
     onConfirm: (Int) -> Unit,
     onDismiss: () -> Unit,
 ) {
     val used = taskDetails.lateDays ?: 0
-    val balance = taskDetails.lateDaysBalance ?: 0
+    val balance = taskDetails.studentLateDaysBalance ?: 0
     val maxAdditional = min(MaxLateDaysPerTask - used, balance)
     var selectedDays by remember { mutableIntStateOf(1) }
 
@@ -167,7 +167,7 @@ private fun LateDaysDialog(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 Text(
-                    text = "Текущий дедлайн: ${formatDeadline(taskDetails.deadline)}",
+                    text = "Текущий дедлайн: ${taskDetails.deadlineFormatted ?: "—"}",
                     color = AppTheme.colors.textSecondary,
                     fontSize = 13.sp,
                 )
@@ -179,10 +179,11 @@ private fun LateDaysDialog(
                     onValueChange = { selectedDays = it },
                 )
 
-                val newDeadline = formatDeadlinePlusDays(
-                    taskDetails.deadline,
-                    used + selectedDays,
-                )
+                val newDeadline = remember(taskDetails.deadline, used, selectedDays) {
+                    taskDetails.deadline?.let { deadline ->
+                        formatDeadlineInstant(deadline + (used + selectedDays).days)
+                    }
+                }
                 if (newDeadline != null) {
                     Text(
                         text = "Новый дедлайн: $newDeadline",
@@ -273,7 +274,7 @@ private fun DayStepper(
 /** Score display row for evaluated tasks. */
 @Composable
 internal fun ScoreDisplay(
-    taskDetails: TaskDetails,
+    taskDetails: TaskDetailsUi,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -290,7 +291,7 @@ internal fun ScoreDisplay(
             fontSize = 14.sp,
         )
         Text(
-            text = "${taskDetails.score?.toInt() ?: 0} / ${taskDetails.maxScore ?: 0}",
+            text = "${taskDetails.scoreText ?: "0"} / ${taskDetails.exercise?.maxScore ?: 0}",
             color = AppTheme.colors.taskEvaluated,
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold,

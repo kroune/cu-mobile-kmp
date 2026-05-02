@@ -1,9 +1,9 @@
 package io.github.kroune.cumobile.domain.usecase
 
-import io.github.kroune.cumobile.data.model.ClassData
-import io.github.kroune.cumobile.data.model.TimetableCourse
-import io.github.kroune.cumobile.data.model.TimetableEventRow
-import io.github.kroune.cumobile.data.model.TimetableSchedule
+import io.github.kroune.cumobile.domain.model.ClassDataDomain
+import io.github.kroune.cumobile.domain.model.TimetableCalendarEventDomain
+import io.github.kroune.cumobile.domain.model.TimetableCourseDomain
+import io.github.kroune.cumobile.domain.model.TimetableEventRowDomain
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
@@ -14,16 +14,16 @@ import kotlin.time.Instant
 private val logger = KotlinLogging.logger {}
 
 /**
- * Filters LMS timetable events for a specific date and maps them to [ClassData].
+ * Filters LMS timetable events for a specific date and maps them to [ClassDataDomain].
  */
 internal class GetClassesForDateUseCase {
     /**
      * Returns classes from the LMS timetable API for the given [dateMillis].
      */
     fun executeFromTimetable(
-        courses: List<TimetableCourse>,
+        courses: List<TimetableCourseDomain>,
         dateMillis: Long,
-    ): List<ClassData> {
+    ): List<ClassDataDomain> {
         val targetDate = Instant
             .fromEpochMilliseconds(dateMillis)
             .toLocalDateTime(TimeZone.currentSystemDefault())
@@ -33,17 +33,17 @@ internal class GetClassesForDateUseCase {
             .flatMap { course ->
                 course.eventRows
                     .filter { row -> timetableEventOccursOn(row, targetDate) }
-                    .map { row -> mapTimetableToClassData(row, course.courseName) }
+                    .map { row -> mapTimetableToClassDataDomain(row, course.courseName) }
             }.sortedBy { it.startTime }
     }
 
     internal fun timetableEventOccursOn(
-        row: TimetableEventRow,
+        row: TimetableEventRowDomain,
         targetDate: LocalDate,
     ): Boolean {
-        val schedule = row.calendarEvent?.schedule ?: return false
+        val event = row.calendarEvent ?: return false
         return try {
-            scheduleOccursOn(schedule, targetDate)
+            scheduleOccursOn(event, targetDate)
         } catch (e: Exception) {
             logger.warn(e) { "Failed to check timetable event on $targetDate" }
             false
@@ -54,32 +54,31 @@ internal class GetClassesForDateUseCase {
         private const val DaysInWeek = 7
 
         internal fun scheduleOccursOn(
-            schedule: TimetableSchedule,
+            event: TimetableCalendarEventDomain,
             targetDate: LocalDate,
         ): Boolean {
-            val start = LocalDate.parse(schedule.startDate)
-            val end = LocalDate.parse(schedule.endDate)
+            val start = LocalDate.parse(event.startDate)
+            val end = LocalDate.parse(event.endDate)
 
             if (targetDate !in start..end) return false
 
-            val scheduleDow = parseDayOfWeek(schedule.dayOfWeek) ?: return false
+            val scheduleDow = parseDayOfWeek(event.dayOfWeek) ?: return false
             if (targetDate.dayOfWeek != scheduleDow) return false
 
-            if (schedule.interval > 1) {
+            if (event.interval > 1) {
                 val daysDiff = targetDate.toEpochDays() - start.toEpochDays()
                 val weeksDiff = daysDiff / DaysInWeek
-                if (weeksDiff % schedule.interval != 0L) return false
+                if (weeksDiff % event.interval != 0L) return false
             }
 
             return true
         }
 
-        internal fun mapTimetableToClassData(
-            row: TimetableEventRow,
+        internal fun mapTimetableToClassDataDomain(
+            row: TimetableEventRowDomain,
             courseName: String,
-        ): ClassData {
+        ): ClassDataDomain {
             val event = row.calendarEvent
-            val schedule = event?.schedule
 
             val type = when (row.eventType) {
                 "lecture" -> "Лекция"
@@ -87,13 +86,13 @@ internal class GetClassesForDateUseCase {
                 else -> row.eventType.replaceFirstChar { it.uppercase() }
             }
 
-            return ClassData(
-                startTime = schedule?.startTime.orEmpty(),
-                endTime = schedule?.endTime.orEmpty(),
+            return ClassDataDomain(
+                startTime = event?.startTime.orEmpty(),
+                endTime = event?.endTime.orEmpty(),
                 room = event?.location.orEmpty(),
                 type = type,
                 title = courseName,
-                professor = event?.host?.name?.trim(),
+                professor = event?.hostName?.trim(),
                 link = null,
             )
         }

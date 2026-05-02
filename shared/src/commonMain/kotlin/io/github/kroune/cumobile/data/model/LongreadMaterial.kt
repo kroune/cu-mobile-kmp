@@ -13,8 +13,8 @@ private val logger = KotlinLogging.logger {}
 
 /** Wrapper for the paginated longread materials API response. */
 @Serializable
-data class LongreadMaterialsResponse(
-    val items: List<LongreadMaterial> = emptyList(),
+data class LongreadMaterialsResponseApi(
+    val items: List<LongreadMaterialApi> = emptyList(),
 )
 
 /**
@@ -29,7 +29,7 @@ data class LongreadMaterialsResponse(
  * parses to such an object. Use [viewContent] for safe string extraction.
  */
 @Serializable
-data class LongreadMaterial(
+data class LongreadMaterialApi(
     val id: String = "",
     val discriminator: String = "",
     /**
@@ -42,9 +42,9 @@ data class LongreadMaterial(
     val version: String? = null,
     val length: Int? = null,
     val name: String? = null,
-    val content: LongreadMaterialContent? = null,
-    val attachments: List<MaterialAttachment> = emptyList(),
-    val estimation: MaterialEstimation? = null,
+    val content: LongreadMaterialContentApi? = null,
+    val attachments: List<MaterialAttachmentApi> = emptyList(),
+    val estimation: MaterialEstimationApi? = null,
     val taskId: String? = null,
 ) {
     val isMarkdown: Boolean get() = discriminator == Discriminator.Markdown
@@ -56,7 +56,7 @@ data class LongreadMaterial(
     val isVideo: Boolean get() = discriminator == Discriminator.Video
     val isImage: Boolean get() = discriminator == Discriminator.Image
 
-    /** Known discriminator values for [LongreadMaterial.discriminator]. */
+    /** Known discriminator values for [LongreadMaterialApi.discriminator]. */
     object Discriminator {
         const val Markdown = "markdown"
         const val File = "file"
@@ -84,15 +84,15 @@ data class LongreadMaterial(
         get() = extractViewContent(viewContentRaw)
 }
 
-/** Nested `content` object inside [LongreadMaterial]. */
+/** Nested `content` object inside [LongreadMaterialApi]. */
 @Serializable
-data class LongreadMaterialContent(
+data class LongreadMaterialContentApi(
     val name: String? = null,
 )
 
 /** File attachment for materials, solutions, comments, and events. */
 @Serializable
-data class MaterialAttachment(
+data class MaterialAttachmentApi(
     val name: String = "",
     val filename: String = "",
     val mediaType: String = "",
@@ -106,11 +106,11 @@ data class MaterialAttachment(
  * The `activity` object is nested in JSON as `{"name": ..., "weight": ...}`.
  */
 @Serializable
-data class MaterialEstimation(
+data class MaterialEstimationApi(
     /** ISO 8601 datetime string. */
     val deadline: String? = null,
     val maxScore: Int? = null,
-    val activity: MaterialEstimationActivity? = null,
+    val activity: MaterialEstimationActivityApi? = null,
 ) {
     val activityName: String?
         get() = activity?.name
@@ -119,9 +119,9 @@ data class MaterialEstimation(
         get() = activity?.weight
 }
 
-/** Activity info within [MaterialEstimation]. */
+/** Activity info within [MaterialEstimationApi]. */
 @Serializable
-data class MaterialEstimationActivity(
+data class MaterialEstimationActivityApi(
     val name: String? = null,
     val weight: Double? = null,
 )

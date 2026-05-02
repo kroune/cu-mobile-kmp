@@ -17,6 +17,12 @@ private val hourMinuteFormat = LocalDateTime.Format {
     minute()
 }
 
+private val dayMonthFormat = LocalDateTime.Format {
+    day()
+    char('.')
+    monthNumber()
+}
+
 private val dayShortMonthFormat = LocalDateTime.Format {
     day(Padding.NONE)
     char(' ')
@@ -54,10 +60,37 @@ fun formatDeadlineTime(isoDate: String?): String {
     return hourMinuteFormat.format(local)
 }
 
+/** Deadline time as `"HH:mm"` from an [Instant]. Returns `"—"` when null. */
+fun formatDeadlineTime(instant: Instant?): String {
+    val local = instant?.toLocalDateTime(TimeZone.currentSystemDefault()) ?: return "—"
+    return hourMinuteFormat.format(local)
+}
+
 /** Deadline date as `"d мес"` (short month). Returns `""` when unavailable. */
 fun formatDeadlineDayShortMonth(isoDate: String?): String {
     val local = parseDeadlineInstant(isoDate)
         ?.toLocalDateTime(TimeZone.currentSystemDefault())
         ?: return ""
     return dayShortMonthFormat.format(local)
+}
+
+/** Deadline date as `"d мес"` (short month) from an [Instant]. Returns `""` when null. */
+fun formatDeadlineDayShortMonth(instant: Instant?): String {
+    val local = instant?.toLocalDateTime(TimeZone.currentSystemDefault()) ?: return ""
+    return dayShortMonthFormat.format(local)
+}
+
+/** Formats a deadline [Instant] to `"dd.MM"`. Returns `null` when the instant is null. */
+fun formatDeadlineShort(instant: Instant?): String? {
+    if (instant == null) return null
+    return dayMonthFormat.format(instant.toLocalDateTime(TimeZone.currentSystemDefault()))
+}
+
+/** `true` when the deadline [Instant] is strictly in the past relative to [now]. */
+fun isOverdue(
+    instant: Instant?,
+    now: Instant,
+): Boolean {
+    if (instant == null) return false
+    return instant < now
 }

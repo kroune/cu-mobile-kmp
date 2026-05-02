@@ -1,48 +1,35 @@
 package io.github.kroune.cumobile.presentation.longread.component.coding
 
 import com.arkivanov.decompose.value.Value
-import io.github.kroune.cumobile.data.model.LongreadMaterial
-import io.github.kroune.cumobile.data.model.MaterialAttachment
-import io.github.kroune.cumobile.data.model.PendingAttachment
-import io.github.kroune.cumobile.data.model.PickedFile
-import io.github.kroune.cumobile.data.model.TaskComment
-import io.github.kroune.cumobile.data.model.TaskDetails
-import io.github.kroune.cumobile.data.model.TaskEvent
 import io.github.kroune.cumobile.presentation.common.ContentState
 import io.github.kroune.cumobile.presentation.common.RenderComponent
+import io.github.kroune.cumobile.presentation.common.model.LongreadMaterialUi
+import io.github.kroune.cumobile.presentation.common.model.MaterialAttachmentUi
+import io.github.kroune.cumobile.presentation.common.model.PendingAttachmentUi
+import io.github.kroune.cumobile.presentation.common.model.PickedFileUi
+import io.github.kroune.cumobile.presentation.common.model.TaskCommentUi
+import io.github.kroune.cumobile.presentation.common.model.TaskDetailsUi
+import io.github.kroune.cumobile.presentation.common.model.TaskEventUi
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
-/**
- * MVI component for a single coding material within the longread.
- *
- * Owns all task-specific state (expansion, tabs, comments, attachments,
- * task actions) that was previously managed by the parent LongreadComponent.
- */
 interface CodingMaterialComponent : RenderComponent {
     val state: Value<State>
-
-    /**
-     * Immutable material data fixed at creation time.
-     *
-     * Intentionally NOT in [State] — it never changes during the component's
-     * lifetime and would bloat every `state.copy()` with a large unchanged object.
-     */
-    val material: LongreadMaterial
+    val material: LongreadMaterialUi
 
     fun onIntent(intent: Intent)
 
     data class State(
         val isExpanded: Boolean = false,
         val selectedTab: String = "solution",
-        val taskDetails: ContentState<TaskDetails> = ContentState.Loading,
-        val taskEvents: ContentState<ImmutableList<TaskEvent>> = ContentState.Loading,
-        val taskComments: ContentState<ImmutableList<TaskComment>> = ContentState.Loading,
+        val taskDetails: ContentState<TaskDetailsUi> = ContentState.Loading,
+        val taskEvents: ContentState<ImmutableList<TaskEventUi>> = ContentState.Loading,
+        val taskComments: ContentState<ImmutableList<TaskCommentUi>> = ContentState.Loading,
         val solutionUrl: String = "",
         val commentText: String = "",
         val isSubmitting: Boolean = false,
-        val pendingSolutionAttachments: ImmutableList<PendingAttachment> = persistentListOf(),
-        val pendingCommentAttachments: ImmutableList<PendingAttachment> = persistentListOf(),
+        val pendingSolutionAttachments: ImmutableList<PendingAttachmentUi> = persistentListOf(),
+        val pendingCommentAttachments: ImmutableList<PendingAttachmentUi> = persistentListOf(),
         val editingCommentId: String? = null,
         val editCommentText: String = "",
         val downloadingAttachment: String? = null,
@@ -100,7 +87,7 @@ interface CodingMaterialComponent : RenderComponent {
 
         sealed interface Attachment : Intent {
             data class PickSolutionAttachment(
-                val file: PickedFile,
+                val file: PickedFileUi,
             ) : Attachment
 
             data class RemoveSolutionAttachment(
@@ -108,7 +95,7 @@ interface CodingMaterialComponent : RenderComponent {
             ) : Attachment
 
             data class PickCommentAttachment(
-                val file: PickedFile,
+                val file: PickedFileUi,
             ) : Attachment
 
             data class RemoveCommentAttachment(
@@ -116,7 +103,7 @@ interface CodingMaterialComponent : RenderComponent {
             ) : Attachment
 
             data class DownloadCommentAttachment(
-                val attachment: MaterialAttachment,
+                val attachment: MaterialAttachmentUi,
             ) : Attachment
         }
     }

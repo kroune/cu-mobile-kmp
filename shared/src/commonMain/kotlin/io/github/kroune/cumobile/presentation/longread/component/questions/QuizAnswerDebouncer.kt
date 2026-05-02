@@ -1,6 +1,6 @@
 package io.github.kroune.cumobile.presentation.longread.component.questions
 
-import io.github.kroune.cumobile.data.model.QuizAnswer
+import io.github.kroune.cumobile.domain.model.QuizAnswer
 import io.github.kroune.cumobile.domain.repository.QuizRepository
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CoroutineScope

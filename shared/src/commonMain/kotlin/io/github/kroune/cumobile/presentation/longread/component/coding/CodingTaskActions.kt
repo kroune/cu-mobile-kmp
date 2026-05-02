@@ -1,8 +1,11 @@
 package io.github.kroune.cumobile.presentation.longread.component.coding
 
 import com.arkivanov.decompose.value.MutableValue
+import io.github.kroune.cumobile.domain.model.MaterialAttachmentDomain
 import io.github.kroune.cumobile.domain.repository.TaskRepository
 import io.github.kroune.cumobile.presentation.common.ContentState
+import io.github.kroune.cumobile.presentation.common.model.MaterialAttachmentUi
+import io.github.kroune.cumobile.presentation.common.model.mappers.toUi
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
@@ -45,6 +48,7 @@ internal class CodingTaskActions(
         val url = state.value.solutionUrl.takeIf { it.isNotBlank() }
         val attachments = state.value.pendingSolutionAttachments
             .mapNotNull { it.uploadedAttachment }
+            .map { it.toDomain() }
         scope.launch {
             state.value = state.value.copy(isSubmitting = true)
             val success = taskRepository.submitTask(taskId, url, attachments)
@@ -67,6 +71,7 @@ internal class CodingTaskActions(
         if (text.isEmpty()) return
         val attachments = state.value.pendingCommentAttachments
             .mapNotNull { it.uploadedAttachment }
+            .map { it.toDomain() }
         scope.launch {
             state.value = state.value.copy(isSubmitting = true)
             val commentId = taskRepository.createComment(taskId, text, attachments)
@@ -150,7 +155,7 @@ internal class CodingTaskActions(
     private suspend fun refreshTaskDetails() {
         val details = taskRepository.fetchTaskDetails(taskId)
         state.value = if (details != null) {
-            state.value.copy(taskDetails = ContentState.Success(details))
+            state.value.copy(taskDetails = ContentState.Success(details.toUi()))
         } else {
             logger.warn { "Failed to fetch task details for taskId=$taskId" }
             state.value.copy(
@@ -164,13 +169,13 @@ internal class CodingTaskActions(
         val events = taskRepository.fetchTaskEvents(taskId)
         val comments = taskRepository.fetchTaskComments(taskId)
         val eventsState = if (events != null) {
-            ContentState.Success(events.toPersistentList())
+            ContentState.Success(events.map { it.toUi() }.toPersistentList())
         } else {
             logger.warn { "Failed to load task events for taskId=$taskId" }
             ContentState.Error("Не удалось загрузить историю")
         }
         val commentsState = if (comments != null) {
-            ContentState.Success(comments.toPersistentList())
+            ContentState.Success(comments.map { it.toUi() }.toPersistentList())
         } else {
             logger.warn { "Failed to load task comments for taskId=$taskId" }
             ContentState.Error("Не удалось загрузить комментарии")
@@ -184,7 +189,9 @@ internal class CodingTaskActions(
     private suspend fun refreshComments() {
         val comments = taskRepository.fetchTaskComments(taskId)
         state.value = if (comments != null) {
-            state.value.copy(taskComments = ContentState.Success(comments.toPersistentList()))
+            state.value.copy(
+                taskComments = ContentState.Success(comments.map { it.toUi() }.toPersistentList()),
+            )
         } else {
             logger.warn { "Failed to load task comments for taskId=$taskId" }
             state.value.copy(
@@ -193,3 +200,12 @@ internal class CodingTaskActions(
         }
     }
 }
+
+private fun MaterialAttachmentUi.toDomain(): MaterialAttachmentDomain =
+    MaterialAttachmentDomain(
+        name = name,
+        filename = filename,
+        mediaType = mediaType,
+        length = length,
+        version = version,
+    )

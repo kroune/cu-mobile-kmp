@@ -2,66 +2,99 @@ package io.github.kroune.cumobile.presentation.courses.detail.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
-import io.github.kroune.cumobile.data.model.CourseOverview
-import io.github.kroune.cumobile.data.model.CourseTheme
-import io.github.kroune.cumobile.data.model.Longread
-import io.github.kroune.cumobile.data.model.ThemeExercise
+import io.github.kroune.cumobile.presentation.common.formatDeadlineShort
+import io.github.kroune.cumobile.presentation.common.model.CourseOverviewUi
+import io.github.kroune.cumobile.presentation.common.model.CourseThemeUi
+import io.github.kroune.cumobile.presentation.common.model.LongreadSummaryUi
+import io.github.kroune.cumobile.presentation.common.model.ThemeExerciseUi
 import io.github.kroune.cumobile.presentation.common.ui.CuMobileTheme
 import io.github.kroune.cumobile.presentation.courses.detail.CourseDetailComponent
 
 private val previewThemes = listOf(
-    CourseTheme(
+    CourseThemeUi(
         id = "1",
         name = "Введение в алгоритмы",
+        order = 1,
+        state = "published",
         longreads = listOf(
-            Longread(id = "1", name = "Теория сложности", type = "markdown"),
-            Longread(
+            LongreadSummaryUi(
+                id = "1",
+                name = "Теория сложности",
+                type = "markdown",
+                state = "published",
+                exercises = emptyList(),
+            ),
+            LongreadSummaryUi(
                 id = "2",
                 name = "Практика: сортировки",
                 type = "coding",
+                state = "published",
                 exercises = listOf(
-                    ThemeExercise(
+                    ThemeExerciseUi(
                         id = "1",
                         name = "ДЗ: Быстрая сортировка",
-                        deadline = "2026-04-01T23:59:00",
+                        maxScore = 10,
+                        deadlineFormatted = formatDeadlineShort("2026-04-01T23:59:00"),
+                        activityName = null,
                     ),
                 ),
             ),
         ),
     ),
-    CourseTheme(
+    CourseThemeUi(
         id = "2",
         name = "Графы и деревья",
+        order = 2,
+        state = "published",
         longreads = listOf(
-            Longread(id = "3", name = "BFS и DFS", type = "markdown"),
-            Longread(
+            LongreadSummaryUi(
+                id = "3",
+                name = "BFS и DFS",
+                type = "markdown",
+                state = "published",
+                exercises = emptyList(),
+            ),
+            LongreadSummaryUi(
                 id = "4",
                 name = "Задачи на графы",
                 type = "coding",
+                state = "published",
                 exercises = listOf(
-                    ThemeExercise(
+                    ThemeExerciseUi(
                         id = "2",
                         name = "ДЗ: Кратчайшие пути",
-                        deadline = "2026-04-10T23:59:00",
+                        maxScore = 10,
+                        deadlineFormatted = formatDeadlineShort("2026-04-10T23:59:00"),
+                        activityName = null,
                     ),
-                    ThemeExercise(
+                    ThemeExerciseUi(
                         id = "3",
                         name = "ДЗ: Минимальное остовное дерево",
+                        maxScore = 10,
+                        deadlineFormatted = null,
+                        activityName = null,
                     ),
                 ),
             ),
         ),
     ),
-    CourseTheme(id = "3", name = "Динамическое программирование"),
+    CourseThemeUi(
+        id = "3",
+        name = "Динамическое программирование",
+        order = 3,
+        state = "published",
+        longreads = emptyList(),
+    ),
 )
 
 private val previewCourseDetailState =
     CourseDetailComponent.State(
         courseId = "1",
         isLoading = false,
-        overview = CourseOverview(
+        overview = CourseOverviewUi(
             id = "1",
             name = "Алгоритмы и структуры данных",
+            isArchived = false,
             themes = previewThemes,
         ),
         filteredThemes = previewThemes,

@@ -39,10 +39,9 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import io.github.kroune.cumobile.data.model.PendingAttachment
-import io.github.kroune.cumobile.data.model.TaskComment
 import io.github.kroune.cumobile.presentation.common.ContentState
-import io.github.kroune.cumobile.presentation.common.formatDateTime
+import io.github.kroune.cumobile.presentation.common.model.PendingAttachmentUi
+import io.github.kroune.cumobile.presentation.common.model.TaskCommentUi
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 import io.github.kroune.cumobile.presentation.common.ui.ShimmerBox
 import io.github.kroune.cumobile.presentation.longread.component.coding.CodingMaterialComponent
@@ -86,7 +85,7 @@ internal fun CommentsTab(
 
 @Composable
 private fun CommentsList(
-    comments: ContentState<ImmutableList<TaskComment>>,
+    comments: ContentState<ImmutableList<TaskCommentUi>>,
     editingCommentId: String?,
     editCommentText: String,
     isSubmitting: Boolean,
@@ -155,7 +154,7 @@ private fun CommentsListErrorText(message: String) {
 private fun CommentInputSection(
     commentText: String,
     isSubmitting: Boolean,
-    pendingAttachments: ImmutableList<PendingAttachment>,
+    pendingAttachments: ImmutableList<PendingAttachmentUi>,
     onIntent: (CodingMaterialComponent.Intent) -> Unit,
     onAttach: () -> Unit,
 ) {
@@ -188,7 +187,7 @@ private fun CommentInputSection(
 
     AttachButton(onAttach = onAttach, isSubmitting = isSubmitting)
 
-    PendingAttachmentsList(
+    PendingAttachmentUisList(
         attachments = pendingAttachments,
         onRemove = { index ->
             onIntent(CodingMaterialComponent.Intent.Attachment.RemoveCommentAttachment(index))
@@ -222,7 +221,7 @@ private const val ActionIconSize = 18
 /** Single comment card with optional edit/delete actions. */
 @Composable
 private fun CommentCard(
-    comment: TaskComment,
+    comment: TaskCommentUi,
     isEditing: Boolean,
     editText: String,
     isSubmitting: Boolean,
@@ -283,7 +282,7 @@ private fun CommentCard(
 /** Comment header: sender name, date, edit/delete buttons. */
 @Composable
 private fun CommentHeader(
-    comment: TaskComment,
+    comment: TaskCommentUi,
     isEditing: Boolean,
     onEdit: () -> Unit,
     onDeleteRequest: () -> Unit,
@@ -294,7 +293,7 @@ private fun CommentHeader(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            text = comment.sender.name.ifBlank { comment.sender.email },
+            text = comment.senderName.ifBlank { comment.senderEmail },
             color = AppTheme.colors.accent,
             fontSize = 13.sp,
             fontWeight = FontWeight.Medium,
@@ -303,9 +302,9 @@ private fun CommentHeader(
             modifier = Modifier.weight(1f),
         )
         Row(verticalAlignment = Alignment.CenterVertically) {
-            comment.createdAt?.let { date ->
+            comment.createdAtFormatted?.let { date ->
                 Text(
-                    text = formatDateTime(date),
+                    text = date,
                     color = AppTheme.colors.textSecondary,
                     fontSize = 11.sp,
                 )
@@ -343,7 +342,7 @@ private fun CommentHeader(
 /** Read-only comment body: HTML content + attachments. */
 @Composable
 private fun CommentContent(
-    comment: TaskComment,
+    comment: TaskCommentUi,
     downloadingAttachment: String?,
     onIntent: (CodingMaterialComponent.Intent) -> Unit,
 ) {

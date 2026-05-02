@@ -10,14 +10,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.FileProvider
-import io.github.kroune.cumobile.data.model.PickedFile
+import io.github.kroune.cumobile.presentation.common.model.PickedFileUi
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.io.File
 
 private val logger = KotlinLogging.logger {}
 
 @Composable
-actual fun rememberImagePicker(onImagesCaptured: (List<PickedFile>) -> Unit): ImagePicker {
+actual fun rememberImagePicker(onImagesCaptured: (List<PickedFileUi>) -> Unit): ImagePicker {
     val context = LocalContext.current
     val tempCameraUri = remember { mutableStateOf<Uri?>(null) }
 
@@ -66,7 +66,7 @@ actual fun rememberImagePicker(onImagesCaptured: (List<PickedFile>) -> Unit): Im
 private fun handleCameraResult(
     contentResolver: ContentResolver,
     uri: Uri,
-    onImagesCaptured: (List<PickedFile>) -> Unit,
+    onImagesCaptured: (List<PickedFileUi>) -> Unit,
 ) {
     try {
         val bytes = contentResolver.openInputStream(uri)?.use { it.readBytes() }
@@ -75,7 +75,7 @@ private fun handleCameraResult(
             return
         }
         onImagesCaptured(
-            listOf(PickedFile("camera_photo.jpg", bytes, "image/jpeg", bytes.size.toLong())),
+            listOf(PickedFileUi("camera_photo.jpg", bytes, "image/jpeg", bytes.size.toLong())),
         )
     } catch (e: Exception) {
         logger.error(e) { "Failed to process camera image" }
@@ -85,7 +85,7 @@ private fun handleCameraResult(
 private fun handleGalleryResult(
     contentResolver: ContentResolver,
     uris: List<Uri>,
-    onImagesCaptured: (List<PickedFile>) -> Unit,
+    onImagesCaptured: (List<PickedFileUi>) -> Unit,
 ) {
     val files = uris.mapNotNull { uri ->
         readPickedImage(contentResolver, uri)
@@ -98,7 +98,7 @@ private fun handleGalleryResult(
 private fun readPickedImage(
     contentResolver: ContentResolver,
     uri: Uri,
-): PickedFile? =
+): PickedFileUi? =
     try {
         val bytes = contentResolver
             .openInputStream(uri)
@@ -106,7 +106,7 @@ private fun readPickedImage(
             ?: return null
         val displayName = queryDisplayName(contentResolver, uri) ?: "image.jpg"
         val mimeType = contentResolver.getType(uri) ?: "image/jpeg"
-        PickedFile(displayName, bytes, mimeType, bytes.size.toLong())
+        PickedFileUi(displayName, bytes, mimeType, bytes.size.toLong())
     } catch (e: Exception) {
         logger.error(e) { "Failed to read gallery image: $uri" }
         null

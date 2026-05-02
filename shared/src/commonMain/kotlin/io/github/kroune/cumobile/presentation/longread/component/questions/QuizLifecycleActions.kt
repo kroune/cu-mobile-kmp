@@ -1,16 +1,18 @@
 package io.github.kroune.cumobile.presentation.longread.component.questions
 
 import com.arkivanov.decompose.value.MutableValue
+import io.github.kroune.cumobile.domain.model.QuizQuestionDomain
+import io.github.kroune.cumobile.domain.model.TaskStatus
 import io.github.kroune.cumobile.domain.repository.QuizRepository
 import io.github.kroune.cumobile.domain.repository.TaskRepository
 import io.github.kroune.cumobile.presentation.common.ContentState
 import io.github.kroune.cumobile.presentation.common.dataOrNull
+import io.github.kroune.cumobile.presentation.common.model.mappers.toUi
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import io.github.kroune.cumobile.data.model.TaskState as TS
 
 private val logger = KotlinLogging.logger {}
 
@@ -48,7 +50,7 @@ internal class QuizLifecycleActions(
 
             val details = taskRepository.fetchTaskDetails(taskId)
             if (details != null) {
-                state.value = state.value.copy(taskDetails = ContentState.Success(details))
+                state.value = state.value.copy(taskDetails = ContentState.Success(details.toUi()))
             }
 
             startNewAttempt(sessionId)
@@ -93,7 +95,7 @@ internal class QuizLifecycleActions(
             val updatedDetails = taskRepository.fetchTaskDetails(taskId)
             if (updatedDetails != null) {
                 state.value = state.value.copy(
-                    taskDetails = ContentState.Success(updatedDetails),
+                    taskDetails = ContentState.Success(updatedDetails.toUi()),
                 )
             }
 
@@ -103,28 +105,33 @@ internal class QuizLifecycleActions(
             val limit = state.value.attemptsLimit
             val used = state.value.pastAttempts.size
             state.value = state.value.copy(
-                attemptResults = attempt,
+                attemptResults = attempt?.toUi(),
                 phase = QuestionsMaterialComponent.QuizPhase.Completed,
                 isSubmitting = false,
-                canStartNewAttempt = updatedDetails?.state == TS.InProgress &&
+                canStartNewAttempt = updatedDetails?.status == TaskStatus.InProgress &&
                     (limit == null || used < limit),
             )
         }
     }
 
-    suspend fun loadQuestions(exerciseId: String) {
+    suspend fun loadQuestions(exerciseId: String): List<QuizQuestionDomain>? {
         val questions = quizRepository.getQuestions(exerciseId)
         if (questions != null) {
-            state.value = state.value.copy(questions = questions.toPersistentList())
+            state.value = state.value.copy(
+                questions = questions.map { it.toUi() }.toPersistentList(),
+            )
         } else {
             logger.warn { "Failed to load quiz questions for exerciseId=$exerciseId" }
         }
+        return questions
     }
 
     suspend fun loadPastAttempts(sessionId: String) {
         val attempts = quizRepository.listAttempts(sessionId)
         if (attempts != null) {
-            state.value = state.value.copy(pastAttempts = attempts.toPersistentList())
+            state.value = state.value.copy(
+                pastAttempts = attempts.map { it.toUi() }.toPersistentList(),
+            )
         }
     }
 

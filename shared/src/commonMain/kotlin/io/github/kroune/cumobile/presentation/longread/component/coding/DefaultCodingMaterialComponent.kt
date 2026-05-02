@@ -6,12 +6,13 @@ import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
-import io.github.kroune.cumobile.data.model.LongreadMaterial
-import io.github.kroune.cumobile.data.model.MaterialAttachment
 import io.github.kroune.cumobile.domain.repository.ContentRepository
 import io.github.kroune.cumobile.domain.repository.TaskRepository
 import io.github.kroune.cumobile.presentation.common.ContentState
 import io.github.kroune.cumobile.presentation.common.componentScope
+import io.github.kroune.cumobile.presentation.common.model.LongreadMaterialUi
+import io.github.kroune.cumobile.presentation.common.model.MaterialAttachmentUi
+import io.github.kroune.cumobile.presentation.common.model.mappers.toUi
 import io.github.kroune.cumobile.presentation.longread.ui.coding.CodingMaterialCardContent
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.collections.immutable.toPersistentList
@@ -29,7 +30,7 @@ private val logger = KotlinLogging.logger {}
  */
 class DefaultCodingMaterialComponent(
     componentContext: ComponentContext,
-    override val material: LongreadMaterial,
+    override val material: LongreadMaterialUi,
     private val taskId: String,
     private val initiallyExpanded: Boolean = false,
     private val taskRepository: TaskRepository,
@@ -130,7 +131,7 @@ class DefaultCodingMaterialComponent(
         }
     }
 
-    private fun downloadCommentAttachment(attachment: MaterialAttachment) {
+    private fun downloadCommentAttachment(attachment: MaterialAttachmentUi) {
         scope.launch {
             _state.value = _state.value.copy(downloadingAttachment = attachment.filename)
             val url = contentRepository.getDownloadLink(attachment.filename, attachment.version)
@@ -160,7 +161,7 @@ class DefaultCodingMaterialComponent(
             _state.value = _state.value.copy(taskDetails = ContentState.Loading)
             val details = taskRepository.fetchTaskDetails(taskId)
             _state.value = if (details != null) {
-                _state.value.copy(taskDetails = ContentState.Success(details))
+                _state.value.copy(taskDetails = ContentState.Success(details.toUi()))
             } else {
                 logger.warn { "Failed to load task details for taskId=$taskId" }
                 _state.value.copy(
@@ -182,13 +183,13 @@ class DefaultCodingMaterialComponent(
                 val events = eventsDeferred.await()
                 val comments = commentsDeferred.await()
                 val eventsState = if (events != null) {
-                    ContentState.Success(events.toPersistentList())
+                    ContentState.Success(events.map { it.toUi() }.toPersistentList())
                 } else {
                     logger.warn { "Failed to load task events for taskId=$taskId" }
                     ContentState.Error("Не удалось загрузить историю")
                 }
                 val commentsState = if (comments != null) {
-                    ContentState.Success(comments.toPersistentList())
+                    ContentState.Success(comments.map { it.toUi() }.toPersistentList())
                 } else {
                     logger.warn { "Failed to load task comments for taskId=$taskId" }
                     ContentState.Error("Не удалось загрузить комментарии")
