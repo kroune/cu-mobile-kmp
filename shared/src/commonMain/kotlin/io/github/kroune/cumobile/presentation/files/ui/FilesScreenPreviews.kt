@@ -13,12 +13,13 @@ private fun previewFile(
     path: String,
     sizeBytes: Long,
     lastModifiedMillis: Long,
-) = DownloadedFileInfo(
-    name = name,
-    path = path,
-    sizeBytes = sizeBytes,
-    lastModifiedMillis = lastModifiedMillis,
-).toDomain().toUi()
+) =
+    DownloadedFileInfo(
+        name = name,
+        path = path,
+        sizeBytes = sizeBytes,
+        lastModifiedMillis = lastModifiedMillis,
+    ).toDomain().toUi()
 
 private val previewFilesState = FilesComponent.State(
     files = listOf(
