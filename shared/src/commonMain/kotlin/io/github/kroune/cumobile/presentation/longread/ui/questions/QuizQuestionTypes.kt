@@ -27,16 +27,17 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import io.github.kroune.cumobile.data.model.QuizAnswer
-import io.github.kroune.cumobile.data.model.QuizQuestion
+import io.github.kroune.cumobile.presentation.common.model.QuizAnswerUi
+import io.github.kroune.cumobile.presentation.common.model.QuizQuestionUi
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
+import kotlinx.collections.immutable.toImmutableSet
 
 @Composable
 internal fun SingleChoiceContent(
-    question: QuizQuestion,
-    answer: QuizAnswer.SingleChoice?,
+    question: QuizQuestionUi,
+    answer: QuizAnswerUi.SingleChoice?,
     isCompleted: Boolean,
-    onAnswerChanged: (QuizAnswer) -> Unit,
+    onAnswerChanged: (QuizAnswerUi) -> Unit,
 ) {
     Column {
         question.options.forEach { option ->
@@ -45,7 +46,7 @@ internal fun SingleChoiceContent(
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(6.dp))
                     .clickable(enabled = !isCompleted) {
-                        onAnswerChanged(QuizAnswer.SingleChoice(option.id))
+                        onAnswerChanged(QuizAnswerUi.SingleChoice(option.id))
                     }.padding(vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -54,7 +55,7 @@ internal fun SingleChoiceContent(
                     onClick = if (isCompleted) {
                         null
                     } else {
-                        { onAnswerChanged(QuizAnswer.SingleChoice(option.id)) }
+                        { onAnswerChanged(QuizAnswerUi.SingleChoice(option.id)) }
                     },
                     colors = RadioButtonDefaults.colors(selectedColor = AppTheme.colors.accent),
                 )
@@ -71,10 +72,10 @@ internal fun SingleChoiceContent(
 
 @Composable
 internal fun MultipleChoiceContent(
-    question: QuizQuestion,
-    answer: QuizAnswer.MultipleChoice?,
+    question: QuizQuestionUi,
+    answer: QuizAnswerUi.MultipleChoice?,
     isCompleted: Boolean,
-    onAnswerChanged: (QuizAnswer) -> Unit,
+    onAnswerChanged: (QuizAnswerUi) -> Unit,
 ) {
     val selectedIds = answer?.optionIds.orEmpty()
 
@@ -88,7 +89,7 @@ internal fun MultipleChoiceContent(
                     .clickable(enabled = !isCompleted) {
                         val newSet =
                             if (isChecked) selectedIds - option.id else selectedIds + option.id
-                        onAnswerChanged(QuizAnswer.MultipleChoice(newSet))
+                        onAnswerChanged(QuizAnswerUi.MultipleChoice(newSet.toImmutableSet()))
                     }.padding(vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -100,7 +101,7 @@ internal fun MultipleChoiceContent(
                         { checked ->
                             val newSet =
                                 if (checked) selectedIds + option.id else selectedIds - option.id
-                            onAnswerChanged(QuizAnswer.MultipleChoice(newSet))
+                            onAnswerChanged(QuizAnswerUi.MultipleChoice(newSet.toImmutableSet()))
                         }
                     },
                     colors = CheckboxDefaults.colors(checkedColor = AppTheme.colors.accent),
@@ -118,13 +119,13 @@ internal fun MultipleChoiceContent(
 
 @Composable
 internal fun StringMatchContent(
-    answer: QuizAnswer.StringMatch?,
+    answer: QuizAnswerUi.StringMatch?,
     isCompleted: Boolean,
-    onAnswerChanged: (QuizAnswer) -> Unit,
+    onAnswerChanged: (QuizAnswerUi) -> Unit,
 ) {
     OutlinedTextField(
         value = answer?.text.orEmpty(),
-        onValueChange = { onAnswerChanged(QuizAnswer.StringMatch(it)) },
+        onValueChange = { onAnswerChanged(QuizAnswerUi.StringMatch(it)) },
         label = { Text("Ответ") },
         readOnly = isCompleted,
         modifier = Modifier.fillMaxWidth(),
@@ -134,9 +135,9 @@ internal fun StringMatchContent(
 
 @Composable
 internal fun NumberMatchContent(
-    answer: QuizAnswer.NumberMatch?,
+    answer: QuizAnswerUi.NumberMatch?,
     isCompleted: Boolean,
-    onAnswerChanged: (QuizAnswer) -> Unit,
+    onAnswerChanged: (QuizAnswerUi) -> Unit,
 ) {
     var text by remember(answer?.text) { mutableStateOf(answer?.text.orEmpty()) }
 
@@ -146,7 +147,7 @@ internal fun NumberMatchContent(
             val filtered = newText.filter { c -> c.isDigit() || c == '.' || c == ',' || c == '-' }
             text = filtered
             if (filtered.isNotEmpty()) {
-                onAnswerChanged(QuizAnswer.NumberMatch(filtered))
+                onAnswerChanged(QuizAnswerUi.NumberMatch(filtered))
             }
         },
         label = { Text("Числовой ответ") },
@@ -159,13 +160,13 @@ internal fun NumberMatchContent(
 
 @Composable
 internal fun OpenTextContent(
-    answer: QuizAnswer.OpenText?,
+    answer: QuizAnswerUi.OpenText?,
     isCompleted: Boolean,
-    onAnswerChanged: (QuizAnswer) -> Unit,
+    onAnswerChanged: (QuizAnswerUi) -> Unit,
 ) {
     OutlinedTextField(
         value = answer?.text.orEmpty(),
-        onValueChange = { onAnswerChanged(QuizAnswer.OpenText(it)) },
+        onValueChange = { onAnswerChanged(QuizAnswerUi.OpenText(it)) },
         label = { Text("Развёрнутый ответ") },
         readOnly = isCompleted,
         modifier = Modifier.fillMaxWidth().height(120.dp),

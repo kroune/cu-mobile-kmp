@@ -1,6 +1,6 @@
 package io.github.kroune.cumobile.domain.repository
 
-import io.github.kroune.cumobile.data.model.NotificationItem
+import io.github.kroune.cumobile.domain.model.NotificationDomain
 
 /** Repository for in-app notifications. */
 interface NotificationRepository {
@@ -15,5 +15,5 @@ interface NotificationRepository {
         category: Int,
         limit: Int = 100,
         offset: Int = 0,
-    ): List<NotificationItem>?
+    ): List<NotificationDomain>?
 }

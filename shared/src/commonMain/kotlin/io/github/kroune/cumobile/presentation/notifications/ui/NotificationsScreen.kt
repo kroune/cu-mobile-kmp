@@ -50,9 +50,9 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
-import io.github.kroune.cumobile.data.model.NotificationItem
 import io.github.kroune.cumobile.presentation.common.ContentState
-import io.github.kroune.cumobile.presentation.common.formatDateTimeFull
+import io.github.kroune.cumobile.presentation.common.isLoading
+import io.github.kroune.cumobile.presentation.common.model.NotificationUi
 import io.github.kroune.cumobile.presentation.common.ui.ActionErrorBar
 import io.github.kroune.cumobile.presentation.common.ui.AppTabRow
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
@@ -126,8 +126,9 @@ internal fun NotificationsScreenContent(
     onDismissError: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
+    val isContentLoading = state.educationNotifications.isLoading && state.otherNotifications.isLoading
     PullToRefreshBox(
-        isRefreshing = state.isContentLoading,
+        isRefreshing = isContentLoading,
         onRefresh = { onIntent(NotificationsComponent.Intent.Refresh) },
         modifier = modifier
             .fillMaxSize()
@@ -201,7 +202,7 @@ internal fun NotificationsScreenContent(
 
 @Composable
 private fun NotificationsList(
-    notifications: List<NotificationItem>,
+    notifications: List<NotificationUi>,
     expandedIds: Set<String>,
     onToggleExpand: (String) -> Unit,
     onLinkClick: (String) -> Unit,
@@ -231,7 +232,7 @@ private const val CollapsedLinkMaxLines = 1
 
 @Composable
 private fun NotificationCard(
-    item: NotificationItem,
+    item: NotificationUi,
     isExpanded: Boolean,
     onToggleExpand: () -> Unit,
     onLinkClick: (String) -> Unit,
@@ -258,7 +259,7 @@ private fun NotificationCard(
 
 @Composable
 private fun NotificationCardContent(
-    item: NotificationItem,
+    item: NotificationUi,
     isExpanded: Boolean,
     onLinkClick: (String) -> Unit,
     modifier: Modifier = Modifier,
@@ -299,10 +300,11 @@ private fun NotificationCardContent(
                     ).hasVisualOverflow
         }
 
-        val link = item.link
-        val linkText = link?.label?.ifBlank { link.uri }
-        val linkOverflows = remember(linkText, link?.uri, maxWidthPx) {
-            link?.uri?.isNotBlank() == true &&
+        val linkUri = item.linkUri
+        val linkLabel = item.linkLabel
+        val linkText = linkLabel?.ifBlank { linkUri }
+        val linkOverflows = remember(linkText, linkUri, maxWidthPx) {
+            linkUri?.isNotBlank() == true &&
                 linkText != null &&
                 linkText.isNotBlank() &&
                 textMeasurer
@@ -339,7 +341,7 @@ private fun NotificationCardContent(
 
 @Composable
 private fun NotificationCardHeader(
-    item: NotificationItem,
+    item: NotificationUi,
     isExpanded: Boolean,
 ) {
     Text(
@@ -352,7 +354,7 @@ private fun NotificationCardHeader(
     )
     Spacer(modifier = Modifier.height(4.dp))
     Text(
-        text = formatDateTimeFull(item.createdAt),
+        text = item.createdAtFormatted,
         color = AppTheme.colors.textSecondary,
         fontSize = 11.sp,
     )
@@ -360,7 +362,7 @@ private fun NotificationCardHeader(
 
 @Composable
 private fun NotificationCardBody(
-    item: NotificationItem,
+    item: NotificationUi,
     descriptionText: String,
     isExpanded: Boolean,
     onLinkClick: (String) -> Unit,
@@ -375,15 +377,16 @@ private fun NotificationCardBody(
             overflow = TextOverflow.Ellipsis,
         )
     }
-    val link = item.link
-    if (link != null && link.uri.isNotBlank()) {
+    val linkUri = item.linkUri
+    if (linkUri != null && linkUri.isNotBlank()) {
+        val linkLabel = item.linkLabel
         Spacer(modifier = Modifier.height(6.dp))
         Text(
-            text = link.label.ifBlank { link.uri },
+            text = linkLabel?.ifBlank { linkUri } ?: linkUri,
             color = AppTheme.colors.accent,
             fontSize = 12.sp,
             textDecoration = TextDecoration.Underline,
-            modifier = Modifier.clickable { onLinkClick(link.uri) },
+            modifier = Modifier.clickable { onLinkClick(linkUri) },
             maxLines = if (isExpanded) Int.MAX_VALUE else CollapsedLinkMaxLines,
             overflow = TextOverflow.Ellipsis,
         )

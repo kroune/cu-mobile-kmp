@@ -3,12 +3,27 @@ package io.github.kroune.cumobile.presentation.files.ui
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import io.github.kroune.cumobile.data.local.DownloadedFileInfo
+import io.github.kroune.cumobile.data.model.mappers.toDomain
+import io.github.kroune.cumobile.presentation.common.model.mappers.toUi
 import io.github.kroune.cumobile.presentation.common.ui.CuMobileTheme
 import io.github.kroune.cumobile.presentation.files.FilesComponent
 
+private fun previewFile(
+    name: String,
+    path: String,
+    sizeBytes: Long,
+    lastModifiedMillis: Long,
+) =
+    DownloadedFileInfo(
+        name = name,
+        path = path,
+        sizeBytes = sizeBytes,
+        lastModifiedMillis = lastModifiedMillis,
+    ).toDomain().toUi()
+
 private val previewFilesState = FilesComponent.State(
     files = listOf(
-        DownloadedFileInfo(
+        previewFile(
             name = "homework_1.pdf",
             path = "/files/homework_1.pdf",
             sizeBytes = 1_200_000,
@@ -71,31 +86,31 @@ private fun PreviewFilesActionErrorLight() {
 
 private val previewFilesSuccessState = FilesComponent.State(
     files = listOf(
-        DownloadedFileInfo(
+        previewFile(
             name = "homework_1.pdf",
             path = "/files/homework_1.pdf",
             sizeBytes = 1_200_000,
             lastModifiedMillis = 1710806400000L,
         ),
-        DownloadedFileInfo(
+        previewFile(
             name = "lecture_notes.docx",
             path = "/files/lecture_notes.docx",
             sizeBytes = 350_000,
             lastModifiedMillis = 1710720000000L,
         ),
-        DownloadedFileInfo(
+        previewFile(
             name = "data_analysis.xlsx",
             path = "/files/data_analysis.xlsx",
             sizeBytes = 89_000,
             lastModifiedMillis = 1710633600000L,
         ),
-        DownloadedFileInfo(
+        previewFile(
             name = "presentation.pptx",
             path = "/files/presentation.pptx",
             sizeBytes = 5_400_000,
             lastModifiedMillis = 1710547200000L,
         ),
-        DownloadedFileInfo(
+        previewFile(
             name = "screenshot.png",
             path = "/files/screenshot.png",
             sizeBytes = 450_000,

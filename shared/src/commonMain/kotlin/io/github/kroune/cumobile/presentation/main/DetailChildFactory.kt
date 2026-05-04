@@ -1,7 +1,6 @@
 package io.github.kroune.cumobile.presentation.main
 
 import com.arkivanov.decompose.ComponentContext
-import io.github.kroune.cumobile.presentation.common.invoke
 import io.github.kroune.cumobile.presentation.courses.detail.DefaultCourseDetailComponent
 import io.github.kroune.cumobile.presentation.files.rename.DefaultFileRenameSettingsComponent
 import io.github.kroune.cumobile.presentation.longread.DefaultLongreadComponent
@@ -12,6 +11,7 @@ import io.github.kroune.cumobile.presentation.performance.CoursePerformanceParam
 import io.github.kroune.cumobile.presentation.performance.DefaultCoursePerformanceComponent
 import io.github.kroune.cumobile.presentation.profile.DefaultProfileComponent
 import io.github.kroune.cumobile.presentation.scanner.DefaultScannerComponent
+import io.github.kroune.cumobile.util.invoke
 
 /**
  * Callbacks for file download tracking within detail screens.

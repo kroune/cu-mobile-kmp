@@ -2,7 +2,7 @@ package io.github.kroune.cumobile.presentation.common.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import io.github.kroune.cumobile.data.model.PickedFile
+import io.github.kroune.cumobile.presentation.common.model.PickedFileUi
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.addressOf
@@ -21,7 +21,7 @@ import platform.posix.memcpy
 private val logger = KotlinLogging.logger {}
 
 @Composable
-actual fun rememberImagePicker(onImagesCaptured: (List<PickedFile>) -> Unit): ImagePicker {
+actual fun rememberImagePicker(onImagesCaptured: (List<PickedFileUi>) -> Unit): ImagePicker {
     val delegate = remember { IosImageCaptureDelegate(onImagesCaptured) }
     return remember {
         object : ImagePicker {
@@ -60,7 +60,7 @@ private fun presentImagePickerController(
 }
 
 private class IosImageCaptureDelegate(
-    private val onImagesCaptured: (List<PickedFile>) -> Unit,
+    private val onImagesCaptured: (List<PickedFileUi>) -> Unit,
 ) : NSObject(),
     UIImagePickerControllerDelegateProtocol,
     UINavigationControllerDelegateProtocol {
@@ -84,7 +84,7 @@ private class IosImageCaptureDelegate(
             }
             onImagesCaptured(
                 listOf(
-                    PickedFile(
+                    PickedFileUi(
                         name = "photo.jpg",
                         bytes = bytes,
                         contentType = "image/jpeg",

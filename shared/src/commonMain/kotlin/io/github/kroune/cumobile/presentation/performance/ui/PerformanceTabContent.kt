@@ -18,9 +18,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import io.github.kroune.cumobile.presentation.common.model.ActivitySummaryUi
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 import io.github.kroune.cumobile.presentation.common.ui.gradeColor
-import io.github.kroune.cumobile.presentation.performance.ActivitySummary
 import kotlinx.collections.immutable.ImmutableList
 
 /**
@@ -28,8 +28,9 @@ import kotlinx.collections.immutable.ImmutableList
  */
 @Composable
 internal fun PerformanceTab(
-    summaries: ImmutableList<ActivitySummary>,
+    summaries: ImmutableList<ActivitySummaryUi>,
     totalContribution: Double,
+    totalContributionFormatted: String,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -48,7 +49,7 @@ internal fun PerformanceTab(
             summaries.forEach { summary ->
                 PerformanceSummaryRow(summary)
             }
-            PerformanceTotalRow(totalContribution)
+            PerformanceTotalRow(totalContribution, totalContributionFormatted)
         }
     }
 }
@@ -84,7 +85,7 @@ private fun HeaderCell(
 
 @Composable
 private fun PerformanceSummaryRow(
-    summary: ActivitySummary,
+    summary: ActivitySummaryUi,
     modifier: Modifier = Modifier,
 ) {
     val avgColor = scoreRatioColor(summary.averageScore / 10.0)
@@ -109,7 +110,7 @@ private fun PerformanceSummaryRow(
             modifier = Modifier.weight(0.8f),
         )
         Text(
-            text = formatScore(summary.averageScore),
+            text = summary.averageScoreFormatted,
             color = avgColor,
             fontSize = 12.sp,
             fontWeight = FontWeight.Bold,
@@ -122,7 +123,7 @@ private fun PerformanceSummaryRow(
             modifier = Modifier.weight(0.3f),
         )
         Text(
-            text = formatScore(summary.weight),
+            text = summary.weightFormatted,
             color = AppTheme.colors.textPrimary,
             fontSize = 12.sp,
             modifier = Modifier.weight(0.6f),
@@ -134,7 +135,7 @@ private fun PerformanceSummaryRow(
             modifier = Modifier.weight(0.3f),
         )
         Text(
-            text = formatScore(summary.totalContribution),
+            text = summary.totalContributionFormatted,
             color = contribColor,
             fontSize = 12.sp,
             fontWeight = FontWeight.Bold,
@@ -146,6 +147,7 @@ private fun PerformanceSummaryRow(
 @Composable
 private fun PerformanceTotalRow(
     total: Double,
+    totalFormatted: String,
     modifier: Modifier = Modifier,
 ) {
     val color = gradeColor(total.toInt())
@@ -167,7 +169,7 @@ private fun PerformanceTotalRow(
             modifier = Modifier.weight(4.9f),
         )
         Text(
-            formatScore(total),
+            totalFormatted,
             color = color,
             fontSize = 13.sp,
             fontWeight = FontWeight.Bold,

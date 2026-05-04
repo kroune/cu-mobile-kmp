@@ -13,7 +13,7 @@ import kotlinx.serialization.Serializable
  * May also arrive as an integer (1, 2, 3).
  */
 @Serializable
-data class TaskDetails(
+data class TaskDetailsApi(
     val id: String = "",
     val score: Double? = null,
     val extraScore: Double? = null,
@@ -33,9 +33,9 @@ data class TaskDetails(
     val currentAttemptId: String? = null,
     val evaluatedAttemptId: String? = null,
     val lastAttemptId: String? = null,
-    val exercise: TaskDetailsExercise? = null,
-    val solution: TaskDetailsSolution? = null,
-    val student: TaskDetailsStudent? = null,
+    val exercise: TaskDetailsExerciseApi? = null,
+    val solution: TaskDetailsSolutionApi? = null,
+    val student: TaskDetailsStudentApi? = null,
 ) {
     /** Convenience accessor for `exercise.maxScore`. */
     val maxScore: Double?
@@ -50,7 +50,7 @@ data class TaskDetails(
         get() = solution?.solutionUrl
 
     /** Convenience accessor for `solution.attachments`. */
-    val solutionAttachments: List<MaterialAttachment>
+    val solutionAttachments: List<MaterialAttachmentApi>
         get() = solution?.attachments.orEmpty()
 
     /** Convenience accessor for `student.lateDaysBalance`. */
@@ -58,33 +58,33 @@ data class TaskDetails(
         get() = student?.lateDaysBalance
 }
 
-/** Nested exercise info within [TaskDetails] JSON. */
+/** Nested exercise info within [TaskDetailsApi] JSON. */
 @Serializable
-data class TaskDetailsExercise(
+data class TaskDetailsExerciseApi(
     val id: String? = null,
     val name: String? = null,
     val type: String? = null,
     val timer: String? = null,
     val maxScore: Double? = null,
-    val settings: ExerciseSettings? = null,
+    val settings: ExerciseSettingsApi? = null,
 )
 
 @Serializable
-data class ExerciseSettings(
+data class ExerciseSettingsApi(
     val attemptsLimit: Int? = null,
     val evaluationStrategy: EvaluationStrategy? = null,
 )
 
-/** Nested solution info within [TaskDetails] JSON. */
+/** Nested solution info within [TaskDetailsApi] JSON. */
 @Serializable
-data class TaskDetailsSolution(
+data class TaskDetailsSolutionApi(
     val solutionUrl: String? = null,
-    val attachments: List<MaterialAttachment> = emptyList(),
-    val answers: List<QuizAnswerResult> = emptyList(),
+    val attachments: List<MaterialAttachmentApi> = emptyList(),
+    val answers: List<QuizAnswerResultApi> = emptyList(),
 )
 
-/** Nested student info within [TaskDetails] JSON. */
+/** Nested student info within [TaskDetailsApi] JSON. */
 @Serializable
-data class TaskDetailsStudent(
+data class TaskDetailsStudentApi(
     val lateDaysBalance: Int? = null,
 )

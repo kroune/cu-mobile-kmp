@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 /**
  * Serializable configuration for each material in the longread ChildItems.
  *
- * Each variant maps 1:1 to a [LongreadMaterial][io.github.kroune.cumobile.data.model.LongreadMaterial]
+ * Each variant maps 1:1 to a [LongreadMaterialDomain][io.github.kroune.cumobile.domain.model.LongreadMaterialDomain]
  * discriminator. The [id] must be unique across the items list.
  */
 @Serializable

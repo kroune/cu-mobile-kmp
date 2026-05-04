@@ -1,12 +1,11 @@
 package io.github.kroune.cumobile.presentation.courses
 
 import com.arkivanov.decompose.value.Value
-import io.github.kroune.cumobile.data.model.Course
-import io.github.kroune.cumobile.data.model.GradebookResponse
-import io.github.kroune.cumobile.data.model.StudentPerformanceCourse
 import io.github.kroune.cumobile.presentation.common.ContentState
-import io.github.kroune.cumobile.presentation.common.dataOrNull
-import io.github.kroune.cumobile.presentation.common.isLoading
+import io.github.kroune.cumobile.presentation.common.model.CourseGradeUi
+import io.github.kroune.cumobile.presentation.common.model.CourseUi
+import io.github.kroune.cumobile.presentation.common.model.GradebookUi
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -31,28 +30,20 @@ interface CoursesComponent {
 
     data class State(
         /** All courses loaded from the API. */
-        val courses: ContentState<List<Course>> = ContentState.Loading,
+        val courses: ContentState<ImmutableList<CourseUi>> = ContentState.Loading,
         /** Manual course order (list of IDs). */
         val courseOrder: List<String> = emptyList(),
         /** Performance data for grade sheet segment. */
-        val performanceCourses: ContentState<List<StudentPerformanceCourse>> = ContentState.Loading,
+        val performanceCourses: ContentState<ImmutableList<CourseGradeUi>> = ContentState.Loading,
         /** Gradebook data for record book segment. */
-        val gradebook: ContentState<GradebookResponse?> = ContentState.Loading,
+        val gradebook: ContentState<GradebookUi?> = ContentState.Loading,
         /** Currently selected segment: 0 = Courses, 1 = Grade Sheet, 2 = Record Book. */
         val segment: Int = 0,
         /** Whether to show active courses in the courses segment. */
         val showActive: Boolean = true,
         /** Whether to show archived courses in the courses segment. */
         val showArchived: Boolean = false,
-    ) {
-        /** Whether the important content (courses) is still loading. */
-        val isContentLoading: Boolean
-            get() = courses.isLoading
-
-        /** Course data or empty list. */
-        val courseList: List<Course>
-            get() = courses.dataOrNull.orEmpty()
-    }
+    )
 
     sealed interface Intent {
         /** Switch between Courses (0), Grade Sheet (1), Record Book (2). */
@@ -90,9 +81,9 @@ interface CoursesComponent {
 
 /** Returns active (non-archived) courses, using manual order if available. */
 internal fun activeCourses(
-    courses: List<Course>,
+    courses: ImmutableList<CourseUi>,
     order: List<String>,
-): List<Course> {
+): List<CourseUi> {
     val active = courses.filter { !it.isArchived }
     if (order.isEmpty()) return active.sortedBy { it.name }
 
@@ -110,9 +101,9 @@ internal fun activeCourses(
 
 /** Returns archived courses, using manual order if available. */
 internal fun archivedCourses(
-    courses: List<Course>,
+    courses: ImmutableList<CourseUi>,
     order: List<String>,
-): List<Course> {
+): List<CourseUi> {
     val archived = courses.filter { it.isArchived }
     if (order.isEmpty()) return archived.sortedBy { it.name }
 

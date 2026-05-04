@@ -1,8 +1,8 @@
 package io.github.kroune.cumobile.data.repository
 
 import io.github.kroune.cumobile.data.local.AuthLocalDataSource
-import io.github.kroune.cumobile.presentation.common.invoke
 import io.github.kroune.cumobile.util.AppDispatchers
+import io.github.kroune.cumobile.util.invoke
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
@@ -36,7 +36,7 @@ internal open class CookieAwareRepository(
         withContext(dispatchers().io) {
             val cookie = authLocal().cookieFlow.first()
             if (cookie == null) {
-                logger.debug { "No auth cookie available, skipping API call" }
+                logger.info { "No auth cookie available, skipping API call" }
                 return@withContext null
             }
             block(cookie)
@@ -50,7 +50,7 @@ internal open class CookieAwareRepository(
         withContext(dispatchers().io) {
             val cookie = authLocal().cookieFlow.first()
             if (cookie == null) {
-                logger.debug { "No auth cookie available, skipping API call" }
+                logger.info { "No auth cookie available, skipping API call" }
                 return@withContext false
             }
             block(cookie)

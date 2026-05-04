@@ -1,17 +1,16 @@
 package io.github.kroune.cumobile.presentation.notifications
 
 import com.arkivanov.decompose.value.Value
-import io.github.kroune.cumobile.data.model.NotificationCategory
-import io.github.kroune.cumobile.data.model.NotificationItem
 import io.github.kroune.cumobile.presentation.common.ContentState
-import io.github.kroune.cumobile.presentation.common.isLoading
+import io.github.kroune.cumobile.presentation.common.model.NotificationUi
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.flow.Flow
 
 /**
  * MVI component for the notifications screen.
  *
- * Displays two tabs: "Учеба" (education, [NotificationCategory.Education]) and
- * "Другое" (other, [NotificationCategory.Other]). Supports deep-linking
+ * Displays two tabs: "Учеба" (education, category 1) and
+ * "Другое" (other, category 2). Supports deep-linking
  * from notification links.
  */
 interface NotificationsComponent {
@@ -27,23 +26,15 @@ interface NotificationsComponent {
     }
 
     data class State(
-        val educationNotifications: ContentState<List<NotificationItem>> = ContentState.Loading,
-        val otherNotifications: ContentState<List<NotificationItem>> = ContentState.Loading,
+        val educationNotifications: ContentState<ImmutableList<NotificationUi>> = ContentState.Loading,
+        val otherNotifications: ContentState<ImmutableList<NotificationUi>> = ContentState.Loading,
         /** Currently selected tab index: 0 = Education, 1 = Other. */
         val selectedTab: Int = 0,
         /** URI that should be opened externally (set by OpenLink, consumed by UI). */
         val externalLinkToOpen: String? = null,
         /** IDs of notifications whose descriptions are fully expanded. */
         val expandedNotificationIds: Set<String> = emptySet(),
-    ) {
-        /** Whether both tabs are still loading. */
-        val isContentLoading: Boolean
-            get() = educationNotifications.isLoading && otherNotifications.isLoading
-
-        /** ContentState for the currently selected tab. */
-        val currentNotifications: ContentState<List<NotificationItem>>
-            get() = if (selectedTab == 0) educationNotifications else otherNotifications
-    }
+    )
 
     sealed interface Intent {
         data object Back : Intent

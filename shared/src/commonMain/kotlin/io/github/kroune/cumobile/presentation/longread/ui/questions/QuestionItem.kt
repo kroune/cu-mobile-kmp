@@ -24,11 +24,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import io.github.kroune.cumobile.data.model.QuestionResult
-import io.github.kroune.cumobile.data.model.QuizAnswer
-import io.github.kroune.cumobile.data.model.QuizAnswerResult
-import io.github.kroune.cumobile.data.model.QuizQuestion
-import io.github.kroune.cumobile.data.model.QuizQuestionType
+import io.github.kroune.cumobile.presentation.common.model.QuestionResultUi
+import io.github.kroune.cumobile.presentation.common.model.QuizAnswerResultUi
+import io.github.kroune.cumobile.presentation.common.model.QuizAnswerUi
+import io.github.kroune.cumobile.presentation.common.model.QuizQuestionUi
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 import io.github.kroune.cumobile.presentation.longread.htmlrender.HtmlContent
 import io.github.kroune.cumobile.presentation.longread.htmlrender.parseHtmlToBlocks
@@ -41,11 +40,11 @@ private val ColorFail = Color(0xFFF44336)
 @Composable
 fun QuestionItem(
     index: Int,
-    question: QuizQuestion,
-    answer: QuizAnswer?,
+    question: QuizQuestionUi,
+    answer: QuizAnswerUi?,
     isCompleted: Boolean,
-    answerResult: QuizAnswerResult?,
-    onAnswerChanged: (QuizAnswer) -> Unit,
+    answerResult: QuizAnswerResultUi?,
+    onAnswerChanged: (QuizAnswerUi) -> Unit,
 ) {
     val resultColor = answerResultColor(answerResult)
 
@@ -67,11 +66,11 @@ fun QuestionItem(
     }
 }
 
-private fun answerResultColor(answerResult: QuizAnswerResult?): Color? =
+private fun answerResultColor(answerResult: QuizAnswerResultUi?): Color? =
     when (answerResult?.result) {
-        QuestionResult.Success -> ColorSuccess
-        QuestionResult.PartialSuccess -> ColorPartialSuccess
-        QuestionResult.Fail -> ColorFail
+        QuestionResultUi.Success -> ColorSuccess
+        QuestionResultUi.PartialSuccess -> ColorPartialSuccess
+        QuestionResultUi.Fail -> ColorFail
         else -> null
     }
 
@@ -90,8 +89,8 @@ private fun questionBorder(resultColor: Color?): Modifier =
 @Composable
 private fun QuestionHeader(
     index: Int,
-    question: QuizQuestion,
-    answerResult: QuizAnswerResult?,
+    question: QuizQuestionUi,
+    answerResult: QuizAnswerResultUi?,
 ) {
     Row(verticalAlignment = Alignment.Top) {
         Text(
@@ -100,7 +99,7 @@ private fun QuestionHeader(
             fontSize = 14.sp,
         )
         Spacer(Modifier.width(6.dp))
-        val html = question.content?.description.orEmpty()
+        val html = question.description.orEmpty()
         val blocks = remember(html) {
             if (html.isBlank()) persistentListOf() else parseHtmlToBlocks(html)
         }
@@ -125,45 +124,45 @@ private fun QuestionHeader(
 
 @Composable
 private fun QuestionBody(
-    question: QuizQuestion,
-    answer: QuizAnswer?,
+    question: QuizQuestionUi,
+    answer: QuizAnswerUi?,
     isCompleted: Boolean,
-    onAnswerChanged: (QuizAnswer) -> Unit,
+    onAnswerChanged: (QuizAnswerUi) -> Unit,
 ) {
-    when (question.type) {
-        QuizQuestionType.SingleChoice ->
+    when (question.typeLabel) {
+        LabelSingleChoice ->
             SingleChoiceContent(
                 question,
-                answer as? QuizAnswer.SingleChoice,
+                answer as? QuizAnswerUi.SingleChoice,
                 isCompleted,
                 onAnswerChanged,
             )
-        QuizQuestionType.MultipleChoice ->
+        LabelMultipleChoice ->
             MultipleChoiceContent(
                 question,
-                answer as? QuizAnswer.MultipleChoice,
+                answer as? QuizAnswerUi.MultipleChoice,
                 isCompleted,
                 onAnswerChanged,
             )
-        QuizQuestionType.StringMatch ->
+        LabelStringMatch ->
             StringMatchContent(
-                answer as? QuizAnswer.StringMatch,
+                answer as? QuizAnswerUi.StringMatch,
                 isCompleted,
                 onAnswerChanged,
             )
-        QuizQuestionType.NumberMatch ->
+        LabelNumberMatch ->
             NumberMatchContent(
-                answer as? QuizAnswer.NumberMatch,
+                answer as? QuizAnswerUi.NumberMatch,
                 isCompleted,
                 onAnswerChanged,
             )
-        QuizQuestionType.OpenText ->
+        LabelOpenText ->
             OpenTextContent(
-                answer as? QuizAnswer.OpenText,
+                answer as? QuizAnswerUi.OpenText,
                 isCompleted,
                 onAnswerChanged,
             )
-        QuizQuestionType.Unknown ->
+        else ->
             Text(
                 text = "Неизвестный тип вопроса",
                 color = AppTheme.colors.textSecondary,
@@ -173,21 +172,21 @@ private fun QuestionBody(
 }
 
 @Composable
-private fun ResultIcon(result: QuizAnswerResult) {
+private fun ResultIcon(result: QuizAnswerResultUi) {
     when (result.result) {
-        QuestionResult.Success -> Icon(
+        QuestionResultUi.Success -> Icon(
             imageVector = Icons.Default.CheckCircle,
             contentDescription = null,
             tint = ColorSuccess,
             modifier = Modifier.size(20.dp),
         )
-        QuestionResult.Fail -> Icon(
+        QuestionResultUi.Fail -> Icon(
             imageVector = Icons.Default.Close,
             contentDescription = null,
             tint = ColorFail,
             modifier = Modifier.size(20.dp),
         )
-        QuestionResult.PartialSuccess -> Icon(
+        QuestionResultUi.PartialSuccess -> Icon(
             imageVector = Icons.Default.CheckCircle,
             contentDescription = null,
             tint = ColorPartialSuccess,
@@ -199,13 +198,12 @@ private fun ResultIcon(result: QuizAnswerResult) {
 
 @Composable
 private fun ResultFooter(
-    result: QuizAnswerResult,
-    question: QuizQuestion,
+    result: QuizAnswerResultUi,
+    question: QuizQuestionUi,
 ) {
     Column(modifier = Modifier.padding(top = 8.dp)) {
-        val score = result.score ?: 0.0
         Text(
-            text = "Баллы: ${score.displayScore()} / ${question.score.displayScore()}",
+            text = "Баллы: ${result.scoreFormatted} / ${question.scoreFormatted}",
             color = AppTheme.colors.textSecondary,
             fontSize = 12.sp,
         )
@@ -221,7 +219,8 @@ private fun ResultFooter(
     }
 }
 
-internal fun Double.displayScore(): String {
-    val long = toLong()
-    return if (this == long.toDouble()) long.toString() else toString()
-}
+internal const val LabelSingleChoice = "Один вариант"
+internal const val LabelMultipleChoice = "Несколько вариантов"
+internal const val LabelStringMatch = "Текстовый ответ"
+internal const val LabelNumberMatch = "Числовой ответ"
+internal const val LabelOpenText = "Развёрнутый ответ"

@@ -11,7 +11,6 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
-import io.github.kroune.cumobile.data.model.TaskState
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
 import kotlin.time.Clock
@@ -231,41 +230,6 @@ fun CuMobileTheme(
     val materialColors = if (darkTheme) DarkMaterialColors else LightMaterialColors
     CompositionLocalProvider(LocalAppColors provides appColors) {
         MaterialTheme(colorScheme = materialColors, content = content)
-    }
-}
-
-/**
- * Returns the display label for a task state.
- */
-fun taskStateLabel(state: String): String =
-    when (state) {
-        TaskState.Backlog -> "Не начато"
-        TaskState.InProgress -> "В работе"
-        TaskState.Revision, TaskState.Rework -> "Доработка"
-        TaskState.Review -> "На проверке"
-        TaskState.HasSolution -> "Есть решение"
-        TaskState.Failed, TaskState.Rejected -> "Не сдано"
-        TaskState.Evaluated -> "Проверено"
-        else -> state
-    }
-
-/**
- * Returns the color for a task state indicator.
- */
-@Composable
-@ReadOnlyComposable
-fun taskStateColor(state: String): Color {
-    val colors = AppTheme.colors
-    return when (state) {
-        TaskState.Backlog -> colors.taskBacklog
-        TaskState.InProgress -> colors.taskInProgress
-        TaskState.Revision -> colors.taskRevision
-        TaskState.Rework -> colors.taskRework
-        TaskState.Review -> colors.taskReview
-        TaskState.HasSolution -> colors.taskHasSolution
-        TaskState.Failed, TaskState.Rejected -> colors.taskFailed
-        TaskState.Evaluated -> colors.taskEvaluated
-        else -> colors.taskBacklog
     }
 }
 

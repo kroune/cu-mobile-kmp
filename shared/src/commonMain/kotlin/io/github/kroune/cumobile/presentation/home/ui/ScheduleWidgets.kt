@@ -28,16 +28,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import io.github.kroune.cumobile.data.model.ClassData
-import io.github.kroune.cumobile.presentation.common.russianMonthsFull
+import io.github.kroune.cumobile.presentation.common.model.ClassDataUi
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 import io.github.kroune.cumobile.presentation.common.ui.CuMobileTheme
 import io.github.kroune.cumobile.presentation.common.ui.LocalClock
 import io.github.kroune.cumobile.presentation.common.ui.previewClock
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.format.Padding
-import kotlinx.datetime.format.char
 import kotlinx.datetime.plus
 
 /**
@@ -46,6 +43,7 @@ import kotlinx.datetime.plus
 @Composable
 internal fun WeekPicker(
     weekStart: LocalDate,
+    weekRangeLabel: String,
     selectedDate: LocalDate,
     onDateSelected: (LocalDate) -> Unit,
     onPreviousWeek: () -> Unit,
@@ -58,7 +56,7 @@ internal fun WeekPicker(
             .padding(horizontal = 16.dp),
     ) {
         WeekNavigationHeader(
-            weekStart = weekStart,
+            weekRangeLabel = weekRangeLabel,
             onPreviousWeek = onPreviousWeek,
             onNextWeek = onNextWeek,
         )
@@ -77,7 +75,7 @@ internal fun WeekPicker(
 
 @Composable
 private fun WeekNavigationHeader(
-    weekStart: LocalDate,
+    weekRangeLabel: String,
     onPreviousWeek: () -> Unit,
     onNextWeek: () -> Unit,
 ) {
@@ -95,7 +93,7 @@ private fun WeekNavigationHeader(
         }
 
         Text(
-            text = formatWeekRange(weekStart),
+            text = weekRangeLabel,
             fontSize = 14.sp,
             fontWeight = FontWeight.Medium,
             color = AppTheme.colors.textSecondary,
@@ -179,7 +177,7 @@ private fun DayPill(
  */
 @Composable
 internal fun ScheduleCard(
-    classData: ClassData,
+    classData: ClassDataUi,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -252,30 +250,8 @@ internal fun ScheduleCard(
 }
 
 // ════════════════════════════════════════════════════════════════════════════════════
-// WEEK FORMATTING
+// WEEK DAYS GENERATION
 // ════════════════════════════════════════════════════════════════════════════════════
-
-private val dayAndMonthFormat = LocalDate.Format {
-    day(Padding.NONE)
-    char(' ')
-    monthName(russianMonthsFull)
-}
-
-private fun formatWeekRange(weekStart: LocalDate): String {
-    val endDate = weekStart + DatePeriod(days = 6)
-    val startDay = weekStart.day
-    val endDay = endDate.day
-
-    val endFormatted = dayAndMonthFormat.format(endDate)
-    val monthName = endFormatted.substringAfter(' ')
-
-    return if (weekStart.month == endDate.month) {
-        "$startDay - $endDay $monthName"
-    } else {
-        val startFormatted = dayAndMonthFormat.format(weekStart)
-        "$startFormatted - $endFormatted"
-    }
-}
 
 private data class DayData(
     val dayName: String,

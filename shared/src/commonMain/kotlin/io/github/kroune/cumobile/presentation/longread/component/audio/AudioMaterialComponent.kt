@@ -2,8 +2,8 @@ package io.github.kroune.cumobile.presentation.longread.component.audio
 
 import androidx.compose.runtime.Composable
 import com.arkivanov.decompose.ComponentContext
-import io.github.kroune.cumobile.data.model.LongreadMaterial
 import io.github.kroune.cumobile.presentation.common.RenderComponent
+import io.github.kroune.cumobile.presentation.common.model.LongreadMaterialUi
 import io.github.kroune.cumobile.presentation.longread.ui.audio.AudioMaterialCard
 
 /**
@@ -11,7 +11,7 @@ import io.github.kroune.cumobile.presentation.longread.ui.audio.AudioMaterialCar
  */
 class AudioMaterialComponent(
     componentContext: ComponentContext,
-    val material: LongreadMaterial,
+    val material: LongreadMaterialUi,
 ) : ComponentContext by componentContext,
     RenderComponent {
     @Composable

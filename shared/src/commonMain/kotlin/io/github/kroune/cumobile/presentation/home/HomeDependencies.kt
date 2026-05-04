@@ -3,6 +3,7 @@ package io.github.kroune.cumobile.presentation.home
 import io.github.kroune.cumobile.domain.repository.CalendarRepository
 import io.github.kroune.cumobile.domain.repository.CourseRepository
 import io.github.kroune.cumobile.domain.repository.TaskRepository
+import io.github.kroune.cumobile.util.AppDispatchers
 
 /**
  * Groups repository dependencies for [DefaultHomeComponent].
@@ -15,4 +16,5 @@ class HomeDependencies(
     val taskRepository: Lazy<TaskRepository>,
     val courseRepository: Lazy<CourseRepository>,
     val calendarRepository: Lazy<CalendarRepository>,
+    val dispatchers: Lazy<AppDispatchers>,
 )

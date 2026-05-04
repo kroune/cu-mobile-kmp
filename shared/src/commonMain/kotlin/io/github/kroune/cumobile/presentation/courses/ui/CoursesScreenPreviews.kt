@@ -8,26 +8,54 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import io.github.kroune.cumobile.data.model.Course
-import io.github.kroune.cumobile.data.model.GradebookGrade
-import io.github.kroune.cumobile.data.model.GradebookResponse
-import io.github.kroune.cumobile.data.model.GradebookSemester
-import io.github.kroune.cumobile.data.model.StudentPerformanceCourse
 import io.github.kroune.cumobile.presentation.common.ContentState
+import io.github.kroune.cumobile.presentation.common.model.CategoryStyle
+import io.github.kroune.cumobile.presentation.common.model.CourseGradeUi
+import io.github.kroune.cumobile.presentation.common.model.CourseUi
+import io.github.kroune.cumobile.presentation.common.model.GradebookGradeUi
+import io.github.kroune.cumobile.presentation.common.model.GradebookSemesterUi
+import io.github.kroune.cumobile.presentation.common.model.GradebookUi
+import io.github.kroune.cumobile.presentation.common.model.label
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 import io.github.kroune.cumobile.presentation.common.ui.CuMobileTheme
 import io.github.kroune.cumobile.presentation.courses.CoursesComponent
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
+
+private val previewCoursesList = persistentListOf(
+    CourseUi(
+        id = "1",
+        name = "Алгоритмы и структуры данных",
+        isArchived = false,
+        categoryLabel = CategoryStyle.Development.label(),
+        categoryStyle = CategoryStyle.Development,
+    ),
+    CourseUi(
+        id = "2",
+        name = "Линейная алгебра",
+        isArchived = false,
+        categoryLabel = CategoryStyle.Mathematics.label(),
+        categoryStyle = CategoryStyle.Mathematics,
+    ),
+    CourseUi(
+        id = "3",
+        name = "Управление проектами",
+        isArchived = false,
+        categoryLabel = CategoryStyle.Business.label(),
+        categoryStyle = CategoryStyle.Business,
+    ),
+    CourseUi(
+        id = "4",
+        name = "Физика",
+        isArchived = false,
+        categoryLabel = CategoryStyle.Stem.label(),
+        categoryStyle = CategoryStyle.Stem,
+    ),
+)
 
 private val previewCoursesState = CoursesComponent.State(
-    courses = ContentState.Success(
-        listOf(
-            Course(id = "1", name = "Алгоритмы и структуры данных", category = "development"),
-            Course(id = "2", name = "Линейная алгебра", category = "mathematics"),
-            Course(id = "3", name = "Управление проектами", category = "business"),
-            Course(id = "4", name = "Физика", category = "stem"),
-        ),
-    ),
-    performanceCourses = ContentState.Success(emptyList()),
+    courses = ContentState.Success(previewCoursesList),
+    performanceCourses = ContentState.Success(persistentListOf()),
     gradebook = ContentState.Success(null),
 )
 
@@ -120,8 +148,8 @@ private fun PreviewCoursesEmptyDark() {
     CuMobileTheme(darkTheme = true) {
         CoursesScreenContent(
             state = CoursesComponent.State(
-                courses = ContentState.Success(emptyList()),
-                performanceCourses = ContentState.Success(emptyList()),
+                courses = ContentState.Success(persistentListOf()),
+                performanceCourses = ContentState.Success(persistentListOf()),
                 gradebook = ContentState.Success(null),
             ),
             onIntent = {},
@@ -129,13 +157,25 @@ private fun PreviewCoursesEmptyDark() {
     }
 }
 
-private val previewCoursesWithArchived = previewCoursesState.copy(
-    courses = ContentState.Success(
-        previewCoursesState.courseList + listOf(
-            Course(id = "5", name = "Введение в ИИ", category = "development", isArchived = true),
-            Course(id = "6", name = "Философия", category = "general", isArchived = true),
-        ),
+private val previewArchivedCourses = persistentListOf(
+    CourseUi(
+        id = "5",
+        name = "Введение в ИИ",
+        isArchived = true,
+        categoryLabel = CategoryStyle.Development.label(),
+        categoryStyle = CategoryStyle.Development,
     ),
+    CourseUi(
+        id = "6",
+        name = "Философия",
+        isArchived = true,
+        categoryLabel = CategoryStyle.General.label(),
+        categoryStyle = CategoryStyle.General,
+    ),
+)
+
+private val previewCoursesWithArchived = previewCoursesState.copy(
+    courses = ContentState.Success((previewCoursesList + previewArchivedCourses).toPersistentList()),
     showArchived = true,
 )
 
@@ -151,10 +191,31 @@ private val previewGradeSheetState = CoursesComponent.State(
     segment = 1,
     courses = previewCoursesState.courses,
     performanceCourses = ContentState.Success(
-        listOf(
-            StudentPerformanceCourse(id = "1", name = "Алгоритмы и структуры данных", total = 8),
-            StudentPerformanceCourse(id = "2", name = "Линейная алгебра", total = 6),
-            StudentPerformanceCourse(id = "3", name = "Управление проектами", total = 4),
+        persistentListOf(
+            CourseGradeUi(
+                id = "1",
+                name = "Алгоритмы и структуры данных",
+                description = null,
+                total = 8,
+                totalFormatted = "8",
+                totalDescription = "Отлично",
+            ),
+            CourseGradeUi(
+                id = "2",
+                name = "Линейная алгебра",
+                description = null,
+                total = 6,
+                totalFormatted = "6",
+                totalDescription = "Хорошо",
+            ),
+            CourseGradeUi(
+                id = "3",
+                name = "Управление проектами",
+                description = null,
+                total = 4,
+                totalFormatted = "4",
+                totalDescription = "Удовлетворительно",
+            ),
         ),
     ),
     gradebook = ContentState.Success(null),
@@ -178,29 +239,29 @@ private fun PreviewGradeSheetLight() {
 
 private val previewGradebookState = CoursesComponent.State(
     segment = 2,
-    courses = ContentState.Success(emptyList()),
-    performanceCourses = ContentState.Success(emptyList()),
+    courses = ContentState.Success(persistentListOf()),
+    performanceCourses = ContentState.Success(persistentListOf()),
     gradebook = ContentState.Success(
-        GradebookResponse(
-            semesters = listOf(
-                GradebookSemester(
+        GradebookUi(
+            semesters = persistentListOf(
+                GradebookSemesterUi(
                     year = 2025,
                     semesterNumber = 1,
-                    grades = listOf(
-                        GradebookGrade(
+                    grades = persistentListOf(
+                        GradebookGradeUi(
                             subject = "Математический анализ",
-                            grade = 5.0,
                             normalizedGrade = "excellent",
                             assessmentType = "exam",
+                            subjectType = "regular",
                         ),
-                        GradebookGrade(
+                        GradebookGradeUi(
                             subject = "Физическая культура",
                             normalizedGrade = "passed",
                             assessmentType = "credit",
+                            subjectType = "regular",
                         ),
-                        GradebookGrade(
+                        GradebookGradeUi(
                             subject = "Основы программирования",
-                            grade = 4.0,
                             normalizedGrade = "good",
                             assessmentType = "difCredit",
                             subjectType = "elective",

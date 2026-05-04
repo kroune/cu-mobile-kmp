@@ -1,16 +1,16 @@
 package io.github.kroune.cumobile.presentation.longread.component.questions
 
 import com.arkivanov.decompose.value.MutableValue
-import io.github.kroune.cumobile.data.model.QuizAnswer
-import io.github.kroune.cumobile.data.model.TaskDetails
+import io.github.kroune.cumobile.domain.model.QuizAnswer
+import io.github.kroune.cumobile.domain.model.QuizQuestionDomain
+import io.github.kroune.cumobile.domain.model.TaskDetailsDomain
+import io.github.kroune.cumobile.domain.model.TaskStatus
 import io.github.kroune.cumobile.domain.repository.QuizRepository
-import io.github.oshai.kotlinlogging.KotlinLogging
+import io.github.kroune.cumobile.presentation.common.model.mappers.toUi
+import io.github.kroune.cumobile.presentation.common.model.toStatusStyle
 import kotlinx.collections.immutable.toPersistentMap
 import kotlin.time.Clock
 import kotlin.time.Instant
-import io.github.kroune.cumobile.data.model.TaskState as TS
-
-private val logger = KotlinLogging.logger {}
 
 internal class QuizStateResolver(
     private val state: MutableValue<QuestionsMaterialComponent.State>,
@@ -19,30 +19,32 @@ internal class QuizStateResolver(
     private val onStartTimer: (Long) -> Unit,
     private val onCompleteAttempt: () -> Unit,
 ) {
-    suspend fun applyTaskDetails(details: TaskDetails) {
+    suspend fun applyTaskDetailsDomain(details: TaskDetailsDomain) {
         val exerciseId = details.exercise?.id
         val sessionId = details.quizSessionId
         val currentAttemptId = details.currentAttemptId
-        val settings = details.exercise?.settings
 
         state.value = state.value.copy(
             sessionId = sessionId,
             attemptId = currentAttemptId,
-            attemptsLimit = settings?.attemptsLimit,
-            evaluationStrategy = settings?.evaluationStrategy,
-            taskState = details.state,
+            attemptsLimit = details.exercise?.attemptsLimit,
+            evaluationStrategy = details.exercise?.evaluationStrategy,
+            taskStatusStyle = details.status?.toStatusStyle(),
         )
 
-        if (exerciseId != null) {
+        val domainQuestions = if (exerciseId != null) {
             quizLifecycle.loadQuestions(exerciseId)
+        } else {
+            null
         }
 
-        when (details.state) {
-            TS.Backlog -> state.value = state.value.copy(
+        when (details.status) {
+            TaskStatus.Backlog -> state.value = state.value.copy(
                 phase = QuestionsMaterialComponent.QuizPhase.NotStarted,
             )
-            TS.InProgress -> handleInProgressState(details, sessionId, currentAttemptId)
-            TS.Review, TS.Evaluated, TS.Failed ->
+            TaskStatus.InProgress ->
+                handleInProgressState(details, sessionId, currentAttemptId, domainQuestions)
+            TaskStatus.Review, TaskStatus.Evaluated, TaskStatus.Failed ->
                 handleCompletedState(details, sessionId)
             else -> state.value = state.value.copy(
                 phase = QuestionsMaterialComponent.QuizPhase.Completed,
@@ -51,12 +53,13 @@ internal class QuizStateResolver(
     }
 
     private suspend fun handleInProgressState(
-        details: TaskDetails,
+        details: TaskDetailsDomain,
         sessionId: String?,
         currentAttemptId: String?,
+        domainQuestions: List<QuizQuestionDomain>?,
     ) {
         if (sessionId != null && currentAttemptId != null) {
-            resumeInProgressQuiz(details)
+            resumeInProgressQuiz(details, domainQuestions.orEmpty())
         } else if (sessionId != null) {
             quizLifecycle.loadPastAttempts(sessionId)
             val lastAttemptId = state.value.pastAttempts
@@ -64,7 +67,7 @@ internal class QuizStateResolver(
                 ?.id
             if (lastAttemptId != null) {
                 val attempt = quizRepository.getAttempt(lastAttemptId)
-                state.value = state.value.copy(attemptResults = attempt)
+                state.value = state.value.copy(attemptResults = attempt?.toUi())
             }
             val limit = state.value.attemptsLimit
             val used = state.value.pastAttempts.size
@@ -80,7 +83,7 @@ internal class QuizStateResolver(
     }
 
     private suspend fun handleCompletedState(
-        details: TaskDetails,
+        details: TaskDetailsDomain,
         sessionId: String?,
     ) {
         if (sessionId != null) {
@@ -94,7 +97,7 @@ internal class QuizStateResolver(
                 ?.id
         if (attemptIdToShow != null) {
             val attempt = quizRepository.getAttempt(attemptIdToShow)
-            state.value = state.value.copy(attemptResults = attempt)
+            state.value = state.value.copy(attemptResults = attempt?.toUi())
         }
         state.value = state.value.copy(
             phase = QuestionsMaterialComponent.QuizPhase.Completed,
@@ -102,18 +105,20 @@ internal class QuizStateResolver(
         )
     }
 
-    private suspend fun resumeInProgressQuiz(details: TaskDetails) {
+    private suspend fun resumeInProgressQuiz(
+        details: TaskDetailsDomain,
+        domainQuestions: List<QuizQuestionDomain>,
+    ) {
         val attemptId = details.currentAttemptId ?: return
         val attempt = quizRepository.getAttempt(attemptId)
         if (attempt != null) {
-            val questionsMap = state.value.questions.associateBy { it.id }
+            val questionsMap = domainQuestions.associateBy { it.id }
             val restoredAnswers = attempt.answers
                 .mapNotNull { result ->
                     val question = questionsMap[result.questionId] ?: return@mapNotNull null
-                    val value = result.value ?: return@mapNotNull null
-                    val answer = QuizAnswer.fromJsonElement(question.type, value)
+                    val answer = QuizAnswer.fromAnswerValue(question.type, result.answerValue)
                         ?: return@mapNotNull null
-                    result.questionId to answer
+                    result.questionId to answer.toUi()
                 }.toMap()
             state.value = state.value.copy(answers = restoredAnswers.toPersistentMap())
         }
@@ -123,14 +128,6 @@ internal class QuizStateResolver(
         if (timer != null && attemptStartedAt != null) {
             val totalSeconds = parseTimerToSeconds(timer)
             val elapsedSeconds = computeElapsedSeconds(attemptStartedAt)
-            if (elapsedSeconds == null) {
-                state.value = state.value.copy(
-                    phase = QuestionsMaterialComponent.QuizPhase.Error(
-                        "Ошибка при восстановлении таймера",
-                    ),
-                )
-                return
-            }
             val remaining = (totalSeconds - elapsedSeconds).coerceAtLeast(0)
             state.value = state.value.copy(
                 timerTotalSeconds = totalSeconds,
@@ -149,12 +146,7 @@ internal class QuizStateResolver(
     }
 }
 
-private fun computeElapsedSeconds(isoDateTime: String): Long? =
-    try {
-        val instant = Instant.parse(isoDateTime)
-        val now = Clock.System.now()
-        (now - instant).inWholeSeconds
-    } catch (e: Exception) {
-        logger.error(e) { "Failed to parse attemptStartedAt: $isoDateTime" }
-        null
-    }
+private fun computeElapsedSeconds(startedAt: Instant): Long {
+    val now = Clock.System.now()
+    return (now - startedAt).inWholeSeconds
+}

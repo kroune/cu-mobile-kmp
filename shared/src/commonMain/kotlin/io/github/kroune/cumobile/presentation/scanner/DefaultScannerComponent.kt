@@ -6,9 +6,9 @@ import com.arkivanov.decompose.value.Value
 import io.github.kroune.cumobile.data.local.FileStorage
 import io.github.kroune.cumobile.data.local.PdfGenerator
 import io.github.kroune.cumobile.data.local.PdfPageInput
-import io.github.kroune.cumobile.data.model.PickedFile
 import io.github.kroune.cumobile.presentation.common.componentScope
-import io.github.kroune.cumobile.presentation.common.invoke
+import io.github.kroune.cumobile.presentation.common.model.PickedFileUi
+import io.github.kroune.cumobile.util.invoke
 import io.github.kroune.cumobile.util.runCatchingCancellable
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.channels.Channel
@@ -76,7 +76,7 @@ class DefaultScannerComponent(
         }
     }
 
-    private fun addPages(images: List<PickedFile>) {
+    private fun addPages(images: List<PickedFileUi>) {
         val newPages = images.map { file ->
             ScannerComponent.ScanPage(
                 id = "page_${pageCounter++}",

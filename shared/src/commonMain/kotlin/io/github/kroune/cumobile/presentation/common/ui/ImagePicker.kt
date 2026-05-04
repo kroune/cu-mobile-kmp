@@ -1,7 +1,7 @@
 package io.github.kroune.cumobile.presentation.common.ui
 
 import androidx.compose.runtime.Composable
-import io.github.kroune.cumobile.data.model.PickedFile
+import io.github.kroune.cumobile.presentation.common.model.PickedFileUi
 
 /**
  * Handle returned by [rememberImagePicker] for capturing images
@@ -19,7 +19,7 @@ interface ImagePicker {
  * Remembers a platform image-picker launcher.
  *
  * When images are captured/selected, [onImagesCaptured] is invoked
- * with a list of [PickedFile] objects containing image bytes.
+ * with a list of [PickedFileUi] objects containing image bytes.
  */
 @Composable
-expect fun rememberImagePicker(onImagesCaptured: (List<PickedFile>) -> Unit): ImagePicker
+expect fun rememberImagePicker(onImagesCaptured: (List<PickedFileUi>) -> Unit): ImagePicker

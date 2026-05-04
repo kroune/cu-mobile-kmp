@@ -23,13 +23,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import io.github.kroune.cumobile.data.model.LongreadMaterial
 import io.github.kroune.cumobile.presentation.common.formatSizeBytes
+import io.github.kroune.cumobile.presentation.common.model.LongreadMaterialUi
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 
 @Composable
 fun FileMaterialCard(
-    material: LongreadMaterial,
+    material: LongreadMaterialUi,
     onDownload: () -> Unit,
     modifier: Modifier = Modifier,
 ) {

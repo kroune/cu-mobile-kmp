@@ -6,7 +6,8 @@ import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.Lifecycle
 import io.github.kroune.cumobile.domain.repository.FileRepository
 import io.github.kroune.cumobile.presentation.common.componentScope
-import io.github.kroune.cumobile.presentation.common.invoke
+import io.github.kroune.cumobile.presentation.common.model.mappers.toUi
+import io.github.kroune.cumobile.util.invoke
 import io.github.kroune.cumobile.util.runCatchingCancellable
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.channels.Channel
@@ -73,7 +74,7 @@ class DefaultFilesComponent(
             _state.value = _state.value.copy(isLoading = true, error = null)
             val start = TimeSource.Monotonic.markNow()
             runCatchingCancellable {
-                fileRepository().listDownloadedFiles()
+                fileRepository().listDownloadedFiles().map { it.toUi() }
             }.fold(
                 onSuccess = { files ->
                     val remaining = MIN_LOADING_DURATION_MS - start.elapsedNow().inWholeMilliseconds

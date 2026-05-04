@@ -6,20 +6,20 @@ import kotlinx.serialization.Serializable
  * Comment on a task.
  */
 @Serializable
-data class TaskComment(
+data class TaskCommentApi(
     val id: String = "",
     val content: String = "",
-    val sender: CommentSender = CommentSender(),
+    val sender: CommentSenderApi = CommentSenderApi(),
     /** ISO 8601 datetime string. */
     val createdAt: String? = null,
-    val attachments: List<MaterialAttachment> = emptyList(),
+    val attachments: List<MaterialAttachmentApi> = emptyList(),
     val isEditable: Boolean = false,
     val isDeletable: Boolean = false,
 )
 
-/** Author of a [TaskComment]. */
+/** Author of a [TaskCommentApi]. */
 @Serializable
-data class CommentSender(
+data class CommentSenderApi(
     val id: String = "",
     val email: String = "",
     val name: String = "",

@@ -1,16 +1,18 @@
 package io.github.kroune.cumobile.data.repository
 
 import io.github.kroune.cumobile.data.local.AuthLocalDataSource
-import io.github.kroune.cumobile.data.model.MaterialAttachment
-import io.github.kroune.cumobile.data.model.StartTaskResponse
-import io.github.kroune.cumobile.data.model.StudentTask
-import io.github.kroune.cumobile.data.model.TaskComment
-import io.github.kroune.cumobile.data.model.TaskDetails
-import io.github.kroune.cumobile.data.model.TaskEvent
+import io.github.kroune.cumobile.data.model.mappers.toApi
+import io.github.kroune.cumobile.data.model.mappers.toDomain
 import io.github.kroune.cumobile.data.network.TaskApiService
+import io.github.kroune.cumobile.domain.model.MaterialAttachmentDomain
+import io.github.kroune.cumobile.domain.model.StartTaskResponseDomain
+import io.github.kroune.cumobile.domain.model.TaskCommentDomain
+import io.github.kroune.cumobile.domain.model.TaskDetailsDomain
+import io.github.kroune.cumobile.domain.model.TaskDomain
+import io.github.kroune.cumobile.domain.model.TaskEventDomain
 import io.github.kroune.cumobile.domain.repository.TaskRepository
-import io.github.kroune.cumobile.presentation.common.invoke
 import io.github.kroune.cumobile.util.AppDispatchers
+import io.github.kroune.cumobile.util.invoke
 
 /**
  * Implementation of [TaskRepository].
@@ -24,27 +26,27 @@ internal class TaskRepositoryImpl(
     dispatchers: Lazy<AppDispatchers>,
 ) : CookieAwareRepository(authLocal, dispatchers),
     TaskRepository {
-    override suspend fun fetchTasks(states: List<String>): List<StudentTask>? =
-        withCookie { taskApi().fetchTasks(it, states) }
+    override suspend fun fetchTasks(states: List<String>): List<TaskDomain>? =
+        withCookie { taskApi().fetchTasks(it, states)?.map { task -> task.toDomain() } }
 
-    override suspend fun fetchTaskDetails(taskId: String): TaskDetails? =
-        withCookie { taskApi().fetchTaskDetails(it, taskId) }
+    override suspend fun fetchTaskDetails(taskId: String): TaskDetailsDomain? =
+        withCookie { taskApi().fetchTaskDetails(it, taskId) }?.toDomain()
 
-    override suspend fun fetchTaskEvents(taskId: String): List<TaskEvent>? =
-        withCookie { taskApi().fetchTaskEvents(it, taskId) }
+    override suspend fun fetchTaskEvents(taskId: String): List<TaskEventDomain>? =
+        withCookie { taskApi().fetchTaskEvents(it, taskId) }?.map { it.toDomain() }
 
-    override suspend fun fetchTaskComments(taskId: String): List<TaskComment>? =
-        withCookie { taskApi().fetchTaskComments(it, taskId) }
+    override suspend fun fetchTaskComments(taskId: String): List<TaskCommentDomain>? =
+        withCookie { taskApi().fetchTaskComments(it, taskId) }?.map { it.toDomain() }
 
-    override suspend fun startTask(taskId: String): StartTaskResponse? =
-        withCookie { taskApi().startTask(it, taskId) }
+    override suspend fun startTask(taskId: String): StartTaskResponseDomain? =
+        withCookie { taskApi().startTask(it, taskId) }?.toDomain()
 
     override suspend fun submitTask(
         taskId: String,
         solutionUrl: String?,
-        attachments: List<MaterialAttachment>,
+        attachments: List<MaterialAttachmentDomain>,
     ): Boolean =
-        withCookieOrFalse { taskApi().submitTask(it, taskId, solutionUrl, attachments) }
+        withCookieOrFalse { taskApi().submitTask(it, taskId, solutionUrl, attachments.map { a -> a.toApi() }) }
 
     override suspend fun prolongLateDays(
         taskId: String,
@@ -58,16 +60,16 @@ internal class TaskRepositoryImpl(
     override suspend fun createComment(
         taskId: String,
         content: String,
-        attachments: List<MaterialAttachment>,
+        attachments: List<MaterialAttachmentDomain>,
     ): String? =
-        withCookie { taskApi().createComment(it, taskId, content, attachments) }
+        withCookie { taskApi().createComment(it, taskId, content, attachments.map { a -> a.toApi() }) }
 
     override suspend fun editComment(
         commentId: String,
         content: String,
-        attachments: List<MaterialAttachment>,
+        attachments: List<MaterialAttachmentDomain>,
     ): Boolean =
-        withCookieOrFalse { taskApi().editComment(it, commentId, content, attachments) }
+        withCookieOrFalse { taskApi().editComment(it, commentId, content, attachments.map { a -> a.toApi() }) }
 
     override suspend fun deleteComment(commentId: String): Boolean =
         withCookieOrFalse { taskApi().deleteComment(it, commentId) }

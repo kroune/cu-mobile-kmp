@@ -2,97 +2,134 @@ package io.github.kroune.cumobile.presentation.longread.ui.questions
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
-import io.github.kroune.cumobile.data.model.EvaluationStrategy
-import io.github.kroune.cumobile.data.model.LongreadMaterial
-import io.github.kroune.cumobile.data.model.LongreadMaterialContent
-import io.github.kroune.cumobile.data.model.QuestionResult
-import io.github.kroune.cumobile.data.model.QuizAnswer
-import io.github.kroune.cumobile.data.model.QuizAnswerResult
-import io.github.kroune.cumobile.data.model.QuizAttempt
-import io.github.kroune.cumobile.data.model.QuizOption
-import io.github.kroune.cumobile.data.model.QuizQuestion
-import io.github.kroune.cumobile.data.model.QuizQuestionContent
-import io.github.kroune.cumobile.data.model.QuizQuestionType
-import io.github.kroune.cumobile.data.model.TaskDetails
-import io.github.kroune.cumobile.data.model.TaskDetailsExercise
-import io.github.kroune.cumobile.data.model.TaskState
+import io.github.kroune.cumobile.domain.model.AnswerValue
+import io.github.kroune.cumobile.domain.model.LongreadDiscriminator
+import io.github.kroune.cumobile.domain.model.LongreadMaterialDomain
+import io.github.kroune.cumobile.domain.model.QuestionResult
+import io.github.kroune.cumobile.domain.model.QuizAnswer
+import io.github.kroune.cumobile.domain.model.QuizAnswerResultDomain
+import io.github.kroune.cumobile.domain.model.QuizAttemptDomain
+import io.github.kroune.cumobile.domain.model.QuizOptionDomain
+import io.github.kroune.cumobile.domain.model.QuizQuestionDomain
+import io.github.kroune.cumobile.domain.model.QuizQuestionType
+import io.github.kroune.cumobile.domain.model.TaskDetailsDomain
+import io.github.kroune.cumobile.domain.model.TaskDetailsExerciseDomain
+import io.github.kroune.cumobile.domain.model.TaskStatus
 import io.github.kroune.cumobile.presentation.common.ContentState
+import io.github.kroune.cumobile.presentation.common.model.mappers.toUi
+import io.github.kroune.cumobile.presentation.common.model.toStatusStyle
 import io.github.kroune.cumobile.presentation.common.ui.CuMobileTheme
 import io.github.kroune.cumobile.presentation.longread.component.questions.QuestionsMaterialComponent
 import io.github.kroune.cumobile.presentation.longread.component.questions.QuestionsMaterialComponent.QuizPhase
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
-import kotlinx.serialization.json.JsonPrimitive
 
-private val previewQuizMaterial = LongreadMaterial(
+private val previewQuizMaterial = LongreadMaterialDomain(
     id = "q1",
-    discriminator = LongreadMaterial.Discriminator.Questions,
-    content = LongreadMaterialContent(name = "Тест: Основы алгоритмов"),
-)
+    discriminator = LongreadDiscriminator.Questions,
+    contentName = "Тест: Основы алгоритмов",
+).toUi()
 
 private val previewQuestions = persistentListOf(
-    QuizQuestion(
+    QuizQuestionDomain(
         id = "q1",
         type = QuizQuestionType.SingleChoice,
         score = 2.0,
-        content = QuizQuestionContent(description = "Какова сложность бинарного поиска?"),
+        description = "Какова сложность бинарного поиска?",
+        recommendation = null,
         options = listOf(
-            QuizOption(id = "a", text = "O(n)"),
-            QuizOption(id = "b", text = "O(log n)"),
-            QuizOption(id = "c", text = "O(n²)"),
-            QuizOption(id = "d", text = "O(1)"),
+            QuizOptionDomain(id = "a", text = "O(n)"),
+            QuizOptionDomain(id = "b", text = "O(log n)"),
+            QuizOptionDomain(id = "c", text = "O(n²)"),
+            QuizOptionDomain(id = "d", text = "O(1)"),
         ),
-    ),
-    QuizQuestion(
+    ).toUi(),
+    QuizQuestionDomain(
         id = "q2",
         type = QuizQuestionType.MultipleChoice,
         score = 3.0,
-        content = QuizQuestionContent(
-            description = "Выберите стабильные алгоритмы сортировки:",
-        ),
+        description = "Выберите стабильные алгоритмы сортировки:",
+        recommendation = null,
         options = listOf(
-            QuizOption(id = "a", text = "Сортировка слиянием"),
-            QuizOption(id = "b", text = "Быстрая сортировка"),
-            QuizOption(id = "c", text = "Сортировка вставками"),
-            QuizOption(id = "d", text = "Сортировка выбором"),
+            QuizOptionDomain(id = "a", text = "Сортировка слиянием"),
+            QuizOptionDomain(id = "b", text = "Быстрая сортировка"),
+            QuizOptionDomain(id = "c", text = "Сортировка вставками"),
+            QuizOptionDomain(id = "d", text = "Сортировка выбором"),
         ),
-    ),
-    QuizQuestion(
+    ).toUi(),
+    QuizQuestionDomain(
         id = "q3",
         type = QuizQuestionType.NumberMatch,
         score = 1.0,
-        content = QuizQuestionContent(
-            description = "Сколько сравнений в худшем случае для сортировки пузырьком массива из 5 элементов?",
-        ),
-    ),
-    QuizQuestion(
+        description = "Сколько сравнений в худшем случае для сортировки пузырьком массива из 5 элементов?",
+        recommendation = null,
+        options = emptyList(),
+    ).toUi(),
+    QuizQuestionDomain(
         id = "q4",
         type = QuizQuestionType.StringMatch,
         score = 1.0,
-        content = QuizQuestionContent(description = "Назовите структуру данных LIFO (на английском):"),
-    ),
-    QuizQuestion(
+        description = "Назовите структуру данных LIFO (на английском):",
+        recommendation = null,
+        options = emptyList(),
+    ).toUi(),
+    QuizQuestionDomain(
         id = "q5",
         type = QuizQuestionType.OpenText,
         score = 3.0,
-        content = QuizQuestionContent(description = "Объясните разницу между стеком и очередью."),
-    ),
+        description = "Объясните разницу между стеком и очередью.",
+        recommendation = null,
+        options = emptyList(),
+    ).toUi(),
 )
 
-private val previewTaskDetails = ContentState.Success(
-    TaskDetails(
-        id = "t1",
-        state = TaskState.InProgress,
-        exercise = TaskDetailsExercise(
-            id = "ex1",
-            name = "Тест: Основы алгоритмов",
-            type = "Questions",
-            timer = "00:30:00",
-            maxScore = 10.0,
-        ),
-        quizSessionId = "s1",
-        currentAttemptId = "a1",
-    ),
+private fun previewQuizTaskDetails(
+    status: TaskStatus = TaskStatus.InProgress,
+    score: Double? = null,
+    extraScore: Double? = null,
+    scoreSkillLevel: String? = null,
+    quizSessionId: String? = null,
+    currentAttemptId: String? = null,
+    evaluatedAttemptId: String? = null,
+    exerciseTimer: String? = null,
+    exerciseMaxScore: Double? = null,
+) =
+    ContentState.Success(
+        TaskDetailsDomain(
+            id = "t1",
+            score = score,
+            extraScore = extraScore,
+            scoreSkillLevel = scoreSkillLevel,
+            status = status,
+            submitAt = null,
+            isLateDaysEnabled = false,
+            lateDays = null,
+            deadline = null,
+            startedAt = null,
+            attemptStartedAt = null,
+            quizSessionId = quizSessionId,
+            currentAttemptId = currentAttemptId,
+            evaluatedAttemptId = evaluatedAttemptId,
+            lastAttemptId = null,
+            exercise = TaskDetailsExerciseDomain(
+                id = "ex1",
+                name = "Тест: Основы алгоритмов",
+                type = "Questions",
+                timer = exerciseTimer,
+                maxScore = exerciseMaxScore,
+                attemptsLimit = null,
+                evaluationStrategy = null,
+            ),
+            solution = null,
+            studentLateDaysBalance = null,
+        ).toUi(),
+    )
+
+private val previewTaskDetails = previewQuizTaskDetails(
+    quizSessionId = "s1",
+    currentAttemptId = "a1",
+    exerciseTimer = "00:30:00",
+    exerciseMaxScore = 10.0,
 )
 
 // region NotStarted
@@ -107,7 +144,7 @@ private fun PreviewQuizNotStartedDark() {
                 isExpanded = true,
                 phase = QuizPhase.NotStarted,
                 taskDetails = previewTaskDetails,
-                taskState = TaskState.Backlog,
+                taskStatusStyle = TaskStatus.Backlog.toStatusStyle(),
                 attemptsLimit = 3,
             ),
             onIntent = {},
@@ -125,7 +162,7 @@ private fun PreviewQuizNotStartedLight() {
                 isExpanded = true,
                 phase = QuizPhase.NotStarted,
                 taskDetails = previewTaskDetails,
-                taskState = TaskState.Backlog,
+                taskStatusStyle = TaskStatus.Backlog.toStatusStyle(),
                 attemptsLimit = 3,
             ),
             onIntent = {},
@@ -147,11 +184,11 @@ private fun PreviewQuizInProgressDark() {
                 isExpanded = true,
                 phase = QuizPhase.InProgress,
                 taskDetails = previewTaskDetails,
-                taskState = TaskState.InProgress,
+                taskStatusStyle = TaskStatus.InProgress.toStatusStyle(),
                 questions = previewQuestions,
                 answers = persistentMapOf(
-                    "q1" to QuizAnswer.SingleChoice("b"),
-                    "q2" to QuizAnswer.MultipleChoice(setOf("a", "c")),
+                    "q1" to QuizAnswer.SingleChoice("b").toUi(),
+                    "q2" to QuizAnswer.MultipleChoice(setOf("a", "c")).toUi(),
                 ),
                 sessionId = "s1",
                 attemptId = "a1",
@@ -173,11 +210,11 @@ private fun PreviewQuizInProgressLight() {
                 isExpanded = true,
                 phase = QuizPhase.InProgress,
                 taskDetails = previewTaskDetails,
-                taskState = TaskState.InProgress,
+                taskStatusStyle = TaskStatus.InProgress.toStatusStyle(),
                 questions = previewQuestions,
                 answers = persistentMapOf(
-                    "q1" to QuizAnswer.SingleChoice("b"),
-                    "q2" to QuizAnswer.MultipleChoice(setOf("a", "c")),
+                    "q1" to QuizAnswer.SingleChoice("b").toUi(),
+                    "q2" to QuizAnswer.MultipleChoice(setOf("a", "c")).toUi(),
                 ),
                 sessionId = "s1",
                 attemptId = "a1",
@@ -199,7 +236,7 @@ private fun PreviewQuizTimerLowDark() {
                 isExpanded = true,
                 phase = QuizPhase.InProgress,
                 taskDetails = previewTaskDetails,
-                taskState = TaskState.InProgress,
+                taskStatusStyle = TaskStatus.InProgress.toStatusStyle(),
                 questions = previewQuestions,
                 sessionId = "s1",
                 attemptId = "a1",
@@ -219,69 +256,62 @@ private fun PreviewQuizTimerLowDark() {
 private val previewCompletedSuccessState = QuestionsMaterialComponent.State(
     isExpanded = true,
     phase = QuizPhase.Completed,
-    taskDetails = ContentState.Success(
-        TaskDetails(
-            id = "t1",
-            state = TaskState.Evaluated,
-            score = 8.0,
-            extraScore = 1.0,
-            scoreSkillLevel = "intermediate",
-            exercise = TaskDetailsExercise(
-                id = "ex1",
-                name = "Тест: Основы алгоритмов",
-                type = "Questions",
-                maxScore = 10.0,
-            ),
-            quizSessionId = "s1",
-            evaluatedAttemptId = "a1",
-        ),
+    taskDetails = previewQuizTaskDetails(
+        status = TaskStatus.Evaluated,
+        score = 8.0,
+        extraScore = 1.0,
+        scoreSkillLevel = "intermediate",
+        quizSessionId = "s1",
+        evaluatedAttemptId = "a1",
+        exerciseMaxScore = 10.0,
     ),
-    taskState = TaskState.Evaluated,
+    taskStatusStyle = TaskStatus.Evaluated.toStatusStyle(),
     questions = previewQuestions,
-    evaluationStrategy = EvaluationStrategy.Best,
-    attemptResults = QuizAttempt(
+    evaluationStrategy = "Best",
+    attemptResults = QuizAttemptDomain(
         id = "a1",
         score = 8.0,
         maxScore = 10.0,
         answers = listOf(
-            QuizAnswerResult(
+            QuizAnswerResultDomain(
                 questionId = "q1",
                 result = QuestionResult.Success,
                 score = 2.0,
-                value = JsonPrimitive("b"),
+                recommendation = null,
+                answerValue = AnswerValue.Text("b"),
             ),
-            QuizAnswerResult(
+            QuizAnswerResultDomain(
                 questionId = "q2",
                 result = QuestionResult.PartialSuccess,
                 score = 2.0,
                 recommendation = "Сортировка выбором не является стабильной",
-                value = kotlinx.serialization.json.JsonArray(
-                    listOf(JsonPrimitive("a"), JsonPrimitive("c")),
-                ),
+                answerValue = AnswerValue.Choices(listOf("a", "c")),
             ),
-            QuizAnswerResult(
+            QuizAnswerResultDomain(
                 questionId = "q3",
                 result = QuestionResult.Success,
                 score = 1.0,
-                value = JsonPrimitive(10),
+                recommendation = null,
+                answerValue = AnswerValue.Text("10"),
             ),
-            QuizAnswerResult(
+            QuizAnswerResultDomain(
                 questionId = "q4",
                 result = QuestionResult.Fail,
                 score = 0.0,
                 recommendation = "Правильный ответ: stack",
-                value = JsonPrimitive("queue"),
+                answerValue = AnswerValue.Text("queue"),
             ),
-            QuizAnswerResult(
+            QuizAnswerResultDomain(
                 questionId = "q5",
                 result = QuestionResult.Review,
                 score = 3.0,
-                value = JsonPrimitive("Стек — LIFO, очередь — FIFO"),
+                recommendation = null,
+                answerValue = AnswerValue.Text("Стек — LIFO, очередь — FIFO"),
             ),
         ),
-    ),
+    ).toUi(),
     pastAttempts = persistentListOf(
-        QuizAttempt(id = "a1", score = 8.0, maxScore = 10.0),
+        QuizAttemptDomain(id = "a1", score = 8.0, maxScore = 10.0, answers = emptyList()).toUi(),
     ),
 )
 
@@ -307,47 +337,44 @@ private fun PreviewQuizCompletedSuccessLight() {
             state = QuestionsMaterialComponent.State(
                 isExpanded = true,
                 phase = QuizPhase.Completed,
-                taskDetails = ContentState.Success(
-                    TaskDetails(
-                        id = "t1",
-                        state = TaskState.Evaluated,
-                        score = 8.0,
-                        exercise = TaskDetailsExercise(
-                            id = "ex1",
-                            name = "Тест: Основы алгоритмов",
-                            type = "Questions",
-                            maxScore = 10.0,
-                        ),
-                        quizSessionId = "s1",
-                        evaluatedAttemptId = "a1",
-                    ),
+                taskDetails = previewQuizTaskDetails(
+                    status = TaskStatus.Evaluated,
+                    score = 8.0,
+                    quizSessionId = "s1",
+                    evaluatedAttemptId = "a1",
+                    exerciseMaxScore = 10.0,
                 ),
-                taskState = TaskState.Evaluated,
+                taskStatusStyle = TaskStatus.Evaluated.toStatusStyle(),
                 questions = previewQuestions,
-                evaluationStrategy = EvaluationStrategy.Best,
-                attemptResults = QuizAttempt(
+                evaluationStrategy = "Best",
+                attemptResults = QuizAttemptDomain(
                     id = "a1",
                     score = 8.0,
                     maxScore = 10.0,
                     answers = listOf(
-                        QuizAnswerResult(
+                        QuizAnswerResultDomain(
                             questionId = "q1",
                             result = QuestionResult.Success,
                             score = 2.0,
-                            value = JsonPrimitive("b"),
+                            recommendation = null,
+                            answerValue = AnswerValue.Text("b"),
                         ),
-                        QuizAnswerResult(
+                        QuizAnswerResultDomain(
                             questionId = "q2",
                             result = QuestionResult.Fail,
                             score = 0.0,
-                            value = kotlinx.serialization.json.JsonArray(
-                                listOf(JsonPrimitive("b")),
-                            ),
+                            recommendation = null,
+                            answerValue = AnswerValue.Choices(listOf("b")),
                         ),
                     ),
-                ),
+                ).toUi(),
                 pastAttempts = persistentListOf(
-                    QuizAttempt(id = "a1", score = 8.0, maxScore = 10.0),
+                    QuizAttemptDomain(
+                        id = "a1",
+                        score = 8.0,
+                        maxScore = 10.0,
+                        answers = emptyList(),
+                    ).toUi(),
                 ),
             ),
             onIntent = {},
@@ -368,31 +395,29 @@ private fun PreviewQuizCompletedWithRetryDark() {
             state = QuestionsMaterialComponent.State(
                 isExpanded = true,
                 phase = QuizPhase.Completed,
-                taskDetails = ContentState.Success(
-                    TaskDetails(
-                        id = "t1",
-                        state = TaskState.InProgress,
-                        exercise = TaskDetailsExercise(
-                            id = "ex1",
-                            name = "Тест: Основы алгоритмов",
-                            type = "Questions",
-                            maxScore = 10.0,
-                        ),
-                        quizSessionId = "s1",
-                    ),
+                taskDetails = previewQuizTaskDetails(
+                    status = TaskStatus.InProgress,
+                    quizSessionId = "s1",
+                    exerciseMaxScore = 10.0,
                 ),
-                taskState = TaskState.InProgress,
+                taskStatusStyle = TaskStatus.InProgress.toStatusStyle(),
                 questions = previewQuestions,
-                evaluationStrategy = EvaluationStrategy.Last,
+                evaluationStrategy = "Last",
                 attemptsLimit = 3,
                 canStartNewAttempt = true,
-                attemptResults = QuizAttempt(
+                attemptResults = QuizAttemptDomain(
                     id = "a1",
                     score = 5.0,
                     maxScore = 10.0,
-                ),
+                    answers = emptyList(),
+                ).toUi(),
                 pastAttempts = persistentListOf(
-                    QuizAttempt(id = "a1", score = 5.0, maxScore = 10.0),
+                    QuizAttemptDomain(
+                        id = "a1",
+                        score = 5.0,
+                        maxScore = 10.0,
+                        answers = emptyList(),
+                    ).toUi(),
                 ),
             ),
             onIntent = {},
@@ -414,7 +439,7 @@ private fun PreviewQuizCollapsedDark() {
                 isExpanded = false,
                 phase = QuizPhase.InProgress,
                 taskDetails = previewTaskDetails,
-                taskState = TaskState.InProgress,
+                taskStatusStyle = TaskStatus.InProgress.toStatusStyle(),
             ),
             onIntent = {},
         )
@@ -460,7 +485,7 @@ private fun PreviewQuizCompletingDark() {
             state = QuestionsMaterialComponent.State(
                 isExpanded = true,
                 phase = QuizPhase.Completing,
-                taskState = TaskState.InProgress,
+                taskStatusStyle = TaskStatus.InProgress.toStatusStyle(),
             ),
             onIntent = {},
         )

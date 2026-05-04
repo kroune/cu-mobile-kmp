@@ -3,7 +3,7 @@ package io.github.kroune.cumobile.presentation.main
 import com.arkivanov.decompose.router.pages.ChildPages
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.value.Value
-import io.github.kroune.cumobile.data.model.UpdateInfo
+import io.github.kroune.cumobile.presentation.common.model.UpdateInfoUi
 import io.github.kroune.cumobile.presentation.courses.CoursesComponent
 import io.github.kroune.cumobile.presentation.courses.detail.CourseDetailComponent
 import io.github.kroune.cumobile.presentation.files.FilesComponent
@@ -47,7 +47,7 @@ interface MainComponent {
     val topBarState: Value<TopBarState>
 
     /** Available update info (empty latestVersion if none). */
-    val updateInfo: Value<UpdateInfo>
+    val updateInfo: Value<UpdateInfoUi>
 
     /** Called when the avatar has been changed (uploaded/deleted) in ProfileScreen. */
     fun onAvatarChanged()

@@ -17,13 +17,13 @@ import com.arkivanov.decompose.router.stack.pushNew
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.backhandler.BackCallback
-import io.github.kroune.cumobile.data.model.StudentTask
-import io.github.kroune.cumobile.data.model.UpdateInfo
 import io.github.kroune.cumobile.data.network.ApiEndpoints
 import io.github.kroune.cumobile.data.network.BaseUrl
 import io.github.kroune.cumobile.presentation.common.ContentState
 import io.github.kroune.cumobile.presentation.common.componentScope
-import io.github.kroune.cumobile.presentation.common.invoke
+import io.github.kroune.cumobile.presentation.common.model.UpdateInfoUi
+import io.github.kroune.cumobile.presentation.common.model.mappers.toUi
+import io.github.kroune.cumobile.util.invoke
 import io.github.kroune.cumobile.util.runCatchingCancellable
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.launch
@@ -50,9 +50,14 @@ class DefaultMainComponent(
 
     // region Update check
 
-    private val noUpdate = UpdateInfo(latestVersion = "", releasePageUrl = "")
+    private val noUpdate = UpdateInfoUi(
+        latestVersion = "",
+        releasePageUrl = "",
+        apkDownloadUrl = null,
+        releaseName = "",
+    )
     private val _updateInfo = MutableValue(noUpdate)
-    override val updateInfo: Value<UpdateInfo> = _updateInfo
+    override val updateInfo: Value<UpdateInfoUi> = _updateInfo
 
     override fun dismissUpdate() {
         _updateInfo.value = noUpdate
@@ -62,7 +67,7 @@ class DefaultMainComponent(
         scope.launch {
             val info = mainDependenciesLazy().updateChecker().checkForUpdate()
             if (info != null) {
-                _updateInfo.value = info
+                _updateInfo.value = info.toUi()
             }
         }
     }
@@ -167,18 +172,20 @@ class DefaultMainComponent(
         }
     }
 
-    private fun navigateToTask(task: StudentTask) {
-        val longreadId = task.longread.id
-        val themeId = task.theme.id
-        val courseId = task.course.id
+    private fun navigateToTask(
+        taskId: String,
+        courseId: String,
+        themeId: String,
+        longreadId: String,
+    ) {
         if (longreadId.isBlank() || themeId.isBlank()) {
             logger.error {
-                "Cannot navigate to task ${task.id}: longreadId=$longreadId, themeId=$themeId"
+                "Cannot navigate to task $taskId: longreadId=$longreadId, themeId=$themeId"
             }
             return
         }
         detailNavigation.pushNew(
-            DetailConfig.Longread(longreadId, courseId, themeId, focusTaskId = task.id),
+            DetailConfig.Longread(longreadId, courseId, themeId, focusTaskId = taskId),
         )
     }
 

@@ -2,45 +2,46 @@ package io.github.kroune.cumobile.presentation.longread.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
-import io.github.kroune.cumobile.data.model.CommentSender
-import io.github.kroune.cumobile.data.model.LongreadMaterial
-import io.github.kroune.cumobile.data.model.LongreadMaterialContent
-import io.github.kroune.cumobile.data.model.MaterialEstimation
-import io.github.kroune.cumobile.data.model.PendingAttachment
-import io.github.kroune.cumobile.data.model.TaskComment
-import io.github.kroune.cumobile.data.model.TaskDetails
-import io.github.kroune.cumobile.data.model.TaskDetailsExercise
-import io.github.kroune.cumobile.data.model.TaskDetailsSolution
-import io.github.kroune.cumobile.data.model.TaskDetailsStudent
-import io.github.kroune.cumobile.data.model.TaskEvent
-import io.github.kroune.cumobile.data.model.TaskEventContent
-import io.github.kroune.cumobile.data.model.TaskEventScore
-import io.github.kroune.cumobile.data.model.TaskState
-import io.github.kroune.cumobile.data.model.UploadStatus
+import io.github.kroune.cumobile.data.model.mappers.toApiValue
+import io.github.kroune.cumobile.domain.model.CommentSenderDomain
+import io.github.kroune.cumobile.domain.model.LongreadDiscriminator
+import io.github.kroune.cumobile.domain.model.LongreadMaterialDomain
+import io.github.kroune.cumobile.domain.model.TaskCommentDomain
+import io.github.kroune.cumobile.domain.model.TaskDetailsDomain
+import io.github.kroune.cumobile.domain.model.TaskDetailsExerciseDomain
+import io.github.kroune.cumobile.domain.model.TaskDetailsSolutionDomain
+import io.github.kroune.cumobile.domain.model.TaskEventContentDomain
+import io.github.kroune.cumobile.domain.model.TaskEventDomain
+import io.github.kroune.cumobile.domain.model.TaskEventScoreDomain
+import io.github.kroune.cumobile.domain.model.TaskStatus
 import io.github.kroune.cumobile.presentation.common.ContentState
+import io.github.kroune.cumobile.presentation.common.model.PendingAttachmentUi
+import io.github.kroune.cumobile.presentation.common.model.UploadStatusUi
+import io.github.kroune.cumobile.presentation.common.model.mappers.toUi
+import io.github.kroune.cumobile.presentation.common.parseDeadlineInstant
 import io.github.kroune.cumobile.presentation.common.ui.CuMobileTheme
 import io.github.kroune.cumobile.presentation.longread.LongreadComponent
 import io.github.kroune.cumobile.presentation.longread.component.coding.CodingMaterialComponent
 import io.github.kroune.cumobile.presentation.longread.ui.coding.CodingMaterialCardContent
 import kotlinx.collections.immutable.persistentListOf
 
-private val previewCodingMaterial = LongreadMaterial(
+private val previewCodingMaterial = LongreadMaterialDomain(
     id = "3",
-    discriminator = "coding",
-    content = LongreadMaterialContent(name = "ДЗ: Быстрая сортировка"),
+    discriminator = LongreadDiscriminator.Coding,
+    contentName = "ДЗ: Быстрая сортировка",
     taskId = "42",
-    estimation = MaterialEstimation(maxScore = 10),
-)
+    estimationMaxScore = 10,
+).toUi()
 
 private val previewLongreadSuccessState = LongreadComponent.State(
     isLoading = false,
     title = "Введение в алгоритмы",
     materials = persistentListOf(
-        LongreadMaterial(
+        LongreadMaterialDomain(
             id = "1",
-            discriminator = "markdown",
-            content = LongreadMaterialContent(name = "Введение в алгоритмы"),
-            viewContentRaw = kotlinx.serialization.json.JsonPrimitive(
+            discriminator = LongreadDiscriminator.Markdown,
+            contentName = "Введение в алгоритмы",
+            viewContentRaw =
                 "<h2>Алгоритмы</h2>" +
                     "<p>Алгоритм — это <strong>конечная последовательность</strong> " +
                     "точно определённых действий для решения задач.</p>" +
@@ -50,90 +51,158 @@ private val previewLongreadSuccessState = LongreadComponent.State(
                     "    return sorted(arr)</code></pre>" +
                     "<blockquote><p>Сложность — O(n log n)</p></blockquote>" +
                     "<ul><li>Быстрая сортировка</li><li>Сортировка слиянием</li></ul>",
-            ),
-        ),
-        LongreadMaterial(
+        ).toUi(),
+        LongreadMaterialDomain(
             id = "2",
-            discriminator = "file",
+            discriminator = LongreadDiscriminator.File,
             filename = "lecture_slides.pdf",
             length = 2_500_000,
             version = "v1",
-        ),
+        ).toUi(),
         previewCodingMaterial,
-        LongreadMaterial(
+        LongreadMaterialDomain(
             id = "4",
-            discriminator = "questions",
-            content = LongreadMaterialContent(name = "Тест по теме"),
-        ),
+            discriminator = LongreadDiscriminator.Questions,
+            contentName = "Тест по теме",
+        ).toUi(),
     ),
 )
 
 private fun previewTaskDetails(
-    state: String = TaskState.InProgress,
+    status: TaskStatus = TaskStatus.InProgress,
     score: Double? = null,
     solutionUrl: String? = null,
     isLateDaysEnabled: Boolean = false,
     lateDays: Int? = null,
     lateDaysBalance: Int? = null,
-): ContentState<TaskDetails> =
+): ContentState<io.github.kroune.cumobile.presentation.common.model.TaskDetailsUi> =
     ContentState.Success(
-        TaskDetails(
+        TaskDetailsDomain(
             id = "42",
-            state = state,
             score = score,
-            deadline = "2026-04-15T23:59:00Z",
-            exercise = TaskDetailsExercise(name = "Быстрая сортировка", maxScore = 10.0),
-            solution = solutionUrl?.let { TaskDetailsSolution(solutionUrl = it) },
+            extraScore = null,
+            scoreSkillLevel = null,
+            status = status,
+            submitAt = null,
             isLateDaysEnabled = isLateDaysEnabled,
             lateDays = lateDays,
-            student = lateDaysBalance?.let { TaskDetailsStudent(lateDaysBalance = it) },
-        ),
+            deadline = parseDeadlineInstant("2026-04-15T23:59:00Z"),
+            startedAt = null,
+            attemptStartedAt = null,
+            quizSessionId = null,
+            currentAttemptId = null,
+            evaluatedAttemptId = null,
+            lastAttemptId = null,
+            exercise = TaskDetailsExerciseDomain(
+                id = null,
+                name = "Быстрая сортировка",
+                type = null,
+                timer = null,
+                maxScore = 10.0,
+                attemptsLimit = null,
+                evaluationStrategy = null,
+            ),
+            solution = solutionUrl?.let {
+                TaskDetailsSolutionDomain(
+                    solutionUrl = it,
+                    attachments = emptyList(),
+                    answers = emptyList(),
+                )
+            },
+            studentLateDaysBalance = lateDaysBalance,
+        ).toUi(),
     )
 
 private val previewComments = persistentListOf(
-    TaskComment(
+    TaskCommentDomain(
         id = "c1",
         content = "Проверьте обработку граничных случаев",
-        sender = CommentSender(name = "Иванов А.П.", email = "ivanov@cu.ru"),
-        createdAt = "2026-04-10T14:30:00Z",
+        sender = CommentSenderDomain(
+            id = "",
+            name = "Иванов А.П.",
+            email = "ivanov@cu.ru",
+        ),
+        createdAt = parseDeadlineInstant("2026-04-10T14:30:00Z"),
+        attachments = emptyList(),
         isEditable = false,
         isDeletable = false,
-    ),
-    TaskComment(
+    ).toUi(),
+    TaskCommentDomain(
         id = "c2",
         content = "Исправил, пожалуйста посмотрите ещё раз",
-        sender = CommentSender(name = "Студент", email = "student@cu.ru"),
-        createdAt = "2026-04-11T09:15:00Z",
+        sender = CommentSenderDomain(
+            id = "",
+            name = "Студент",
+            email = "student@cu.ru",
+        ),
+        createdAt = parseDeadlineInstant("2026-04-11T09:15:00Z"),
+        attachments = emptyList(),
         isEditable = true,
         isDeletable = true,
-    ),
+    ).toUi(),
 )
 
 private val previewEvents = persistentListOf(
-    TaskEvent(
+    TaskEventDomain(
         id = "e1",
-        occurredOn = "2026-04-01T10:00:00Z",
+        occurredOn = parseDeadlineInstant("2026-04-01T10:00:00Z"),
         type = "taskStarted",
+        actorEmail = null,
         actorName = "Студент",
-        content = TaskEventContent(state = TaskState.InProgress),
-    ),
-    TaskEvent(
-        id = "e2",
-        occurredOn = "2026-04-05T18:00:00Z",
-        type = "taskSubmitted",
-        actorName = "Студент",
-        content = TaskEventContent(state = TaskState.Review),
-    ),
-    TaskEvent(
-        id = "e3",
-        occurredOn = "2026-04-07T12:00:00Z",
-        type = "taskEvaluated",
-        actorName = "Иванов А.П.",
-        content = TaskEventContent(
-            state = TaskState.Evaluated,
-            score = TaskEventScore(value = 8.0),
+        content = TaskEventContentDomain(
+            state = TaskStatus.InProgress.toApiValue(),
+            score = null,
+            estimation = null,
+            solution = null,
+            reviewer = null,
+            reviewers = null,
+            task = null,
+            name = null,
+            lateDays = null,
+            deadline = null,
+            attached = null,
         ),
-    ),
+    ).toUi(),
+    TaskEventDomain(
+        id = "e2",
+        occurredOn = parseDeadlineInstant("2026-04-05T18:00:00Z"),
+        type = "taskSubmitted",
+        actorEmail = null,
+        actorName = "Студент",
+        content = TaskEventContentDomain(
+            state = TaskStatus.Review.toApiValue(),
+            score = null,
+            estimation = null,
+            solution = null,
+            reviewer = null,
+            reviewers = null,
+            task = null,
+            name = null,
+            lateDays = null,
+            deadline = null,
+            attached = null,
+        ),
+    ).toUi(),
+    TaskEventDomain(
+        id = "e3",
+        occurredOn = parseDeadlineInstant("2026-04-07T12:00:00Z"),
+        type = "taskEvaluated",
+        actorEmail = null,
+        actorName = "Иванов А.П.",
+        content = TaskEventContentDomain(
+            state = TaskStatus.Evaluated.toApiValue(),
+            score = TaskEventScoreDomain(level = null, value = 8.0),
+            estimation = null,
+            solution = null,
+            reviewer = null,
+            reviewers = null,
+            task = null,
+            name = null,
+            lateDays = null,
+            deadline = null,
+            attached = null,
+        ),
+    ).toUi(),
 )
 
 // region Screen-level previews
@@ -240,7 +309,7 @@ private fun PreviewCodingCardBacklogDark() {
             material = previewCodingMaterial,
             state = CodingMaterialComponent.State(
                 isExpanded = true,
-                taskDetails = previewTaskDetails(state = TaskState.Backlog),
+                taskDetails = previewTaskDetails(status = TaskStatus.Backlog),
             ),
             onIntent = {},
         )
@@ -257,7 +326,7 @@ private fun PreviewCodingCardSolutionTabDark() {
             state = CodingMaterialComponent.State(
                 isExpanded = true,
                 selectedTab = "solution",
-                taskDetails = previewTaskDetails(state = TaskState.InProgress),
+                taskDetails = previewTaskDetails(status = TaskStatus.InProgress),
                 solutionUrl = "https://github.com/student/quicksort",
             ),
             onIntent = {},
@@ -275,7 +344,7 @@ private fun PreviewCodingCardSolutionTabLight() {
             state = CodingMaterialComponent.State(
                 isExpanded = true,
                 selectedTab = "solution",
-                taskDetails = previewTaskDetails(state = TaskState.InProgress),
+                taskDetails = previewTaskDetails(status = TaskStatus.InProgress),
                 solutionUrl = "https://github.com/student/quicksort",
             ),
             onIntent = {},
@@ -293,22 +362,22 @@ private fun PreviewCodingCardWithAttachmentsDark() {
             state = CodingMaterialComponent.State(
                 isExpanded = true,
                 selectedTab = "solution",
-                taskDetails = previewTaskDetails(state = TaskState.InProgress),
+                taskDetails = previewTaskDetails(status = TaskStatus.InProgress),
                 pendingSolutionAttachments = persistentListOf(
-                    PendingAttachment(
+                    PendingAttachmentUi(
                         name = "solution.py",
                         size = 4096,
-                        status = UploadStatus.Uploaded,
+                        status = UploadStatusUi.Uploaded,
                     ),
-                    PendingAttachment(
+                    PendingAttachmentUi(
                         name = "tests.py",
                         size = 2048,
-                        status = UploadStatus.Uploading,
+                        status = UploadStatusUi.Uploading,
                     ),
-                    PendingAttachment(
+                    PendingAttachmentUi(
                         name = "broken.txt",
                         size = 512,
-                        status = UploadStatus.Failed,
+                        status = UploadStatusUi.Failed,
                     ),
                 ),
             ),
@@ -328,7 +397,7 @@ private fun PreviewCodingCardEvaluatedDark() {
                 isExpanded = true,
                 selectedTab = "solution",
                 taskDetails = previewTaskDetails(
-                    state = TaskState.Evaluated,
+                    status = TaskStatus.Evaluated,
                     score = 8.0,
                     solutionUrl = "https://github.com/student/quicksort",
                 ),
@@ -348,7 +417,7 @@ private fun PreviewCodingCardCommentsTabDark() {
             state = CodingMaterialComponent.State(
                 isExpanded = true,
                 selectedTab = "comments",
-                taskDetails = previewTaskDetails(state = TaskState.InProgress),
+                taskDetails = previewTaskDetails(status = TaskStatus.InProgress),
                 taskComments = ContentState.Success(previewComments),
             ),
             onIntent = {},
@@ -366,7 +435,7 @@ private fun PreviewCodingCardCommentsTabLight() {
             state = CodingMaterialComponent.State(
                 isExpanded = true,
                 selectedTab = "comments",
-                taskDetails = previewTaskDetails(state = TaskState.InProgress),
+                taskDetails = previewTaskDetails(status = TaskStatus.InProgress),
                 taskComments = ContentState.Success(previewComments),
             ),
             onIntent = {},
@@ -384,7 +453,7 @@ private fun PreviewCodingCardCommentEditingDark() {
             state = CodingMaterialComponent.State(
                 isExpanded = true,
                 selectedTab = "comments",
-                taskDetails = previewTaskDetails(state = TaskState.InProgress),
+                taskDetails = previewTaskDetails(status = TaskStatus.InProgress),
                 taskComments = ContentState.Success(previewComments),
                 editingCommentId = "c2",
                 editCommentText = "Исправил обработку граничных случаев",
@@ -405,7 +474,7 @@ private fun PreviewCodingCardInfoTabDark() {
                 isExpanded = true,
                 selectedTab = "info",
                 taskDetails = previewTaskDetails(
-                    state = TaskState.Evaluated,
+                    status = TaskStatus.Evaluated,
                     score = 8.0,
                     isLateDaysEnabled = true,
                     lateDays = 2,
@@ -429,7 +498,7 @@ private fun PreviewCodingCardLateDaysDark() {
                 isExpanded = true,
                 selectedTab = "solution",
                 taskDetails = previewTaskDetails(
-                    state = TaskState.InProgress,
+                    status = TaskStatus.InProgress,
                     isLateDaysEnabled = true,
                     lateDays = 3,
                     lateDaysBalance = 4,
@@ -450,7 +519,7 @@ private fun PreviewCodingCardSubmittingDark() {
             state = CodingMaterialComponent.State(
                 isExpanded = true,
                 selectedTab = "solution",
-                taskDetails = previewTaskDetails(state = TaskState.InProgress),
+                taskDetails = previewTaskDetails(status = TaskStatus.InProgress),
                 isSubmitting = true,
                 solutionUrl = "https://github.com/student/quicksort",
             ),
@@ -468,7 +537,7 @@ private fun PreviewCodingCardCollapsedDark() {
             material = previewCodingMaterial,
             state = CodingMaterialComponent.State(
                 isExpanded = false,
-                taskDetails = previewTaskDetails(state = TaskState.InProgress),
+                taskDetails = previewTaskDetails(status = TaskStatus.InProgress),
             ),
             onIntent = {},
         )

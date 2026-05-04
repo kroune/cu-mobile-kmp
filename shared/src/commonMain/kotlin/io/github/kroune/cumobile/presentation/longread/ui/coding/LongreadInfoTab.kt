@@ -17,17 +17,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import io.github.kroune.cumobile.data.model.TaskDetails
-import io.github.kroune.cumobile.data.model.TaskEvent
 import io.github.kroune.cumobile.presentation.common.ContentState
-import io.github.kroune.cumobile.presentation.common.formatDateTime
-import io.github.kroune.cumobile.presentation.common.formatDeadline
+import io.github.kroune.cumobile.presentation.common.model.TaskDetailsUi
+import io.github.kroune.cumobile.presentation.common.model.TaskEventUi
+import io.github.kroune.cumobile.presentation.common.model.color
 import io.github.kroune.cumobile.presentation.common.ui.AppColorScheme
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 import io.github.kroune.cumobile.presentation.common.ui.ShimmerBox
 import io.github.kroune.cumobile.presentation.common.ui.StatusBadge
-import io.github.kroune.cumobile.presentation.common.ui.taskStateColor
-import io.github.kroune.cumobile.presentation.common.ui.taskStateLabel
 import kotlinx.collections.immutable.ImmutableList
 
 /**
@@ -35,8 +32,8 @@ import kotlinx.collections.immutable.ImmutableList
  */
 @Composable
 internal fun InfoTab(
-    taskDetails: TaskDetails,
-    events: ContentState<ImmutableList<TaskEvent>>,
+    taskDetails: TaskDetailsUi,
+    events: ContentState<ImmutableList<TaskEventUi>>,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -50,7 +47,7 @@ internal fun InfoTab(
 }
 
 @Composable
-private fun EventsTimeline(events: ContentState<ImmutableList<TaskEvent>>) {
+private fun EventsTimeline(events: ContentState<ImmutableList<TaskEventUi>>) {
     when (events) {
         is ContentState.Loading -> EventsTimelineSkeleton()
         is ContentState.Error -> TimelineErrorText(events.message)
@@ -101,7 +98,7 @@ private fun TimelineErrorText(message: String) {
 /** Task info summary: status, score, deadline, late days. */
 @Composable
 private fun TaskInfoSummary(
-    taskDetails: TaskDetails,
+    taskDetails: TaskDetailsUi,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -112,27 +109,28 @@ private fun TaskInfoSummary(
             .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
+        val style = taskDetails.statusStyle
         InfoRow(
             label = "Статус",
-            value = taskStateLabel(taskDetails.state.orEmpty()),
-            valueColor = taskStateColor(taskDetails.state.orEmpty()),
+            value = taskDetails.statusLabel ?: "—",
+            valueColor = style?.color() ?: AppTheme.colors.textPrimary,
         )
         InfoRow(
             label = "Оценка",
-            value = "${taskDetails.score?.toInt() ?: "-"} / ${taskDetails.maxScore ?: "-"}",
+            value = "${taskDetails.scoreText ?: "-"} / ${taskDetails.exercise?.maxScoreFormatted ?: "-"}",
         )
         InfoRow(
             label = "Дедлайн",
-            value = formatDeadline(taskDetails.deadline),
+            value = taskDetails.deadlineFormatted ?: "—",
         )
         if (taskDetails.isLateDaysEnabled) {
             InfoRow(
                 label = "Late days",
                 value = "Исп.: ${taskDetails.lateDays ?: 0}" +
-                    " | Баланс: ${taskDetails.lateDaysBalance ?: 0}",
+                    " | Баланс: ${taskDetails.studentLateDaysBalance ?: 0}",
             )
         }
-        taskDetails.solutionUrl?.let { url ->
+        taskDetails.solution?.solutionUrl?.let { url ->
             InfoRow(label = "Решение", value = url)
         }
     }
@@ -170,7 +168,7 @@ private fun InfoRow(
 /** Single event card in the timeline. */
 @Composable
 private fun EventCard(
-    event: TaskEvent,
+    event: TaskEventUi,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -184,12 +182,12 @@ private fun EventCard(
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             StatusBadge(
-                label = eventTypeLabel(event.type),
+                label = event.typeLabel,
                 color = eventTypeColor(event.type),
             )
-            event.occurredOn?.let { date ->
+            event.occurredOnFormatted?.let { date ->
                 Text(
-                    text = formatDateTime(date),
+                    text = date,
                     color = AppTheme.colors.textSecondary,
                     fontSize = 11.sp,
                 )
@@ -204,25 +202,25 @@ private fun EventCard(
             )
         }
 
-        event.content.state?.let { state ->
+        val statusLabel = event.content.statusLabel
+        val statusStyle = event.content.statusStyle
+        if (statusLabel != null && statusStyle != null) {
             Text(
-                text = "Статус: ${taskStateLabel(state)}",
-                color = taskStateColor(state),
+                text = "Статус: $statusLabel",
+                color = statusStyle.color(),
                 fontSize = 12.sp,
             )
         }
 
-        event.content.score?.let { score ->
-            score.value?.let { value ->
-                Text(
-                    text = "Оценка: ${value.toInt()}",
-                    color = AppTheme.colors.taskEvaluated,
-                    fontSize = 12.sp,
-                )
-            }
+        event.content.scoreFormatted?.let { formatted ->
+            Text(
+                text = "Оценка: $formatted",
+                color = AppTheme.colors.taskEvaluated,
+                fontSize = 12.sp,
+            )
         }
 
-        event.content.lateDaysValue?.let { days ->
+        event.content.lateDaysFormatted?.let { days ->
             Text(
                 text = "Late days: $days",
                 color = AppTheme.colors.textSecondary,
@@ -231,30 +229,6 @@ private fun EventCard(
         }
     }
 }
-
-private val eventTypeLabels = mapOf(
-    "taskStarted" to "Начато",
-    "taskSubmitted" to "Отправлено",
-    "taskEvaluated" to "Принято",
-    "taskRejected" to "Доработка",
-    "taskFailed" to "Не сдано",
-    "taskReset" to "Статус изменён",
-    "taskExtraScoreGranted" to "Доп. баллы",
-    "maxScoreChanged" to "Макс. балл изменён",
-    "exerciseMaxScoreChanged" to "Макс. балл изменён",
-    "exerciseEstimated" to "Задание выдано",
-    "exerciseDeadlineChanged" to "Дедлайн изменён",
-    "assistantAssigned" to "Назначен проверяющий",
-    "reviewerAssigned" to "Назначен проверяющий",
-    "taskProlonged" to "Дедлайн изменён",
-    "solutionAttached" to "Файлы прикреплены",
-    "taskLateDaysReset" to "Late days сброшены",
-    "taskLateDaysCancelled" to "Late days возвращены",
-    "taskLateDaysProlong" to "Late days списаны",
-)
-
-private fun eventTypeLabel(type: String): String =
-    eventTypeLabels.getOrElse(type) { type }
 
 private val eventTypeColorAccessors: Map<String, (AppColorScheme) -> Color> = mapOf(
     "taskStarted" to { it.taskInProgress },

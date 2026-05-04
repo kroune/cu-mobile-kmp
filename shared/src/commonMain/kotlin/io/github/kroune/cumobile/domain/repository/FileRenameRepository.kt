@@ -1,6 +1,6 @@
 package io.github.kroune.cumobile.domain.repository
 
-import io.github.kroune.cumobile.data.local.FileRenameRule
+import io.github.kroune.cumobile.domain.model.FileRenameRuleDomain
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -8,16 +8,16 @@ import kotlinx.coroutines.flow.Flow
  */
 interface FileRenameRepository {
     /** Flow emitting the list of all configured rename rules. */
-    val rules: Flow<List<FileRenameRule>>
+    val rules: Flow<List<FileRenameRuleDomain>>
 
     /** Saves a new list of rename rules. */
-    suspend fun saveRules(rules: List<FileRenameRule>)
+    suspend fun saveRules(rules: List<FileRenameRuleDomain>)
 
     /** Adds a single rename rule. */
-    suspend fun addRule(rule: FileRenameRule)
+    suspend fun addRule(rule: FileRenameRuleDomain)
 
     /** Deletes a single rename rule. */
-    suspend fun deleteRule(rule: FileRenameRule)
+    suspend fun deleteRule(rule: FileRenameRuleDomain)
 
     /**
      * Returns a rule that matches the given criteria, or null if none found.
@@ -26,5 +26,5 @@ interface FileRenameRepository {
         courseId: String,
         activityName: String,
         extension: String,
-    ): FileRenameRule?
+    ): FileRenameRuleDomain?
 }

@@ -56,12 +56,14 @@ CuMobile/
         │   ├── data/
         │   │   ├── local/         # DataStore, AuthLocalDataSource, FileStorage
         │   │   │   └── db/        # Room: AppDatabase, Entity, DAO, миграции
-        │   │   ├── model/         # ~37 @Serializable DTO
+        │   │   ├── model/         # ~37 @Serializable *Api DTOs (network only)
+        │   │   │   └── mappers/   # Extension fns: *Api.toDomain() → *Domain
         │   │   ├── network/       # HttpClientFactory, ApiService (25 эндпоинтов)
         │   │   └── repository/    # 8 реализаций + CookieAwareRepository
         │   ├── di/                # Koin.kt (модули: core, network, data, repository)
         │   ├── domain/
-        │   │   └── repository/    # 8 интерфейсов репозиториев
+        │   │   ├── model/         # *Domain classes (enums, parsed dates, used everywhere above repos)
+        │   │   └── repository/    # 8 интерфейсов репозиториев — возвращают Domain-типы
         │   └── presentation/
         │       ├── auth/          # LoginComponent, LoginScreen, LoginStepContent
         │       │   ├── sms/       # SmsCodeObserver (expect) — OTP-автозаполнение
@@ -106,6 +108,16 @@ CuMobile/
 **Диспатчеры** — `AppDispatchers` инжектится через конструктор. Прямые ссылки на `Dispatchers.IO/Default` запрещены (detekt `InjectDispatcher`).
 
 **Форматирование дат** — `FormatUtils.kt` и `DeadlineFormat.kt`. Русские названия месяцев через `russianMonthsShort`/`russianMonthsFull`. Использовать `kotlinx-datetime`.
+
+**Модели данных (3-слойный подход)**:
+- `data/model/*Api` — `@Serializable` DTO, используются только в network и repository impl. Суффикс `Api`.
+- `domain/model/*Domain` — чистые Kotlin-классы (enums, `Instant?`), используются в компонентах (impl). Суффикс `Domain`.
+- `presentation/common/model/*Ui` — UI-ready модели с предформатированными строками, используются в State и UI. Суффикс `Ui`.
+- `data/model/mappers/` — extension-функции `*Api.toDomain()`.
+- `presentation/common/model/mappers/` — extension-функции `*Domain.toUi()`.
+- Presentation-энумы: `StatusStyle`, `CategoryStyle`, `UrgencyLevel` в `presentation/common/model/`.
+- Domain-энумы: `TaskStatus`, `CourseCategory`, `EducationLevel` в `domain/model/`.
+- UI-расширения: `StatusStyle.label()/color()`, `CategoryStyle.label()/color()` в `presentation/common/model/`.
 
 ---
 

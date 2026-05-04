@@ -4,7 +4,9 @@ import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.doOnStart
-import io.github.kroune.cumobile.data.model.StudentTask
+import io.github.kroune.cumobile.data.model.mappers.toApiValue
+import io.github.kroune.cumobile.domain.model.TaskDomain
+import io.github.kroune.cumobile.domain.model.TaskStatus
 import io.github.kroune.cumobile.domain.repository.TaskRepository
 import io.github.kroune.cumobile.presentation.common.ContentState
 import io.github.kroune.cumobile.presentation.common.componentScope
@@ -13,6 +15,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.time.Clock
 
 private val logger = KotlinLogging.logger {}
 
@@ -31,7 +34,7 @@ class DefaultTasksComponent(
     componentContext: ComponentContext,
     taskRepository: Lazy<TaskRepository>,
     dispatchers: Lazy<AppDispatchers>,
-    private val onOpenTask: (StudentTask) -> Unit,
+    private val onOpenTask: (taskId: String, courseId: String, themeId: String, longreadId: String) -> Unit,
 ) : TasksComponent,
     ComponentContext by componentContext {
     private val taskRepository by taskRepository
@@ -46,7 +49,7 @@ class DefaultTasksComponent(
      * mutation takes a consistent snapshot into the derivation job.
      */
     private data class RawState(
-        val tasks: List<StudentTask> = emptyList(),
+        val tasks: List<TaskDomain> = emptyList(),
         val segment: Int = 0,
         val statusFilter: String? = null,
         val courseFilter: String? = null,
@@ -73,7 +76,7 @@ class DefaultTasksComponent(
             is TasksComponent.Intent.Search ->
                 updateRaw { copy(searchQuery = intent.query) }
             is TasksComponent.Intent.OpenTask ->
-                onOpenTask(intent.task)
+                onOpenTask(intent.taskId, intent.courseId, intent.themeId, intent.longreadId)
             TasksComponent.Intent.Refresh ->
                 loadTasks()
         }
@@ -123,9 +126,15 @@ class DefaultTasksComponent(
                     statusFilter = snapshot.statusFilter,
                     courseFilter = snapshot.courseFilter,
                     searchQuery = snapshot.searchQuery,
+                    now = Clock.System.now(),
                 )
             }
             _state.value = _state.value.copy(content = ContentState.Success(content))
         }
     }
 }
+
+/**
+ * All API state values requested when fetching tasks.
+ */
+private val AllApiStates: List<String> = TaskStatus.entries.map { it.toApiValue() }

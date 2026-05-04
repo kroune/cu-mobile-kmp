@@ -7,18 +7,18 @@ import kotlinx.serialization.json.JsonElement
  * Event in the task history timeline.
  */
 @Serializable
-data class TaskEvent(
+data class TaskEventApi(
     val id: String = "",
     /** ISO 8601 datetime string. */
     val occurredOn: String? = null,
     val type: String = "",
     val actorEmail: String? = null,
     val actorName: String? = null,
-    val content: TaskEventContent = TaskEventContent(),
+    val content: TaskEventContentApi = TaskEventContentApi(),
 )
 
 /**
- * Content payload of a [TaskEvent].
+ * Content payload of a [TaskEventApi].
  *
  * The API returns a complex nested structure. This DTO mirrors the raw JSON.
  * Fields from nested objects (reviewer name, solution URL, etc.) can be
@@ -28,14 +28,14 @@ data class TaskEvent(
  * an object `{"value": Int}`. Use [lateDaysValue] for safe access.
  */
 @Serializable
-data class TaskEventContent(
+data class TaskEventContentApi(
     val state: String? = null,
-    val score: TaskEventScore? = null,
-    val estimation: TaskEventEstimation? = null,
-    val solution: TaskEventSolution? = null,
-    val reviewer: TaskEventActor? = null,
-    val reviewers: List<TaskEventActor>? = null,
-    val task: TaskEventTask? = null,
+    val score: TaskEventScoreApi? = null,
+    val estimation: TaskEventEstimationApi? = null,
+    val solution: TaskEventSolutionApi? = null,
+    val reviewer: TaskEventActorApi? = null,
+    val reviewers: List<TaskEventActorApi>? = null,
+    val task: TaskEventTaskApi? = null,
     /** Exercise name at the top level of the content object. */
     val name: String? = null,
     /**
@@ -46,7 +46,7 @@ data class TaskEventContent(
     /** ISO 8601 datetime string (top-level deadline in content). */
     val deadline: String? = null,
     /** Attachments added directly to the event. */
-    val attached: List<MaterialAttachment>? = null,
+    val attached: List<MaterialAttachmentApi>? = null,
 ) {
     /**
      * Extracts the integer late-days value regardless of JSON shape.
@@ -62,28 +62,28 @@ data class TaskEventContent(
         }
 
     /** Merged attachments from [solution] and [attached]. */
-    val allAttachments: List<MaterialAttachment>
+    val allAttachments: List<MaterialAttachmentApi>
         get() = (solution?.attachments.orEmpty()) + (attached.orEmpty())
 }
 
-/** Score info within a [TaskEventContent]. */
+/** Score info within a [TaskEventContentApi]. */
 @Serializable
-data class TaskEventScore(
+data class TaskEventScoreApi(
     val level: String? = null,
     val value: Double? = null,
 )
 
 /**
- * Estimation info within a [TaskEventContent].
+ * Estimation info within a [TaskEventContentApi].
  *
  * The `activity` object is nested in JSON as `{"name": ..., "weight": ...}`.
  */
 @Serializable
-data class TaskEventEstimation(
+data class TaskEventEstimationApi(
     /** ISO 8601 datetime string. */
     val deadline: String? = null,
     val maxScore: Int? = null,
-    val activity: TaskEventEstimationActivity? = null,
+    val activity: TaskEventEstimationActivityApi? = null,
 ) {
     val activityName: String?
         get() = activity?.name
@@ -92,28 +92,28 @@ data class TaskEventEstimation(
         get() = activity?.weight
 }
 
-/** Activity within [TaskEventEstimation]. */
+/** Activity within [TaskEventEstimationApi]. */
 @Serializable
-data class TaskEventEstimationActivity(
+data class TaskEventEstimationActivityApi(
     val name: String? = null,
     val weight: Double? = null,
 )
 
-/** Solution info nested within [TaskEventContent]. */
+/** Solution info nested within [TaskEventContentApi]. */
 @Serializable
-data class TaskEventSolution(
+data class TaskEventSolutionApi(
     val solutionUrl: String? = null,
-    val attachments: List<MaterialAttachment> = emptyList(),
+    val attachments: List<MaterialAttachmentApi> = emptyList(),
 )
 
 /**
- * Actor (reviewer) info within [TaskEventContent].
+ * Actor (reviewer) info within [TaskEventContentApi].
  *
  * The reviewer's name is nested as `{"name": {"last": ..., "first": ..., "middle": ...}}`.
  */
 @Serializable
-data class TaskEventActor(
-    val name: TaskEventActorName? = null,
+data class TaskEventActorApi(
+    val name: TaskEventActorNameApi? = null,
 ) {
     /** Full name in "Last First Middle" format. */
     val fullName: String?
@@ -126,23 +126,23 @@ data class TaskEventActor(
         }
 }
 
-/** Name parts for a [TaskEventActor]. */
+/** Name parts for a [TaskEventActorApi]. */
 @Serializable
-data class TaskEventActorName(
+data class TaskEventActorNameApi(
     val last: String? = null,
     val first: String? = null,
     val middle: String? = null,
 )
 
 /**
- * Nested task info within [TaskEventContent].
+ * Nested task info within [TaskEventContentApi].
  *
  * Contains task state, deadline, and optional estimation snapshot.
  */
 @Serializable
-data class TaskEventTask(
+data class TaskEventTaskApi(
     val state: String? = null,
     /** ISO 8601 datetime string. */
     val deadline: String? = null,
-    val estimation: TaskEventEstimation? = null,
+    val estimation: TaskEventEstimationApi? = null,
 )

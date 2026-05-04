@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
  * In-app notification item.
  */
 @Serializable
-data class NotificationItem(
+data class NotificationApi(
     val id: String = "",
     val notificationId: String = "",
     /** ISO 8601 datetime string. */
@@ -16,7 +16,7 @@ data class NotificationItem(
     val icon: String = "",
     val title: String = "",
     val description: String = "",
-    val link: NotificationLink? = null,
+    val link: NotificationLinkApi? = null,
     /** ISO 8601 datetime string. */
     val startDate: String? = null,
     /** ISO 8601 datetime string. */
@@ -24,9 +24,9 @@ data class NotificationItem(
     val previewImageUri: String? = null,
 )
 
-/** Deep-link associated with a [NotificationItem]. */
+/** Deep-link associated with a [NotificationApi]. */
 @Serializable
-data class NotificationLink(
+data class NotificationLinkApi(
     val uri: String = "",
     val label: String = "",
     val target: String = "",
@@ -36,9 +36,9 @@ data class NotificationLink(
  * Request body for fetching notifications.
  */
 @Serializable
-data class NotificationRequest(
-    val paging: NotificationPaging,
-    val filter: NotificationFilter,
+data class NotificationRequestApi(
+    val paging: NotificationPagingApi,
+    val filter: NotificationFilterApi,
 ) {
     companion object {
         /** Convenience factory for creating a standard notification request. */
@@ -46,25 +46,25 @@ data class NotificationRequest(
             category: Int,
             limit: Int = 100,
             offset: Int = 0,
-        ): NotificationRequest =
-            NotificationRequest(
-                paging = NotificationPaging(limit = limit, offset = offset),
-                filter = NotificationFilter(category),
+        ): NotificationRequestApi =
+            NotificationRequestApi(
+                paging = NotificationPagingApi(limit = limit, offset = offset),
+                filter = NotificationFilterApi(category),
             )
     }
 }
 
-/** Paging parameters for [NotificationRequest]. */
+/** Paging parameters for [NotificationRequestApi]. */
 @Serializable
-data class NotificationPaging(
+data class NotificationPagingApi(
     val limit: Int,
     val offset: Int,
     val sorting: List<String> = emptyList(),
 )
 
-/** Filter parameters for [NotificationRequest]. category is an integer ID. */
+/** Filter parameters for [NotificationRequestApi]. category is an integer ID. */
 @Serializable
-data class NotificationFilter(
+data class NotificationFilterApi(
     val category: Int,
 )
 
@@ -73,7 +73,7 @@ data class NotificationFilter(
  *
  * Category `1` = education-related, category `2` = everything else.
  */
-object NotificationCategory {
+object NotificationCategoryApi {
     const val Education = 1
     const val Other = 2
 }

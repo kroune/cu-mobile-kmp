@@ -1,10 +1,8 @@
 package io.github.kroune.cumobile.domain.usecase
 
-import io.github.kroune.cumobile.data.model.TimetableCalendarEvent
-import io.github.kroune.cumobile.data.model.TimetableCourse
-import io.github.kroune.cumobile.data.model.TimetableEventRow
-import io.github.kroune.cumobile.data.model.TimetableHost
-import io.github.kroune.cumobile.data.model.TimetableSchedule
+import io.github.kroune.cumobile.domain.model.TimetableCalendarEventDomain
+import io.github.kroune.cumobile.domain.model.TimetableCourseDomain
+import io.github.kroune.cumobile.domain.model.TimetableEventRowDomain
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
@@ -97,8 +95,8 @@ class GetClassesForDateUseCaseTest {
     @Test
     fun resultsSortedByStartTime() {
         val courses = listOf(
-            TimetableCourse(
-                courseId = 1,
+            TimetableCourseDomain(
+                courseId = "1",
                 courseName = "Courses",
                 eventRows = listOf(
                     makeTimetableRow("lecture", "14:00", "15:30", "monday"),
@@ -121,11 +119,11 @@ class GetClassesForDateUseCaseTest {
     @Test
     fun skipsRowWithNullCalendarEvent() {
         val courses = listOf(
-            TimetableCourse(
-                courseId = 1,
+            TimetableCourseDomain(
+                courseId = "1",
                 courseName = "Test",
                 eventRows = listOf(
-                    TimetableEventRow(
+                    TimetableEventRowDomain(
                         eventType = "lecture",
                         eventRowNumber = 1,
                         calendarEvent = null,
@@ -142,7 +140,7 @@ class GetClassesForDateUseCaseTest {
     @Test
     fun mapsLectureEvent() {
         val row = makeTimetableRow("lecture", "11:30", "12:50", "monday")
-        val classData = GetClassesForDateUseCase.mapTimetableToClassData(row, "Математика")
+        val classData = GetClassesForDateUseCase.mapTimetableToClassDataDomain(row, "Математика")
         assertEquals("Математика", classData.title)
         assertEquals("B101", classData.room)
         assertEquals("Лекция", classData.type)
@@ -153,45 +151,42 @@ class GetClassesForDateUseCaseTest {
     @Test
     fun mapsSeminarEvent() {
         val row = makeTimetableRow("seminar", "13:00", "14:20", "tuesday")
-        val classData = GetClassesForDateUseCase.mapTimetableToClassData(row, "Экономика")
+        val classData = GetClassesForDateUseCase.mapTimetableToClassDataDomain(row, "Экономика")
         assertEquals("Семинар", classData.type)
     }
 
     @Test
     fun mapsEventWithHost() {
-        val row = TimetableEventRow(
+        val row = TimetableEventRowDomain(
             eventType = "lecture",
             eventRowNumber = 1,
-            calendarEvent = TimetableCalendarEvent(
+            calendarEvent = TimetableCalendarEventDomain(
                 calendarEventId = "test",
                 eventType = "lecture",
                 location = "B702",
-                host = TimetableHost(name = "Иванов Иван ", email = "i@cu.ru"),
-                schedule = TimetableSchedule(
-                    startDate = "2026-02-02",
-                    endDate = "2026-05-31",
-                    startTime = "11:30",
-                    endTime = "12:50",
-                    dayOfWeek = "monday",
-                ),
+                hostName = "Иванов Иван ",
+                hostEmail = "i@cu.ru",
+                startDate = "2026-02-02",
+                endDate = "2026-05-31",
+                startTime = "11:30",
+                endTime = "12:50",
+                dayOfWeek = "monday",
+                interval = 1,
+                comment = null,
             ),
         )
-        val classData = GetClassesForDateUseCase.mapTimetableToClassData(row, "Математика")
+        val classData = GetClassesForDateUseCase.mapTimetableToClassDataDomain(row, "Математика")
         assertEquals("Иванов Иван", classData.professor)
     }
 
     @Test
     fun mapsEventWithNullScheduleGracefully() {
-        val row = TimetableEventRow(
+        val row = TimetableEventRowDomain(
             eventType = "lecture",
             eventRowNumber = 1,
-            calendarEvent = TimetableCalendarEvent(
-                calendarEventId = "test",
-                eventType = "lecture",
-                schedule = null,
-            ),
+            calendarEvent = null,
         )
-        val classData = GetClassesForDateUseCase.mapTimetableToClassData(row, "Test")
+        val classData = GetClassesForDateUseCase.mapTimetableToClassDataDomain(row, "Test")
         assertEquals("", classData.startTime)
         assertEquals("", classData.endTime)
         assertEquals("", classData.room)
@@ -233,15 +228,16 @@ class GetClassesForDateUseCaseTest {
         startDate: String = "2026-02-02",
         endDate: String = "2026-05-31",
         interval: Int = 1,
-    ): TimetableCourse =
-        TimetableCourse(
-            courseId = name.hashCode().toLong(),
+    ): TimetableCourseDomain =
+        TimetableCourseDomain(
+            courseId = name.hashCode().toString(),
             courseName = name,
             eventRows = listOf(
                 makeTimetableRow("seminar", startTime, endTime, dayOfWeek, startDate, endDate, interval),
             ),
         )
 
+    @Suppress("LongParameterList")
     private fun makeTimetableRow(
         eventType: String,
         startTime: String,
@@ -250,22 +246,23 @@ class GetClassesForDateUseCaseTest {
         startDate: String = "2026-02-02",
         endDate: String = "2026-05-31",
         interval: Int = 1,
-    ): TimetableEventRow =
-        TimetableEventRow(
+    ): TimetableEventRowDomain =
+        TimetableEventRowDomain(
             eventType = eventType,
             eventRowNumber = 1,
-            calendarEvent = TimetableCalendarEvent(
+            calendarEvent = TimetableCalendarEventDomain(
                 calendarEventId = "test-$startTime",
                 eventType = eventType,
                 location = "B101",
-                schedule = TimetableSchedule(
-                    startDate = startDate,
-                    endDate = endDate,
-                    startTime = startTime,
-                    endTime = endTime,
-                    dayOfWeek = dayOfWeek,
-                    interval = interval,
-                ),
+                hostName = null,
+                hostEmail = null,
+                startDate = startDate,
+                endDate = endDate,
+                startTime = startTime,
+                endTime = endTime,
+                dayOfWeek = dayOfWeek,
+                interval = interval,
+                comment = null,
             ),
         )
 }

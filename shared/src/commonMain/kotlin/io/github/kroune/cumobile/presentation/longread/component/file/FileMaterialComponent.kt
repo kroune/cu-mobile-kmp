@@ -2,10 +2,10 @@ package io.github.kroune.cumobile.presentation.longread.component.file
 
 import androidx.compose.runtime.Composable
 import com.arkivanov.decompose.ComponentContext
-import io.github.kroune.cumobile.data.model.LongreadMaterial
 import io.github.kroune.cumobile.domain.repository.ContentRepository
 import io.github.kroune.cumobile.presentation.common.RenderComponent
 import io.github.kroune.cumobile.presentation.common.componentScope
+import io.github.kroune.cumobile.presentation.common.model.LongreadMaterialUi
 import io.github.kroune.cumobile.presentation.longread.ui.file.FileMaterialCard
 import io.github.kroune.cumobile.util.runCatchingCancellable
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -21,7 +21,7 @@ private val logger = KotlinLogging.logger {}
  */
 class FileMaterialComponent(
     componentContext: ComponentContext,
-    val material: LongreadMaterial,
+    val material: LongreadMaterialUi,
     private val contentRepository: ContentRepository,
     private val resolveFilename: suspend () -> String,
     private val saveFile: suspend (url: String, filename: String) -> Boolean,

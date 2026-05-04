@@ -30,7 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
-import io.github.kroune.cumobile.data.local.FileRenameRule
+import io.github.kroune.cumobile.presentation.common.model.FileRenameRuleUi
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 import io.github.kroune.cumobile.presentation.common.ui.DetailTopBar
 import io.github.kroune.cumobile.presentation.common.ui.EmptyContent
@@ -110,8 +110,8 @@ private fun AddRuleButton(onClick: () -> Unit) {
 
 @Composable
 private fun RulesList(
-    rules: List<FileRenameRule>,
-    onDelete: (FileRenameRule) -> Unit,
+    rules: List<FileRenameRuleUi>,
+    onDelete: (FileRenameRuleUi) -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
@@ -126,7 +126,7 @@ private fun RulesList(
 
 @Composable
 private fun RuleCard(
-    rule: FileRenameRule,
+    rule: FileRenameRuleUi,
     onDelete: () -> Unit,
 ) {
     Column(
@@ -168,9 +168,9 @@ private fun RuleCard(
 
 @Composable
 private fun AddRuleDialog(
-    courses: List<io.github.kroune.cumobile.data.model.Course>,
+    courses: List<io.github.kroune.cumobile.presentation.common.model.CourseUi>,
     onDismiss: () -> Unit,
-    onConfirm: (FileRenameRule) -> Unit,
+    onConfirm: (FileRenameRuleUi) -> Unit,
 ) {
     // Simple inline dialog using Column
     val selectedCourseId by remember { mutableStateOf(courses.firstOrNull()?.id.orEmpty()) }
@@ -229,7 +229,7 @@ private fun AddRuleDialog(
                     onClick = {
                         if (activityName.isNotBlank() && template.isNotBlank()) {
                             onConfirm(
-                                FileRenameRule(
+                                FileRenameRuleUi(
                                     courseId = selectedCourseId,
                                     activityName = activityName,
                                     extension = extension.lowercase(),

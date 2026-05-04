@@ -11,7 +11,7 @@ import kotlinx.serialization.Serializable
  * Known [state] values: `"active"`, `"archived"`.
  */
 @Serializable
-data class Course(
+data class CourseApi(
     val id: String = "",
     val name: String = "",
     val state: String = "",

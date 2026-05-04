@@ -35,16 +35,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import io.github.kroune.cumobile.data.model.LongreadMaterial
 import io.github.kroune.cumobile.presentation.common.dataOrNull
+import io.github.kroune.cumobile.presentation.common.model.LongreadMaterialUi
+import io.github.kroune.cumobile.presentation.common.model.StatusStyle
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 import io.github.kroune.cumobile.presentation.longread.component.questions.QuestionsMaterialComponent
 import io.github.kroune.cumobile.presentation.longread.component.questions.QuestionsMaterialComponent.QuizPhase
-import io.github.kroune.cumobile.data.model.TaskState as TS
 
 @Composable
 fun QuestionsMaterialCard(
-    material: LongreadMaterial,
+    material: LongreadMaterialUi,
     state: QuestionsMaterialComponent.State,
     onIntent: (QuestionsMaterialComponent.Intent) -> Unit,
 ) {
@@ -121,7 +121,7 @@ private fun ConfirmDialogs(
 
 @Composable
 private fun CardHeader(
-    material: LongreadMaterial,
+    material: LongreadMaterialUi,
     state: QuestionsMaterialComponent.State,
 ) {
     Row(
@@ -161,10 +161,10 @@ private fun PhaseStatusText(state: QuestionsMaterialComponent.State) {
         QuizPhase.InProgress -> "В процессе" to AppTheme.colors.accent
         QuizPhase.Completing -> "Завершение..." to AppTheme.colors.accent
         QuizPhase.Completed -> {
-            when (state.taskState) {
-                TS.Review -> "На проверке" to AppTheme.colors.accent
-                TS.InProgress -> "Попытка завершена" to AppTheme.colors.accent
-                TS.Failed -> "Неудача" to AppTheme.colors.error
+            when (state.taskStatusStyle) {
+                StatusStyle.Review -> "На проверке" to AppTheme.colors.accent
+                StatusStyle.InProgress -> "Попытка завершена" to AppTheme.colors.accent
+                StatusStyle.Failed, StatusStyle.Rejected -> "Неудача" to AppTheme.colors.error
                 else -> "Завершён" to AppTheme.colors.taskEvaluated
             }
         }
@@ -176,10 +176,10 @@ private fun PhaseStatusText(state: QuestionsMaterialComponent.State) {
 @Composable
 private fun ScoreBadge(state: QuestionsMaterialComponent.State) {
     val details = state.taskDetails.dataOrNull ?: return
-    val score = details.score ?: return
-    val maxScore = details.maxScore ?: return
+    val scoreText = details.scoreText ?: return
+    val maxScoreFormatted = details.exercise?.maxScoreFormatted ?: return
     Text(
-        text = "${score.displayScore()}/${maxScore.displayScore()}",
+        text = "$scoreText/$maxScoreFormatted",
         color = AppTheme.colors.textPrimary,
         fontSize = 14.sp,
         fontWeight = FontWeight.SemiBold,

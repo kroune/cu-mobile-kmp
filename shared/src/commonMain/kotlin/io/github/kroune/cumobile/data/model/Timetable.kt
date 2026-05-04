@@ -7,36 +7,36 @@ import kotlinx.serialization.Serializable
  * Each entry represents a course with its scheduled event rows.
  */
 @Serializable
-data class TimetableCourse(
+data class TimetableCourseApi(
     val courseId: Long,
     val courseName: String,
-    val eventRows: List<TimetableEventRow>,
+    val eventRows: List<TimetableEventRowApi>,
 )
 
 @Serializable
-data class TimetableEventRow(
+data class TimetableEventRowApi(
     val eventType: String,
     val eventRowNumber: Int,
-    val calendarEvent: TimetableCalendarEvent? = null,
+    val calendarEvent: TimetableCalendarEventApi? = null,
 )
 
 @Serializable
-data class TimetableCalendarEvent(
+data class TimetableCalendarEventApi(
     val calendarEventId: String,
     val eventType: String,
     val location: String? = null,
-    val host: TimetableHost? = null,
-    val schedule: TimetableSchedule? = null,
+    val host: TimetableHostApi? = null,
+    val schedule: TimetableScheduleApi? = null,
 )
 
 @Serializable
-data class TimetableHost(
+data class TimetableHostApi(
     val name: String? = null,
     val email: String? = null,
 )
 
 @Serializable
-data class TimetableSchedule(
+data class TimetableScheduleApi(
     val startDate: String,
     val endDate: String,
     val startTime: String,

@@ -39,10 +39,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import io.github.kroune.cumobile.baseline.BaselineTestTags
-import io.github.kroune.cumobile.data.model.Course
-import io.github.kroune.cumobile.data.model.StudentTask
 import io.github.kroune.cumobile.presentation.common.ContentState
 import io.github.kroune.cumobile.presentation.common.isError
+import io.github.kroune.cumobile.presentation.common.isLoading
+import io.github.kroune.cumobile.presentation.common.model.CourseUi
+import io.github.kroune.cumobile.presentation.common.model.TaskUi
 import io.github.kroune.cumobile.presentation.common.ui.ActionErrorBar
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 import io.github.kroune.cumobile.presentation.common.ui.CourseCard
@@ -78,8 +79,10 @@ fun HomeScreen(
         }
     }
 
+    val isContentLoading = state.tasks.isLoading && state.courses.isLoading
+
     PullToRefreshBox(
-        isRefreshing = state.isContentLoading,
+        isRefreshing = isContentLoading,
         onRefresh = { component.onIntent(HomeComponent.Intent.Refresh) },
         modifier = modifier
             .fillMaxSize()
@@ -91,7 +94,7 @@ fun HomeScreen(
                 onRetry = { component.onIntent(HomeComponent.Intent.Refresh) },
             )
 
-            state.isContentLoading -> HomeScreenSkeleton()
+            isContentLoading -> HomeScreenSkeleton()
             else -> Column(modifier = Modifier.fillMaxSize()) {
                 ActionErrorBar(
                     error = actionError,
@@ -101,10 +104,17 @@ fun HomeScreen(
                     state = state,
                     onIntent = { component.onIntent(it) },
                     onTaskClick = { task ->
-                        component.onIntent(HomeComponent.Intent.OpenTask(task))
+                        component.onIntent(
+                            HomeComponent.Intent.OpenTask(
+                                taskId = task.id,
+                                courseId = task.courseId,
+                                themeId = task.themeId,
+                                longreadId = task.longreadId,
+                            ),
+                        )
                     },
-                    onCourseClick = { courseId ->
-                        component.onIntent(HomeComponent.Intent.OpenCourse(courseId))
+                    onCourseClick = { course ->
+                        component.onIntent(HomeComponent.Intent.OpenCourse(course.id))
                     },
                 )
             }
@@ -116,8 +126,8 @@ fun HomeScreen(
 internal fun HomeContent(
     state: HomeComponent.State,
     onIntent: (HomeComponent.Intent) -> Unit,
-    onTaskClick: (StudentTask) -> Unit,
-    onCourseClick: (String) -> Unit,
+    onTaskClick: (TaskUi) -> Unit,
+    onCourseClick: (CourseUi) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
@@ -158,9 +168,9 @@ internal fun HomeContent(
  */
 @Composable
 private fun DeadlinesSection(
-    tasksState: ContentState<List<StudentTask>>,
-    deadlineTasks: ImmutableList<StudentTask>,
-    onTaskClick: (StudentTask) -> Unit,
+    tasksState: ContentState<List<TaskUi>>,
+    deadlineTasks: ImmutableList<TaskUi>,
+    onTaskClick: (TaskUi) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.padding(top = 8.dp)) {
@@ -225,9 +235,9 @@ private fun DeadlinesSection(
  */
 @Composable
 private fun CoursesSection(
-    coursesState: ContentState<List<Course>>,
-    activeCourses: ImmutableList<Course>,
-    onCourseClick: (String) -> Unit,
+    coursesState: ContentState<List<CourseUi>>,
+    activeCourses: ImmutableList<CourseUi>,
+    onCourseClick: (CourseUi) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
@@ -277,7 +287,7 @@ private fun CoursesSection(
                         ) { course ->
                             CourseCard(
                                 course = course,
-                                onClick = { onCourseClick(course.id) },
+                                onClick = { onCourseClick(course) },
                             )
                         }
                     }
@@ -305,6 +315,7 @@ private fun ScheduleSection(
 
         WeekPicker(
             weekStart = state.weekStart,
+            weekRangeLabel = state.weekRangeLabel,
             selectedDate = state.selectedDate,
             onDateSelected = { onIntent(HomeComponent.Intent.SelectDate(it)) },
             onPreviousWeek = { onIntent(HomeComponent.Intent.PreviousWeek) },

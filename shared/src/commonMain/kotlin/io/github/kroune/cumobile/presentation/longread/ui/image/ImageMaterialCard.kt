@@ -20,14 +20,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.SubcomposeAsyncImage
-import io.github.kroune.cumobile.data.model.LongreadMaterial
+import io.github.kroune.cumobile.presentation.common.model.LongreadMaterialUi
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 import io.github.kroune.cumobile.presentation.longread.htmlrender.resolveUrl
 
 /** Card for standalone `image` discriminator materials. */
 @Composable
 fun ImageMaterialCard(
-    material: LongreadMaterial,
+    material: LongreadMaterialUi,
     modifier: Modifier = Modifier,
 ) {
     val url = material.viewContent?.let { resolveUrl(it) }

@@ -1,7 +1,7 @@
 package io.github.kroune.cumobile.presentation.files
 
 import com.arkivanov.decompose.value.Value
-import io.github.kroune.cumobile.data.local.DownloadedFileInfo
+import io.github.kroune.cumobile.presentation.common.model.DownloadedFileInfoUi
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -23,7 +23,7 @@ interface FilesComponent {
     }
 
     data class State(
-        val files: List<DownloadedFileInfo> = emptyList(),
+        val files: List<DownloadedFileInfoUi> = emptyList(),
         val isLoading: Boolean = false,
         val error: String? = null,
         /** Names of currently selected files (for batch delete). */

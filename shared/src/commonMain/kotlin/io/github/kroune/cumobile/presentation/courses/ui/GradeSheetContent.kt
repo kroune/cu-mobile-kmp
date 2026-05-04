@@ -28,13 +28,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import io.github.kroune.cumobile.data.model.StudentPerformanceCourse
 import io.github.kroune.cumobile.presentation.common.ContentState
+import io.github.kroune.cumobile.presentation.common.dataOrNull
+import io.github.kroune.cumobile.presentation.common.model.CourseGradeUi
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 import io.github.kroune.cumobile.presentation.common.ui.EmptyContent
 import io.github.kroune.cumobile.presentation.common.ui.ErrorContent
 import io.github.kroune.cumobile.presentation.common.ui.gradeColor
-import io.github.kroune.cumobile.presentation.common.ui.gradeDescription
 import io.github.kroune.cumobile.presentation.common.ui.stripEmojiPrefix
 import io.github.kroune.cumobile.presentation.courses.CoursesComponent
 
@@ -67,8 +67,9 @@ internal fun GradeSheetContent(
             onRetry = { onIntent(CoursesComponent.Intent.Refresh) },
         )
         is ContentState.Success -> {
+            val courseList = state.courses.dataOrNull
             val items = perfState.data.filter { perf ->
-                state.courseList.none { it.id == perf.id && it.isArchived }
+                courseList == null || courseList.none { it.id == perf.id && it.isArchived }
             }
 
             if (items.isEmpty()) {
@@ -102,7 +103,7 @@ internal fun GradeSheetContent(
 
 @Composable
 private fun GradeSheetTile(
-    performance: StudentPerformanceCourse,
+    performance: CourseGradeUi,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -125,7 +126,7 @@ private fun GradeSheetTile(
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                text = performance.total.toString(),
+                text = performance.totalFormatted,
                 color = color,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
@@ -144,7 +145,7 @@ private fun GradeSheetTile(
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
-                text = gradeDescription(performance.total),
+                text = performance.totalDescription,
                 color = color,
                 fontSize = 12.sp,
             )

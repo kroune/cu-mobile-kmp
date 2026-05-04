@@ -3,13 +3,19 @@ package io.github.kroune.cumobile.presentation.performance
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
-import io.github.kroune.cumobile.data.model.CourseExercise
-import io.github.kroune.cumobile.data.model.TaskScore
+import io.github.kroune.cumobile.domain.model.CourseExerciseDomain
+import io.github.kroune.cumobile.domain.model.ExerciseScoreDomain
 import io.github.kroune.cumobile.domain.repository.PerformanceRepository
 import io.github.kroune.cumobile.presentation.common.ContentState
 import io.github.kroune.cumobile.presentation.common.componentScope
 import io.github.kroune.cumobile.presentation.common.dataOrNull
+import io.github.kroune.cumobile.presentation.common.formatScore
 import io.github.kroune.cumobile.presentation.common.isLoading
+import io.github.kroune.cumobile.presentation.common.model.ActivitySummaryUi
+import io.github.kroune.cumobile.presentation.common.model.ExerciseWithScoreUi
+import io.github.kroune.cumobile.presentation.common.model.mappers.toActivitySummaryUi
+import io.github.kroune.cumobile.presentation.common.model.mappers.toExerciseWithScoreUi
+import io.github.kroune.cumobile.presentation.common.ui.gradeDescription
 import io.github.kroune.cumobile.util.AppDispatchers
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.async
@@ -30,8 +36,8 @@ data class CoursePerformanceParams(
  * Default implementation of [CoursePerformanceComponent].
  *
  * Loads course exercises and per-task scores in parallel, then joins
- * them into [ExerciseWithScore] items and computes
- * [ActivitySummary] aggregates.
+ * them into [ExerciseWithScoreUi] items and computes
+ * [ActivitySummaryUi] aggregates.
  */
 class DefaultCoursePerformanceComponent(
     componentContext: ComponentContext,
@@ -50,6 +56,8 @@ class DefaultCoursePerformanceComponent(
             courseId = params.courseId,
             courseName = params.courseName,
             totalGrade = params.totalGrade,
+            totalGradeFormatted = params.totalGrade.toString(),
+            totalGradeDescription = gradeDescription(params.totalGrade),
         ),
     )
     override val state: Value<CoursePerformanceComponent.State> = _state
@@ -69,6 +77,7 @@ class DefaultCoursePerformanceComponent(
         } else {
             exercises.filter { it.activityName == s.activityFilter }.toImmutableList()
         }
+        val totalContrib = summaries.sumOf { it.totalContribution }
         _state.value = s.copy(
             exercises = exercises,
             activitySummaries = summaries,
@@ -79,7 +88,8 @@ class DefaultCoursePerformanceComponent(
                 .sorted()
                 .toImmutableList(),
             filteredExercises = filtered,
-            totalContribution = summaries.sumOf { it.totalContribution },
+            totalContribution = totalContrib,
+            totalContributionFormatted = formatScore(totalContrib),
         )
     }
 
@@ -109,23 +119,25 @@ class DefaultCoursePerformanceComponent(
                 performanceRepository.fetchCoursePerformance(params.courseId)
             }
 
-            val exercisesResponse = exercisesDeferred.await()
-            val performanceResponse = performanceDeferred.await()
+            val exercises = exercisesDeferred.await()
+            val tasks = performanceDeferred.await()
 
-            if (exercisesResponse == null && performanceResponse == null) {
+            if (exercises == null && tasks == null) {
                 updateState {
                     copy(content = ContentState.Error("Не удалось загрузить успеваемость"))
                 }
                 return@launch
             }
 
-            val exercises = exercisesResponse?.exercises.orEmpty()
-            val tasks = performanceResponse?.tasks.orEmpty()
-
             val performanceData = withContext(dispatchers.default) {
                 PerformanceData(
-                    exercises = joinExercisesWithScores(exercises, tasks).toImmutableList(),
-                    activitySummaries = buildActivitySummaries(tasks).toImmutableList(),
+                    exercises = joinExercisesWithScores(
+                        exercises.orEmpty(),
+                        tasks.orEmpty(),
+                    ).toImmutableList(),
+                    activitySummaries = buildActivitySummaries(
+                        tasks.orEmpty(),
+                    ).toImmutableList(),
                 )
             }
 
@@ -134,42 +146,33 @@ class DefaultCoursePerformanceComponent(
     }
 }
 
-/**
- * Joins exercises with their scores by matching
- * [CourseExercise.id] to [TaskScore.exerciseId].
- */
 internal fun joinExercisesWithScores(
-    exercises: List<CourseExercise>,
-    tasks: List<TaskScore>,
-): List<ExerciseWithScore> {
+    exercises: List<CourseExerciseDomain>,
+    tasks: List<ExerciseScoreDomain>,
+): List<ExerciseWithScoreUi> {
     val scoreByExerciseId = tasks.associateBy { it.exerciseId }
     return exercises.map { exercise ->
-        ExerciseWithScore(
+        toExerciseWithScoreUi(
             exercise = exercise,
             score = scoreByExerciseId[exercise.id],
         )
     }
 }
 
-/**
- * Groups tasks by activity and computes per-activity averages.
- *
- * Results are sorted by weight descending.
- */
-internal fun buildActivitySummaries(tasks: List<TaskScore>): List<ActivitySummary> {
-    val grouped = tasks.groupBy { it.activity.id }
+internal fun buildActivitySummaries(tasks: List<ExerciseScoreDomain>): List<ActivitySummaryUi> {
+    val grouped = tasks.groupBy { it.activityId }
     val summaries = grouped.map { entry ->
         val activityId = entry.key
         val activityTasks = entry.value
         val first = activityTasks.first()
         val totalScore = activityTasks.sumOf { it.score }
         val avgScore = totalScore / activityTasks.size
-        ActivitySummary(
+        toActivitySummaryUi(
             activityId = activityId,
-            activityName = first.activity.name,
+            activityName = first.activityName,
             count = activityTasks.size,
             averageScore = avgScore,
-            weight = first.activity.weight,
+            weight = first.activityWeight,
         )
     }
     return summaries.sortedByDescending { it.weight }

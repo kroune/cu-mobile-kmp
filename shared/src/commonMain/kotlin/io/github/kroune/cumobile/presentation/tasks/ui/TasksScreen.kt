@@ -34,18 +34,17 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
-import io.github.kroune.cumobile.data.model.StudentTask
 import io.github.kroune.cumobile.presentation.common.ContentState
 import io.github.kroune.cumobile.presentation.common.dataOrNull
 import io.github.kroune.cumobile.presentation.common.errorOrNull
 import io.github.kroune.cumobile.presentation.common.isLoading
+import io.github.kroune.cumobile.presentation.common.model.TaskUi
 import io.github.kroune.cumobile.presentation.common.ui.AppTabRow
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 import io.github.kroune.cumobile.presentation.common.ui.EmptyContent
 import io.github.kroune.cumobile.presentation.common.ui.ErrorContent
 import io.github.kroune.cumobile.presentation.common.ui.LoadingContent
 import io.github.kroune.cumobile.presentation.common.ui.stripEmojiPrefix
-import io.github.kroune.cumobile.presentation.common.ui.taskStateLabel
 import io.github.kroune.cumobile.presentation.tasks.TasksComponent
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -156,7 +155,7 @@ internal fun TasksScreenContent(
 @Composable
 private fun TasksContentArea(
     contentState: ContentState<TasksComponent.Content>,
-    tasks: ImmutableList<StudentTask>,
+    tasks: ImmutableList<TaskUi>,
     onIntent: (TasksComponent.Intent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -185,7 +184,14 @@ private fun TasksContentArea(
                     TaskListItem(
                         task = task,
                         onClick = {
-                            onIntent(TasksComponent.Intent.OpenTask(task))
+                            onIntent(
+                                TasksComponent.Intent.OpenTask(
+                                    taskId = task.id,
+                                    courseId = task.courseId,
+                                    themeId = task.themeId,
+                                    longreadId = task.longreadId,
+                                ),
+                            )
                         },
                     )
                 }
@@ -251,13 +257,13 @@ private fun FiltersRow(
 /** Status filter chips row — selected chip moves to front. */
 @Composable
 private fun StatusFilterChips(
-    availableStatuses: ImmutableList<String>,
+    availableStatuses: ImmutableList<Pair<String, String>>,
     statusFilter: String?,
     onIntent: (TasksComponent.Intent) -> Unit,
 ) {
     val statuses = availableStatuses
     if (statuses.isEmpty()) return
-    val sorted = selectedFirst(statuses, statusFilter)
+    val sorted = selectedFirst(statuses, statusFilter) { it.first }
     val listState = rememberLazyListState()
     LaunchedEffect(statusFilter) {
         listState.animateScrollToItem(0)
@@ -268,13 +274,13 @@ private fun StatusFilterChips(
     ) {
         items(
             items = sorted,
-            key = { it },
-        ) { status ->
+            key = { it.first },
+        ) { (apiValue, label) ->
             FilterChip(
-                label = taskStateLabel(status),
-                selected = statusFilter == status,
+                label = label,
+                selected = statusFilter == apiValue,
                 onClick = {
-                    val newFilter = if (statusFilter == status) null else status
+                    val newFilter = if (statusFilter == apiValue) null else apiValue
                     onIntent(TasksComponent.Intent.FilterByStatus(newFilter))
                 },
                 modifier = Modifier.animateItem(),
@@ -316,13 +322,6 @@ private fun CourseFilterChips(
         }
     }
 }
-
-/** Moves the selected string to the front, keeping relative order of the rest. */
-private fun selectedFirst(
-    items: List<String>,
-    selectedKey: String?,
-): List<String> =
-    selectedFirst(items, selectedKey) { it }
 
 /** Moves the selected item to the front, keeping relative order of the rest. */
 private fun <T> selectedFirst(

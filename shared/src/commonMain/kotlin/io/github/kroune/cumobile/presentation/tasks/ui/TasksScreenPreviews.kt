@@ -3,11 +3,11 @@ package io.github.kroune.cumobile.presentation.tasks.ui
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.tooling.preview.Preview
-import io.github.kroune.cumobile.data.model.StudentTask
-import io.github.kroune.cumobile.data.model.TaskCourse
-import io.github.kroune.cumobile.data.model.TaskExercise
-import io.github.kroune.cumobile.data.model.TaskState
+import io.github.kroune.cumobile.data.model.mappers.toApiValue
+import io.github.kroune.cumobile.domain.model.TaskDomain
+import io.github.kroune.cumobile.domain.model.TaskStatus
 import io.github.kroune.cumobile.presentation.common.ContentState
+import io.github.kroune.cumobile.presentation.common.parseDeadlineInstant
 import io.github.kroune.cumobile.presentation.common.ui.CuMobileTheme
 import io.github.kroune.cumobile.presentation.common.ui.LocalClock
 import io.github.kroune.cumobile.presentation.common.ui.previewClock
@@ -16,7 +16,7 @@ import io.github.kroune.cumobile.presentation.tasks.buildTasksContent
 import kotlinx.collections.immutable.persistentListOf
 
 private fun previewState(
-    tasks: List<StudentTask>,
+    tasks: List<TaskDomain>,
     segment: Int = 0,
     statusFilter: String? = null,
     courseFilter: String? = null,
@@ -30,6 +30,7 @@ private fun previewState(
                 statusFilter = statusFilter,
                 courseFilter = courseFilter,
                 searchQuery = searchQuery,
+                now = previewClock.now(),
             ),
         ),
         segment = segment,
@@ -38,41 +39,82 @@ private fun previewState(
         searchQuery = searchQuery,
     )
 
+private fun previewTaskDomain(
+    id: String = "",
+    status: TaskStatus = TaskStatus.Backlog,
+    exerciseName: String = "",
+    deadline: String? = null,
+    courseId: String = "",
+    courseName: String = "",
+    score: Double? = null,
+) =
+    TaskDomain(
+        id = id,
+        status = status,
+        score = score,
+        extraScore = null,
+        deadline = null,
+        submitAt = null,
+        startedAt = null,
+        exerciseId = "",
+        exerciseName = exerciseName,
+        exerciseType = "",
+        exerciseMaxScore = 0,
+        exerciseDeadline = parseDeadlineInstant(deadline),
+        activityName = null,
+        activityWeight = null,
+        courseId = courseId,
+        courseName = courseName,
+        courseIsArchived = status.isArchived,
+        themeId = "",
+        themeName = "",
+        longreadId = "",
+        isLateDaysEnabled = false,
+        lateDays = null,
+    )
+
 private val previewActiveTasks = persistentListOf(
-    StudentTask(
+    previewTaskDomain(
         id = "1",
-        state = TaskState.InProgress,
-        exercise = TaskExercise(name = "ДЗ: Деревья и графы", deadline = "2026-04-01T23:59:00"),
-        course = TaskCourse(id = "1", name = "Алгоритмы"),
+        status = TaskStatus.InProgress,
+        exerciseName = "ДЗ: Деревья и графы",
+        deadline = "2026-04-01T23:59:00",
+        courseId = "1",
+        courseName = "Алгоритмы",
     ),
-    StudentTask(
+    previewTaskDomain(
         id = "2",
-        state = TaskState.Backlog,
-        exercise = TaskExercise(name = "Лабораторная 3", deadline = "2026-04-05T23:59:00"),
-        course = TaskCourse(id = "2", name = "Линейная алгебра"),
+        status = TaskStatus.Backlog,
+        exerciseName = "Лабораторная 3",
+        deadline = "2026-04-05T23:59:00",
+        courseId = "2",
+        courseName = "Линейная алгебра",
     ),
-    StudentTask(
+    previewTaskDomain(
         id = "3",
-        state = TaskState.Review,
-        exercise = TaskExercise(name = "Эссе по менеджменту"),
-        course = TaskCourse(id = "3", name = "Менеджмент"),
+        status = TaskStatus.Review,
+        exerciseName = "Эссе по менеджменту",
+        courseId = "3",
+        courseName = "Менеджмент",
     ),
 )
 
 private val previewArchiveTasks = persistentListOf(
-    StudentTask(
+    previewTaskDomain(
         id = "10",
-        state = TaskState.Evaluated,
+        status = TaskStatus.Evaluated,
+        exerciseName = "ДЗ: Сортировки",
+        courseId = "1",
+        courseName = "Алгоритмы",
         score = 8.0,
-        exercise = TaskExercise(name = "ДЗ: Сортировки"),
-        course = TaskCourse(id = "1", name = "Алгоритмы"),
     ),
-    StudentTask(
+    previewTaskDomain(
         id = "11",
-        state = TaskState.Failed,
+        status = TaskStatus.Failed,
+        exerciseName = "Контрольная: Матрицы",
+        courseId = "2",
+        courseName = "Линейная алгебра",
         score = 2.0,
-        exercise = TaskExercise(name = "Контрольная: Матрицы"),
-        course = TaskCourse(id = "2", name = "Линейная алгебра"),
     ),
 )
 
@@ -168,7 +210,7 @@ private fun PreviewTasksWithFiltersDark() {
             TasksScreenContent(
                 state = previewState(
                     tasks = previewActiveTasks,
-                    statusFilter = TaskState.InProgress,
+                    statusFilter = TaskStatus.InProgress.toApiValue(),
                     courseFilter = "1",
                 ),
                 onIntent = {},

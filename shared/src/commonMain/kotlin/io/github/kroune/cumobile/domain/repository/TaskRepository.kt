@@ -1,11 +1,11 @@
 package io.github.kroune.cumobile.domain.repository
 
-import io.github.kroune.cumobile.data.model.MaterialAttachment
-import io.github.kroune.cumobile.data.model.StartTaskResponse
-import io.github.kroune.cumobile.data.model.StudentTask
-import io.github.kroune.cumobile.data.model.TaskComment
-import io.github.kroune.cumobile.data.model.TaskDetails
-import io.github.kroune.cumobile.data.model.TaskEvent
+import io.github.kroune.cumobile.domain.model.MaterialAttachmentDomain
+import io.github.kroune.cumobile.domain.model.StartTaskResponseDomain
+import io.github.kroune.cumobile.domain.model.TaskCommentDomain
+import io.github.kroune.cumobile.domain.model.TaskDetailsDomain
+import io.github.kroune.cumobile.domain.model.TaskDomain
+import io.github.kroune.cumobile.domain.model.TaskEventDomain
 
 /** Repository for task-related operations. */
 interface TaskRepository {
@@ -14,19 +14,19 @@ interface TaskRepository {
      *
      * Known states: "inProgress", "review", "backlog", "failed", "evaluated".
      */
-    suspend fun fetchTasks(states: List<String>): List<StudentTask>?
+    suspend fun fetchTasks(states: List<String>): List<TaskDomain>?
 
     /** Fetches details for a specific task. */
-    suspend fun fetchTaskDetails(taskId: String): TaskDetails?
+    suspend fun fetchTaskDetails(taskId: String): TaskDetailsDomain?
 
     /** Fetches the event history for a task. */
-    suspend fun fetchTaskEvents(taskId: String): List<TaskEvent>?
+    suspend fun fetchTaskEvents(taskId: String): List<TaskEventDomain>?
 
     /** Fetches comments on a task. */
-    suspend fun fetchTaskComments(taskId: String): List<TaskComment>?
+    suspend fun fetchTaskComments(taskId: String): List<TaskCommentDomain>?
 
     /** Starts a task (moves it from backlog to inProgress). */
-    suspend fun startTask(taskId: String): StartTaskResponse?
+    suspend fun startTask(taskId: String): StartTaskResponseDomain?
 
     /**
      * Submits a task solution.
@@ -37,7 +37,7 @@ interface TaskRepository {
     suspend fun submitTask(
         taskId: String,
         solutionUrl: String? = null,
-        attachments: List<MaterialAttachment> = emptyList(),
+        attachments: List<MaterialAttachmentDomain> = emptyList(),
     ): Boolean
 
     /** Requests late-day extension for a task. */
@@ -57,14 +57,14 @@ interface TaskRepository {
     suspend fun createComment(
         taskId: String,
         content: String,
-        attachments: List<MaterialAttachment> = emptyList(),
+        attachments: List<MaterialAttachmentDomain> = emptyList(),
     ): String?
 
     /** Updates an existing comment's text and attachments. */
     suspend fun editComment(
         commentId: String,
         content: String,
-        attachments: List<MaterialAttachment> = emptyList(),
+        attachments: List<MaterialAttachmentDomain> = emptyList(),
     ): Boolean
 
     /** Deletes a comment by its ID. */

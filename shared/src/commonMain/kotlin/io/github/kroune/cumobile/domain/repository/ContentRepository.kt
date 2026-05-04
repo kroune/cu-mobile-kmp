@@ -1,16 +1,16 @@
 package io.github.kroune.cumobile.domain.repository
 
-import io.github.kroune.cumobile.data.model.LongreadMaterial
-import io.github.kroune.cumobile.data.model.MaterialAttachment
-import io.github.kroune.cumobile.data.model.UploadLinkData
+import io.github.kroune.cumobile.domain.model.LongreadMaterialDomain
+import io.github.kroune.cumobile.domain.model.MaterialAttachmentDomain
+import io.github.kroune.cumobile.domain.model.UploadLinkDataDomain
 
 /** Repository for longread/material content and file links. */
 interface ContentRepository {
     /** Fetches all materials for a longread. */
-    suspend fun fetchLongreadMaterials(longreadId: String): List<LongreadMaterial>?
+    suspend fun fetchLongreadMaterials(longreadId: String): List<LongreadMaterialDomain>?
 
     /** Fetches a single material by ID. */
-    suspend fun fetchMaterial(materialId: String): LongreadMaterial?
+    suspend fun fetchMaterial(materialId: String): LongreadMaterialDomain?
 
     /**
      * Gets a pre-signed download URL for a file.
@@ -30,13 +30,13 @@ interface ContentRepository {
      * @param directory the target directory in storage.
      * @param filename the file name.
      * @param contentType the MIME type of the file.
-     * @return [UploadLinkData] with the upload URL and metadata, or null.
+     * @return [UploadLinkDataDomain] with the upload URL and metadata, or null.
      */
     suspend fun getUploadLink(
         directory: String,
         filename: String,
         contentType: String,
-    ): UploadLinkData?
+    ): UploadLinkDataDomain?
 
     /**
      * Uploads a file to storage: obtains a pre-signed URL, then PUTs the bytes.
@@ -45,7 +45,7 @@ interface ContentRepository {
      * @param filename the file name.
      * @param contentType the MIME type of the file.
      * @param bytes the raw file content.
-     * @return a [MaterialAttachment] ready to be included in a task submission or comment,
+     * @return a [MaterialAttachmentDomain] ready to be included in a task submission or comment,
      *         or null if any step failed.
      */
     suspend fun uploadFile(
@@ -53,5 +53,5 @@ interface ContentRepository {
         filename: String,
         contentType: String,
         bytes: ByteArray,
-    ): MaterialAttachment?
+    ): MaterialAttachmentDomain?
 }

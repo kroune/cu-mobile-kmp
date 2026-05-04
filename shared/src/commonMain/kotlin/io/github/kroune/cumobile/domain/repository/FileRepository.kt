@@ -1,6 +1,6 @@
 package io.github.kroune.cumobile.domain.repository
 
-import io.github.kroune.cumobile.data.local.DownloadedFileInfo
+import io.github.kroune.cumobile.domain.model.DownloadedFileInfoDomain
 
 /**
  * Repository for managing locally downloaded files.
@@ -12,7 +12,7 @@ interface FileRepository {
     /**
      * Lists all downloaded files, sorted by modification date (newest first).
      */
-    suspend fun listDownloadedFiles(): List<DownloadedFileInfo>
+    suspend fun listDownloadedFiles(): List<DownloadedFileInfoDomain>
 
     /**
      * Deletes a single file by name.

@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
  * Student profile from the micro-LMS service.
  */
 @Serializable
-data class StudentLmsProfile(
+data class LmsProfileApi(
     val id: String = "",
     val lastName: String = "",
     val firstName: String = "",

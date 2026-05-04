@@ -1,11 +1,13 @@
 package io.github.kroune.cumobile.presentation.longread.component.coding
 
 import com.arkivanov.decompose.value.MutableValue
-import io.github.kroune.cumobile.data.model.MaterialAttachment
-import io.github.kroune.cumobile.data.model.PendingAttachment
-import io.github.kroune.cumobile.data.model.PickedFile
-import io.github.kroune.cumobile.data.model.UploadStatus
+import io.github.kroune.cumobile.domain.model.MaterialAttachmentDomain
 import io.github.kroune.cumobile.domain.repository.ContentRepository
+import io.github.kroune.cumobile.presentation.common.model.PendingAttachmentUi
+import io.github.kroune.cumobile.presentation.common.model.PickedFileUi
+import io.github.kroune.cumobile.presentation.common.model.UploadStatusUi
+import io.github.kroune.cumobile.presentation.common.model.mappers.toDomain
+import io.github.kroune.cumobile.presentation.common.model.mappers.toUi
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.CoroutineScope
@@ -30,13 +32,13 @@ internal class CodingAttachmentManager(
     }
 
     fun uploadAttachment(
-        file: PickedFile,
+        file: PickedFileUi,
         isSolution: Boolean,
     ) {
-        val pending = PendingAttachment(
+        val pending = PendingAttachmentUi(
             name = file.name,
             size = file.size,
-            status = UploadStatus.Uploading,
+            status = UploadStatusUi.Uploading,
         )
         if (isSolution) {
             state.value = state.value.copy(
@@ -54,13 +56,14 @@ internal class CodingAttachmentManager(
         } else {
             "tasks/$taskId/comments"
         }
+        val domainFile = file.toDomain()
         scope.launch {
             val attachment = try {
                 contentRepository.uploadFile(
                     directory = directory,
-                    filename = file.name,
-                    contentType = file.contentType,
-                    bytes = file.bytes,
+                    filename = domainFile.name,
+                    contentType = domainFile.contentType,
+                    bytes = domainFile.bytes,
                 )
             } catch (e: CancellationException) {
                 throw e
@@ -97,16 +100,16 @@ internal class CodingAttachmentManager(
 
     private fun updateSolutionAttachment(
         fileName: String,
-        attachment: MaterialAttachment?,
+        attachment: MaterialAttachmentDomain?,
     ) {
         val list = state.value.pendingSolutionAttachments.toMutableList()
         val idx = list.indexOfFirst {
-            it.name == fileName && it.status == UploadStatus.Uploading
+            it.name == fileName && it.status == UploadStatusUi.Uploading
         }
         if (idx >= 0) {
             list[idx] = list[idx].copy(
-                status = if (attachment != null) UploadStatus.Uploaded else UploadStatus.Failed,
-                uploadedAttachment = attachment,
+                status = if (attachment != null) UploadStatusUi.Uploaded else UploadStatusUi.Failed,
+                uploadedAttachment = attachment?.toUi(),
             )
             state.value = state.value.copy(pendingSolutionAttachments = list.toPersistentList())
         }
@@ -114,16 +117,16 @@ internal class CodingAttachmentManager(
 
     private fun updateCommentAttachment(
         fileName: String,
-        attachment: MaterialAttachment?,
+        attachment: MaterialAttachmentDomain?,
     ) {
         val list = state.value.pendingCommentAttachments.toMutableList()
         val idx = list.indexOfFirst {
-            it.name == fileName && it.status == UploadStatus.Uploading
+            it.name == fileName && it.status == UploadStatusUi.Uploading
         }
         if (idx >= 0) {
             list[idx] = list[idx].copy(
-                status = if (attachment != null) UploadStatus.Uploaded else UploadStatus.Failed,
-                uploadedAttachment = attachment,
+                status = if (attachment != null) UploadStatusUi.Uploaded else UploadStatusUi.Failed,
+                uploadedAttachment = attachment?.toUi(),
             )
             state.value = state.value.copy(pendingCommentAttachments = list.toPersistentList())
         }

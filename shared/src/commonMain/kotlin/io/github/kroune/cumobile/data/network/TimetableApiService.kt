@@ -1,6 +1,6 @@
 package io.github.kroune.cumobile.data.network
 
-import io.github.kroune.cumobile.data.model.TimetableCourse
+import io.github.kroune.cumobile.data.model.TimetableCourseApi
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
@@ -20,7 +20,7 @@ internal class TimetableApiService(
      * Fetches the current student's full timetable.
      * Returns `null` on failure.
      */
-    suspend fun fetchTimetable(cookie: String): List<TimetableCourse>? =
+    suspend fun fetchTimetable(cookie: String): List<TimetableCourseApi>? =
         safeApiCall(logger, "fetch timetable") {
             httpClient.get(ApiEndpoints.Timetable.ME) {
                 header("Cookie", cookieHeader(cookie))

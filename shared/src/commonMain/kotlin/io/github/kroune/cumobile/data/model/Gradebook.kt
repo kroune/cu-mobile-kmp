@@ -6,28 +6,28 @@ import kotlinx.serialization.Serializable
  * Gradebook response containing semester grades.
  */
 @Serializable
-data class GradebookResponse(
-    val semesters: List<GradebookSemester> = emptyList(),
+data class GradebookResponseApi(
+    val semesters: List<GradebookSemesterApi> = emptyList(),
 )
 
-/** A single semester in the [GradebookResponse]. */
+/** A single semester in the [GradebookResponseApi]. */
 @Serializable
-data class GradebookSemester(
+data class GradebookSemesterApi(
     val year: Int,
     val semesterNumber: Int,
-    val grades: List<GradebookGrade> = emptyList(),
+    val grades: List<GradebookGradeApi> = emptyList(),
 ) {
     /** Non-elective grades. */
-    val regularGrades: List<GradebookGrade>
+    val regularGrades: List<GradebookGradeApi>
         get() = grades.filter { !it.isElective }
 
     /** Elective grades. */
-    val electiveGrades: List<GradebookGrade>
+    val electiveGrades: List<GradebookGradeApi>
         get() = grades.filter { it.isElective }
 }
 
 /**
- * Individual grade entry in a [GradebookSemester].
+ * Individual grade entry in a [GradebookSemesterApi].
  *
  * Known [normalizedGrade] values:
  * `"passed"` (Зачтено), `"excellent"` (Отлично), `"good"` (Хорошо),
@@ -39,7 +39,7 @@ data class GradebookSemester(
  * Known [subjectType] values: `"elective"` vs others.
  */
 @Serializable
-data class GradebookGrade(
+data class GradebookGradeApi(
     val subject: String,
     val grade: Double? = null,
     val normalizedGrade: String = "unknown",

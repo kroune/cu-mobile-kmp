@@ -2,7 +2,7 @@ package io.github.kroune.cumobile.presentation.common.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import io.github.kroune.cumobile.data.model.PickedFile
+import io.github.kroune.cumobile.presentation.common.model.PickedFileUi
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.addressOf
@@ -22,7 +22,7 @@ import platform.posix.memcpy
 private val logger = KotlinLogging.logger {}
 
 @Composable
-actual fun rememberFilePicker(onFilePicked: (PickedFile) -> Unit): FilePicker {
+actual fun rememberFilePicker(onFilePicked: (PickedFileUi) -> Unit): FilePicker {
     val delegate = remember { IosFilePickerDelegate(onFilePicked) }
     return remember {
         object : FilePicker {
@@ -44,7 +44,7 @@ private fun presentDocumentPicker(delegate: IosFilePickerDelegate) {
 }
 
 private class IosFilePickerDelegate(
-    private val onFilePicked: (PickedFile) -> Unit,
+    private val onFilePicked: (PickedFileUi) -> Unit,
 ) : NSObject(),
     UIDocumentPickerDelegateProtocol {
     override fun documentPicker(
@@ -72,7 +72,7 @@ private class IosFilePickerDelegate(
             }
             val name = url.lastPathComponent ?: "file"
             val contentType = mimeTypeFromExtension(url.pathExtension ?: "")
-            onFilePicked(PickedFile(name, bytes, contentType, bytes.size.toLong()))
+            onFilePicked(PickedFileUi(name, bytes, contentType, bytes.size.toLong()))
         } catch (e: Exception) {
             logger.error(e) { "Failed to pick file from $url" }
         }

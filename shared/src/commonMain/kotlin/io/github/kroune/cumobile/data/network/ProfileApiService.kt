@@ -1,7 +1,7 @@
 package io.github.kroune.cumobile.data.network
 
-import io.github.kroune.cumobile.data.model.StudentLmsProfile
-import io.github.kroune.cumobile.data.model.StudentProfile
+import io.github.kroune.cumobile.data.model.LmsProfileApi
+import io.github.kroune.cumobile.data.model.ProfileApi
 import io.github.kroune.cumobile.util.runCatchingCancellable
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
@@ -52,7 +52,7 @@ internal class ProfileApiService(
         }
 
     /** Fetches the current student's hub profile. */
-    suspend fun fetchProfile(cookie: String): StudentProfile? =
+    suspend fun fetchProfile(cookie: String): ProfileApi? =
         safeApiCall(logger, "fetch profile") {
             httpClient.get(ApiEndpoints.Profile.ME) {
                 header("Cookie", cookieHeader(cookie))
@@ -100,7 +100,7 @@ internal class ProfileApiService(
         }
 
     /** Fetches the current student's LMS profile. */
-    suspend fun fetchLmsProfile(cookie: String): StudentLmsProfile? =
+    suspend fun fetchLmsProfile(cookie: String): LmsProfileApi? =
         safeApiCall(logger, "fetch LMS profile") {
             httpClient.get(ApiEndpoints.Profile.LMS_ME) {
                 header("Cookie", cookieHeader(cookie))

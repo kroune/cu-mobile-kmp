@@ -37,10 +37,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
-import io.github.kroune.cumobile.data.model.CourseTheme
-import io.github.kroune.cumobile.data.model.Longread
-import io.github.kroune.cumobile.data.model.ThemeExercise
-import io.github.kroune.cumobile.presentation.common.formatDeadlineShort
+import io.github.kroune.cumobile.presentation.common.model.CourseThemeUi
+import io.github.kroune.cumobile.presentation.common.model.LongreadSummaryUi
+import io.github.kroune.cumobile.presentation.common.model.ThemeExerciseUi
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 import io.github.kroune.cumobile.presentation.common.ui.DetailTopBar
 import io.github.kroune.cumobile.presentation.common.ui.ErrorContent
@@ -206,7 +205,7 @@ private fun SearchField(
  */
 @Composable
 private fun ThemeCard(
-    theme: CourseTheme,
+    theme: CourseThemeUi,
     index: Int,
     isExpanded: Boolean,
     onToggle: () -> Unit,
@@ -250,7 +249,7 @@ private fun ThemeCard(
 
 @Composable
 private fun ThemeHeader(
-    theme: CourseTheme,
+    theme: CourseThemeUi,
     index: Int,
     isExpanded: Boolean,
     onClick: () -> Unit,
@@ -290,9 +289,10 @@ private fun ThemeHeader(
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
-            if (theme.hasExercises) {
+            val totalExercises = theme.longreads.sumOf { it.exercises.size }
+            if (totalExercises > 0) {
                 Text(
-                    text = exerciseCountLabel(theme.totalExercises),
+                    text = exerciseCountLabel(totalExercises),
                     color = AppTheme.colors.textSecondary,
                     fontSize = 12.sp,
                 )
@@ -313,7 +313,7 @@ private fun ThemeHeader(
  */
 @Composable
 private fun LongreadRow(
-    longread: Longread,
+    longread: LongreadSummaryUi,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -369,7 +369,7 @@ private fun LongreadRow(
 
 @Composable
 private fun ExerciseRow(
-    exercise: ThemeExercise,
+    exercise: ThemeExerciseUi,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -387,9 +387,9 @@ private fun ExerciseRow(
             modifier = Modifier.weight(1f),
         )
 
-        if (exercise.deadline != null) {
+        if (exercise.deadlineFormatted != null) {
             Text(
-                text = formatDeadlineShort(exercise.deadline),
+                text = exercise.deadlineFormatted,
                 color = AppTheme.colors.textSecondary,
                 fontSize = 11.sp,
             )

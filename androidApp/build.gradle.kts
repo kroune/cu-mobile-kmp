@@ -138,6 +138,8 @@ dependencies {
     testImplementation(libs.roborazzi)
     testImplementation(libs.roborazzi.compose)
     testImplementation(libs.composable.preview.scanner)
+    testImplementation(libs.coil.compose)
+    testImplementation(libs.coil.test)
 
     debugImplementation(libs.compose.uiTooling)
     debugImplementation(libs.compose.uiToolingPreview)

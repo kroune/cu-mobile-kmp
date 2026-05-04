@@ -3,13 +3,15 @@ package io.github.kroune.cumobile.presentation.profile
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
-import io.github.kroune.cumobile.data.model.PickedFile
 import io.github.kroune.cumobile.data.network.ApiEndpoints
 import io.github.kroune.cumobile.data.network.BaseUrl
 import io.github.kroune.cumobile.domain.repository.ProfileRepository
 import io.github.kroune.cumobile.presentation.common.ContentState
 import io.github.kroune.cumobile.presentation.common.componentScope
-import io.github.kroune.cumobile.presentation.common.invoke
+import io.github.kroune.cumobile.presentation.common.model.PickedFileUi
+import io.github.kroune.cumobile.presentation.common.model.mappers.toDomain
+import io.github.kroune.cumobile.presentation.common.model.mappers.toUi
+import io.github.kroune.cumobile.util.invoke
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
@@ -67,20 +69,22 @@ class DefaultProfileComponent(
         currentLoadJob = scope.launch {
             launch {
                 val profile = profileRepository().fetchProfile()
-                _state.value = _state.value.copy(
-                    profile = if (profile != null) {
-                        ContentState.Success(profile)
-                    } else {
-                        ContentState.Error("Не удалось загрузить профиль")
-                    },
-                )
+                if (profile != null) {
+                    _state.value = _state.value.copy(
+                        profile = ContentState.Success(profile.toUi()),
+                    )
+                } else {
+                    _state.value = _state.value.copy(
+                        profile = ContentState.Error("Не удалось загрузить профиль"),
+                    )
+                }
             }
 
             launch {
                 val lmsProfile = profileRepository().fetchLmsProfile()
                 _state.value = _state.value.copy(
                     lmsProfile = if (lmsProfile != null) {
-                        ContentState.Success(lmsProfile)
+                        ContentState.Success(lmsProfile.toUi())
                     } else {
                         ContentState.Error("Не удалось загрузить LMS профиль")
                     },
@@ -98,10 +102,11 @@ class DefaultProfileComponent(
     private fun buildAvatarUrl(): String =
         "${BaseUrl}${ApiEndpoints.Profile.AVATAR_ME}?v=$avatarVersion"
 
-    private fun uploadAvatar(file: PickedFile) {
+    private fun uploadAvatar(file: PickedFileUi) {
+        val domainFile = file.toDomain()
         scope.launch {
             _state.value = _state.value.copy(isUploadingAvatar = true)
-            val success = profileRepository().uploadAvatar(file.bytes, file.contentType)
+            val success = profileRepository().uploadAvatar(domainFile.bytes, domainFile.contentType)
             if (success) {
                 _state.value = _state.value.copy(isUploadingAvatar = false)
                 bumpAvatarVersion()

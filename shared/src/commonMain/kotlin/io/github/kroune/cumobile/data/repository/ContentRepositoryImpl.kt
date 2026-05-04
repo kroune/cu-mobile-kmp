@@ -1,13 +1,14 @@
 package io.github.kroune.cumobile.data.repository
 
 import io.github.kroune.cumobile.data.local.AuthLocalDataSource
-import io.github.kroune.cumobile.data.model.LongreadMaterial
-import io.github.kroune.cumobile.data.model.MaterialAttachment
-import io.github.kroune.cumobile.data.model.UploadLinkData
+import io.github.kroune.cumobile.data.model.mappers.toDomain
 import io.github.kroune.cumobile.data.network.ContentApiService
+import io.github.kroune.cumobile.domain.model.LongreadMaterialDomain
+import io.github.kroune.cumobile.domain.model.MaterialAttachmentDomain
+import io.github.kroune.cumobile.domain.model.UploadLinkDataDomain
 import io.github.kroune.cumobile.domain.repository.ContentRepository
-import io.github.kroune.cumobile.presentation.common.invoke
 import io.github.kroune.cumobile.util.AppDispatchers
+import io.github.kroune.cumobile.util.invoke
 import io.github.oshai.kotlinlogging.KotlinLogging
 
 private val logger = KotlinLogging.logger {}
@@ -24,14 +25,14 @@ internal class ContentRepositoryImpl(
     dispatchers: Lazy<AppDispatchers>,
 ) : CookieAwareRepository(authLocal, dispatchers),
     ContentRepository {
-    override suspend fun fetchLongreadMaterials(longreadId: String): List<LongreadMaterial>? =
-        withCookie {
-            contentApi().fetchLongreadMaterials(it, longreadId)
+    override suspend fun fetchLongreadMaterials(longreadId: String): List<LongreadMaterialDomain>? =
+        withCookie { cookie ->
+            contentApi().fetchLongreadMaterials(cookie, longreadId)?.map { it.toDomain() }
         }
 
-    override suspend fun fetchMaterial(materialId: String): LongreadMaterial? =
+    override suspend fun fetchMaterial(materialId: String): LongreadMaterialDomain? =
         withCookie {
-            contentApi().fetchMaterial(it, materialId)
+            contentApi().fetchMaterial(it, materialId)?.toDomain()
         }
 
     override suspend fun getDownloadLink(
@@ -46,9 +47,9 @@ internal class ContentRepositoryImpl(
         directory: String,
         filename: String,
         contentType: String,
-    ): UploadLinkData? =
+    ): UploadLinkDataDomain? =
         withCookie {
-            contentApi().getUploadLink(it, directory, filename, contentType)
+            contentApi().getUploadLink(it, directory, filename, contentType)?.toDomain()
         }
 
     override suspend fun uploadFile(
@@ -56,8 +57,10 @@ internal class ContentRepositoryImpl(
         filename: String,
         contentType: String,
         bytes: ByteArray,
-    ): MaterialAttachment? {
-        val uploadData = getUploadLink(directory, filename, contentType)
+    ): MaterialAttachmentDomain? {
+        val uploadData = withCookie {
+            contentApi().getUploadLink(it, directory, filename, contentType)?.toDomain()
+        }
         if (uploadData == null) {
             logger.warn { "Failed to get upload link for $filename" }
             return null
@@ -67,7 +70,7 @@ internal class ContentRepositoryImpl(
             logger.warn { "Failed to upload $filename to presigned URL" }
             return null
         }
-        return MaterialAttachment(
+        return MaterialAttachmentDomain(
             name = uploadData.shortName.ifBlank { filename },
             filename = uploadData.filename,
             mediaType = contentType,

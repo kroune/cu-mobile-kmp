@@ -1,10 +1,11 @@
 package io.github.kroune.cumobile.data.repository
 
-import io.github.kroune.cumobile.data.local.DownloadedFileInfo
 import io.github.kroune.cumobile.data.local.FileStorage
+import io.github.kroune.cumobile.data.model.mappers.toDomain
+import io.github.kroune.cumobile.domain.model.DownloadedFileInfoDomain
 import io.github.kroune.cumobile.domain.repository.FileRepository
-import io.github.kroune.cumobile.presentation.common.invoke
 import io.github.kroune.cumobile.util.AppDispatchers
+import io.github.kroune.cumobile.util.invoke
 import io.github.kroune.cumobile.util.runCatchingCancellable
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
@@ -29,9 +30,9 @@ internal class FileRepositoryImpl(
     private val fileStorage by fileStorage
     private val httpClient by httpClient
 
-    override suspend fun listDownloadedFiles(): List<DownloadedFileInfo> =
+    override suspend fun listDownloadedFiles(): List<DownloadedFileInfoDomain> =
         withContext(dispatchers().io) {
-            fileStorage.listFiles()
+            fileStorage.listFiles().map { it.toDomain() }
         }
 
     override suspend fun deleteFile(name: String): Boolean =

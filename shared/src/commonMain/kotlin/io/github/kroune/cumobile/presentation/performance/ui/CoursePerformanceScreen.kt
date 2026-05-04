@@ -36,7 +36,6 @@ import io.github.kroune.cumobile.presentation.common.ui.DetailTopBar
 import io.github.kroune.cumobile.presentation.common.ui.ErrorContent
 import io.github.kroune.cumobile.presentation.common.ui.SegmentedControl
 import io.github.kroune.cumobile.presentation.common.ui.gradeColor
-import io.github.kroune.cumobile.presentation.common.ui.gradeDescription
 import io.github.kroune.cumobile.presentation.performance.CoursePerformanceComponent
 import kotlinx.collections.immutable.persistentListOf
 
@@ -120,6 +119,8 @@ private fun PerformanceContent(
     Column(modifier = modifier.fillMaxSize()) {
         TotalGradeCard(
             grade = state.totalGrade,
+            gradeFormatted = state.totalGradeFormatted,
+            gradeDescription = state.totalGradeDescription,
             courseName = state.courseName,
         )
         AppTabRow(
@@ -152,6 +153,7 @@ private fun PerformanceContent(
                 1 -> PerformanceTab(
                     summaries = state.activitySummaries,
                     totalContribution = state.totalContribution,
+                    totalContributionFormatted = state.totalContributionFormatted,
                 )
             }
         }
@@ -163,6 +165,8 @@ private fun PerformanceContent(
 @Composable
 private fun TotalGradeCard(
     grade: Int,
+    gradeFormatted: String,
+    gradeDescription: String,
     courseName: String,
     modifier: Modifier = Modifier,
 ) {
@@ -183,7 +187,7 @@ private fun TotalGradeCard(
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                text = grade.toString(),
+                text = gradeFormatted,
                 color = Color.White,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
@@ -197,7 +201,7 @@ private fun TotalGradeCard(
                 fontSize = 12.sp,
             )
             Text(
-                text = gradeDescription(grade),
+                text = gradeDescription,
                 color = AppTheme.colors.textPrimary,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
@@ -218,17 +222,6 @@ private fun TotalGradeCard(
 // endregion
 
 // region Helpers
-
-/** Format a score, showing one decimal place only if needed. */
-@Suppress("MagicNumber")
-internal fun formatScore(value: Double): String {
-    val rounded = (value * 10).toInt() / 10.0
-    return if (rounded == rounded.toInt().toDouble()) {
-        rounded.toInt().toString()
-    } else {
-        rounded.toString()
-    }
-}
 
 /** Color based on score ratio (0.0 to 1.0). */
 @Suppress("MagicNumber")

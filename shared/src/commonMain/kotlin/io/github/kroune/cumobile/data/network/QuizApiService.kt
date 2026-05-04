@@ -1,11 +1,9 @@
 package io.github.kroune.cumobile.data.network
 
-import io.github.kroune.cumobile.data.model.QuizAnswer
-import io.github.kroune.cumobile.data.model.QuizAttempt
-import io.github.kroune.cumobile.data.model.QuizQuestion
-import io.github.kroune.cumobile.data.model.QuizQuestionType
-import io.github.kroune.cumobile.data.model.StartAttemptResponse
-import io.github.kroune.cumobile.presentation.common.invoke
+import io.github.kroune.cumobile.data.model.QuizAttemptApi
+import io.github.kroune.cumobile.data.model.QuizQuestionApi
+import io.github.kroune.cumobile.data.model.StartAttemptResponseApi
+import io.github.kroune.cumobile.util.invoke
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
@@ -35,8 +33,16 @@ internal data class SubmitAnswerRequest(
 internal data class SubmitAnswerBody(
     val questionId: String,
     val sessionId: String,
-    val type: QuizQuestionType,
+    val type: String,
     val value: JsonElement,
+)
+
+data class SubmitAnswerParams(
+    val questionId: String,
+    val sessionId: String,
+    val attemptId: String,
+    val answerType: String,
+    val answerValue: JsonElement,
 )
 
 internal class QuizApiService(
@@ -45,7 +51,7 @@ internal class QuizApiService(
     suspend fun startAttempt(
         cookie: String,
         sessionId: String,
-    ): StartAttemptResponse? =
+    ): StartAttemptResponseApi? =
         safeApiCall(logger, "start quiz attempt for sessionId=$sessionId") {
             httpClient().post(ApiEndpoints.Quizzes.ATTEMPTS) {
                 header("Cookie", cookieHeader(cookie))
@@ -57,7 +63,7 @@ internal class QuizApiService(
     suspend fun getAttempt(
         cookie: String,
         attemptId: String,
-    ): QuizAttempt? =
+    ): QuizAttemptApi? =
         safeApiCall(logger, "get quiz attempt attemptId=$attemptId") {
             httpClient().get(ApiEndpoints.Quizzes.attemptById(attemptId)) {
                 header("Cookie", cookieHeader(cookie))
@@ -80,7 +86,7 @@ internal class QuizApiService(
     suspend fun getQuestions(
         cookie: String,
         quizId: String,
-    ): List<QuizQuestion>? =
+    ): List<QuizQuestionApi>? =
         safeApiCall(logger, "get quiz questions for quizId=$quizId") {
             httpClient().get(ApiEndpoints.Quizzes.questions(quizId)) {
                 header("Cookie", cookieHeader(cookie))
@@ -90,7 +96,7 @@ internal class QuizApiService(
     suspend fun listAttempts(
         cookie: String,
         sessionId: String,
-    ): List<QuizAttempt>? =
+    ): List<QuizAttemptApi>? =
         safeApiCall(logger, "list quiz attempts for sessionId=$sessionId") {
             httpClient().get(ApiEndpoints.Quizzes.sessionAttempts(sessionId)) {
                 header("Cookie", cookieHeader(cookie))
@@ -100,24 +106,21 @@ internal class QuizApiService(
     suspend fun submitAnswer(
         cookie: String,
         taskId: String,
-        questionId: String,
-        sessionId: String,
-        attemptId: String,
-        answer: QuizAnswer,
+        params: SubmitAnswerParams,
     ): Boolean =
-        safeApiAction(logger, "submit quiz answer for taskId=$taskId, questionId=$questionId") {
+        safeApiAction(logger, "submit quiz answer for taskId=$taskId") {
             httpClient().put(ApiEndpoints.Tasks.submit(taskId)) {
                 header("Cookie", cookieHeader(cookie))
                 contentType(ContentType.Application.Json)
                 setBody(
                     SubmitAnswerRequest(
                         answer = SubmitAnswerBody(
-                            questionId = questionId,
-                            sessionId = sessionId,
-                            type = answer.type,
-                            value = answer.toJsonElement(),
+                            questionId = params.questionId,
+                            sessionId = params.sessionId,
+                            type = params.answerType,
+                            value = params.answerValue,
                         ),
-                        attemptId = attemptId,
+                        attemptId = params.attemptId,
                     ),
                 )
             }
