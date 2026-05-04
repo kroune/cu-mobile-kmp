@@ -9,10 +9,8 @@ import kotlinx.datetime.format
 import kotlinx.datetime.format.DateTimeComponents
 import kotlinx.datetime.format.MonthNames
 import kotlinx.datetime.format.char
-import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
 import kotlin.math.roundToLong
-import kotlin.time.Duration.Companion.days
 import kotlin.time.Instant
 
 private val logger = KotlinLogging.logger {}
@@ -153,30 +151,17 @@ fun formatDateTime(dateTime: String): String =
 fun formatDateTimeFull(isoDate: String): String =
     formatIsoOrFallback(isoDate) { dayMonthYearTimeFormat.format(it) }
 
+/** Formats an [Instant] to `"dd.MM.yyyy HH:mm"`. Returns empty string when null. */
+fun formatDateTimeFullInstant(instant: Instant?): String {
+    if (instant == null) return ""
+    return dayMonthYearTimeFormat.format(
+        instant.toLocalDateTime(TimeZone.currentSystemDefault()),
+    )
+}
+
 /** Formats an ISO 8601 deadline to `"dd.MM"`. Falls back to the raw string. */
 fun formatDeadlineShort(deadline: String): String =
     formatIsoOrFallback(deadline) { dayMonthFormat.format(it) }
-
-/**
- * Adds [daysToAdd] to an ISO 8601 deadline and returns formatted `"dd.MM HH:mm"`.
- * Returns `null` when [isoDate] is null or on parse errors.
- */
-fun formatDeadlinePlusDays(
-    isoDate: String?,
-    daysToAdd: Int,
-): String? {
-    if (isoDate == null) return null
-    return try {
-        val dt = parseIsoDateTime(isoDate)
-        val zone = TimeZone.currentSystemDefault()
-        val shifted = (dt.toInstant(zone) + daysToAdd.days)
-            .toLocalDateTime(zone)
-        dayMonthTimeFormat.format(shifted)
-    } catch (e: Exception) {
-        logger.error(e) { "Failed to compute deadline + $daysToAdd days: $isoDate" }
-        null
-    }
-}
 
 // ──────────────────────────────────────────────────────
 // Epoch millis → date

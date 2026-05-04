@@ -21,7 +21,6 @@ import io.github.kroune.cumobile.data.network.ApiEndpoints
 import io.github.kroune.cumobile.data.network.BaseUrl
 import io.github.kroune.cumobile.presentation.common.ContentState
 import io.github.kroune.cumobile.presentation.common.componentScope
-import io.github.kroune.cumobile.presentation.common.model.TaskUi
 import io.github.kroune.cumobile.presentation.common.model.UpdateInfoUi
 import io.github.kroune.cumobile.presentation.common.model.mappers.toUi
 import io.github.kroune.cumobile.util.invoke
@@ -173,18 +172,20 @@ class DefaultMainComponent(
         }
     }
 
-    private fun navigateToTask(task: TaskUi) {
-        val longreadId = task.longreadId
-        val themeId = task.themeId
-        val courseId = task.courseId
+    private fun navigateToTask(
+        taskId: String,
+        courseId: String,
+        themeId: String,
+        longreadId: String,
+    ) {
         if (longreadId.isBlank() || themeId.isBlank()) {
             logger.error {
-                "Cannot navigate to task ${task.id}: longreadId=$longreadId, themeId=$themeId"
+                "Cannot navigate to task $taskId: longreadId=$longreadId, themeId=$themeId"
             }
             return
         }
         detailNavigation.pushNew(
-            DetailConfig.Longread(longreadId, courseId, themeId, focusTaskId = task.id),
+            DetailConfig.Longread(longreadId, courseId, themeId, focusTaskId = taskId),
         )
     }
 

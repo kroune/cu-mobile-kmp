@@ -10,6 +10,7 @@ import io.github.kroune.cumobile.domain.repository.ContentRepository
 import io.github.kroune.cumobile.domain.repository.TaskRepository
 import io.github.kroune.cumobile.presentation.common.ContentState
 import io.github.kroune.cumobile.presentation.common.componentScope
+import io.github.kroune.cumobile.presentation.common.formatDeadlineInstant
 import io.github.kroune.cumobile.presentation.common.model.LongreadMaterialUi
 import io.github.kroune.cumobile.presentation.common.model.MaterialAttachmentUi
 import io.github.kroune.cumobile.presentation.common.model.mappers.toUi
@@ -19,6 +20,8 @@ import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Instant
 
 private val logger = KotlinLogging.logger {}
 
@@ -44,12 +47,20 @@ class DefaultCodingMaterialComponent(
     private val _state = MutableValue(CodingMaterialComponent.State())
     override val state: Value<CodingMaterialComponent.State> = _state
 
+    /** Domain deadline kept for late-days preview computation. */
+    private var lastTaskDeadline: Instant? = null
+    private var lastLateDaysUsed: Int = 0
+
     private val taskActions = CodingTaskActions(
         taskId = taskId,
         state = _state,
         taskRepository = taskRepository,
         scope = scope,
         onShowError = onShowError,
+        onDomainDetailsLoaded = { details ->
+            lastTaskDeadline = details.deadline
+            lastLateDaysUsed = details.lateDays ?: 0
+        },
     )
 
     private val attachmentManager = CodingAttachmentManager(
@@ -88,6 +99,8 @@ class DefaultCodingMaterialComponent(
                 _state.value = _state.value.copy(solutionUrl = intent.url)
             is CodingMaterialComponent.Intent.Task.ProlongLateDays ->
                 taskActions.prolongLateDays(intent.days)
+            is CodingMaterialComponent.Intent.Task.PreviewNewDeadline ->
+                previewNewDeadline(intent.selectedDays)
         }
     }
 
@@ -156,15 +169,27 @@ class DefaultCodingMaterialComponent(
         }
     }
 
+    private fun previewNewDeadline(selectedDays: Int) {
+        val deadline = lastTaskDeadline
+        val newDeadline = deadline?.let {
+            formatDeadlineInstant(it + (lastLateDaysUsed + selectedDays).days)
+        }
+        _state.value = _state.value.copy(newDeadlinePreview = newDeadline)
+    }
+
     private fun loadTaskDetails() {
         scope.launch {
             _state.value = _state.value.copy(taskDetails = ContentState.Loading)
             val details = taskRepository.fetchTaskDetails(taskId)
-            _state.value = if (details != null) {
-                _state.value.copy(taskDetails = ContentState.Success(details.toUi()))
+            if (details != null) {
+                lastTaskDeadline = details.deadline
+                lastLateDaysUsed = details.lateDays ?: 0
+                _state.value = _state.value.copy(
+                    taskDetails = ContentState.Success(details.toUi()),
+                )
             } else {
                 logger.warn { "Failed to load task details for taskId=$taskId" }
-                _state.value.copy(
+                _state.value = _state.value.copy(
                     taskDetails = ContentState.Error("Не удалось загрузить задание"),
                 )
             }

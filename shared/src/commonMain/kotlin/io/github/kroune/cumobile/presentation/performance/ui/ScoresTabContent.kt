@@ -125,7 +125,11 @@ private fun ExerciseTile(
                 fontSize = 11.sp,
                 modifier = Modifier.weight(1f),
             )
-            ScoreBadge(score = item.scoreValue, maxScore = item.maxScore)
+            ScoreBadge(
+                text = item.scoreBadgeText,
+                score = item.scoreValue,
+                maxScore = item.maxScore,
+            )
         }
         Spacer(Modifier.height(4.dp))
         Text(
@@ -146,13 +150,13 @@ private fun ExerciseTile(
 
 @Composable
 private fun ScoreBadge(
+    text: String,
     score: Double,
     maxScore: Int,
     modifier: Modifier = Modifier,
 ) {
     val ratio = if (maxScore > 0) score / maxScore else 0.0
     val color = scoreRatioColor(ratio)
-    val text = formatScore(score) + " / $maxScore"
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(8.dp))

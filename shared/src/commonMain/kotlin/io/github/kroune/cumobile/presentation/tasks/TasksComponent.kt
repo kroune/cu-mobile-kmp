@@ -1,7 +1,6 @@
 package io.github.kroune.cumobile.presentation.tasks
 
 import com.arkivanov.decompose.value.Value
-import io.github.kroune.cumobile.domain.model.TaskStatus
 import io.github.kroune.cumobile.presentation.common.ContentState
 import io.github.kroune.cumobile.presentation.common.model.TaskUi
 import kotlinx.collections.immutable.ImmutableList
@@ -53,7 +52,8 @@ interface TasksComponent {
         val activeCount: Int = 0,
         val archiveCount: Int = 0,
         val availableCourses: ImmutableList<Pair<String, String>> = persistentListOf(),
-        val availableStatuses: ImmutableList<String> = persistentListOf(),
+        /** Status API value to display label. */
+        val availableStatuses: ImmutableList<Pair<String, String>> = persistentListOf(),
     )
 
     sealed interface Intent {
@@ -79,15 +79,13 @@ interface TasksComponent {
 
         /** Open a task (navigate to longread/course detail). */
         data class OpenTask(
-            val task: TaskUi,
+            val taskId: String,
+            val courseId: String,
+            val themeId: String,
+            val longreadId: String,
         ) : Intent
 
         /** Refresh the task list from the API. */
         data object Refresh : Intent
     }
 }
-
-/**
- * All API state values requested when fetching tasks.
- */
-internal val AllApiStates: List<String> = TaskStatus.entries.map { it.apiValue }

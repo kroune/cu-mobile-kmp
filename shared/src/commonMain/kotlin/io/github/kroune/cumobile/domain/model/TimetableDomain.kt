@@ -1,7 +1,7 @@
 package io.github.kroune.cumobile.domain.model
 
 data class TimetableCourseDomain(
-    val courseId: Long,
+    val courseId: String,
     val courseName: String,
     val eventRows: List<TimetableEventRowDomain>,
 )

@@ -1,6 +1,7 @@
 package io.github.kroune.cumobile.data.network
 
 import io.github.kroune.cumobile.data.model.GithubReleaseApi
+import io.github.kroune.cumobile.data.model.mappers.toDomain
 import io.github.kroune.cumobile.domain.model.UpdateInfoDomain
 import io.github.kroune.cumobile.util.runCatchingCancellable
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -30,22 +31,10 @@ class UpdateChecker(
         runCatchingCancellable {
             val release: GithubReleaseApi =
                 httpClient.get(GithubReleasesUrl).body()
-            val latestVersion = release.tagName
-                .removePrefix("v")
-                .trim()
-            if (isNewerVersion(latestVersion, CurrentAppVersion)) {
-                val apkUrl = release.assets
-                    .firstOrNull { it.name.endsWith(".apk") }
-                    ?.browserDownloadUrl
-                UpdateInfoDomain(
-                    latestVersion = latestVersion,
-                    releasePageUrl = release.htmlUrl,
-                    apkDownloadUrl = apkUrl,
-                    releaseName = release.name,
-                )
-            } else {
-                null
-            }
+            release.toDomain(
+                currentVersion = CurrentAppVersion,
+                isNewerVersion = ::isNewerVersion,
+            )
         }.getOrElse { e ->
             logger.error(e) { "Failed to check for updates" }
             null

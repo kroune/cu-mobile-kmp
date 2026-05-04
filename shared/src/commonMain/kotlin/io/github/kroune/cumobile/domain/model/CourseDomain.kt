@@ -1,21 +1,13 @@
 package io.github.kroune.cumobile.domain.model
 
-enum class CourseCategory(
-    val apiValue: String,
-) {
-    General("general"),
-    Mathematics("mathematics"),
-    Development("development"),
-    Stem("stem"),
-    Business("business"),
-    SoftSkills("softSkills"),
-    Unknown(""),
-    ;
-
-    companion object {
-        fun fromApi(value: String): CourseCategory =
-            entries.find { it.apiValue == value } ?: Unknown
-    }
+enum class CourseCategory {
+    General,
+    Mathematics,
+    Development,
+    Stem,
+    Business,
+    SoftSkills,
+    Unknown,
 }
 
 data class CourseDomain(

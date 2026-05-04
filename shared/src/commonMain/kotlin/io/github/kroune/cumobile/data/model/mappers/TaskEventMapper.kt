@@ -54,7 +54,7 @@ private fun TaskEventContentApi.toDomain(): TaskEventContentDomain =
             )
         },
         name = name,
-        lateDaysRaw = lateDays?.toString(),
+        lateDays = lateDaysValue,
         deadline = parseDeadlineInstant(deadline),
         attached = attached?.map { it.toDomain() },
     )

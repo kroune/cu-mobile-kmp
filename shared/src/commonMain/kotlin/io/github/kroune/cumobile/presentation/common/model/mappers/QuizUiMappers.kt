@@ -8,6 +8,7 @@ import io.github.kroune.cumobile.domain.model.QuizAnswerResultDomain
 import io.github.kroune.cumobile.domain.model.QuizAttemptDomain
 import io.github.kroune.cumobile.domain.model.QuizQuestionDomain
 import io.github.kroune.cumobile.domain.model.QuizQuestionType
+import io.github.kroune.cumobile.presentation.common.displayScore
 import io.github.kroune.cumobile.presentation.common.model.AnswerValueUi
 import io.github.kroune.cumobile.presentation.common.model.PickedFileUi
 import io.github.kroune.cumobile.presentation.common.model.QuestionResultUi
@@ -17,12 +18,14 @@ import io.github.kroune.cumobile.presentation.common.model.QuizAttemptUi
 import io.github.kroune.cumobile.presentation.common.model.QuizOptionUi
 import io.github.kroune.cumobile.presentation.common.model.QuizQuestionUi
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.toImmutableSet
 
 fun QuizQuestionDomain.toUi(): QuizQuestionUi =
     QuizQuestionUi(
         id = id,
         typeLabel = type.label(),
         score = score,
+        scoreFormatted = score.displayScore(),
         description = description,
         recommendation = recommendation,
         options = options.map { QuizOptionUi(id = it.id, text = it.text) }.toImmutableList(),
@@ -33,7 +36,9 @@ fun QuizAttemptDomain.toUi(): QuizAttemptUi =
         id = id,
         answers = answers.map { it.toUi() }.toImmutableList(),
         score = score,
+        scoreFormatted = (score ?: 0.0).displayScore(),
         maxScore = maxScore,
+        maxScoreFormatted = (maxScore ?: 0.0).displayScore(),
     )
 
 fun QuizAnswerResultDomain.toUi(): QuizAnswerResultUi =
@@ -41,6 +46,7 @@ fun QuizAnswerResultDomain.toUi(): QuizAnswerResultUi =
         questionId = questionId,
         result = result.toUi(),
         score = score,
+        scoreFormatted = (score ?: 0.0).displayScore(),
         recommendation = recommendation,
         answerValue = answerValue?.toUi(),
     )
@@ -64,7 +70,7 @@ fun AnswerValue.toUi(): AnswerValueUi =
 fun QuizAnswer.toUi(): QuizAnswerUi =
     when (this) {
         is QuizAnswer.SingleChoice -> QuizAnswerUi.SingleChoice(optionId)
-        is QuizAnswer.MultipleChoice -> QuizAnswerUi.MultipleChoice(optionIds)
+        is QuizAnswer.MultipleChoice -> QuizAnswerUi.MultipleChoice(optionIds.toImmutableSet())
         is QuizAnswer.StringMatch -> QuizAnswerUi.StringMatch(text)
         is QuizAnswer.NumberMatch -> QuizAnswerUi.NumberMatch(text)
         is QuizAnswer.OpenText -> QuizAnswerUi.OpenText(text)

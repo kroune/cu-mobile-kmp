@@ -20,7 +20,7 @@ data class TaskEventContentDomain(
     val reviewers: List<TaskEventActorDomain>?,
     val task: TaskEventTaskDomain?,
     val name: String?,
-    val lateDaysRaw: String?,
+    val lateDays: Int?,
     val deadline: Instant?,
     val attached: List<MaterialAttachmentDomain>?,
 )

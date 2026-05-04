@@ -2,6 +2,7 @@ package io.github.kroune.cumobile.presentation.longread.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
+import io.github.kroune.cumobile.data.model.mappers.toApiValue
 import io.github.kroune.cumobile.domain.model.CommentSenderDomain
 import io.github.kroune.cumobile.domain.model.LongreadDiscriminator
 import io.github.kroune.cumobile.domain.model.LongreadMaterialDomain
@@ -149,7 +150,7 @@ private val previewEvents = persistentListOf(
         actorEmail = null,
         actorName = "Студент",
         content = TaskEventContentDomain(
-            state = TaskStatus.InProgress.apiValue,
+            state = TaskStatus.InProgress.toApiValue(),
             score = null,
             estimation = null,
             solution = null,
@@ -157,7 +158,7 @@ private val previewEvents = persistentListOf(
             reviewers = null,
             task = null,
             name = null,
-            lateDaysRaw = null,
+            lateDays = null,
             deadline = null,
             attached = null,
         ),
@@ -169,7 +170,7 @@ private val previewEvents = persistentListOf(
         actorEmail = null,
         actorName = "Студент",
         content = TaskEventContentDomain(
-            state = TaskStatus.Review.apiValue,
+            state = TaskStatus.Review.toApiValue(),
             score = null,
             estimation = null,
             solution = null,
@@ -177,7 +178,7 @@ private val previewEvents = persistentListOf(
             reviewers = null,
             task = null,
             name = null,
-            lateDaysRaw = null,
+            lateDays = null,
             deadline = null,
             attached = null,
         ),
@@ -189,7 +190,7 @@ private val previewEvents = persistentListOf(
         actorEmail = null,
         actorName = "Иванов А.П.",
         content = TaskEventContentDomain(
-            state = TaskStatus.Evaluated.apiValue,
+            state = TaskStatus.Evaluated.toApiValue(),
             score = TaskEventScoreDomain(level = null, value = 8.0),
             estimation = null,
             solution = null,
@@ -197,7 +198,7 @@ private val previewEvents = persistentListOf(
             reviewers = null,
             task = null,
             name = null,
-            lateDaysRaw = null,
+            lateDays = null,
             deadline = null,
             attached = null,
         ),

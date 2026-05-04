@@ -3,6 +3,7 @@ package io.github.kroune.cumobile.presentation.tasks.ui
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.tooling.preview.Preview
+import io.github.kroune.cumobile.data.model.mappers.toApiValue
 import io.github.kroune.cumobile.domain.model.TaskDomain
 import io.github.kroune.cumobile.domain.model.TaskStatus
 import io.github.kroune.cumobile.presentation.common.ContentState
@@ -209,7 +210,7 @@ private fun PreviewTasksWithFiltersDark() {
             TasksScreenContent(
                 state = previewState(
                     tasks = previewActiveTasks,
-                    statusFilter = TaskStatus.InProgress.apiValue,
+                    statusFilter = TaskStatus.InProgress.toApiValue(),
                     courseFilter = "1",
                 ),
                 onIntent = {},

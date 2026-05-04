@@ -37,5 +37,5 @@ private fun resolveTaskStatus(
     submitAt: String?,
 ): TaskStatus {
     if (apiState == "inProgress" && submitAt != null) return TaskStatus.HasSolution
-    return TaskStatus.fromApi(apiState)
+    return apiState.toTaskStatus()
 }

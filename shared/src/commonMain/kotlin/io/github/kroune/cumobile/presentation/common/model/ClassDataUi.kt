@@ -9,5 +9,4 @@ data class ClassDataUi(
     val professor: String? = null,
     val link: String? = null,
     val badge: String? = null,
-    val badgeColor: Long? = null,
 )

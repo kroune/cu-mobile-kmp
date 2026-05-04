@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.sp
 import io.github.kroune.cumobile.presentation.common.model.QuizAnswerUi
 import io.github.kroune.cumobile.presentation.common.model.QuizQuestionUi
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
+import kotlinx.collections.immutable.toImmutableSet
 
 @Composable
 internal fun SingleChoiceContent(
@@ -88,7 +89,7 @@ internal fun MultipleChoiceContent(
                     .clickable(enabled = !isCompleted) {
                         val newSet =
                             if (isChecked) selectedIds - option.id else selectedIds + option.id
-                        onAnswerChanged(QuizAnswerUi.MultipleChoice(newSet))
+                        onAnswerChanged(QuizAnswerUi.MultipleChoice(newSet.toImmutableSet()))
                     }.padding(vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -100,7 +101,7 @@ internal fun MultipleChoiceContent(
                         { checked ->
                             val newSet =
                                 if (checked) selectedIds + option.id else selectedIds - option.id
-                            onAnswerChanged(QuizAnswerUi.MultipleChoice(newSet))
+                            onAnswerChanged(QuizAnswerUi.MultipleChoice(newSet.toImmutableSet()))
                         }
                     },
                     colors = CheckboxDefaults.colors(checkedColor = AppTheme.colors.accent),

@@ -59,7 +59,7 @@ internal class ContentRepositoryImpl(
         bytes: ByteArray,
     ): MaterialAttachmentDomain? {
         val uploadData = withCookie {
-            contentApi().getUploadLink(it, directory, filename, contentType)
+            contentApi().getUploadLink(it, directory, filename, contentType)?.toDomain()
         }
         if (uploadData == null) {
             logger.warn { "Failed to get upload link for $filename" }

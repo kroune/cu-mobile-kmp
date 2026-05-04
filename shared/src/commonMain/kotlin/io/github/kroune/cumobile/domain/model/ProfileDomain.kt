@@ -1,20 +1,10 @@
 package io.github.kroune.cumobile.domain.model
 
-import kotlinx.collections.immutable.ImmutableList
-
-enum class EducationLevel(
-    val apiValue: String,
-) {
-    Bachelor("bachelor"),
-    Master("master"),
-    Specialist("specialist"),
-    Unknown(""),
-    ;
-
-    companion object {
-        fun fromApi(value: String): EducationLevel =
-            entries.find { it.apiValue.equals(value, ignoreCase = true) } ?: Unknown
-    }
+enum class EducationLevel {
+    Bachelor,
+    Master,
+    Specialist,
+    Unknown,
 }
 
 data class ProfileDomain(
@@ -25,8 +15,8 @@ data class ProfileDomain(
     val timeLogin: String,
     val educationLevel: EducationLevel,
     val universityEmail: String?,
-    val otherEmails: ImmutableList<EmailDomain>,
-    val phones: ImmutableList<PhoneDomain>,
+    val otherEmails: List<EmailDomain>,
+    val phones: List<PhoneDomain>,
     val birthdate: String,
     val telegram: String?,
     val studentCourse: Int?,

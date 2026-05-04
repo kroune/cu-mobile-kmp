@@ -1,7 +1,6 @@
 package io.github.kroune.cumobile.presentation.common.model
 
 import kotlinx.collections.immutable.ImmutableList
-import kotlin.time.Instant
 
 data class TaskDetailsUi(
     val id: String,
@@ -13,7 +12,6 @@ data class TaskDetailsUi(
     val submitAtFormatted: String?,
     val isLateDaysEnabled: Boolean,
     val lateDays: Int?,
-    val deadline: Instant?,
     val deadlineFormatted: String?,
     val startedAtFormatted: String?,
     val attemptStartedAtFormatted: String?,
@@ -32,6 +30,8 @@ data class TaskDetailsExerciseUi(
     val type: String?,
     val timer: String?,
     val maxScore: Double?,
+    /** Pre-formatted max score for display (e.g. "10" or "-"). */
+    val maxScoreFormatted: String,
     val attemptsLimit: Int?,
     val evaluationStrategy: String?,
 )

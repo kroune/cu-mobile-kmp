@@ -27,6 +27,7 @@ import io.github.kroune.cumobile.presentation.common.model.QuizAnswerUi
 import io.github.kroune.cumobile.presentation.common.model.QuizAttemptUi
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 import io.github.kroune.cumobile.presentation.longread.component.questions.QuestionsMaterialComponent
+import kotlinx.collections.immutable.toImmutableSet
 
 @Composable
 internal fun CompletedContent(
@@ -62,11 +63,9 @@ private fun AttemptScoreHeader(
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
         )
-        val score = attempt.score ?: 0.0
-        val maxScore = attempt.maxScore ?: 0.0
         val extraScoreText = details?.extraScoreText
         val scoreText = buildString {
-            append("${score.displayScore()} / ${maxScore.displayScore()}")
+            append("${attempt.scoreFormatted} / ${attempt.maxScoreFormatted}")
             if (extraScoreText != null) {
                 append(" +$extraScoreText")
             }
@@ -185,7 +184,7 @@ private fun answerValueToQuizAnswer(
         LabelSingleChoice ->
             (value as? AnswerValueUi.Text)?.let { QuizAnswerUi.SingleChoice(it.content) }
         LabelMultipleChoice ->
-            (value as? AnswerValueUi.Choices)?.let { QuizAnswerUi.MultipleChoice(it.optionIds.toSet()) }
+            (value as? AnswerValueUi.Choices)?.let { QuizAnswerUi.MultipleChoice(it.optionIds.toImmutableSet()) }
         LabelStringMatch ->
             (value as? AnswerValueUi.Text)?.let { QuizAnswerUi.StringMatch(it.content) }
         LabelNumberMatch ->

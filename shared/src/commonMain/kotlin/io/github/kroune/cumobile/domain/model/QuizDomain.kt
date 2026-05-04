@@ -1,37 +1,21 @@
 package io.github.kroune.cumobile.domain.model
 
-enum class QuizQuestionType(
-    val apiValue: String,
-) {
-    SingleChoice("SingleChoice"),
-    MultipleChoice("MultipleChoice"),
-    StringMatch("StringMatch"),
-    NumberMatch("NumberMatch"),
-    OpenText("OpenText"),
-    Unknown(""),
-    ;
-
-    companion object {
-        fun fromApi(value: String): QuizQuestionType =
-            entries.find { it.apiValue == value } ?: Unknown
-    }
+enum class QuizQuestionType {
+    SingleChoice,
+    MultipleChoice,
+    StringMatch,
+    NumberMatch,
+    OpenText,
+    Unknown,
 }
 
-enum class QuestionResult(
-    val apiValue: String,
-) {
-    Unknown("Unknown"),
-    Unanswered("Unanswered"),
-    Review("Review"),
-    Fail("Fail"),
-    Success("Success"),
-    PartialSuccess("PartialSuccess"),
-    ;
-
-    companion object {
-        fun fromApi(value: String): QuestionResult =
-            entries.find { it.apiValue == value } ?: Unknown
-    }
+enum class QuestionResult {
+    Unknown,
+    Unanswered,
+    Review,
+    Fail,
+    Success,
+    PartialSuccess,
 }
 
 data class QuizQuestionDomain(

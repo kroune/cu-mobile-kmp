@@ -1,7 +1,6 @@
 package io.github.kroune.cumobile.data.model.mappers
 
 import io.github.kroune.cumobile.data.model.CourseApi
-import io.github.kroune.cumobile.domain.model.CourseCategory
 import io.github.kroune.cumobile.domain.model.CourseDomain
 
 fun CourseApi.toDomain(): CourseDomain =
@@ -9,6 +8,6 @@ fun CourseApi.toDomain(): CourseDomain =
         id = id,
         name = name,
         isArchived = isArchived,
-        category = CourseCategory.fromApi(category),
+        category = category.toCourseCategory(),
         categoryCoverUrl = categoryCover,
     )

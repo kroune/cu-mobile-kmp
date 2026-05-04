@@ -1,10 +1,9 @@
 package io.github.kroune.cumobile.presentation.longread.component.coding
 
 import com.arkivanov.decompose.value.MutableValue
-import io.github.kroune.cumobile.domain.model.MaterialAttachmentDomain
 import io.github.kroune.cumobile.domain.repository.TaskRepository
 import io.github.kroune.cumobile.presentation.common.ContentState
-import io.github.kroune.cumobile.presentation.common.model.MaterialAttachmentUi
+import io.github.kroune.cumobile.presentation.common.model.mappers.toDomain
 import io.github.kroune.cumobile.presentation.common.model.mappers.toUi
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.collections.immutable.persistentListOf
@@ -25,6 +24,7 @@ internal class CodingTaskActions(
     private val taskRepository: TaskRepository,
     private val scope: CoroutineScope,
     private val onShowError: (String) -> Unit,
+    private val onDomainDetailsLoaded: (io.github.kroune.cumobile.domain.model.TaskDetailsDomain) -> Unit,
 ) {
     init {
         require(taskId.isNotBlank()) { "taskId must not be blank" }
@@ -154,11 +154,14 @@ internal class CodingTaskActions(
 
     private suspend fun refreshTaskDetails() {
         val details = taskRepository.fetchTaskDetails(taskId)
-        state.value = if (details != null) {
-            state.value.copy(taskDetails = ContentState.Success(details.toUi()))
+        if (details != null) {
+            onDomainDetailsLoaded(details)
+            state.value = state.value.copy(
+                taskDetails = ContentState.Success(details.toUi()),
+            )
         } else {
             logger.warn { "Failed to fetch task details for taskId=$taskId" }
-            state.value.copy(
+            state.value = state.value.copy(
                 taskDetails = ContentState.Error("Не удалось загрузить задание"),
             )
         }
@@ -200,12 +203,3 @@ internal class CodingTaskActions(
         }
     }
 }
-
-private fun MaterialAttachmentUi.toDomain(): MaterialAttachmentDomain =
-    MaterialAttachmentDomain(
-        name = name,
-        filename = filename,
-        mediaType = mediaType,
-        length = length,
-        version = version,
-    )

@@ -37,6 +37,7 @@ import io.github.kroune.cumobile.presentation.common.model.StatusStyle
 import io.github.kroune.cumobile.presentation.common.model.TaskDetailsUi
 import io.github.kroune.cumobile.presentation.common.model.UploadStatusUi
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
+import io.github.kroune.cumobile.presentation.longread.component.coding.CodingMaterialComponent
 import io.github.kroune.cumobile.presentation.longread.component.coding.CodingMaterialComponent.Intent
 import kotlinx.collections.immutable.ImmutableList
 
@@ -44,13 +45,14 @@ import kotlinx.collections.immutable.ImmutableList
 @Composable
 internal fun SolutionTab(
     taskDetails: TaskDetailsUi,
-    solutionUrl: String,
-    isSubmitting: Boolean,
-    pendingAttachments: ImmutableList<PendingAttachmentUi>,
+    state: CodingMaterialComponent.State,
     onIntent: (Intent) -> Unit,
     onAttach: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val solutionUrl = state.solutionUrl
+    val isSubmitting = state.isSubmitting
+    val pendingAttachments = state.pendingSolutionAttachments
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -63,7 +65,7 @@ internal fun SolutionTab(
             ScoreDisplay(taskDetails)
         }
 
-        LateDaysInfo(taskDetails, onIntent)
+        LateDaysInfo(taskDetails, state.newDeadlinePreview, onIntent)
 
         if (canSubmitSolution(taskDetails.statusStyle)) {
             SolutionUrlInput(

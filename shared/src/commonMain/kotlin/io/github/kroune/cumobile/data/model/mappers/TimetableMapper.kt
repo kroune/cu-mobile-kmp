@@ -7,7 +7,7 @@ import io.github.kroune.cumobile.domain.model.TimetableEventRowDomain
 
 fun TimetableCourseApi.toDomain(): TimetableCourseDomain =
     TimetableCourseDomain(
-        courseId = courseId,
+        courseId = courseId.toString(),
         courseName = courseName,
         eventRows = eventRows.map { row ->
             TimetableEventRowDomain(

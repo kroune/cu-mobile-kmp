@@ -6,24 +6,27 @@ import io.github.kroune.cumobile.presentation.common.model.CourseGradeUi
 import io.github.kroune.cumobile.presentation.common.model.GradebookGradeUi
 import io.github.kroune.cumobile.presentation.common.model.GradebookSemesterUi
 import io.github.kroune.cumobile.presentation.common.model.GradebookUi
+import io.github.kroune.cumobile.presentation.common.ui.gradeDescription
+import kotlinx.collections.immutable.toImmutableList
 
 fun GradebookResponseDomain.toUi(): GradebookUi =
     GradebookUi(
-        semesters = semesters.map { semester ->
-            GradebookSemesterUi(
-                year = semester.year,
-                semesterNumber = semester.semesterNumber,
-                grades = semester.grades.map { grade ->
-                    GradebookGradeUi(
-                        subject = grade.subject,
-                        grade = grade.grade,
-                        normalizedGrade = grade.normalizedGrade,
-                        assessmentType = grade.assessmentType,
-                        subjectType = grade.subjectType,
-                    )
-                },
-            )
-        },
+        semesters = semesters
+            .map { semester ->
+                GradebookSemesterUi(
+                    year = semester.year,
+                    semesterNumber = semester.semesterNumber,
+                    grades = semester.grades
+                        .map { grade ->
+                            GradebookGradeUi(
+                                subject = grade.subject,
+                                normalizedGrade = grade.normalizedGrade,
+                                assessmentType = grade.assessmentType,
+                                subjectType = grade.subjectType,
+                            )
+                        }.toImmutableList(),
+                )
+            }.toImmutableList(),
     )
 
 fun CourseGradeDomain.toUi(): CourseGradeUi =
@@ -32,4 +35,6 @@ fun CourseGradeDomain.toUi(): CourseGradeUi =
         name = name,
         description = description,
         total = total,
+        totalFormatted = total.toString(),
+        totalDescription = gradeDescription(total),
     )

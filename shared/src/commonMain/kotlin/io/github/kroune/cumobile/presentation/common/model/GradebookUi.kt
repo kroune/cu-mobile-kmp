@@ -1,18 +1,19 @@
 package io.github.kroune.cumobile.presentation.common.model
 
+import kotlinx.collections.immutable.ImmutableList
+
 data class GradebookUi(
-    val semesters: List<GradebookSemesterUi>,
+    val semesters: ImmutableList<GradebookSemesterUi>,
 )
 
 data class GradebookSemesterUi(
     val year: Int,
     val semesterNumber: Int,
-    val grades: List<GradebookGradeUi>,
+    val grades: ImmutableList<GradebookGradeUi>,
 )
 
 data class GradebookGradeUi(
     val subject: String,
-    val grade: Double?,
     val normalizedGrade: String,
     val assessmentType: String,
     val subjectType: String,

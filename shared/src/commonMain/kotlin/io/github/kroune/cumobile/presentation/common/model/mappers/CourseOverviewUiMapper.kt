@@ -9,13 +9,14 @@ import io.github.kroune.cumobile.presentation.common.model.CourseOverviewUi
 import io.github.kroune.cumobile.presentation.common.model.CourseThemeUi
 import io.github.kroune.cumobile.presentation.common.model.LongreadSummaryUi
 import io.github.kroune.cumobile.presentation.common.model.ThemeExerciseUi
+import kotlinx.collections.immutable.toImmutableList
 
 fun CourseOverviewDomain.toUi(): CourseOverviewUi =
     CourseOverviewUi(
         id = id,
         name = name,
         isArchived = isArchived,
-        themes = themes.map { it.toUi() },
+        themes = themes.map { it.toUi() }.toImmutableList(),
     )
 
 fun CourseThemeDomain.toUi(): CourseThemeUi =
@@ -24,7 +25,7 @@ fun CourseThemeDomain.toUi(): CourseThemeUi =
         name = name,
         order = order,
         state = state,
-        longreads = longreads.map { it.toUi() },
+        longreads = longreads.map { it.toUi() }.toImmutableList(),
     )
 
 private fun LongreadDomain.toUi(): LongreadSummaryUi =
@@ -33,7 +34,7 @@ private fun LongreadDomain.toUi(): LongreadSummaryUi =
         type = type,
         name = name,
         state = state,
-        exercises = exercises.map { it.toUi() },
+        exercises = exercises.map { it.toUi() }.toImmutableList(),
     )
 
 private fun ThemeExerciseDomain.toUi(): ThemeExerciseUi =

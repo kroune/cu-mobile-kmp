@@ -1,9 +1,12 @@
 package io.github.kroune.cumobile.presentation.tasks
 
+import io.github.kroune.cumobile.data.model.mappers.toApiValue
 import io.github.kroune.cumobile.domain.model.TaskDomain
 import io.github.kroune.cumobile.domain.model.TaskStatus
 import io.github.kroune.cumobile.presentation.common.model.TaskUi
+import io.github.kroune.cumobile.presentation.common.model.label
 import io.github.kroune.cumobile.presentation.common.model.mappers.toUi
+import io.github.kroune.cumobile.presentation.common.model.toStatusStyle
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -81,18 +84,20 @@ private fun collectAvailableStatuses(
     segment: Int,
     active: List<IndexedTask>,
     archive: List<IndexedTask>,
-): ImmutableList<String> {
+): ImmutableList<Pair<String, String>> {
     val bucket = if (segment == 0) active else archive
-    val present = bucket.mapTo(mutableSetOf()) { it.status.apiValue }
+    val present = bucket.mapTo(mutableSetOf()) { it.status.toApiValue() }
     val segmentStatuses = if (segment == 0) {
         TaskStatus.ACTIVE_STATUSES
     } else {
         TaskStatus.ARCHIVE_STATUSES
     }
     return segmentStatuses
-        .filter { it.apiValue in present }
-        .map { it.apiValue }
-        .toImmutableList()
+        .filter { it.toApiValue() in present }
+        .map { status ->
+            val apiValue = status.toApiValue()
+            apiValue to status.toStatusStyle().label()
+        }.toImmutableList()
 }
 
 private fun List<IndexedTask>.filterAndSort(
@@ -104,7 +109,7 @@ private fun List<IndexedTask>.filterAndSort(
     if (isEmpty()) return persistentListOf()
     val query = searchQuery.takeIf { it.isNotEmpty() }
     val filtered = filter { item ->
-        (statusFilter == null || item.status.apiValue == statusFilter) &&
+        (statusFilter == null || item.status.toApiValue() == statusFilter) &&
             (courseFilter == null || item.task.courseId == courseFilter) &&
             (
                 query == null ||

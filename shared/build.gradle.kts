@@ -34,7 +34,7 @@ room {
 
 dependencies {
     detektPlugins(project(":detekt-rules"))
-    detektPlugins("com.vk.vkompose:detekt:0.6.1")
+    detektPlugins(libs.detekt)
 }
 
 tasks.withType<Detekt> { dependsOn(":detekt-rules:assemble") }

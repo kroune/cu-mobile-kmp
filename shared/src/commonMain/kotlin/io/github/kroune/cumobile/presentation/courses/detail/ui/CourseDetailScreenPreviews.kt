@@ -9,27 +9,28 @@ import io.github.kroune.cumobile.presentation.common.model.LongreadSummaryUi
 import io.github.kroune.cumobile.presentation.common.model.ThemeExerciseUi
 import io.github.kroune.cumobile.presentation.common.ui.CuMobileTheme
 import io.github.kroune.cumobile.presentation.courses.detail.CourseDetailComponent
+import kotlinx.collections.immutable.persistentListOf
 
-private val previewThemes = listOf(
+private val previewThemes = persistentListOf(
     CourseThemeUi(
         id = "1",
         name = "Введение в алгоритмы",
         order = 1,
         state = "published",
-        longreads = listOf(
+        longreads = persistentListOf(
             LongreadSummaryUi(
                 id = "1",
                 name = "Теория сложности",
                 type = "markdown",
                 state = "published",
-                exercises = emptyList(),
+                exercises = persistentListOf(),
             ),
             LongreadSummaryUi(
                 id = "2",
                 name = "Практика: сортировки",
                 type = "coding",
                 state = "published",
-                exercises = listOf(
+                exercises = persistentListOf(
                     ThemeExerciseUi(
                         id = "1",
                         name = "ДЗ: Быстрая сортировка",
@@ -46,20 +47,20 @@ private val previewThemes = listOf(
         name = "Графы и деревья",
         order = 2,
         state = "published",
-        longreads = listOf(
+        longreads = persistentListOf(
             LongreadSummaryUi(
                 id = "3",
                 name = "BFS и DFS",
                 type = "markdown",
                 state = "published",
-                exercises = emptyList(),
+                exercises = persistentListOf(),
             ),
             LongreadSummaryUi(
                 id = "4",
                 name = "Задачи на графы",
                 type = "coding",
                 state = "published",
-                exercises = listOf(
+                exercises = persistentListOf(
                     ThemeExerciseUi(
                         id = "2",
                         name = "ДЗ: Кратчайшие пути",
@@ -83,7 +84,7 @@ private val previewThemes = listOf(
         name = "Динамическое программирование",
         order = 3,
         state = "published",
-        longreads = emptyList(),
+        longreads = persistentListOf(),
     ),
 )
 

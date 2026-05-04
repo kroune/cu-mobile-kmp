@@ -1,7 +1,6 @@
 package io.github.kroune.cumobile.presentation.main
 
 import com.arkivanov.decompose.ComponentContext
-import io.github.kroune.cumobile.presentation.common.model.TaskUi
 import io.github.kroune.cumobile.presentation.courses.DefaultCoursesComponent
 import io.github.kroune.cumobile.presentation.files.DefaultFilesComponent
 import io.github.kroune.cumobile.presentation.home.DefaultHomeComponent
@@ -15,7 +14,7 @@ import io.github.kroune.cumobile.util.invoke
  */
 internal data class TabNavigationCallbacks(
     val toCourseDetail: (courseId: String) -> Unit,
-    val toTask: (task: TaskUi) -> Unit,
+    val toTask: (taskId: String, courseId: String, themeId: String, longreadId: String) -> Unit,
     val toCoursePerformance: (courseId: String, courseName: String, totalGrade: Int) -> Unit,
     val toFileRenameSettings: () -> Unit,
     val toScanner: () -> Unit,

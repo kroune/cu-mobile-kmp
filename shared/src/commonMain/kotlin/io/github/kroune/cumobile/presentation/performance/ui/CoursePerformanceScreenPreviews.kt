@@ -21,6 +21,7 @@ private val previewPerformanceExercises =
             activityName = "Домашнее задание",
             scoreValue = 8.0,
             maxScore = 10,
+            scoreBadgeText = "8 / 10",
             statusLabel = "Проверено",
             statusStyle = StatusStyle.Evaluated,
         ),
@@ -32,6 +33,7 @@ private val previewPerformanceExercises =
             activityName = "Лабораторная",
             scoreValue = 5.0,
             maxScore = 10,
+            scoreBadgeText = "5 / 10",
             statusLabel = "Проверено",
             statusStyle = StatusStyle.Evaluated,
         ),
@@ -43,6 +45,7 @@ private val previewPerformanceExercises =
             activityName = "Домашнее задание",
             scoreValue = 0.0,
             maxScore = 10,
+            scoreBadgeText = "0 / 10",
             statusLabel = "none",
             statusStyle = StatusStyle.Backlog,
         ),
@@ -54,16 +57,22 @@ private val previewActivitySummaries = persistentListOf(
         activityName = "Домашнее задание",
         count = 5,
         averageScore = 8.0,
+        averageScoreFormatted = "8.0",
         weight = 0.4,
+        weightFormatted = "0.4",
         totalContribution = 3.2,
+        totalContributionFormatted = "3.2",
     ),
     ActivitySummaryUi(
         activityId = "2",
         activityName = "Лабораторная",
         count = 3,
         averageScore = 5.0,
+        averageScoreFormatted = "5.0",
         weight = 0.3,
+        weightFormatted = "0.3",
         totalContribution = 1.5,
+        totalContributionFormatted = "1.5",
     ),
 )
 
@@ -72,6 +81,8 @@ private val previewPerformanceState =
         courseId = "1",
         courseName = "Алгоритмы и структуры данных",
         totalGrade = 7,
+        totalGradeFormatted = "7",
+        totalGradeDescription = "Хорошо",
         content = ContentState.Success(
             PerformanceData(
                 exercises = previewPerformanceExercises,
@@ -84,6 +95,7 @@ private val previewPerformanceState =
         activityNames = persistentListOf("Домашнее задание", "Лабораторная"),
         filteredExercises = previewPerformanceExercises,
         totalContribution = previewActivitySummaries.sumOf { it.totalContribution },
+        totalContributionFormatted = "4.7",
     )
 
 @Preview

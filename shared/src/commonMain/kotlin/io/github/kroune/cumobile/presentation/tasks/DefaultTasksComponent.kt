@@ -4,11 +4,12 @@ import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.doOnStart
+import io.github.kroune.cumobile.data.model.mappers.toApiValue
 import io.github.kroune.cumobile.domain.model.TaskDomain
+import io.github.kroune.cumobile.domain.model.TaskStatus
 import io.github.kroune.cumobile.domain.repository.TaskRepository
 import io.github.kroune.cumobile.presentation.common.ContentState
 import io.github.kroune.cumobile.presentation.common.componentScope
-import io.github.kroune.cumobile.presentation.common.model.TaskUi
 import io.github.kroune.cumobile.util.AppDispatchers
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Job
@@ -33,7 +34,7 @@ class DefaultTasksComponent(
     componentContext: ComponentContext,
     taskRepository: Lazy<TaskRepository>,
     dispatchers: Lazy<AppDispatchers>,
-    private val onOpenTask: (TaskUi) -> Unit,
+    private val onOpenTask: (taskId: String, courseId: String, themeId: String, longreadId: String) -> Unit,
 ) : TasksComponent,
     ComponentContext by componentContext {
     private val taskRepository by taskRepository
@@ -75,7 +76,7 @@ class DefaultTasksComponent(
             is TasksComponent.Intent.Search ->
                 updateRaw { copy(searchQuery = intent.query) }
             is TasksComponent.Intent.OpenTask ->
-                onOpenTask(intent.task)
+                onOpenTask(intent.taskId, intent.courseId, intent.themeId, intent.longreadId)
             TasksComponent.Intent.Refresh ->
                 loadTasks()
         }
@@ -132,3 +133,8 @@ class DefaultTasksComponent(
         }
     }
 }
+
+/**
+ * All API state values requested when fetching tasks.
+ */
+private val AllApiStates: List<String> = TaskStatus.entries.map { it.toApiValue() }

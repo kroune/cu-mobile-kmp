@@ -17,6 +17,15 @@ fun MaterialAttachmentDomain.toUi(): MaterialAttachmentUi =
         version = version,
     )
 
+fun MaterialAttachmentUi.toDomain(): MaterialAttachmentDomain =
+    MaterialAttachmentDomain(
+        name = name,
+        filename = filename,
+        mediaType = mediaType,
+        length = length,
+        version = version,
+    )
+
 fun LongreadMaterialDomain.toUi(): LongreadMaterialUi =
     LongreadMaterialUi(
         id = id,

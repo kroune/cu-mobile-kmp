@@ -36,7 +36,7 @@ internal open class CookieAwareRepository(
         withContext(dispatchers().io) {
             val cookie = authLocal().cookieFlow.first()
             if (cookie == null) {
-                logger.debug { "No auth cookie available, skipping API call" }
+                logger.info { "No auth cookie available, skipping API call" }
                 return@withContext null
             }
             block(cookie)
@@ -50,7 +50,7 @@ internal open class CookieAwareRepository(
         withContext(dispatchers().io) {
             val cookie = authLocal().cookieFlow.first()
             if (cookie == null) {
-                logger.debug { "No auth cookie available, skipping API call" }
+                logger.info { "No auth cookie available, skipping API call" }
                 return@withContext false
             }
             block(cookie)

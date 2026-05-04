@@ -96,7 +96,7 @@ class GetClassesForDateUseCaseTest {
     fun resultsSortedByStartTime() {
         val courses = listOf(
             TimetableCourseDomain(
-                courseId = 1,
+                courseId = "1",
                 courseName = "Courses",
                 eventRows = listOf(
                     makeTimetableRow("lecture", "14:00", "15:30", "monday"),
@@ -120,7 +120,7 @@ class GetClassesForDateUseCaseTest {
     fun skipsRowWithNullCalendarEvent() {
         val courses = listOf(
             TimetableCourseDomain(
-                courseId = 1,
+                courseId = "1",
                 courseName = "Test",
                 eventRows = listOf(
                     TimetableEventRowDomain(
@@ -230,7 +230,7 @@ class GetClassesForDateUseCaseTest {
         interval: Int = 1,
     ): TimetableCourseDomain =
         TimetableCourseDomain(
-            courseId = name.hashCode().toLong(),
+            courseId = name.hashCode().toString(),
             courseName = name,
             eventRows = listOf(
                 makeTimetableRow("seminar", startTime, endTime, dayOfWeek, startDate, endDate, interval),

@@ -23,6 +23,8 @@ interface CoursePerformanceComponent {
         val courseId: String,
         val courseName: String = "",
         val totalGrade: Int = 0,
+        val totalGradeFormatted: String = "0",
+        val totalGradeDescription: String = "",
         val content: ContentState<PerformanceData> = ContentState.Loading,
         val selectedTab: Int = 0,
         val activityFilter: String? = null,
@@ -32,6 +34,7 @@ interface CoursePerformanceComponent {
         val activityNames: ImmutableList<String> = persistentListOf(),
         val filteredExercises: ImmutableList<ExerciseWithScoreUi> = persistentListOf(),
         val totalContribution: Double = 0.0,
+        val totalContributionFormatted: String = "0",
     )
 
     sealed interface Intent {

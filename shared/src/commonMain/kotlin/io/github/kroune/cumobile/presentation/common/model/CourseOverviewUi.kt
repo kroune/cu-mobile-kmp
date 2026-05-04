@@ -1,10 +1,12 @@
 package io.github.kroune.cumobile.presentation.common.model
 
+import kotlinx.collections.immutable.ImmutableList
+
 data class CourseOverviewUi(
     val id: String,
     val name: String,
     val isArchived: Boolean,
-    val themes: List<CourseThemeUi>,
+    val themes: ImmutableList<CourseThemeUi>,
 )
 
 data class CourseThemeUi(
@@ -12,7 +14,7 @@ data class CourseThemeUi(
     val name: String,
     val order: Int,
     val state: String,
-    val longreads: List<LongreadSummaryUi>,
+    val longreads: ImmutableList<LongreadSummaryUi>,
 )
 
 data class LongreadSummaryUi(
@@ -20,7 +22,7 @@ data class LongreadSummaryUi(
     val type: String,
     val name: String,
     val state: String,
-    val exercises: List<ThemeExerciseUi>,
+    val exercises: ImmutableList<ThemeExerciseUi>,
 )
 
 data class ThemeExerciseUi(

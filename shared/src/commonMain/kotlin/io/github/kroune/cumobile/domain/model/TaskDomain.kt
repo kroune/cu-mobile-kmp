@@ -2,18 +2,17 @@ package io.github.kroune.cumobile.domain.model
 
 import kotlin.time.Instant
 
-enum class TaskStatus(
-    val apiValue: String,
-) {
-    Backlog("backlog"),
-    InProgress("inProgress"),
-    HasSolution("hasSolution"),
-    Review("review"),
-    Revision("revision"),
-    Rework("rework"),
-    Failed("failed"),
-    Rejected("rejected"),
-    Evaluated("evaluated"),
+enum class TaskStatus {
+    Backlog,
+    InProgress,
+    HasSolution,
+    Review,
+    Revision,
+    Rework,
+    Failed,
+    Rejected,
+    Evaluated,
+    Unknown,
     ;
 
     val isActive: Boolean get() = this in ACTIVE_STATUSES
@@ -34,9 +33,6 @@ enum class TaskStatus(
             Failed,
             Rejected,
         )
-
-        fun fromApi(value: String): TaskStatus =
-            entries.find { it.apiValue == value } ?: Backlog
     }
 }
 

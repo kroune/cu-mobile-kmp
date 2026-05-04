@@ -17,5 +17,4 @@ data class TaskUi(
     val urgencyLevel: UrgencyLevel,
     val lateDaysText: String?,
     val scoreText: String?,
-    val score: Double?,
 )

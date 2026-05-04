@@ -192,9 +192,30 @@ private val previewGradeSheetState = CoursesComponent.State(
     courses = previewCoursesState.courses,
     performanceCourses = ContentState.Success(
         persistentListOf(
-            CourseGradeUi(id = "1", name = "Алгоритмы и структуры данных", description = null, total = 8),
-            CourseGradeUi(id = "2", name = "Линейная алгебра", description = null, total = 6),
-            CourseGradeUi(id = "3", name = "Управление проектами", description = null, total = 4),
+            CourseGradeUi(
+                id = "1",
+                name = "Алгоритмы и структуры данных",
+                description = null,
+                total = 8,
+                totalFormatted = "8",
+                totalDescription = "Отлично",
+            ),
+            CourseGradeUi(
+                id = "2",
+                name = "Линейная алгебра",
+                description = null,
+                total = 6,
+                totalFormatted = "6",
+                totalDescription = "Хорошо",
+            ),
+            CourseGradeUi(
+                id = "3",
+                name = "Управление проектами",
+                description = null,
+                total = 4,
+                totalFormatted = "4",
+                totalDescription = "Удовлетворительно",
+            ),
         ),
     ),
     gradebook = ContentState.Success(null),
@@ -222,28 +243,25 @@ private val previewGradebookState = CoursesComponent.State(
     performanceCourses = ContentState.Success(persistentListOf()),
     gradebook = ContentState.Success(
         GradebookUi(
-            semesters = listOf(
+            semesters = persistentListOf(
                 GradebookSemesterUi(
                     year = 2025,
                     semesterNumber = 1,
-                    grades = listOf(
+                    grades = persistentListOf(
                         GradebookGradeUi(
                             subject = "Математический анализ",
-                            grade = 5.0,
                             normalizedGrade = "excellent",
                             assessmentType = "exam",
                             subjectType = "regular",
                         ),
                         GradebookGradeUi(
                             subject = "Физическая культура",
-                            grade = null,
                             normalizedGrade = "passed",
                             assessmentType = "credit",
                             subjectType = "regular",
                         ),
                         GradebookGradeUi(
                             subject = "Основы программирования",
-                            grade = 4.0,
                             normalizedGrade = "good",
                             assessmentType = "difCredit",
                             subjectType = "elective",

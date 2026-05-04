@@ -33,6 +33,7 @@ interface CodingMaterialComponent : RenderComponent {
         val editingCommentId: String? = null,
         val editCommentText: String = "",
         val downloadingAttachment: String? = null,
+        val newDeadlinePreview: String? = null,
     )
 
     sealed interface Intent {
@@ -57,6 +58,10 @@ interface CodingMaterialComponent : RenderComponent {
 
             data class ProlongLateDays(
                 val days: Int,
+            ) : Task
+
+            data class PreviewNewDeadline(
+                val selectedDays: Int,
             ) : Task
         }
 

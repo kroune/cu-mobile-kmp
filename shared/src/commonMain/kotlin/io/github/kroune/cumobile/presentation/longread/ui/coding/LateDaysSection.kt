@@ -20,6 +20,7 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -31,12 +32,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import io.github.kroune.cumobile.presentation.common.formatDeadlineInstant
 import io.github.kroune.cumobile.presentation.common.model.TaskDetailsUi
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 import io.github.kroune.cumobile.presentation.longread.component.coding.CodingMaterialComponent
 import kotlin.math.min
-import kotlin.time.Duration.Companion.days
 
 private const val MaxLateDaysPerTask = 7
 
@@ -44,6 +43,7 @@ private const val MaxLateDaysPerTask = 7
 @Composable
 internal fun LateDaysInfo(
     taskDetails: TaskDetailsUi,
+    newDeadlinePreview: String?,
     onIntent: (CodingMaterialComponent.Intent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -70,6 +70,10 @@ internal fun LateDaysInfo(
     if (showDialog) {
         LateDaysDialog(
             taskDetails = taskDetails,
+            newDeadlinePreview = newDeadlinePreview,
+            onPreviewNewDeadline = { days ->
+                onIntent(CodingMaterialComponent.Intent.Task.PreviewNewDeadline(days))
+            },
             onConfirm = { days ->
                 showDialog = false
                 onIntent(CodingMaterialComponent.Intent.Task.ProlongLateDays(days))
@@ -143,6 +147,8 @@ private fun LateDaysActions(
 @Composable
 private fun LateDaysDialog(
     taskDetails: TaskDetailsUi,
+    newDeadlinePreview: String?,
+    onPreviewNewDeadline: (Int) -> Unit,
     onConfirm: (Int) -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -150,6 +156,11 @@ private fun LateDaysDialog(
     val balance = taskDetails.studentLateDaysBalance ?: 0
     val maxAdditional = min(MaxLateDaysPerTask - used, balance)
     var selectedDays by remember { mutableIntStateOf(1) }
+
+    // Request initial preview on first composition.
+    LaunchedEffect(Unit) {
+        onPreviewNewDeadline(selectedDays)
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -176,17 +187,15 @@ private fun LateDaysDialog(
                     value = selectedDays,
                     min = 1,
                     max = maxAdditional,
-                    onValueChange = { selectedDays = it },
+                    onValueChange = { days ->
+                        selectedDays = days
+                        onPreviewNewDeadline(days)
+                    },
                 )
 
-                val newDeadline = remember(taskDetails.deadline, used, selectedDays) {
-                    taskDetails.deadline?.let { deadline ->
-                        formatDeadlineInstant(deadline + (used + selectedDays).days)
-                    }
-                }
-                if (newDeadline != null) {
+                if (newDeadlinePreview != null) {
                     Text(
-                        text = "Новый дедлайн: $newDeadline",
+                        text = "Новый дедлайн: $newDeadlinePreview",
                         color = AppTheme.colors.accent,
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Medium,
@@ -291,7 +300,7 @@ internal fun ScoreDisplay(
             fontSize = 14.sp,
         )
         Text(
-            text = "${taskDetails.scoreText ?: "0"} / ${taskDetails.exercise?.maxScore ?: 0}",
+            text = "${taskDetails.scoreText ?: "0"} / ${taskDetails.exercise?.maxScoreFormatted ?: "0"}",
             color = AppTheme.colors.taskEvaluated,
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold,

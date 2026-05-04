@@ -12,7 +12,9 @@ data class TaskEventUi(
 )
 
 data class TaskEventContentUi(
-    val state: String?,
+    val statusStyle: StatusStyle?,
+    val statusLabel: String?,
+    val scoreFormatted: String?,
     val scoreValue: Double?,
     val scoreLevel: String?,
     val estimationDeadlineFormatted: String?,
@@ -23,7 +25,7 @@ data class TaskEventContentUi(
     val reviewerName: String?,
     val reviewerNames: ImmutableList<String>,
     val name: String?,
-    val lateDaysRaw: String?,
+    val lateDaysFormatted: String?,
     val deadlineFormatted: String?,
     val attached: ImmutableList<MaterialAttachmentUi>,
 )

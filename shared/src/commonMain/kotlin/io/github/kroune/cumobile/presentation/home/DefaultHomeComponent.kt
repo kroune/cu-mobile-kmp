@@ -4,6 +4,7 @@ import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.doOnStart
+import io.github.kroune.cumobile.data.model.mappers.toApiValue
 import io.github.kroune.cumobile.domain.model.ClassDataDomain
 import io.github.kroune.cumobile.domain.model.TaskDomain
 import io.github.kroune.cumobile.domain.model.TaskStatus
@@ -12,7 +13,6 @@ import io.github.kroune.cumobile.presentation.common.DateTimeProvider
 import io.github.kroune.cumobile.presentation.common.componentScope
 import io.github.kroune.cumobile.presentation.common.formatWeekRange
 import io.github.kroune.cumobile.presentation.common.model.ClassDataUi
-import io.github.kroune.cumobile.presentation.common.model.TaskUi
 import io.github.kroune.cumobile.presentation.common.model.mappers.toUi
 import io.github.kroune.cumobile.util.runCatchingCancellable
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -44,7 +44,7 @@ private val logger = KotlinLogging.logger {}
 class DefaultHomeComponent(
     componentContext: ComponentContext,
     deps: HomeDependencies,
-    private val onOpenTask: (TaskUi) -> Unit,
+    private val onOpenTask: (taskId: String, courseId: String, themeId: String, longreadId: String) -> Unit,
     private val onOpenCourse: (String) -> Unit,
 ) : HomeComponent,
     ComponentContext by componentContext {
@@ -81,7 +81,12 @@ class DefaultHomeComponent(
 
     override fun onIntent(intent: HomeComponent.Intent) {
         when (intent) {
-            is HomeComponent.Intent.OpenTask -> onOpenTask(intent.task)
+            is HomeComponent.Intent.OpenTask -> onOpenTask(
+                intent.taskId,
+                intent.courseId,
+                intent.themeId,
+                intent.longreadId,
+            )
             is HomeComponent.Intent.OpenCourse -> onOpenCourse(intent.courseId)
             is HomeComponent.Intent.Refresh -> {
                 loadData()
@@ -207,12 +212,12 @@ class DefaultHomeComponent(
      */
     private suspend fun loadTasks(): List<TaskDomain>? {
         val states = listOf(
-            TaskStatus.InProgress.apiValue,
-            TaskStatus.Review.apiValue,
-            TaskStatus.Backlog.apiValue,
-            TaskStatus.Failed.apiValue,
-            TaskStatus.Evaluated.apiValue,
-        )
+            TaskStatus.InProgress,
+            TaskStatus.Review,
+            TaskStatus.Backlog,
+            TaskStatus.Failed,
+            TaskStatus.Evaluated,
+        ).map { it.toApiValue() }
         return taskRepository.fetchTasks(states)
     }
 
@@ -242,5 +247,4 @@ private fun ClassDataDomain.toUi() =
         professor = professor,
         link = link,
         badge = badge,
-        badgeColor = badgeColor,
     )

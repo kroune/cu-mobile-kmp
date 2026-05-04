@@ -5,15 +5,20 @@ data class FileRenameRuleDomain(
     val activityName: String,
     val extension: String,
     val template: String,
-) {
-    fun apply(
-        courseName: String,
-        activityName: String,
-        version: String,
-    ): String =
-        template
-            .replace("{course}", courseName.replace(" ", "_"))
-            .replace("{activity}", activityName.replace(" ", "_"))
-            .replace("{version}", version)
-            .replace(" ", "_")
-}
+)
+
+/**
+ * Renders a [FileRenameRuleDomain.template] by substituting placeholders
+ * with the given values and replacing spaces with underscores.
+ */
+fun applyRenameTemplate(
+    rule: FileRenameRuleDomain,
+    courseName: String,
+    activityName: String,
+    version: String,
+): String =
+    rule.template
+        .replace("{course}", courseName.replace(" ", "_"))
+        .replace("{activity}", activityName.replace(" ", "_"))
+        .replace("{version}", version)
+        .replace(" ", "_")

@@ -3,9 +3,6 @@ package io.github.kroune.cumobile.data.network
 import io.github.kroune.cumobile.data.model.QuizAttemptApi
 import io.github.kroune.cumobile.data.model.QuizQuestionApi
 import io.github.kroune.cumobile.data.model.StartAttemptResponseApi
-import io.github.kroune.cumobile.data.model.mappers.apiQuestionType
-import io.github.kroune.cumobile.data.model.mappers.toJsonElement
-import io.github.kroune.cumobile.domain.model.QuizAnswer
 import io.github.kroune.cumobile.util.invoke
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
@@ -38,6 +35,14 @@ internal data class SubmitAnswerBody(
     val sessionId: String,
     val type: String,
     val value: JsonElement,
+)
+
+data class SubmitAnswerParams(
+    val questionId: String,
+    val sessionId: String,
+    val attemptId: String,
+    val answerType: String,
+    val answerValue: JsonElement,
 )
 
 internal class QuizApiService(
@@ -101,24 +106,21 @@ internal class QuizApiService(
     suspend fun submitAnswer(
         cookie: String,
         taskId: String,
-        questionId: String,
-        sessionId: String,
-        attemptId: String,
-        answer: QuizAnswer,
+        params: SubmitAnswerParams,
     ): Boolean =
-        safeApiAction(logger, "submit quiz answer for taskId=$taskId, questionId=$questionId") {
+        safeApiAction(logger, "submit quiz answer for taskId=$taskId") {
             httpClient().put(ApiEndpoints.Tasks.submit(taskId)) {
                 header("Cookie", cookieHeader(cookie))
                 contentType(ContentType.Application.Json)
                 setBody(
                     SubmitAnswerRequest(
                         answer = SubmitAnswerBody(
-                            questionId = questionId,
-                            sessionId = sessionId,
-                            type = answer.apiQuestionType(),
-                            value = answer.toJsonElement(),
+                            questionId = params.questionId,
+                            sessionId = params.sessionId,
+                            type = params.answerType,
+                            value = params.answerValue,
                         ),
-                        attemptId = attemptId,
+                        attemptId = params.attemptId,
                     ),
                 )
             }

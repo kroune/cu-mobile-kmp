@@ -3,6 +3,9 @@ package io.github.kroune.cumobile.presentation.courses.detail
 import com.arkivanov.decompose.value.Value
 import io.github.kroune.cumobile.presentation.common.model.CourseOverviewUi
 import io.github.kroune.cumobile.presentation.common.model.CourseThemeUi
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 
 /**
  * MVI component for the Course Detail screen.
@@ -22,7 +25,7 @@ interface CourseDetailComponent {
         val error: String? = null,
         val searchQuery: String = "",
         val expandedThemeIds: Set<String> = emptySet(),
-        val filteredThemes: List<CourseThemeUi> = emptyList(),
+        val filteredThemes: ImmutableList<CourseThemeUi> = persistentListOf(),
     )
 
     sealed interface Intent {
@@ -61,26 +64,27 @@ interface CourseDetailComponent {
 internal fun filteredThemes(
     themes: List<CourseThemeUi>,
     query: String,
-): List<CourseThemeUi> {
-    if (query.isBlank()) return themes
+): ImmutableList<CourseThemeUi> {
+    if (query.isBlank()) return themes.toImmutableList()
 
-    return themes.mapNotNull { theme ->
-        val themeNameMatches = theme.name.contains(query, ignoreCase = true)
-        if (themeNameMatches) {
-            return@mapNotNull theme
-        }
+    return themes
+        .mapNotNull { theme ->
+            val themeNameMatches = theme.name.contains(query, ignoreCase = true)
+            if (themeNameMatches) {
+                return@mapNotNull theme
+            }
 
-        val matchingLongreads = theme.longreads.filter { longread ->
-            longread.name.contains(query, ignoreCase = true) ||
-                longread.exercises.any { ex ->
-                    ex.name.contains(query, ignoreCase = true)
-                }
-        }
+            val matchingLongreads = theme.longreads.filter { longread ->
+                longread.name.contains(query, ignoreCase = true) ||
+                    longread.exercises.any { ex ->
+                        ex.name.contains(query, ignoreCase = true)
+                    }
+            }
 
-        if (matchingLongreads.isNotEmpty()) {
-            theme.copy(longreads = matchingLongreads)
-        } else {
-            null
-        }
-    }
+            if (matchingLongreads.isNotEmpty()) {
+                theme.copy(longreads = matchingLongreads.toImmutableList())
+            } else {
+                null
+            }
+        }.toImmutableList()
 }

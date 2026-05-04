@@ -12,6 +12,7 @@ import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import io.github.kroune.cumobile.domain.model.LongreadDiscriminator
 import io.github.kroune.cumobile.domain.model.LongreadMaterialDomain
+import io.github.kroune.cumobile.domain.model.applyRenameTemplate
 import io.github.kroune.cumobile.domain.model.viewContent
 import io.github.kroune.cumobile.presentation.common.componentScope
 import io.github.kroune.cumobile.presentation.common.model.LongreadMaterialUi
@@ -356,7 +357,8 @@ class DefaultLongreadComponent(
                 extension = extension,
             )
             if (rule != null) {
-                return rule.apply(
+                return applyRenameTemplate(
+                    rule = rule,
                     courseName = _state.value.title,
                     activityName = activityName,
                     version = version,

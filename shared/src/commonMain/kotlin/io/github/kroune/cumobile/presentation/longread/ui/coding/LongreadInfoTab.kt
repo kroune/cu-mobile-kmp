@@ -18,11 +18,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.kroune.cumobile.presentation.common.ContentState
-import io.github.kroune.cumobile.presentation.common.model.StatusStyle
 import io.github.kroune.cumobile.presentation.common.model.TaskDetailsUi
 import io.github.kroune.cumobile.presentation.common.model.TaskEventUi
 import io.github.kroune.cumobile.presentation.common.model.color
-import io.github.kroune.cumobile.presentation.common.model.label
 import io.github.kroune.cumobile.presentation.common.ui.AppColorScheme
 import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 import io.github.kroune.cumobile.presentation.common.ui.ShimmerBox
@@ -119,7 +117,7 @@ private fun TaskInfoSummary(
         )
         InfoRow(
             label = "Оценка",
-            value = "${taskDetails.scoreText ?: "-"} / ${taskDetails.exercise?.maxScore ?: "-"}",
+            value = "${taskDetails.scoreText ?: "-"} / ${taskDetails.exercise?.maxScoreFormatted ?: "-"}",
         )
         InfoRow(
             label = "Дедлайн",
@@ -204,24 +202,25 @@ private fun EventCard(
             )
         }
 
-        event.content.state?.let { state ->
-            val style = StatusStyle.fromApiValue(state)
+        val statusLabel = event.content.statusLabel
+        val statusStyle = event.content.statusStyle
+        if (statusLabel != null && statusStyle != null) {
             Text(
-                text = "Статус: ${style.label()}",
-                color = style.color(),
+                text = "Статус: $statusLabel",
+                color = statusStyle.color(),
                 fontSize = 12.sp,
             )
         }
 
-        event.content.scoreValue?.let { value ->
+        event.content.scoreFormatted?.let { formatted ->
             Text(
-                text = "Оценка: ${value.toInt()}",
+                text = "Оценка: $formatted",
                 color = AppTheme.colors.taskEvaluated,
                 fontSize = 12.sp,
             )
         }
 
-        event.content.lateDaysRaw?.let { days ->
+        event.content.lateDaysFormatted?.let { days ->
             Text(
                 text = "Late days: $days",
                 color = AppTheme.colors.textSecondary,

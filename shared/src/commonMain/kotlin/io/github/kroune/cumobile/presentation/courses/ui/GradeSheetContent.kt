@@ -35,7 +35,6 @@ import io.github.kroune.cumobile.presentation.common.ui.AppTheme
 import io.github.kroune.cumobile.presentation.common.ui.EmptyContent
 import io.github.kroune.cumobile.presentation.common.ui.ErrorContent
 import io.github.kroune.cumobile.presentation.common.ui.gradeColor
-import io.github.kroune.cumobile.presentation.common.ui.gradeDescription
 import io.github.kroune.cumobile.presentation.common.ui.stripEmojiPrefix
 import io.github.kroune.cumobile.presentation.courses.CoursesComponent
 
@@ -127,7 +126,7 @@ private fun GradeSheetTile(
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                text = performance.total.toString(),
+                text = performance.totalFormatted,
                 color = color,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
@@ -146,7 +145,7 @@ private fun GradeSheetTile(
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
-                text = gradeDescription(performance.total),
+                text = performance.totalDescription,
                 color = color,
                 fontSize = 12.sp,
             )

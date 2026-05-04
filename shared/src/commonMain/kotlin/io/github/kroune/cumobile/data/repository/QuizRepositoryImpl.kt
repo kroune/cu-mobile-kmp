@@ -2,6 +2,7 @@ package io.github.kroune.cumobile.data.repository
 
 import io.github.kroune.cumobile.data.local.AuthLocalDataSource
 import io.github.kroune.cumobile.data.model.mappers.toDomain
+import io.github.kroune.cumobile.data.model.mappers.toSubmitParams
 import io.github.kroune.cumobile.data.network.QuizApiService
 import io.github.kroune.cumobile.domain.model.QuizAnswer
 import io.github.kroune.cumobile.domain.model.QuizAttemptDomain
@@ -42,6 +43,10 @@ internal class QuizRepositoryImpl(
         answer: QuizAnswer,
     ): Boolean =
         withCookieOrFalse {
-            quizApi.value.submitAnswer(it, taskId, questionId, sessionId, attemptId, answer)
+            quizApi.value.submitAnswer(
+                cookie = it,
+                taskId = taskId,
+                params = answer.toSubmitParams(questionId, sessionId, attemptId),
+            )
         }
 }

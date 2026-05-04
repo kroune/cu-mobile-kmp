@@ -35,7 +35,6 @@ private fun ClassDataDomain.toUi() =
         professor = professor,
         link = link,
         badge = badge,
-        badgeColor = badgeColor,
     )
 
 private val previewMonday = LocalDate(2026, 3, 23)

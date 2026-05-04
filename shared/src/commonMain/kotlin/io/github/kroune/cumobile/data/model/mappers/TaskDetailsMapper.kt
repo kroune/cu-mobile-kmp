@@ -4,7 +4,6 @@ import io.github.kroune.cumobile.data.model.TaskDetailsApi
 import io.github.kroune.cumobile.domain.model.TaskDetailsDomain
 import io.github.kroune.cumobile.domain.model.TaskDetailsExerciseDomain
 import io.github.kroune.cumobile.domain.model.TaskDetailsSolutionDomain
-import io.github.kroune.cumobile.domain.model.TaskStatus
 
 fun TaskDetailsApi.toDomain(): TaskDetailsDomain =
     TaskDetailsDomain(
@@ -12,7 +11,7 @@ fun TaskDetailsApi.toDomain(): TaskDetailsDomain =
         score = score,
         extraScore = extraScore,
         scoreSkillLevel = scoreSkillLevel,
-        status = state?.let { TaskStatus.fromApi(it) },
+        status = state?.let { it.toTaskStatus() },
         submitAt = parseInstant(submitAt),
         isLateDaysEnabled = isLateDaysEnabled,
         lateDays = lateDays,

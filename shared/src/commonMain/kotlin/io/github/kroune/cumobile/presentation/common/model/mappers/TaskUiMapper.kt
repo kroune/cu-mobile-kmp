@@ -39,7 +39,6 @@ fun TaskDomain.toUi(now: Instant): TaskUi {
         urgencyLevel = computeUrgencyLevel(exerciseDeadline, now),
         lateDaysText = formatLateDays(isLateDaysEnabled, lateDays),
         scoreText = score?.let { "${it.toInt()}" },
-        score = score,
     )
 }
 

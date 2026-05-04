@@ -9,11 +9,13 @@ import io.github.kroune.cumobile.domain.repository.PerformanceRepository
 import io.github.kroune.cumobile.presentation.common.ContentState
 import io.github.kroune.cumobile.presentation.common.componentScope
 import io.github.kroune.cumobile.presentation.common.dataOrNull
+import io.github.kroune.cumobile.presentation.common.formatScore
 import io.github.kroune.cumobile.presentation.common.isLoading
 import io.github.kroune.cumobile.presentation.common.model.ActivitySummaryUi
 import io.github.kroune.cumobile.presentation.common.model.ExerciseWithScoreUi
 import io.github.kroune.cumobile.presentation.common.model.mappers.toActivitySummaryUi
 import io.github.kroune.cumobile.presentation.common.model.mappers.toExerciseWithScoreUi
+import io.github.kroune.cumobile.presentation.common.ui.gradeDescription
 import io.github.kroune.cumobile.util.AppDispatchers
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.async
@@ -54,6 +56,8 @@ class DefaultCoursePerformanceComponent(
             courseId = params.courseId,
             courseName = params.courseName,
             totalGrade = params.totalGrade,
+            totalGradeFormatted = params.totalGrade.toString(),
+            totalGradeDescription = gradeDescription(params.totalGrade),
         ),
     )
     override val state: Value<CoursePerformanceComponent.State> = _state
@@ -73,6 +77,7 @@ class DefaultCoursePerformanceComponent(
         } else {
             exercises.filter { it.activityName == s.activityFilter }.toImmutableList()
         }
+        val totalContrib = summaries.sumOf { it.totalContribution }
         _state.value = s.copy(
             exercises = exercises,
             activitySummaries = summaries,
@@ -83,7 +88,8 @@ class DefaultCoursePerformanceComponent(
                 .sorted()
                 .toImmutableList(),
             filteredExercises = filtered,
-            totalContribution = summaries.sumOf { it.totalContribution },
+            totalContribution = totalContrib,
+            totalContributionFormatted = formatScore(totalContrib),
         )
     }
 

@@ -312,9 +312,7 @@ private fun TaskTabbedContent(
         when (tabKeys[page]) {
             "solution" -> SolutionTab(
                 taskDetails = taskDetails,
-                solutionUrl = state.solutionUrl,
-                isSubmitting = state.isSubmitting,
-                pendingAttachments = state.pendingSolutionAttachments,
+                state = state,
                 onIntent = onIntent,
                 onAttach = onAttachSolution,
             )

@@ -6,7 +6,6 @@ import io.github.kroune.cumobile.data.model.TaskScoreApi
 import io.github.kroune.cumobile.domain.model.CourseExerciseDomain
 import io.github.kroune.cumobile.domain.model.CourseGradeDomain
 import io.github.kroune.cumobile.domain.model.ExerciseScoreDomain
-import io.github.kroune.cumobile.domain.model.TaskStatus
 
 fun PerformanceCourseApi.toDomain(): CourseGradeDomain =
     CourseGradeDomain(
@@ -30,7 +29,7 @@ fun CourseExerciseApi.toDomain(): CourseExerciseDomain =
 fun TaskScoreApi.toDomain(): ExerciseScoreDomain =
     ExerciseScoreDomain(
         id = id,
-        status = TaskStatus.fromApi(state),
+        status = state.toTaskStatus(),
         score = score,
         extraScore = extraScore,
         exerciseId = exerciseId,

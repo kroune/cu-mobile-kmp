@@ -47,7 +47,10 @@ interface HomeComponent {
     sealed interface Intent {
         /** Navigate to a task's longread page. */
         data class OpenTask(
-            val task: TaskUi,
+            val taskId: String,
+            val courseId: String,
+            val themeId: String,
+            val longreadId: String,
         ) : Intent
 
         /** Navigate to a course detail page. */

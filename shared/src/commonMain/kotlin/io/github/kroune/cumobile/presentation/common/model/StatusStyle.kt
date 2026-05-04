@@ -77,4 +77,5 @@ fun TaskStatus.toStatusStyle(): StatusStyle =
         TaskStatus.Failed -> StatusStyle.Failed
         TaskStatus.Rejected -> StatusStyle.Rejected
         TaskStatus.Evaluated -> StatusStyle.Evaluated
+        TaskStatus.Unknown -> StatusStyle.Backlog
     }

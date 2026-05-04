@@ -177,9 +177,9 @@ private fun PhaseStatusText(state: QuestionsMaterialComponent.State) {
 private fun ScoreBadge(state: QuestionsMaterialComponent.State) {
     val details = state.taskDetails.dataOrNull ?: return
     val scoreText = details.scoreText ?: return
-    val maxScore = details.exercise?.maxScore ?: return
+    val maxScoreFormatted = details.exercise?.maxScoreFormatted ?: return
     Text(
-        text = "$scoreText/${maxScore.displayScore()}",
+        text = "$scoreText/$maxScoreFormatted",
         color = AppTheme.colors.textPrimary,
         fontSize = 14.sp,
         fontWeight = FontWeight.SemiBold,

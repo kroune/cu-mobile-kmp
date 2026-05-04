@@ -5,6 +5,7 @@ import io.github.kroune.cumobile.domain.model.TaskDetailsDomain
 import io.github.kroune.cumobile.domain.model.TaskEventActorDomain
 import io.github.kroune.cumobile.domain.model.TaskEventDomain
 import io.github.kroune.cumobile.presentation.common.formatDeadlineInstant
+import io.github.kroune.cumobile.presentation.common.model.StatusStyle
 import io.github.kroune.cumobile.presentation.common.model.TaskCommentUi
 import io.github.kroune.cumobile.presentation.common.model.TaskDetailsExerciseUi
 import io.github.kroune.cumobile.presentation.common.model.TaskDetailsSolutionUi
@@ -48,7 +49,6 @@ fun TaskDetailsDomain.toUi(): TaskDetailsUi {
         submitAtFormatted = formatDeadlineInstant(submitAt),
         isLateDaysEnabled = isLateDaysEnabled,
         lateDays = lateDays,
-        deadline = deadline,
         deadlineFormatted = formatDeadlineInstant(deadline),
         startedAtFormatted = formatDeadlineInstant(startedAt),
         attemptStartedAtFormatted = formatDeadlineInstant(attemptStartedAt),
@@ -63,6 +63,7 @@ fun TaskDetailsDomain.toUi(): TaskDetailsUi {
                 type = it.type,
                 timer = it.timer,
                 maxScore = it.maxScore,
+                maxScoreFormatted = it.maxScore?.toInt()?.toString() ?: "-",
                 attemptsLimit = it.attemptsLimit,
                 evaluationStrategy = it.evaluationStrategy,
             )
@@ -85,32 +86,40 @@ fun TaskEventDomain.toUi(): TaskEventUi =
         type = type,
         typeLabel = eventTypeLabels.getOrElse(type) { type },
         actorName = actorName,
-        content = TaskEventContentUi(
-            state = content.state,
-            scoreValue = content.score?.value,
-            scoreLevel = content.score?.level,
-            estimationDeadlineFormatted = formatDeadlineInstant(content.estimation?.deadline),
-            estimationMaxScore = content.estimation?.maxScore,
-            estimationActivityName = content.estimation?.activityName,
-            solutionUrl = content.solution?.solutionUrl,
-            solutionAttachments = content.solution
-                ?.attachments
-                .orEmpty()
-                .map { it.toUi() }
-                .toImmutableList(),
-            reviewerName = content.reviewer?.formatName(),
-            reviewerNames = content.reviewers
-                ?.mapNotNull { it.formatName() }
-                .orEmpty()
-                .toImmutableList(),
-            name = content.name,
-            lateDaysRaw = content.lateDaysRaw,
-            deadlineFormatted = formatDeadlineInstant(content.deadline),
-            attached = content.attached
-                .orEmpty()
-                .map { it.toUi() }
-                .toImmutableList(),
-        ),
+        content = run {
+            val eventStatusStyle = content.state?.let { StatusStyle.fromApiValue(it) }
+            TaskEventContentUi(
+                statusStyle = eventStatusStyle,
+                statusLabel = eventStatusStyle?.label(),
+                scoreFormatted = content.score
+                    ?.value
+                    ?.toInt()
+                    ?.toString(),
+                scoreValue = content.score?.value,
+                scoreLevel = content.score?.level,
+                estimationDeadlineFormatted = formatDeadlineInstant(content.estimation?.deadline),
+                estimationMaxScore = content.estimation?.maxScore,
+                estimationActivityName = content.estimation?.activityName,
+                solutionUrl = content.solution?.solutionUrl,
+                solutionAttachments = content.solution
+                    ?.attachments
+                    .orEmpty()
+                    .map { it.toUi() }
+                    .toImmutableList(),
+                reviewerName = content.reviewer?.formatName(),
+                reviewerNames = content.reviewers
+                    ?.mapNotNull { it.formatName() }
+                    .orEmpty()
+                    .toImmutableList(),
+                name = content.name,
+                lateDaysFormatted = content.lateDays?.toString(),
+                deadlineFormatted = formatDeadlineInstant(content.deadline),
+                attached = content.attached
+                    .orEmpty()
+                    .map { it.toUi() }
+                    .toImmutableList(),
+            )
+        },
     )
 
 fun TaskCommentDomain.toUi(): TaskCommentUi =

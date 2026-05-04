@@ -202,9 +202,8 @@ private fun ResultFooter(
     question: QuizQuestionUi,
 ) {
     Column(modifier = Modifier.padding(top = 8.dp)) {
-        val score = result.score ?: 0.0
         Text(
-            text = "Баллы: ${score.displayScore()} / ${question.score.displayScore()}",
+            text = "Баллы: ${result.scoreFormatted} / ${question.scoreFormatted}",
             color = AppTheme.colors.textSecondary,
             fontSize = 12.sp,
         )
@@ -218,11 +217,6 @@ private fun ResultFooter(
             )
         }
     }
-}
-
-internal fun Double.displayScore(): String {
-    val long = toLong()
-    return if (this == long.toDouble()) long.toString() else toString()
 }
 
 internal const val LabelSingleChoice = "Один вариант"

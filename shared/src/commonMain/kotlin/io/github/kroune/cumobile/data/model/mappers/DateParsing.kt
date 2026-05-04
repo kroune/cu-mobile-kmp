@@ -16,25 +16,35 @@ private const val EndOfDayMinute = 59
 private const val EndOfDaySecond = 59
 
 internal fun parseInstant(value: String?): Instant? =
-    value?.let { runCatching { Instant.parse(it) }.getOrNull() }
+    value?.let {
+        runCatching { Instant.parse(it) }
+            .onFailure { e -> logger.warn(e) { "Failed to parse instant: $value" } }
+            .getOrNull()
+    }
 
 internal fun parseDeadlineInstant(isoDate: String?): Instant? {
     if (isoDate == null) return null
     return try {
-        parseIsoDateTime(isoDate).toInstant(TimeZone.currentSystemDefault())
+        parseIsoDateTime(isoDate)
     } catch (e: Exception) {
         logger.error(e) { "Failed to parse deadline: $isoDate" }
         null
     }
 }
 
-private fun parseIsoDateTime(iso: String): LocalDateTime {
+private fun parseIsoDateTime(iso: String): Instant {
     if (!iso.contains('T')) {
-        return LocalDate.parse(iso).atTime(EndOfDayHour, EndOfDayMinute, EndOfDaySecond)
-    }
-    return runCatching { LocalDateTime.parse(iso) }.getOrElse {
-        DateTimeComponents.Formats.ISO_DATE_TIME_OFFSET
+        val localDateTime = LocalDate
             .parse(iso)
-            .toLocalDateTime()
+            .atTime(EndOfDayHour, EndOfDayMinute, EndOfDaySecond)
+        return localDateTime.toInstant(TimeZone.currentSystemDefault())
+    }
+    return runCatching { Instant.parse(iso) }.getOrElse {
+        val localDateTime = runCatching { LocalDateTime.parse(iso) }.getOrElse {
+            DateTimeComponents.Formats.ISO_DATE_TIME_OFFSET
+                .parse(iso)
+                .toLocalDateTime()
+        }
+        localDateTime.toInstant(TimeZone.currentSystemDefault())
     }
 }

@@ -104,7 +104,14 @@ fun HomeScreen(
                     state = state,
                     onIntent = { component.onIntent(it) },
                     onTaskClick = { task ->
-                        component.onIntent(HomeComponent.Intent.OpenTask(task))
+                        component.onIntent(
+                            HomeComponent.Intent.OpenTask(
+                                taskId = task.id,
+                                courseId = task.courseId,
+                                themeId = task.themeId,
+                                longreadId = task.longreadId,
+                            ),
+                        )
                     },
                     onCourseClick = { course ->
                         component.onIntent(HomeComponent.Intent.OpenCourse(course.id))
